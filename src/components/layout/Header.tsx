@@ -1,62 +1,63 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, Search, Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+    <header className="fixed top-0 z-50 w-full">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <Building2 className="h-6 w-6" />
-          <span className="text-xl font-bold">LuxApts</span>
+        <Link href="/" className="flex items-center gap-2 group">
+          <span className="text-lg font-medium tracking-tight text-white group-hover:opacity-70 transition-opacity">
+            LuxApts
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-8">
           <Link
             href="/search"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="text-sm text-zinc-400 hover:text-white transition-colors"
           >
             Search
           </Link>
           <Link
             href="/cities"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="text-sm text-zinc-400 hover:text-white transition-colors"
           >
             Cities
           </Link>
           <Link
-            href="/compare"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            href="/about"
+            className="text-sm text-zinc-400 hover:text-white transition-colors"
           >
-            Compare
+            About
           </Link>
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/search">
-              <Search className="h-5 w-5" />
-              <span className="sr-only">Search</span>
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/auth/login">Sign In</Link>
-          </Button>
+        <div className="hidden md:flex items-center gap-4">
+          <Link
+            href="/auth/login"
+            className="text-sm text-zinc-400 hover:text-white transition-colors"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/search"
+            className="text-sm px-4 py-2 rounded-full bg-white text-black font-medium hover:bg-zinc-200 transition-colors"
+          >
+            Get Started
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
+        <button
+          className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? (
@@ -65,43 +66,50 @@ export function Header() {
             <Menu className="h-5 w-5" />
           )}
           <span className="sr-only">Toggle menu</span>
-        </Button>
+        </button>
       </div>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t bg-background">
-          <nav className="container mx-auto flex flex-col gap-2 px-4 py-4">
+        <div className="md:hidden fixed inset-0 top-16 bg-black/95 backdrop-blur-xl">
+          <nav className="flex flex-col gap-1 px-6 py-8">
             <Link
               href="/search"
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+              className="py-3 text-lg text-zinc-400 hover:text-white transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <Search className="h-4 w-4" />
               Search
             </Link>
             <Link
               href="/cities"
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+              className="py-3 text-lg text-zinc-400 hover:text-white transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Cities
             </Link>
             <Link
-              href="/compare"
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+              href="/about"
+              className="py-3 text-lg text-zinc-400 hover:text-white transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Compare
+              About
             </Link>
-            <hr className="my-2" />
-            <Link
-              href="/auth/login"
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Sign In
-            </Link>
+            <div className="mt-8 pt-8 border-t border-zinc-800">
+              <Link
+                href="/auth/login"
+                className="block py-3 text-lg text-zinc-400 hover:text-white transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/search"
+                className="mt-4 block text-center py-3 rounded-full bg-white text-black font-medium hover:bg-zinc-200 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Get Started
+              </Link>
+            </div>
           </nav>
         </div>
       )}
