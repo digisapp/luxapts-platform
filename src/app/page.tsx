@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, Search, ArrowRight, MapPin, Sparkles } from "lucide-react";
+import { Building2, Search, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/layout/Header";
@@ -117,69 +117,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Features */}
-        <section className="bg-muted/30 py-20">
-          <div className="container mx-auto px-4">
-            <div className="mb-12 text-center">
-              <h2 className="mb-3 text-3xl font-bold">Why LuxApts?</h2>
-              <p className="text-muted-foreground">
-                The smarter way to find your next apartment
-              </p>
-            </div>
-
-            <div className="grid gap-8 md:grid-cols-3">
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                  <Sparkles className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold">AI-Powered Search</h3>
-                <p className="text-sm text-muted-foreground">
-                  Natural language search that understands what you&apos;re looking for. Just describe your ideal apartment.
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                  <Building2 className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold">Real-Time Pricing</h3>
-                <p className="text-sm text-muted-foreground">
-                  Always see the latest prices and availability. No outdated listings or surprise fees.
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                  <MapPin className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold">Compare & Decide</h3>
-                <p className="text-sm text-muted-foreground">
-                  Side-by-side building comparisons with amenities, pricing, and policies all in one place.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-2xl rounded-2xl bg-primary p-8 text-center text-primary-foreground md:p-12">
-              <h2 className="mb-4 text-2xl font-bold md:text-3xl">
-                Ready to Find Your Home?
-              </h2>
-              <p className="mb-8 opacity-90">
-                Start your search now and let our AI help you find the perfect apartment.
-              </p>
-              <Button size="lg" variant="secondary" asChild>
-                <Link href="/search">
-                  Start Searching
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </section>
       </main>
 
       <Footer />
