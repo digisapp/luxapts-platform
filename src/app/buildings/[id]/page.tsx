@@ -53,6 +53,17 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     .select("details, amenities(id, name, category, icon)")
     .eq("building_id", id);
 
+  // Fetch building facts (including images)
+  const { data: facts } = await supabase
+    .from("building_facts")
+    .select("key, value")
+    .eq("building_id", id);
+
+  const buildingFacts: Record<string, string | number> = {};
+  for (const fact of facts || []) {
+    buildingFacts[fact.key] = fact.value as string | number;
+  }
+
   // Fetch available units with latest prices
   const { data: units } = await supabase
     .from("units")
@@ -104,9 +115,25 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
               {/* Image */}
               <div className="lg:col-span-2">
                 <div className="relative h-64 md:h-96 rounded-xl bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Building2 className="h-24 w-24 text-muted-foreground/30" />
-                  </div>
+                  {buildingFacts.image_exterior ? (
+                    <img
+                      src={buildingFacts.image_exterior as string}
+                      alt={building.name}
+                      className="absolute inset-0 h-full w-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Building2 className="h-24 w-24 text-muted-foreground/30" />
+                    </div>
+                  )}
+                  {buildingFacts.move_in_specials && (
+                    <Badge className="absolute top-3 right-3 bg-green-600">
+                      Special Offer
+                    </Badge>
+                  )}
                 </div>
               </div>
 
@@ -195,6 +222,22 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
         <div className="container mx-auto px-4 py-8">
           <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-8">
+              {/* Move-in Specials */}
+              {buildingFacts.move_in_specials && (
+                <Card className="border-green-500/50 bg-green-500/5">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-600">
+                      <span className="text-xl">🎉</span> Move-in Special
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-green-700 dark:text-green-400 font-medium">
+                      {buildingFacts.move_in_specials}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Description */}
               {building.description && (
                 <Card>

@@ -1,0 +1,1038 @@
+{
+  "last_updated": "2026-01-10",
+  "market": "Miami",
+  "buildings": [
+    {
+      "name": "Solitair Brickell",
+      "address": "86 SW 8th St, Miami, FL 33130",
+      "neighborhood": "Brickell",
+      "year_built": 2018,
+      "stories": 50,
+      "total_units": 438,
+      "website": "https://www.livesolitair.com/",
+      "phone": "786-842-4578",
+      "rent_range": {
+        "min": 2496,
+        "max": 5958
+      },
+      "sqft_range": {
+        "min": 494,
+        "max": 1533
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "move_in_specials": "Contact for current specials",
+      "amenities": ["50th floor rooftop pool", "9th floor bar lounge", "48th floor billiard lounge", "Floor-to-ceiling windows"],
+      "pet_policy": "Pets allowed, $500 non-refundable fee, $25/month, 2 pet max",
+      "images": {
+        "gallery": "https://www.livesolitair.com/apartments/fl/miami/gallery",
+        "exterior": "https://images1.apartments.com/i2/HA_CjgJqPgz_aI6GKIYWNxqb0-vLdK3CwZL3QBhP5bQ/117/solitair-brickell-apartments-miami-fl-primary-photo.jpg",
+        "amenities": "https://images1.apartments.com/i2/e6Zv3Qf8BDqrE6lqQPUWNWJt_zyYz7B5KHpXVWC0Xgo/117/solitair-brickell-apartments-miami-fl-pool.jpg"
+      }
+    },
+    {
+      "name": "Maizon Brickell",
+      "address": "221 SW 12th St, Miami, FL 33130",
+      "neighborhood": "Brickell",
+      "year_built": 2019,
+      "stories": 19,
+      "total_units": 262,
+      "website": "https://www.maizonmiami.com/",
+      "phone": "754-799-3157",
+      "rent_range": {
+        "min": 2235,
+        "max": 9604
+      },
+      "sqft_range": {
+        "min": 482,
+        "max": 1952
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "Penthouse"],
+      "available_units": 18,
+      "floor_plans": [
+        {"name": "B2-A", "beds": 2, "baths": 1.5, "sqft": 1039, "rent": 3882, "available": 1},
+        {"name": "B2-C", "beds": 2, "baths": 2, "sqft": 1098, "rent": 4206, "available": 2},
+        {"name": "B3-A", "beds": 2, "baths": 2, "sqft": 1234, "rent": 3796, "available": 2}
+      ],
+      "move_in_specials": "6 weeks free for select units with lease start by 12/30",
+      "amenities": ["8th floor rooftop pool", "Sundeck", "City skyline views", "Biscayne Bay views"],
+      "pet_policy": "Pets welcome",
+      "parking": {"1_car": 150, "2nd_car": 175}
+    },
+    {
+      "name": "Magnus Brickell",
+      "address": "201 SW 10th St, Miami, FL 33130",
+      "neighborhood": "Brickell",
+      "year_built": 2025,
+      "stories": 29,
+      "total_units": 465,
+      "website": "https://magnusbrickell.com/",
+      "phone": "754-663-2834",
+      "email": "Info@MagnusBrickell.com",
+      "rent_range": {
+        "min": 2410,
+        "max": 5122
+      },
+      "sqft_range": {
+        "min": 531,
+        "max": 1121
+      },
+      "unit_types": ["1BR", "2BR", "3BR"],
+      "available_units": 114,
+      "move_in_specials": "Contact for current specials",
+      "amenities": ["Resort-style pool", "Cold plunge pools", "State-of-the-art fitness", "Pet spa", "Podcast studio", "Coworking spaces"],
+      "pet_policy": "Pets welcome"
+    },
+    {
+      "name": "CMPND Miami",
+      "address": "55 NE 2nd St, Miami, FL 33132",
+      "neighborhood": "Downtown",
+      "year_built": 2025,
+      "stories": 22,
+      "total_units": 680,
+      "website": "https://cmpndmiamiapts.com/",
+      "phone": "786-952-7755",
+      "rent_range": {
+        "min": 2490,
+        "max": 4386
+      },
+      "sqft_range": {
+        "min": 402,
+        "max": 1015
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "available_units": 33,
+      "floor_plans": [
+        {"unit": "3606", "name": "S1", "beds": 0, "baths": 1, "sqft": 402, "rent": 2595, "available_date": "2026-03-01"},
+        {"unit": "3815", "name": "S1", "beds": 0, "baths": 1, "sqft": 402, "rent": 2585, "available_date": "2026-03-01"},
+        {"unit": "PH3-12", "name": "B1", "beds": 2, "baths": 2, "sqft": 1015, "rent": 4386, "available_date": "2026-03-01"}
+      ],
+      "move_in_specials": "One Month Free On Select Residences",
+      "pet_policy": "Not pet-friendly",
+      "walk_score": 99,
+      "transit_score": 100
+    },
+    {
+      "name": "Forma Miami",
+      "address": "2900 Biscayne Blvd, Miami, FL 33137",
+      "neighborhood": "Edgewater",
+      "year_built": 2024,
+      "website": "https://www.rentformamiami.com/",
+      "phone": "786-982-0740",
+      "management_company": "Crescent Heights",
+      "rent_range": {
+        "min": 3205,
+        "max": 7515
+      },
+      "sqft_range": {
+        "min": 485,
+        "max": 1980
+      },
+      "unit_types": ["Jr 1BR", "1BR", "2BR", "3BR", "Penthouse"],
+      "floor_plans": [
+        {"unit": "2502", "name": "1-F", "beds": 1, "baths": 1, "sqft": 549, "rent": 3360, "available_date": "2025-12-22"},
+        {"unit": "1605", "name": "1-B", "beds": 1, "baths": 1, "sqft": 654, "rent": 3920, "available_date": "2026-01-07"}
+      ],
+      "move_in_specials": "Move-in incentives available on select residences",
+      "amenities": ["85,000 sqft amenity collection", "Outdoor lounge pool", "Lap pool", "Cold plunge", "Spa", "Infrared sauna", "Steam room", "Whole Foods on-site"],
+      "pet_policy": "2 pets max, $500 deposit, $25/month per pet",
+      "walk_score": 93,
+      "transit_score": 50
+    },
+    {
+      "name": "Brickell Flatiron",
+      "address": "1000 Brickell Plz, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "year_built": 2019,
+      "stories": 64,
+      "total_units": 527,
+      "website": "https://www.brickellflatiron.com/",
+      "management_company": "CMC Group",
+      "rent_range": {
+        "min": 4100,
+        "max": 16500
+      },
+      "sqft_range": {
+        "min": 665,
+        "max": 1909
+      },
+      "unit_types": ["1BR", "2BR", "3BR", "Penthouse"],
+      "available_units": 22,
+      "floor_plans": [
+        {"unit": "2004", "beds": 1, "baths": 1, "sqft": 665, "rent": 4100, "available_date": "2025-06"},
+        {"unit": "2604", "beds": 1, "baths": 1, "sqft": 665, "rent": 4100, "available_date": "2025-04"},
+        {"unit": "1904", "beds": 1, "baths": 1, "sqft": 665, "rent": 4100, "available_date": "2025-08"},
+        {"unit": "4704", "beds": 1, "baths": 1, "sqft": 665, "rent": 4400, "available_date": "2025-08"},
+        {"unit": "1814", "beds": 1, "baths": 1, "sqft": 870, "rent": 4500, "available_date": "2025-06"},
+        {"unit": "3002", "beds": 3, "baths": 3.5, "sqft": 1909, "rent": 16500}
+      ],
+      "move_in_specials": "Contact for current specials",
+      "amenities": ["Rooftop pool with 360 views", "Rooftop spa", "Fitness center", "Movie theater", "Children's play area", "Game room"],
+      "pet_policy": "Pet-friendly, no limitations",
+      "min_lease": "6 months unfurnished, 30 days furnished"
+    },
+    {
+      "name": "Panorama Tower",
+      "address": "1100 Brickell Bay Dr, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "year_built": 2018,
+      "stories": 85,
+      "total_units": 821,
+      "website": "https://www.panoramatowermiami.com/",
+      "rent_range": {
+        "min": 3805,
+        "max": 10190
+      },
+      "sqft_range": {
+        "min": 1125,
+        "max": 2191
+      },
+      "unit_types": ["1BR", "2BR", "3BR"],
+      "move_in_specials": "Contact for current specials",
+      "amenities": ["100,000+ sqft resort-style amenities", "Multiple pools", "World-class fitness center", "Pet-friendly spaces", "On-site restaurants"],
+      "pet_policy": "2 pets max, 40 lb limit, no aggressive breeds",
+      "parking": {"1st_space": "included", "2nd_space": 175},
+      "notable": "Tallest residential building on Eastern Seaboard south of NYC"
+    },
+    {
+      "name": "Icon Brickell Tower 1",
+      "address": "465 Brickell Ave, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "year_built": 2008,
+      "stories": 57,
+      "total_units": 713,
+      "website": "https://www.iconbrickell.com/",
+      "management_company": "Related Group",
+      "rent_range": {
+        "min": 2400,
+        "max": 10000
+      },
+      "sqft_range": {
+        "min": 550,
+        "max": 1825
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["300-foot swimming pool", "50-person hot tub", "28,000 sqft spa/fitness by W Hotel", "Movie theater", "24-hour concierge"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Icon Brickell Tower 2",
+      "address": "485 Brickell Ave, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "year_built": 2008,
+      "stories": 57,
+      "total_units": 561,
+      "website": "https://www.iconbrickell.com/",
+      "management_company": "Related Group",
+      "rent_range": {
+        "min": 3000,
+        "max": 9500
+      },
+      "available_units": 36,
+      "floor_plans": [
+        {"unit": "5008", "beds": 1, "baths": 1, "sqft": 732, "rent": 3000},
+        {"unit": "3706", "beds": 1, "baths": 1, "sqft": 732, "rent": 3099},
+        {"unit": "4408", "beds": 1, "baths": 1, "sqft": 732, "rent": 3100}
+      ],
+      "amenities": ["300-foot swimming pool", "50-person hot tub", "28,000 sqft spa/fitness", "Movie theater"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Icon Brickell Tower 3 (W Miami)",
+      "address": "495 Brickell Ave, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "year_built": 2008,
+      "stories": 50,
+      "total_units": 444,
+      "website": "https://www.iconbrickell.com/",
+      "management_company": "Related Group",
+      "rent_range": {
+        "min": 3400,
+        "max": 7200
+      },
+      "available_units": 6,
+      "floor_plans": [
+        {"unit": "4103", "beds": 1, "baths": 1, "sqft": 790, "rent": 3400},
+        {"unit": "2606", "beds": 1, "baths": 1, "sqft": 842, "rent": 4200},
+        {"unit": "3506", "beds": 1, "baths": 1, "sqft": 842, "rent": 4970}
+      ],
+      "amenities": ["W Hotel services", "300-foot swimming pool", "Spa/fitness"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "SLS Lux Brickell",
+      "address": "801 S Miami Ave, Miami, FL 33130",
+      "neighborhood": "Brickell",
+      "year_built": 2018,
+      "stories": 57,
+      "total_units": 450,
+      "website": "https://www.slsluxbrickell.com/",
+      "management_company": "Related Group",
+      "rent_range": {
+        "min": 4200,
+        "max": 11200
+      },
+      "sqft_range": {
+        "min": 553,
+        "max": 4247
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR", "4BR", "Penthouse"],
+      "available_units": 22,
+      "amenities": ["3 pools", "2 hot tubs", "Poolside bar", "Tennis court", "Full-service spa", "Full-service concierge", "2 club rooms"],
+      "pet_policy": "Pet-friendly",
+      "min_lease": "6 months minimum",
+      "parking": {"extra_space": 175}
+    },
+    {
+      "name": "Monarc at Met",
+      "address": "201 SE 2nd Ave, Miami, FL 33131",
+      "neighborhood": "Downtown",
+      "year_built": 2016,
+      "stories": 32,
+      "total_units": 462,
+      "website": "https://www.monarcatmet.com/",
+      "phone": "305-358-4000",
+      "rent_range": {
+        "min": 2747,
+        "max": 5783
+      },
+      "sqft_range": {
+        "min": 674,
+        "max": 1056
+      },
+      "unit_types": ["1BR", "2BR"],
+      "available_units": 24,
+      "floor_plans": [
+        {"unit": "2907", "name": "Pool Deck Penthouse", "beds": 1, "sqft": 589, "rent": 2932, "available_date": "2025-03-10"},
+        {"unit": "2901", "name": "Pool Deck Penthouse", "beds": 2, "baths": 2, "sqft": 1035, "rent": 3907, "available_date": "2025-04-03"},
+        {"unit": "2418", "beds": 1, "sqft": 695, "rent": 3057, "available_date": "Now"},
+        {"unit": "1504", "beds": 1, "baths": 2, "sqft": 1056, "rent": 3702, "available_date": "Now"}
+      ],
+      "move_in_specials": "1 Month Free for eligible applicants (12-month lease)",
+      "amenities": ["Heated saltwater pool", "Spa with sauna", "Co-working space", "Entertainment lounge", "24-hour concierge", "Wine lockers"],
+      "pet_policy": "2 pets max, 75 lb limit, no aggressive breeds",
+      "fees": {"security_deposit": 1000, "parking_1st": 100, "parking_2nd": 175, "amenity_fee": 35, "trash_fee": 25}
+    },
+    {
+      "name": "Strata Wynwood",
+      "address": "21 NE 22nd St, Miami, FL 33137",
+      "neighborhood": "Wynwood",
+      "website": "https://www.stratawynwood.com/",
+      "phone": "786-505-6700",
+      "management_company": "Bozzuto",
+      "rent_range": {
+        "min": 2530,
+        "max": 5570
+      },
+      "sqft_range": {
+        "min": 509,
+        "max": 1288
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "available_units": 20,
+      "floor_plans": [
+        {"beds": 3, "baths": 2, "sqft": 1288, "rent": 4970}
+      ],
+      "move_in_specials": "2 months free + $1,000 Look & Lease Special + 4 months free parking",
+      "amenities": ["In-unit washer/dryer", "Modern finishes"],
+      "pet_policy": "Pets welcome, restrictions may apply"
+    },
+    {
+      "name": "29 Wyn",
+      "address": "2828 NW 1st Ave, Miami, FL 33127",
+      "neighborhood": "Wynwood",
+      "year_built": 2023,
+      "stories": 12,
+      "total_units": 248,
+      "website": "https://29wyn.com/",
+      "rent_range": {
+        "min": 2399,
+        "max": 5742
+      },
+      "sqft_range": {
+        "min": 422,
+        "max": 1469
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "floor_plans": [
+        {"beds": 0, "baths": 1, "sqft": 422},
+        {"beds": 0, "baths": 1, "sqft": 481},
+        {"beds": 0, "baths": 1, "sqft": 495}
+      ],
+      "move_in_specials": "2 Months Free on select units; 3 Months Free on last 1BR",
+      "amenities": ["Rooftop pool & sun deck", "Private cabanas", "24-hour fitness center", "Boxing area", "Latch smart locks", "Nest thermostats"],
+      "pet_policy": "$500 fee, $25/month"
+    },
+    {
+      "name": "Gio Midtown",
+      "address": "3131 NE 1st Ave, Miami, FL 33137",
+      "neighborhood": "Midtown",
+      "stories": 32,
+      "total_units": 447,
+      "website": "https://www.giomidtown.com/",
+      "phone": "305-456-1900",
+      "management_company": "Bozzuto",
+      "rent_range": {
+        "min": 2829,
+        "max": 9406
+      },
+      "sqft_range": {
+        "min": 386,
+        "max": 1919
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "move_in_specials": "Look and lease special - Apply within 48 hours for waived amenity fee",
+      "amenities": ["In-unit washer/dryer", "Retail on ground floor"],
+      "pet_policy": "$500-$750 fee for dogs, $50/month",
+      "fees": {"security_deposit": "500 to 1 month rent"}
+    },
+    {
+      "name": "Bella Isla",
+      "address": "31 Venetian Way, Miami Beach, FL 33139",
+      "neighborhood": "Venetian Islands",
+      "total_units": 172,
+      "website": "https://www.bellaisla.com/",
+      "phone": "305-531-7134",
+      "rent_range": {
+        "min": 3800,
+        "max": 8000
+      },
+      "sqft_range": {
+        "min": 780,
+        "max": 1400
+      },
+      "unit_types": ["1BR", "2BR", "3BR"],
+      "amenities": ["800 linear feet oceanfront", "Pool", "Fitness Center", "EV Charging", "Balconies with Bay views"],
+      "pet_policy": "Pets allowed",
+      "notable": "Exclusive oceanfront community on Venetian Islands",
+      "rating": 4.5
+    },
+    {
+      "name": "The Henry",
+      "address": "4131 Laguna St, Coral Gables, FL 33146",
+      "neighborhood": "Coral Gables",
+      "website": "https://thehenrycoralgables.com/",
+      "phone": "786-882-4667",
+      "rent_range": {
+        "min": 3587,
+        "max": 4884
+      },
+      "sqft_range": {
+        "min": 673,
+        "max": 1763
+      },
+      "unit_types": ["1BR", "2BR", "3BR"],
+      "available_units": 30,
+      "amenities": ["Pool", "In-unit laundry", "Patio/Balcony"],
+      "pet_policy": "2 pets max, 85 lb combined weight limit",
+      "walk_score": 87,
+      "nearby": ["Shops at Merrick Park (0.1 mi)", "Miracle Mile"]
+    },
+    {
+      "name": "Berkshire Coral Gables",
+      "address": "3880 Bird Rd, Coral Gables, FL 33146",
+      "neighborhood": "Coral Gables",
+      "year_built": 2015,
+      "stories": 8,
+      "total_units": 276,
+      "website": "https://berkshirecoralgables.com/",
+      "phone": "786-735-2180",
+      "rent_range": {
+        "min": 2117,
+        "max": 3474
+      },
+      "sqft_range": {
+        "min": 538,
+        "max": 1366
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "available_units": 22,
+      "move_in_specials": "Up to 2 weeks free on select apartments",
+      "amenities": ["Concierge service", "Swimming pool", "Residents lounge", "Package service", "Dry cleaning service"],
+      "pet_policy": "2 pets max, $500 fee per pet, $20/month per pet",
+      "nearby": ["University of Miami", "Shops at Merrick Park", "Douglas Metro Station"]
+    },
+    {
+      "name": "Mr. C Residences",
+      "address": "2655 S Bayshore Dr, Miami, FL 33133",
+      "neighborhood": "Coconut Grove",
+      "year_built": 2023,
+      "stories": 21,
+      "total_units": 118,
+      "website": "https://mrcresidencescoconutgrove.com/",
+      "phone": "305-800-0672",
+      "management_company": "Terra Group",
+      "rent_range": {
+        "min": 1850,
+        "max": 38000
+      },
+      "sqft_range": {
+        "min": 650,
+        "max": 2655
+      },
+      "unit_types": ["1BR", "2BR", "3BR", "4BR", "5BR"],
+      "available_units": 6,
+      "min_lease": "6 months",
+      "amenities": ["Bay views", "11-foot ceilings", "Italian kitchens", "European furnishings"],
+      "notable": "Two towers: Bayshore (grand layouts) and Tigertail (variety of plans)"
+    },
+    {
+      "name": "AMLI Wynwood",
+      "address": "51 NW 26th St, Miami, FL 33127",
+      "neighborhood": "Wynwood",
+      "website": "https://www.amli.com/apartments/southeast-florida/miami-apartments/amli-wynwood",
+      "phone": "786-622-8888",
+      "management_company": "AMLI",
+      "rent_range": {
+        "min": 2400,
+        "max": 4500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Rooftop pool", "Fitness center", "Pet spa", "Coworking spaces"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Wynwood 25",
+      "address": "2515 N Miami Ave, Miami, FL 33127",
+      "neighborhood": "Wynwood",
+      "website": "https://wynwood25.com/",
+      "rent_range": {
+        "min": 2200,
+        "max": 4800
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Rooftop pool", "Fitness center", "Art-inspired design"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Bezel Miami Worldcenter",
+      "address": "851 NE 1st Ave, Miami, FL 33132",
+      "neighborhood": "Downtown",
+      "stories": 43,
+      "website": "https://www.bezelmiami.com/",
+      "phone": "786-864-1851",
+      "rent_range": {
+        "min": 2800,
+        "max": 5500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Connected luxury living", "Miami Worldcenter location"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "UNI Miami",
+      "address": "1756 N Bayshore Dr, Miami, FL 33132",
+      "neighborhood": "Arts District",
+      "stories": 28,
+      "website": "https://www.liveatuni.com/",
+      "rent_range": {
+        "min": 2600,
+        "max": 5000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Bay views", "Modern design", "Arts District location"],
+      "notable": "28-story tower in Arts + Entertainment District"
+    },
+    {
+      "name": "Blu27 at Edgewater",
+      "address": "2700 NE 27th St, Miami, FL 33137",
+      "neighborhood": "Edgewater",
+      "website": "https://www.blu27aptsmiami.com/",
+      "phone": "786-558-6060",
+      "rent_range": {
+        "min": 2400,
+        "max": 4200
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Peloton spin/yoga studio", "Resort-style pool", "Rooftop terrace", "Business center"],
+      "nearby": ["Design District", "Midtown", "Downtown"],
+      "images": {
+        "gallery": "https://www.blu27aptsmiami.com/galleries/photo-gallery/",
+        "exterior": "https://images1.apartments.com/i2/sQzz6bD5F6FXNVV5d3Qf9-8T0g_pNFBw0pY0TRKxN2U/117/blu27-at-edgewater-miami-fl-primary-photo.jpg"
+      }
+    },
+    {
+      "name": "Jade Brickell",
+      "address": "1331 Brickell Bay Dr, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "year_built": 2005,
+      "stories": 48,
+      "total_units": 341,
+      "website": "https://www.jadebrickell.com/",
+      "rent_range": {
+        "min": 4500,
+        "max": 15000
+      },
+      "sqft_range": {
+        "min": 895,
+        "max": 3415
+      },
+      "unit_types": ["1BR", "2BR", "3BR", "Penthouse"],
+      "available_units": 9,
+      "amenities": ["31,000 sqft amenity deck", "Infinity-edge lap pool", "Reflecting pool", "Cabanas", "Wellness spa", "Fitness center", "Business center"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Ultra-luxury waterfront tower",
+      "images": {
+        "gallery": "https://miamiresidential.com/jadebrickell/",
+        "exterior": "https://images1.apartments.com/i2/jade-brickell-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "1010 Brickell",
+      "address": "1010 Brickell Ave, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "year_built": 2017,
+      "stories": 50,
+      "total_units": 389,
+      "website": "https://www.1010brickell.com/",
+      "rent_range": {
+        "min": 2950,
+        "max": 9000
+      },
+      "sqft_range": {
+        "min": 442,
+        "max": 2170
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "available_units": 19,
+      "min_lease": "6 months",
+      "amenities": ["Rooftop pool with jacuzzi and bar", "Indoor pool", "Indoor basketball court", "Squash court", "Bowling", "Virtual golf", "Running track", "Spa with sauna/steam", "Kids playground"],
+      "pet_policy": "Pets for owners only, 2 pets max, 50 lb total",
+      "notable": "Best amenities in Brickell",
+      "images": {
+        "gallery": "https://miamiresidential.com/1010brickell/",
+        "exterior": "https://images1.apartments.com/i2/1010-brickell-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "The Bond on Brickell",
+      "address": "1080 Brickell Ave, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "year_built": 2016,
+      "stories": 44,
+      "total_units": 328,
+      "website": "https://www.thebondonbrickell.com/",
+      "phone": "305-639-2663",
+      "rent_range": {
+        "min": 3000,
+        "max": 8000
+      },
+      "sqft_range": {
+        "min": 558,
+        "max": 2100
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR", "Loft", "Penthouse"],
+      "min_lease": "30 days",
+      "amenities": ["Sundeck with waterfall", "Zero-edge lap pool", "Cabanas", "Outdoor fireplace", "BBQ area", "Fitness center", "Business center", "Playroom", "Parliament Lounge", "Screening room"],
+      "pet_policy": "2 pets max, 70 lb combined weight",
+      "utilities_included": ["Water", "Sewer", "Trash", "Cable", "Internet"],
+      "images": {
+        "gallery": "https://thebondrent.com/",
+        "exterior": "https://images1.apartments.com/i2/the-bond-brickell-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "SOMA at Brickell",
+      "address": "145 SW 13th St, Miami, FL 33130",
+      "neighborhood": "Brickell",
+      "year_built": 2015,
+      "stories": 8,
+      "total_units": 418,
+      "website": "https://www.somaatbrickell.com/",
+      "management_company": "Greystar",
+      "rent_range": {
+        "min": 2250,
+        "max": 5657
+      },
+      "sqft_range": {
+        "min": 514,
+        "max": 1102
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Rooftop lounge", "24-hour fitness", "In-unit washer/dryer", "Boutique hotel-inspired design"],
+      "pet_policy": "2 pets max, $25/month per pet",
+      "images": {
+        "gallery": "https://www.somabrickell.com/miami/soma-at-brickell/photos/",
+        "exterior": "https://images1.apartments.com/i2/soma-at-brickell-miami-fl-primary-photo.jpg"
+      }
+    },
+    {
+      "name": "Miro Brickell",
+      "address": "255 SW 11th St, Miami, FL 33130",
+      "neighborhood": "Brickell",
+      "website": "https://www.harborgroupmanagement.com/apartments/fl/miami/miro-brickell/",
+      "management_company": "Harbor Group",
+      "rent_range": {
+        "min": 2260,
+        "max": 5450
+      },
+      "sqft_range": {
+        "min": 458,
+        "max": 1524
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "available_units": 28,
+      "move_in_specials": "1 month FREE + Hometown hero discounts for teachers, first responders, military",
+      "amenities": ["Resort-style pool", "Fitness center", "Private movie theater"],
+      "pet_policy": "2 pets max, no breed restrictions, no weight limits",
+      "images": {
+        "gallery": "https://www.harborgroupmanagement.com/apartments/fl/miami/miro-brickell/photos/",
+        "exterior": "https://images1.apartments.com/i2/miro-brickell-miami-fl-primary-photo.jpg"
+      }
+    },
+    {
+      "name": "Elemi at Grove Village",
+      "address": "3335 Thomas Ave, Miami, FL 33133",
+      "neighborhood": "Coconut Grove",
+      "total_units": 46,
+      "website": "https://elemigrove.com/",
+      "rent_range": {
+        "min": 4629,
+        "max": 8085
+      },
+      "sqft_range": {
+        "min": 990,
+        "max": 1560
+      },
+      "unit_types": ["1BR", "2BR", "3BR"],
+      "available_units": 10,
+      "amenities": ["Rooftop pool", "Private terraces", "Two-story units", "Boutique living"],
+      "pet_policy": "2 pets max, 75 lb limit, $500 pet fee, $30-50/month",
+      "notable": "Only 46 sophisticated residences",
+      "images": {
+        "gallery": "https://elemigrove.com/gallery/",
+        "exterior": "https://images1.apartments.com/i2/elemi-miami-fl-primary-photo.jpg"
+      }
+    },
+    {
+      "name": "Grove at Grand Bay",
+      "address": "2669 S Bayshore Dr, Miami, FL 33133",
+      "neighborhood": "Coconut Grove",
+      "stories": 22,
+      "total_units": 99,
+      "website": "https://www.groveatgrandbay.com/",
+      "phone": "786-628-7560",
+      "management_company": "Terra Group",
+      "rent_range": {
+        "min": 8000,
+        "max": 45000
+      },
+      "sqft_range": {
+        "min": 1602,
+        "max": 7013
+      },
+      "unit_types": ["2BR", "3BR", "4BR", "5BR", "6BR"],
+      "min_lease": "6 months",
+      "amenities": ["Private elevator foyer", "12-foot ceilings", "Floor-to-ceiling windows", "Summer kitchens", "Grove Kitchen restaurant", "$250 food credit included"],
+      "pet_policy": "No restrictions",
+      "notable": "Twisting Towers by Bjarke Ingels, ultra-luxury bayfront",
+      "images": {
+        "gallery": "https://miamiresidential.com/groveatgrandbay/",
+        "exterior": "https://images1.apartments.com/i2/grove-at-grand-bay-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "800 Capri",
+      "address": "800 Capri St, Coral Gables, FL 33134",
+      "neighborhood": "Coral Gables",
+      "website": "https://800capri.com/",
+      "phone": "786-803-2648",
+      "rent_range": {
+        "min": 2145,
+        "max": 2800
+      },
+      "sqft_range": {
+        "min": 800,
+        "max": 1130
+      },
+      "unit_types": ["1BR", "2BR"],
+      "amenities": ["9-foot ceilings", "Impact windows", "In-unit washer/dryer", "Porcelain floors"],
+      "utilities_included": ["Water", "1GB Internet"],
+      "nearby": ["University of Miami", "Brickell", "Miami Airport", "Downtown Miami"],
+      "images": {
+        "gallery": "https://800capri.com/",
+        "exterior": "https://images1.apartments.com/i2/800-capri-coral-gables-fl.jpg"
+      }
+    },
+    {
+      "name": "Brickell First",
+      "address": "80 SW 8th St, Miami, FL 33130",
+      "neighborhood": "Brickell",
+      "website": "https://brickellfirst.prospectportal.com/",
+      "rent_range": {
+        "min": 2400,
+        "max": 4500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "images": {
+        "gallery": "https://brickellfirst.prospectportal.com/",
+        "exterior": "https://images1.apartments.com/i2/brickell-first-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "Natiivo Miami",
+      "address": "601 NE 1st Ave, Miami, FL 33132",
+      "neighborhood": "Downtown",
+      "stories": 51,
+      "website": "https://www.natiivomiami.com/",
+      "rent_range": {
+        "min": 2800,
+        "max": 6000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Short-term rental friendly", "Hotel-style services", "Rooftop pool"],
+      "notable": "51-story tower, Airbnb-friendly",
+      "images": {
+        "gallery": "https://www.natiivomiami.com/gallery/",
+        "exterior": "https://images1.apartments.com/i2/natiivo-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "NoMad Residences",
+      "address": "2700 NW 2nd Ave, Miami, FL 33127",
+      "neighborhood": "Wynwood",
+      "stories": 9,
+      "total_units": 329,
+      "website": "https://www.nomadresidencesmiami.com/",
+      "rent_range": {
+        "min": 2600,
+        "max": 5500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["NoMad brand lifestyle", "Restaurant", "Rooftop pool"],
+      "notable": "First NoMad branded residences",
+      "images": {
+        "gallery": "https://www.nomadresidencesmiami.com/gallery/",
+        "exterior": "https://images1.apartments.com/i2/nomad-residences-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "Remi on the River",
+      "address": "444 NW North River Dr, Miami, FL 33128",
+      "neighborhood": "River District",
+      "website": "https://www.remiontheriver.com/",
+      "rent_range": {
+        "min": 2500,
+        "max": 5000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["River views", "Rooftop pool", "Modern design"],
+      "images": {
+        "gallery": "https://www.remiontheriver.com/gallery/",
+        "exterior": "https://images1.apartments.com/i2/remi-on-the-river-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "Muze at Met",
+      "address": "201 SE 3rd Ave, Miami, FL 33131",
+      "neighborhood": "Downtown",
+      "website": "https://www.muzemetmiami.com/",
+      "phone": "305-358-3636",
+      "rent_range": {
+        "min": 2600,
+        "max": 5500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Met Square location", "Whole Foods nearby", "Urban lifestyle"],
+      "images": {
+        "gallery": "https://www.muzemetmiami.com/gallery/",
+        "exterior": "https://images1.apartments.com/i2/muze-at-met-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "Grand Station",
+      "address": "240 NW 25th St, Miami, FL 33127",
+      "neighborhood": "Wynwood",
+      "website": "https://www.grandstationmiami.com/",
+      "phone": "786-703-0300",
+      "rent_range": {
+        "min": 2400,
+        "max": 4800
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Wynwood Arts District location", "Modern design", "Rooftop amenities"],
+      "images": {
+        "gallery": "https://www.grandstationmiami.com/gallery/",
+        "exterior": "https://images1.apartments.com/i2/grand-station-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "Cascade Link at Douglas",
+      "address": "3201 Shipping Ave, Miami, FL 33133",
+      "neighborhood": "Coconut Grove",
+      "website": "https://cascadeatlink.com/",
+      "phone": "786-802-4700",
+      "rent_range": {
+        "min": 2800,
+        "max": 5500
+      },
+      "unit_types": ["1BR", "2BR", "3BR"],
+      "amenities": ["Modern finishes", "Pool", "Fitness center"],
+      "images": {
+        "gallery": "https://cascadeatlink.com/gallery/",
+        "exterior": "https://images1.apartments.com/i2/cascade-link-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "The Residences at THesis",
+      "address": "1350 S Dixie Hwy, Coral Gables, FL 33146",
+      "neighborhood": "Coral Gables",
+      "website": "https://thesisresidencesmiami.com/",
+      "phone": "305-779-6000",
+      "rent_range": {
+        "min": 2500,
+        "max": 5000
+      },
+      "unit_types": ["1BR", "2BR", "3BR"],
+      "amenities": ["University Station access", "Open-air venues", "Modern apartments"],
+      "notable": "First of its kind along US-1 corridor",
+      "images": {
+        "gallery": "https://thesisresidencesmiami.com/gallery/",
+        "exterior": "https://images1.apartments.com/i2/thesis-residences-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "Gables Columbus Center",
+      "address": "2820 SW 37th Ave, Coral Gables, FL 33133",
+      "neighborhood": "Coral Gables",
+      "website": "https://www.gables.com/",
+      "phone": "786-220-4300",
+      "management_company": "Gables Residential",
+      "rent_range": {
+        "min": 2200,
+        "max": 4500
+      },
+      "unit_types": ["1BR", "2BR"],
+      "amenities": ["Rooftop pool", "Fitness center", "Block from Miracle Mile"],
+      "images": {
+        "gallery": "https://www.gables.com/apartments/fl/coral-gables/gables-columbus-center/photos/",
+        "exterior": "https://images1.apartments.com/i2/gables-columbus-center-coral-gables-fl.jpg"
+      }
+    },
+    {
+      "name": "Arte Grand Central",
+      "address": "145 NW 8th St, Miami, FL 33136",
+      "neighborhood": "Overtown",
+      "website": "https://avantiresidential.com/",
+      "phone": "786-953-6666",
+      "management_company": "Avanti Residential",
+      "rent_range": {
+        "min": 2200,
+        "max": 4000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["BrightLine Station access", "Skyline views", "Pool with cabanas", "Designer kitchens"],
+      "images": {
+        "gallery": "https://avantiresidential.com/property/arte-grand-central-overtown/",
+        "exterior": "https://images1.apartments.com/i2/arte-grand-central-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "Solaris at Brickell",
+      "address": "186 SE 12th Terrace, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "website": "https://www.solarisatbrickell.com/",
+      "rent_range": {
+        "min": 2800,
+        "max": 5500
+      },
+      "unit_types": ["1BR", "2BR"],
+      "images": {
+        "gallery": "https://www.solarisatbrickell.com/",
+        "exterior": "https://images1.apartments.com/i2/solaris-at-brickell-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "The Plaza on Brickell",
+      "address": "950 Brickell Bay Dr, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "website": "https://www.theplazaonbrickell.com/",
+      "management_company": "Related Group",
+      "rent_range": {
+        "min": 3000,
+        "max": 8000
+      },
+      "unit_types": ["1BR", "2BR", "3BR"],
+      "amenities": ["Two towers", "Pool deck", "Fitness center", "Bay views"],
+      "images": {
+        "gallery": "https://www.theplazaonbrickell.com/",
+        "exterior": "https://images1.apartments.com/i2/plaza-on-brickell-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "Four Seasons Brickell",
+      "address": "1425 Brickell Ave, Miami, FL 33131",
+      "neighborhood": "Brickell",
+      "website": "https://www.fourseasons.com/miami/",
+      "phone": "305-358-3535",
+      "management_company": "Four Seasons",
+      "rent_range": {
+        "min": 6000,
+        "max": 25000
+      },
+      "unit_types": ["1BR", "2BR", "3BR", "Penthouse"],
+      "amenities": ["Four Seasons hotel services", "In-room dining", "Housekeeping", "Concierge", "Spa", "Pool"],
+      "notable": "Hotel-branded residences with full services",
+      "images": {
+        "gallery": "https://www.fourseasons.com/miami/photos_and_videos/",
+        "exterior": "https://images1.apartments.com/i2/four-seasons-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "Lofty Brickell",
+      "address": "99 SW 7th St, Miami, FL 33130",
+      "neighborhood": "Brickell",
+      "stories": 44,
+      "total_units": 784,
+      "website": "https://www.loftybrickell.com/",
+      "management_company": "Newgard Development",
+      "rent_range": {
+        "min": 2800,
+        "max": 6500
+      },
+      "sqft_range": {
+        "min": 485,
+        "max": 2221
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR", "Penthouse"],
+      "amenities": ["Miami River views", "Rooftop pool", "Designed by Arquitectonica"],
+      "notable": "Short-term rental friendly, opening 2027",
+      "images": {
+        "gallery": "https://www.loftybrickell.com/gallery/",
+        "exterior": "https://images1.apartments.com/i2/lofty-brickell-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "Wynwood Bay",
+      "address": "2100 N Miami Ave, Miami, FL 33127",
+      "neighborhood": "Wynwood",
+      "website": "https://www.wynwoodbay.com/",
+      "rent_range": {
+        "min": 2400,
+        "max": 4800
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Arts District location", "Rooftop amenities", "Modern design"],
+      "images": {
+        "gallery": "https://www.wynwoodbay.com/gallery/",
+        "exterior": "https://images1.apartments.com/i2/wynwood-bay-miami-fl.jpg"
+      }
+    },
+    {
+      "name": "AMLI Midtown 29",
+      "address": "29 NE 29th St, Miami, FL 33137",
+      "neighborhood": "Midtown",
+      "website": "https://www.amli.com/apartments/southeast-florida/miami-apartments/amli-midtown-29",
+      "management_company": "AMLI",
+      "rent_range": {
+        "min": 2500,
+        "max": 5000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Rooftop pool", "Fitness center", "Pet spa", "Coworking"],
+      "images": {
+        "gallery": "https://www.amli.com/apartments/southeast-florida/miami-apartments/amli-midtown-29/photos",
+        "exterior": "https://images1.apartments.com/i2/amli-midtown-29-miami-fl.jpg"
+      }
+    }
+  ]
+}

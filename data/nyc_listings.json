@@ -1,0 +1,1623 @@
+{
+  "last_updated": "2026-01-10",
+  "market": "New York City",
+  "total_buildings": 84,
+  "buildings": [
+    {
+      "name": "ARO",
+      "address": "242 West 53rd Street, New York, NY 10019",
+      "neighborhood": "Midtown West",
+      "borough": "Manhattan",
+      "year_built": 2018,
+      "stories": 62,
+      "total_units": 426,
+      "website": "https://aro.nyc/",
+      "phone": "646-518-8855",
+      "email": "rent@aro.nyc",
+      "management_company": "Algin Management",
+      "rent_range": {
+        "min": 3850,
+        "max": 15000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR", "4BR Penthouse"],
+      "amenities": ["40,000+ sqft amenities", "Indoor pool", "Basketball court", "Golf simulator", "Fitness center with yoga room", "Children's playroom", "Game room", "Chef's kitchen with private dining", "Landscaped terraces", "24/7 doormen", "Concierge", "In-unit washer/dryer"],
+      "pet_policy": "Pet-friendly",
+      "images": {
+        "exterior": "https://images1.apartments.com/i2/aro-new-york-ny-primary-photo.jpg"
+      }
+    },
+    {
+      "name": "555TEN",
+      "address": "555 Tenth Avenue, New York, NY 10018",
+      "neighborhood": "Hell's Kitchen",
+      "borough": "Manhattan",
+      "year_built": 2016,
+      "stories": 56,
+      "total_units": 597,
+      "website": "https://555ten.com/",
+      "phone": "212-563-5553",
+      "email": "HELLO@555TEN.com",
+      "management_company": "Extell Development",
+      "rent_range": {
+        "min": 4660,
+        "max": 12000
+      },
+      "sqft_range": {
+        "min": 500,
+        "max": 1000
+      },
+      "unit_types": ["Loft", "1BR", "2BR", "3BR"],
+      "amenities": ["Rooftop pool & sundeck with cabanas", "Indoor saltwater lap pool", "All-season rooftop bar and lounge", "Indoor/outdoor fireplace", "Fitness center with Peloton", "Private bowling alley", "Arcade", "Children's playroom", "Dog park", "Pet spa (Throw Me a Bone)", "Building-wide WiFi", "Mobile app services"],
+      "pet_policy": "Pet-friendly with on-site pet spa",
+      "images": {
+        "exterior": "https://images1.apartments.com/i2/555ten-new-york-ny-primary-photo.jpg"
+      }
+    },
+    {
+      "name": "7 Dey",
+      "address": "7 Dey Street, New York, NY 10007",
+      "neighborhood": "Financial District",
+      "borough": "Manhattan",
+      "year_built": 2021,
+      "stories": 57,
+      "website": "https://7deynyc.com/",
+      "phone": "212-977-5777",
+      "email": "leasing@7DeyNYC.com",
+      "rent_range": {
+        "min": 5085,
+        "max": 14900
+      },
+      "sqft_range": {
+        "min": 547,
+        "max": 1688
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR Penthouse"],
+      "floor_plans": [
+        {"type": "Studio", "rent": 5085},
+        {"type": "1BR", "rent": 6090},
+        {"type": "2BR", "rent": 8900},
+        {"type": "3BR Penthouse", "rent": 14900}
+      ],
+      "move_in_specials": "1 month free on 16-month lease; 1/2 month free on 12-month lease",
+      "amenities": ["Private terraces on select units", "Luxury finishes", "24-hour concierge"],
+      "pet_policy": "No pets allowed (service animals welcome)"
+    },
+    {
+      "name": "MiMA",
+      "address": "450 West 42nd Street, New York, NY 10036",
+      "neighborhood": "Midtown West",
+      "borough": "Manhattan",
+      "stories": 63,
+      "total_units": 884,
+      "website": "https://www.livemima.com/",
+      "phone": "212-629-9500",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 4200,
+        "max": 11650
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "move_in_specials": "Up to $5,000 Gift Card on select units",
+      "amenities": ["44,000 sqft amenity space", "Equinox fitness club", "Heated indoor pool", "Full-size basketball & volleyball courts", "Golf simulator", "Tech center with coffee bar", "Children's playroom", "Outdoor deck with BBQ", "Outdoor theater", "Dog City pet spa", "Frank Gehry-designed theaters", "LEED Gold certified"],
+      "pet_policy": "Pet-friendly with on-site pet spa",
+      "images": {
+        "exterior": "https://images1.apartments.com/i2/mima-new-york-ny-primary-photo.jpg"
+      }
+    },
+    {
+      "name": "The Westport",
+      "address": "500 West 56th Street, New York, NY 10019",
+      "neighborhood": "Midtown West",
+      "borough": "Manhattan",
+      "year_built": 2003,
+      "stories": 36,
+      "total_units": 371,
+      "website": "https://www.relatedrentals.com/apartment-rentals/new-york-city/midtown-manhattan/the-westport",
+      "phone": "212-586-0600",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 4250,
+        "max": 7935
+      },
+      "unit_types": ["Alcove Studio", "1BR", "2BR"],
+      "floor_plans": [
+        {"type": "Alcove Studio", "rent": 4250},
+        {"type": "1BR", "rent": 4810},
+        {"type": "1BR/2BA", "rent": 6350},
+        {"type": "2BR Corner with Terrace", "rent": 7935}
+      ],
+      "move_in_specials": "Up to 1 Month Free on select units",
+      "amenities": ["24-hour concierge", "Basketball court", "Party room", "Rooftop terrace", "Fitness center", "WFH conveniences", "Related Personal Assistant service"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Caledonia",
+      "address": "450 West 17th Street, New York, NY 10011",
+      "neighborhood": "Chelsea",
+      "borough": "Manhattan",
+      "year_built": 2006,
+      "stories": 24,
+      "total_units": 288,
+      "website": "https://www.relatedrentals.com/apartment-rentals/new-york-city/west-chelsea/the-caledonia",
+      "phone": "212-255-3800",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 4500,
+        "max": 12000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR", "4BR"],
+      "amenities": ["Direct High Line access", "Equinox Fitness Club & Spa", "Dog City pet spa", "Rooftop terrace", "Culture lounge curated by Assouline", "Children's playroom", "Zen meditation garden", "Business center", "Full-service garage", "24-hour doorman"],
+      "pet_policy": "Pet-friendly with on-site pet spa",
+      "notable": "First luxury condo built along the High Line",
+      "images": {
+        "exterior": "https://images1.apartments.com/i2/the-caledonia-new-york-ny-primary-photo.jpg"
+      }
+    },
+    {
+      "name": "The Tate",
+      "address": "535 West 23rd Street, New York, NY 10011",
+      "neighborhood": "Chelsea",
+      "borough": "Manhattan",
+      "website": "https://www.relatedrentals.com/apartment-rentals/new-york-city/west-chelsea/the-tate",
+      "phone": "212-929-0003",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 4000,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace", "Resident lounge"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Westminster",
+      "address": "180 West 20th Street, New York, NY 10011",
+      "neighborhood": "Chelsea",
+      "borough": "Manhattan",
+      "website": "https://www.relatedrentals.com/",
+      "phone": "212-989-0200",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 3800,
+        "max": 9000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Tribeca Park",
+      "address": "400 Chambers Street, New York, NY 10282",
+      "neighborhood": "Tribeca",
+      "borough": "Manhattan",
+      "website": "https://www.relatedrentals.com/",
+      "phone": "212-786-0900",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 4500,
+        "max": 12000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace", "Hudson River views"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Tribeca Tower",
+      "address": "105 Duane Street, New York, NY 10007",
+      "neighborhood": "Tribeca",
+      "borough": "Manhattan",
+      "stories": 52,
+      "total_units": 451,
+      "website": "https://www.relatedrentals.com/apartment-rentals/new-york-city/tribeca-battery-park-city/tribeca-tower",
+      "phone": "212-964-2500",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 5325,
+        "max": 12040
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "floor_plans": [
+        {"type": "Studio", "rent": 5395},
+        {"type": "1BR", "rent": 5325},
+        {"type": "2BR/2BA", "rent": 8125},
+        {"type": "3BR/3BA", "rent": 12040}
+      ],
+      "move_in_specials": "Up to $2,000 Gift Card on select units",
+      "amenities": ["24-hour doorman/concierge", "Heated indoor pool", "Private sun terrace", "State-of-the-art fitness center", "Business center with high-speed internet", "Entertainment lounge", "David Rockwell-designed lobby", "WFH conveniences"],
+      "pet_policy": "Pet-friendly with weight limits and breed restrictions"
+    },
+    {
+      "name": "One Hudson Yards",
+      "address": "530 West 30th Street, New York, NY 10001",
+      "neighborhood": "Hudson Yards",
+      "borough": "Manhattan",
+      "stories": 33,
+      "website": "https://www.relatedrentals.com/apartment-rentals/new-york-city/hudson-yards/one-hudson-yards",
+      "phone": "212-524-6000",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 6100,
+        "max": 25447
+      },
+      "unit_types": ["1BR", "2BR", "3BR", "4BR"],
+      "amenities": ["82-foot lap pool", "Spa", "Bowling alley", "Game room", "Basketball court", "Penthouse lounge & terrace", "Children's playroom", "Equinox-curated fitness center", "High-speed internet", "Business center", "High Line & The Shed views"],
+      "pet_policy": "No pets allowed (service animals welcome)"
+    },
+    {
+      "name": "Abington House",
+      "address": "500 West 30th Street, New York, NY 10001",
+      "neighborhood": "Hudson Yards",
+      "borough": "Manhattan",
+      "website": "https://www.relatedrentals.com/",
+      "phone": "212-695-0030",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 4500,
+        "max": 12000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace", "Hudson Yards location"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Set",
+      "address": "455 10th Avenue, New York, NY 10018",
+      "neighborhood": "Hudson Yards",
+      "borough": "Manhattan",
+      "website": "https://www.relatedrentals.com/",
+      "phone": "212-695-9000",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 4200,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "3ELEVEN",
+      "address": "311 Eleventh Avenue, New York, NY 10001",
+      "neighborhood": "Chelsea",
+      "borough": "Manhattan",
+      "year_built": 2023,
+      "stories": 60,
+      "total_units": 935,
+      "website": "https://3elevennyc.com/",
+      "phone": "212-206-0311",
+      "management_company": "Douglaston Development",
+      "rent_range": {
+        "min": 4295,
+        "max": 9060
+      },
+      "sqft_range": {
+        "min": 460,
+        "max": 1957
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "move_in_specials": "2 months free on select 14-month leases",
+      "amenities": ["60,000+ sqft amenity space", "Outdoor pool with cabanas", "Tenant lounge with catering kitchen", "BBQ grills", "Amphitheater room", "Game room", "5,000+ sqft fitness center", "Sky Lounge on 42nd floor", "Co-working spaces", "Two dog runs", "Throw Me a Bone pet care facility"],
+      "pet_policy": "Pet-friendly - may be most pet-friendly building in NYC"
+    },
+    {
+      "name": "225 West 28th",
+      "address": "225 West 28th Street, New York, NY 10001",
+      "neighborhood": "Chelsea",
+      "borough": "Manhattan",
+      "website": "https://225west28th.com/",
+      "phone": "212-290-2250",
+      "rent_range": {
+        "min": 3800,
+        "max": 8500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Echelon Chelsea",
+      "address": "37 West 21st Street, New York, NY 10010",
+      "neighborhood": "Chelsea",
+      "borough": "Manhattan",
+      "website": "https://www.echelonchelsea.com/",
+      "phone": "212-255-2121",
+      "rent_range": {
+        "min": 4000,
+        "max": 9000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Pavilion",
+      "address": "500 East 77th Street, New York, NY 10162",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/properties/upper-east-side/the-pavilion/",
+      "phone": "212-535-5900",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3500,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["24-hour doorman", "Attended garage & valet", "Fitness center", "Children's playroom", "Landscaped rooftop sundeck", "On-site shopping center with grocery", "Spa salon", "Free shuttle to Lexington Ave & Q subway"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Flagship residence of Glenwood"
+    },
+    {
+      "name": "The Fairmont",
+      "address": "300 East 75th Street, New York, NY 10021",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/properties/upper-east-side/the-fairmont/",
+      "phone": "212-734-7500",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3200,
+        "max": 9500
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["Fountains & landscaped lighted gardens", "Circular drive entrance", "24-hour attended garage with EV charging", "On-site management office", "Fitness center", "Children's playroom", "Rooftop sundeck with river & city views", "Balconies in select units"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Lucerne",
+      "address": "350 East 79th Street, New York, NY 10075",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-535-5000",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3000,
+        "max": 8500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Marlowe",
+      "address": "245 East 93rd Street, New York, NY 10128",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-996-5000",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 2800,
+        "max": 7500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Stratford",
+      "address": "1385 York Avenue, New York, NY 10021",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-628-3900",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3000,
+        "max": 8000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Andover",
+      "address": "1675 York Avenue, New York, NY 10128",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-628-0900",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 2800,
+        "max": 7000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Barclay",
+      "address": "1755 York Avenue, New York, NY 10128",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-628-1200",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 2700,
+        "max": 6500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Brittany",
+      "address": "1775 York Avenue, New York, NY 10128",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-535-8800",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 2800,
+        "max": 7000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace", "Panoramic views of Harlem & East River"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Cambridge",
+      "address": "500 East 85th Street, New York, NY 10028",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-734-7800",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3000,
+        "max": 8000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Paramount Tower",
+      "address": "240 East 39th Street, New York, NY 10016",
+      "neighborhood": "Midtown East",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-682-6900",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3200,
+        "max": 9000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Bamford",
+      "address": "333 East 56th Street, New York, NY 10022",
+      "neighborhood": "Midtown East",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-753-0500",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3000,
+        "max": 8500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Belmont",
+      "address": "320 East 46th Street, New York, NY 10017",
+      "neighborhood": "Midtown East",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-682-8800",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3000,
+        "max": 8000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Bristol",
+      "address": "300 East 56th Street, New York, NY 10022",
+      "neighborhood": "Midtown East",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-759-0200",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3200,
+        "max": 9000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Crystal Green",
+      "address": "330 West 39th Street, New York, NY 10018",
+      "neighborhood": "Midtown West",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-868-1400",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3500,
+        "max": 9500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Emerald Green",
+      "address": "320 West 38th Street, New York, NY 10018",
+      "neighborhood": "Midtown West",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-695-4400",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3400,
+        "max": 9000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Sage",
+      "address": "329 West 38th Street, New York, NY 10018",
+      "neighborhood": "Midtown West",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-868-1500",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3300,
+        "max": 8500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Encore",
+      "address": "175 West 60th Street, New York, NY 10023",
+      "neighborhood": "Lincoln Center",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-586-0100",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3800,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace", "Lincoln Center proximity"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Hawthorn Park",
+      "address": "160 West 62nd Street, New York, NY 10023",
+      "neighborhood": "Lincoln Center",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-580-0600",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3600,
+        "max": 9500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Regent",
+      "address": "45 West 60th Street, New York, NY 10023",
+      "neighborhood": "Lincoln Center",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-581-1700",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3500,
+        "max": 9000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Barclay Tower",
+      "address": "10 Barclay Street, New York, NY 10007",
+      "neighborhood": "Tribeca",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-406-0700",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 4000,
+        "max": 11000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace", "Financial District location"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Liberty Plaza",
+      "address": "10 Liberty Street, New York, NY 10006",
+      "neighborhood": "Financial District",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-240-3400",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 3800,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "2 Gold Street",
+      "address": "2 Gold Street, New York, NY 10038",
+      "neighborhood": "Financial District",
+      "borough": "Manhattan",
+      "year_built": 2005,
+      "stories": 51,
+      "total_units": 839,
+      "website": "https://tfc.com/",
+      "phone": "212-344-0200",
+      "management_company": "TF Cornerstone",
+      "rent_range": {
+        "min": 4875,
+        "max": 7555
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Pool", "Fitness center", "Children's playroom", "Garage"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "45 Wall Street",
+      "address": "45 Wall Street, New York, NY 10005",
+      "neighborhood": "Financial District",
+      "borough": "Manhattan",
+      "year_built": 1997,
+      "stories": 27,
+      "total_units": 435,
+      "website": "https://tfc.com/",
+      "phone": "212-269-4500",
+      "management_company": "TF Cornerstone",
+      "rent_range": {
+        "min": 3500,
+        "max": 8000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Rooftop lounge with pool table", "Big-screen TV", "Expansive terrace", "Health club", "Indoor golf practice", "Laundry rooms", "Garage"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Steps from NYSE, Federal Hall, Trinity Church"
+    },
+    {
+      "name": "505 West 37th",
+      "address": "505 West 37th Street, New York, NY 10018",
+      "neighborhood": "Hudson Yards",
+      "borough": "Manhattan",
+      "website": "https://tfc.com/",
+      "phone": "212-967-3737",
+      "management_company": "TF Cornerstone",
+      "rent_range": {
+        "min": 4000,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "200 West 26th Street",
+      "address": "200 West 26th Street, New York, NY 10001",
+      "neighborhood": "Chelsea",
+      "borough": "Manhattan",
+      "website": "https://tfc.com/",
+      "phone": "212-929-2626",
+      "management_company": "TF Cornerstone",
+      "rent_range": {
+        "min": 3800,
+        "max": 9000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "70 Pine",
+      "address": "70 Pine Street, New York, NY 10270",
+      "neighborhood": "Financial District",
+      "borough": "Manhattan",
+      "year_built": 1932,
+      "stories": 66,
+      "total_units": 612,
+      "website": "https://www.rosenyc.com/rentals/70-pine/",
+      "phone": "212-269-7070",
+      "management_company": "Rose Associates",
+      "rent_range": {
+        "min": 5000,
+        "max": 15000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "floor_plans": [
+        {"unit": "1123", "beds": 2, "rent": 8320}
+      ],
+      "amenities": ["22,000 sqft amenities", "Fitness center with classes", "Pilates & yoga", "Turf track", "Bowling alley", "Virtual golf", "Billiards & ping pong lounge", "Screening room in historic bank vault", "Children's playroom", "Valet services", "Michelin Star restaurants (Crown Shy, Saga)", "Overstory cocktail bar", "City Acres gourmet market on-site"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Historic Art Deco landmark, formerly 3rd largest building in the world",
+      "fees": {
+        "application": 20,
+        "amenity_fee": 85
+      }
+    },
+    {
+      "name": "21 West Street",
+      "address": "21 West Street, New York, NY 10006",
+      "neighborhood": "Financial District",
+      "borough": "Manhattan",
+      "website": "https://www.rosenyc.com/",
+      "phone": "212-786-2121",
+      "management_company": "Rose Associates",
+      "rent_range": {
+        "min": 4500,
+        "max": 12000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace", "Harbor views"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "London Terrace Gardens",
+      "address": "415 West 23rd Street, New York, NY 10011",
+      "neighborhood": "Chelsea",
+      "borough": "Manhattan",
+      "year_built": 1934,
+      "stories": 16,
+      "total_units": 921,
+      "website": "https://www.rosenyc.com/rentals/london-terrace-gardens/",
+      "phone": "212-929-5900",
+      "management_company": "Rose Associates",
+      "rent_range": {
+        "min": 3500,
+        "max": 9000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["24-hour doorman", "On-site parking garage", "Fitness center", "Resident lounge with Starbucks", "Flat-screen TV", "Fireplace", "Bike rooms", "Tenant storage", "Landscaped garden courtyard"],
+      "pet_policy": "Pet-friendly",
+      "utilities_included": ["Heat", "Gas", "Water", "Electricity"]
+    },
+    {
+      "name": "Renoir House",
+      "address": "225 East 63rd Street, New York, NY 10065",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.rosenyc.com/",
+      "phone": "212-935-2250",
+      "management_company": "Rose Associates",
+      "rent_range": {
+        "min": 3500,
+        "max": 9000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Electra",
+      "address": "354 East 91st Street, New York, NY 10128",
+      "neighborhood": "Upper East Side",
+      "borough": "Manhattan",
+      "website": "https://www.rosenyc.com/",
+      "phone": "212-831-3540",
+      "management_company": "Rose Associates",
+      "rent_range": {
+        "min": 3000,
+        "max": 7500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Nathaniel",
+      "address": "138 East 12th Street, New York, NY 10003",
+      "neighborhood": "East Village",
+      "borough": "Manhattan",
+      "website": "https://www.rosenyc.com/",
+      "phone": "212-777-1380",
+      "management_company": "Rose Associates",
+      "rent_range": {
+        "min": 4000,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Larstrand",
+      "address": "277 West 77th Street, New York, NY 10024",
+      "neighborhood": "Upper West Side",
+      "borough": "Manhattan",
+      "website": "https://www.rosenyc.com/",
+      "phone": "212-799-7700",
+      "management_company": "Rose Associates",
+      "rent_range": {
+        "min": 3500,
+        "max": 9500
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "SKY",
+      "address": "605 West 42nd Street, New York, NY 10036",
+      "neighborhood": "Hell's Kitchen",
+      "borough": "Manhattan",
+      "year_built": 2015,
+      "stories": 71,
+      "total_units": 1175,
+      "website": "https://www.liveatsky.com/",
+      "phone": "212-594-6050",
+      "management_company": "Moinian Group",
+      "rent_range": {
+        "min": 3680,
+        "max": 12000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "floor_plans": [
+        {"type": "1BR Penthouse", "sqft": 830, "rent": 6700},
+        {"type": "2BR Penthouse", "rent": 7375}
+      ],
+      "move_in_specials": "2 months free on 14-month lease; 1 year free amenities with 2-year lease",
+      "amenities": ["70,000 sqft athletic club", "NBA regulation basketball court", "Indoor pool", "Two outdoor zero-edge pools", "Turkish-style hammam spa", "Sundeck", "Skydeck", "Children's playroom", "Media room", "Billiards lounge", "Cafe with free breakfast", "Pet spa", "Bike valet", "Life Time partnership"],
+      "pet_policy": "Pet-friendly with pet spa",
+      "notable": "Largest rental building in NYC"
+    },
+    {
+      "name": "Oskar",
+      "address": "555 West 43rd Street, New York, NY 10036",
+      "neighborhood": "Hell's Kitchen",
+      "borough": "Manhattan",
+      "stories": 44,
+      "website": "https://www.moinian.com/",
+      "phone": "212-257-2045",
+      "management_company": "Moinian Group",
+      "rent_range": {
+        "min": 3689,
+        "max": 8000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "move_in_specials": "3 months free on 27-month lease",
+      "amenities": ["24-hour concierge", "Resident lounge with workspace", "Cafe seating area", "Library", "Fitness studio with Peloton, Technogym, Precor", "Patio garden", "Landscaped rooftop terrace with Hudson River views", "Complimentary resident shuttle", "Keyless smart locks", "Nest thermostats", "Building-wide WiFi"],
+      "pet_policy": "Pet-friendly (cats and dogs allowed)"
+    },
+    {
+      "name": "Atelier",
+      "address": "635 West 42nd Street, New York, NY 10036",
+      "neighborhood": "Hell's Kitchen",
+      "borough": "Manhattan",
+      "year_built": 2007,
+      "stories": 46,
+      "total_units": 478,
+      "website": "https://www.theateliernyc.com/",
+      "phone": "212-967-6350",
+      "management_company": "Moinian Group",
+      "rent_range": {
+        "min": 3395,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["Sky-lit indoor pool", "12,000 sqft health club", "Rooftop lounge & terraces", "Daily breakfast in lobby", "Basketball court", "Tennis court", "Golf driving range", "Movie theater", "BBQ grills", "Free bicycles", "Crosstown shuttle bus", "Ice skating rink on rooftop (winter)", "Solar panels - Green Building certified"],
+      "pet_policy": "Pet-friendly",
+      "fees": {
+        "holding_deposit": 500,
+        "application_fee": 20,
+        "421a_surcharge": 89,
+        "amenity_fee": 60
+      }
+    },
+    {
+      "name": "Atlas New York",
+      "address": "66 West 38th Street, New York, NY 10018",
+      "neighborhood": "Midtown",
+      "borough": "Manhattan",
+      "year_built": 2001,
+      "stories": 48,
+      "total_units": 374,
+      "website": "https://www.atlasny.com/",
+      "phone": "212-302-6638",
+      "management_company": "Gotham Organization",
+      "rent_range": {
+        "min": 3725,
+        "max": 7070
+      },
+      "sqft_range": {
+        "min": 435,
+        "max": 1156
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Concierge services", "Fitness club with studio", "Complimentary bike storage", "Valet services", "Sky terrace with 360-degree views", "Lounge with library & terrace", "Daily coffee & breakfast service"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Gotham West",
+      "address": "550 West 45th Street, New York, NY 10036",
+      "neighborhood": "Hell's Kitchen",
+      "borough": "Manhattan",
+      "year_built": 2013,
+      "stories": 32,
+      "total_units": 1238,
+      "website": "https://gothamwestnyc.com/",
+      "phone": "212-974-5500",
+      "management_company": "Gotham Organization",
+      "rent_range": {
+        "min": 3625,
+        "max": 9000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["Game room", "Test kitchen for cooking classes", "Curated art gallery", "Business center", "Fitness center with spinning & yoga", "The Perch private courtyard", "Sky lounge with roof deck", "Movie screen", "Misting wall", "Concierge services", "Shuttle service", "Children's playroom"],
+      "pet_policy": "Pet-friendly with no pet fees"
+    },
+    {
+      "name": "The Nicole",
+      "address": "400 West 55th Street, New York, NY 10019",
+      "neighborhood": "Hell's Kitchen",
+      "borough": "Manhattan",
+      "year_built": 2003,
+      "stories": 20,
+      "total_units": 145,
+      "website": "https://www.thenicole.com/",
+      "phone": "212-247-4000",
+      "management_company": "Gotham Organization",
+      "rent_range": {
+        "min": 3276,
+        "max": 8225
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Resident-only concierge", "Expansive sundeck & outdoor lounge", "Resident lounge with co-working & WiFi", "Fitness center with Peloton", "Community events", "Outdoor children's playground", "Laundry facilities", "Dry cleaning & laundry valet", "24-hour doorman", "GothamCard benefits program"],
+      "pet_policy": "Pet-friendly with no pet fees"
+    },
+    {
+      "name": "The Maybury",
+      "address": "550 Tenth Avenue, New York, NY 10036",
+      "neighborhood": "Hudson Yards",
+      "borough": "Manhattan",
+      "website": "https://www.gothamproperties.com/",
+      "phone": "212-695-5500",
+      "management_company": "Gotham Organization",
+      "rent_range": {
+        "min": 4000,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Waterline Square",
+      "address": "645 West 59th Street, New York, NY 10069",
+      "neighborhood": "Upper West Side",
+      "borough": "Manhattan",
+      "year_built": 2019,
+      "stories": 39,
+      "total_units": 641,
+      "website": "https://www.waterlinesquare.com/",
+      "phone": "212-801-2500",
+      "management_company": "FirstService Residential",
+      "rent_range": {
+        "min": 2980,
+        "max": 15500
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "floor_plans": [
+        {"unit": "324", "beds": 0, "rent": 2980},
+        {"unit": "302", "beds": 1, "rent": 5553},
+        {"unit": "1502", "beds": 2, "rent": 7917},
+        {"unit": "1010", "beds": 3, "rent": 11500}
+      ],
+      "move_in_specials": "3 months free on 12-month lease",
+      "amenities": ["100,000+ sqft amenities", "Indoor tennis court", "Basketball court", "Squash court", "Soccer field", "Half-pipe skate park", "25m lap pool", "Kid's pool", "Steam rooms & saunas", "State-of-the-art gym", "Yoga & Pilates studios", "Boxing studio", "Rock climbing wall", "Playroom", "Gardening studio", "Recording studio", "Art studio", "Bowling alley", "Golf simulator", "Dog playground", "Cipriani food hall", "Empellon restaurant"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Three towers designed by Richard Meier, Rafael Vinoly, and Kohn Pedersen Fox"
+    },
+    {
+      "name": "One Waterline Square",
+      "address": "10 Riverside Boulevard, New York, NY 10069",
+      "neighborhood": "Upper West Side",
+      "borough": "Manhattan",
+      "year_built": 2019,
+      "website": "https://www.waterlinesquare.com/",
+      "phone": "212-801-2510",
+      "management_company": "FirstService Residential",
+      "rent_range": {
+        "min": 5000,
+        "max": 20000
+      },
+      "unit_types": ["1BR", "2BR", "3BR"],
+      "amenities": ["Shared 100,000 sqft amenity complex", "Designed by Richard Meier"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Two Waterline Square",
+      "address": "30 Riverside Boulevard, New York, NY 10069",
+      "neighborhood": "Upper West Side",
+      "borough": "Manhattan",
+      "year_built": 2019,
+      "website": "https://www.waterlinesquare.com/",
+      "phone": "212-801-2520",
+      "management_company": "FirstService Residential",
+      "rent_range": {
+        "min": 4500,
+        "max": 18000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["Shared 100,000 sqft amenity complex", "Designed by Rafael Vinoly"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Three Waterline Square",
+      "address": "639 West 59th Street, New York, NY 10069",
+      "neighborhood": "Upper West Side",
+      "borough": "Manhattan",
+      "year_built": 2019,
+      "website": "https://www.waterlinesquare.com/",
+      "phone": "212-801-2530",
+      "management_company": "FirstService Residential",
+      "rent_range": {
+        "min": 4000,
+        "max": 15000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["Shared 100,000 sqft amenity complex", "Designed by Kohn Pedersen Fox"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Grand Tier",
+      "address": "1930 Broadway, New York, NY 10023",
+      "neighborhood": "Lincoln Center",
+      "borough": "Manhattan",
+      "website": "https://www.glenwoodnyc.com/",
+      "phone": "212-580-1930",
+      "management_company": "Glenwood Management",
+      "rent_range": {
+        "min": 4000,
+        "max": 12000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace", "Lincoln Center proximity"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Corner",
+      "address": "200 West 72nd Street, New York, NY 10023",
+      "neighborhood": "Upper West Side",
+      "borough": "Manhattan",
+      "website": "https://www.relatedrentals.com/",
+      "phone": "212-595-2000",
+      "management_company": "Related Rentals",
+      "rent_range": {
+        "min": 4000,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "2 Cooper Square",
+      "address": "2 Cooper Square, New York, NY 10003",
+      "neighborhood": "East Village",
+      "borough": "Manhattan",
+      "website": "https://www.rockrose.com/",
+      "phone": "212-260-0002",
+      "management_company": "Rockrose",
+      "rent_range": {
+        "min": 4000,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Prism at Park Ave South",
+      "address": "50 East 28th Street, New York, NY 10016",
+      "neighborhood": "NoMad",
+      "borough": "Manhattan",
+      "year_built": 2016,
+      "stories": 42,
+      "total_units": 269,
+      "website": "https://www.equityapartments.com/new-york-city/nomad/prism-at-park-avenue-south-apartments",
+      "phone": "212-686-5000",
+      "management_company": "Rockrose",
+      "rent_range": {
+        "min": 4300,
+        "max": 9890
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["Lap pool", "Fitness center", "Golf room", "Bike storage", "Floor-to-ceiling windows", "In-unit washer/dryer", "Designed by Christian de Portzamparc"],
+      "pet_policy": "Pet-friendly - max 3 dogs or 3 cats per unit",
+      "walk_score": 100,
+      "transit_score": 100,
+      "fees": {
+        "421a_surcharge": {"studio": 50, "1BR": 65, "2BR": 85, "3BR": 100}
+      }
+    },
+    {
+      "name": "Beatrice",
+      "address": "105 West 29th Street, New York, NY 10001",
+      "neighborhood": "NoMad",
+      "borough": "Manhattan",
+      "website": "https://livebeatrice.com/",
+      "phone": "212-279-1050",
+      "rent_range": {
+        "min": 4500,
+        "max": 12000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "19 Dutch",
+      "address": "19 Dutch Street, New York, NY 10038",
+      "neighborhood": "Financial District",
+      "borough": "Manhattan",
+      "year_built": 2018,
+      "stories": 64,
+      "total_units": 483,
+      "website": "https://www.19dutch.com/",
+      "phone": "212-748-1919",
+      "management_company": "Bozzuto",
+      "rent_range": {
+        "min": 3469,
+        "max": 10567
+      },
+      "sqft_range": {
+        "min": 443,
+        "max": 1220
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "move_in_specials": "1 Month Free on select units",
+      "amenities": ["Fitness center", "Children's playroom", "Rooftop terrace", "Library", "Event lounge", "Great room", "Conference room", "2 kitchen spaces", "Outdoor terrace on 4th floor", "Roof lounge on 64th floor"],
+      "pet_policy": "Pet-friendly (dogs and cats)",
+      "notable": "770 feet tall glass tower with unique frit design"
+    },
+    {
+      "name": "The Capitol",
+      "address": "306 East 35th Street, New York, NY 10016",
+      "neighborhood": "NoMad",
+      "borough": "Manhattan",
+      "website": "https://www.thecapitolnyc.com/",
+      "phone": "212-213-9000",
+      "rent_range": {
+        "min": 3500,
+        "max": 8000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour doorman", "Fitness center", "Rooftop terrace"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "Rose Hill",
+      "address": "30 East 29th Street, New York, NY 10016",
+      "neighborhood": "NoMad",
+      "borough": "Manhattan",
+      "year_built": 2021,
+      "stories": 46,
+      "total_units": 121,
+      "website": "https://www.rosehillnyc.com/",
+      "phone": "212-951-9000",
+      "management_company": "Rockefeller Group",
+      "rent_range": {
+        "min": 7500,
+        "max": 20000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR", "4BR"],
+      "amenities": ["Double-height lobby with marble fireplace", "Blue Room lounge", "Landscaped courtyard", "Fhitting Room fitness center", "Squash court by SquashRx", "50-foot pool with green oxide-glazed tiles", "Dry heat sauna", "Guest suite", "Bicycle storage", "Cold storage", "Pet salon"],
+      "pet_policy": "Pet-friendly with on-site pet salon",
+      "notable": "Art Deco-inspired condominium by CetraRuddy"
+    },
+    {
+      "name": "The Eugene",
+      "address": "435 West 31st Street, New York, NY 10001",
+      "neighborhood": "Hudson Yards",
+      "borough": "Manhattan",
+      "year_built": 2017,
+      "stories": 62,
+      "total_units": 844,
+      "website": "https://www.theeugenenyc.com/",
+      "phone": "646-652-3232",
+      "management_company": "Brookfield",
+      "rent_range": {
+        "min": 3444,
+        "max": 10000
+      },
+      "sqft_range": {
+        "min": 424,
+        "max": 1410
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "move_in_specials": "$1,000 security deposit for qualified applicants",
+      "amenities": ["55,000+ sqft amenity space", "LA PALESTRA fitness center", "Regulation basketball court", "Arcade corner", "Golf simulator", "Poker room", "Billiards room", "Lounge", "Children's activity room", "Pet grooming station", "Private storage", "24-hour attended lobby", "Hudson Club rooftop terrace with grilling stations", "Private dining room", "Sunroom with bar", "Hudson River views"],
+      "pet_policy": "Pet-friendly with grooming station"
+    },
+    {
+      "name": "Lantern House",
+      "address": "515 West 18th Street, New York, NY 10011",
+      "neighborhood": "Chelsea",
+      "borough": "Manhattan",
+      "year_built": 2020,
+      "stories": 22,
+      "total_units": 181,
+      "website": "https://lanternhousenyc.com/",
+      "phone": "212-616-7000",
+      "management_company": "Related Companies",
+      "rent_range": {
+        "min": 9800,
+        "max": 25000
+      },
+      "unit_types": ["1BR", "2BR", "3BR", "4BR"],
+      "amenities": ["75-foot swimming pool", "Infrared sauna", "Cold plunge", "Hot tub", "Treatment rooms", "Steam rooms", "Equinox-managed fitness center", "Yoga room overlooking High Line", "Pilates reformer room", "Outdoor workout space", "Children's playroom", "Game room", "Library lounge", "Co-working lounge", "Garden with magnolia trees", "Private dining room & bar", "Cucina Alba restaurant on-site"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Two towers straddling the High Line, designed by Heatherwick Studio"
+    },
+    {
+      "name": "35 Hudson Yards",
+      "address": "35 Hudson Yards, New York, NY 10001",
+      "neighborhood": "Hudson Yards",
+      "borough": "Manhattan",
+      "year_built": 2019,
+      "stories": 92,
+      "total_units": 143,
+      "website": "https://www.35hudsonyards.com/",
+      "phone": "212-708-3535",
+      "management_company": "Related Companies",
+      "rent_range": {
+        "min": 19900,
+        "max": 50000
+      },
+      "unit_types": ["1BR", "2BR", "3BR", "4BR"],
+      "amenities": ["22,000 sqft private amenities", "Equinox Club & Spa", "Indoor & outdoor pools", "SoulCycle", "WS New York", "Electric Lemon restaurant by Stephen Starr", "Residents-only fitness center", "Yoga & stretching studio", "Meditation room", "Business center & boardroom", "Cocktail lounge & bar", "Screening room with wet bar", "Golf simulator lounge", "Grand terrace with Hudson River views", "Private dining room with catering"],
+      "pet_policy": "Pet-friendly",
+      "notable": "1,010-foot supertall - NYC's 5th tallest apartment building"
+    },
+    {
+      "name": "One High Line",
+      "address": "500 West 18th Street, New York, NY 10011",
+      "neighborhood": "Chelsea",
+      "borough": "Manhattan",
+      "website": "https://onehighline.com/",
+      "phone": "212-228-1500",
+      "rent_range": {
+        "min": 8000,
+        "max": 30000
+      },
+      "unit_types": ["1BR", "2BR", "3BR", "4BR"],
+      "amenities": ["High Line views", "Luxury finishes", "24-hour doorman", "Fitness center"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "111 Varick",
+      "address": "111 Varick Street, New York, NY 10013",
+      "neighborhood": "Hudson Square",
+      "borough": "Manhattan",
+      "year_built": 2020,
+      "stories": 30,
+      "total_units": 100,
+      "website": "https://111varick.com/",
+      "rent_range": {
+        "min": 5000,
+        "max": 19995
+      },
+      "sqft_range": {
+        "min": 564,
+        "max": 1804
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "Penthouse"],
+      "floor_plans": [
+        {"unit": "9E", "beds": 1, "baths": 1, "rent": 7895},
+        {"unit": "24D", "beds": 1, "baths": 1.5, "rent": 9695},
+        {"unit": "18A", "beds": 2, "baths": 2, "rent": 13500},
+        {"unit": "19A", "beds": 2, "baths": 2, "sqft": 1226, "rent": 13995},
+        {"unit": "PH2", "beds": 2, "baths": 2.5, "sqft": 1804, "rent": 19995}
+      ],
+      "amenities": ["LEED Silver certified", "Bike room", "Automated parking", "Fitness center", "Meditation/yoga room", "Club lounge", "Billiards", "Conference room", "Dining room with demo kitchen", "Private media room", "Children's playroom", "Roof deck with grilling & dining", "EV charging stations"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Undulating precast concrete facade inspired by industrial heritage"
+    },
+    {
+      "name": "Silver Towers",
+      "address": "600 West 42nd Street, New York, NY 10036",
+      "neighborhood": "Hell's Kitchen",
+      "borough": "Manhattan",
+      "year_built": 2006,
+      "stories": 60,
+      "total_units": 1116,
+      "website": "https://silvertowers.com/",
+      "management_company": "Silverstein Properties",
+      "rent_range": {
+        "min": 2980,
+        "max": 7595
+      },
+      "sqft_range": {
+        "min": 535,
+        "max": 906
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "Penthouse"],
+      "floor_plans": [
+        {"unit": "22M", "beds": 0, "rent": 3410},
+        {"unit": "22B", "beds": 1, "rent": 2980},
+        {"unit": "S34L", "beds": 1, "rent": 4390},
+        {"unit": "S31E", "beds": 2, "rent": 6121},
+        {"unit": "PHD", "beds": 2, "rent": 7595}
+      ],
+      "amenities": ["24-hour doorman", "75-foot swimming pool", "Sauna", "Rooftop lounge with BBQ & wet bar", "Tennis courts", "Basketball court", "Health club", "Courtyard playground with Tom Otterness sculpture", "In-unit Bosch washer/dryer"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Elegant twin 60-story skyscrapers designed by Costas Kondylis"
+    },
+    {
+      "name": "One South First",
+      "address": "1 South 1st Street, Brooklyn, NY 11249",
+      "neighborhood": "Williamsburg",
+      "borough": "Brooklyn",
+      "year_built": 2022,
+      "stories": 45,
+      "website": "https://www.onesouthfirst.com/",
+      "phone": "718-302-0001",
+      "management_company": "Two Trees",
+      "rent_range": {
+        "min": 4500,
+        "max": 12000
+      },
+      "sqft_range": {
+        "min": 600,
+        "max": 1100
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["Rooftop cabanas", "Outdoor pool", "Domino Park location", "Central air", "USB outlets", "In-unit washer/dryer", "Grohe bathroom fixtures", "Dimmable lighting", "Solar shades", "Blackout bedroom shades", "White oak hardwood floors"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Williamsburg's tallest building, designed by COOKFOX"
+    },
+    {
+      "name": "325 Kent",
+      "address": "325 Kent Avenue, Brooklyn, NY 11249",
+      "neighborhood": "Williamsburg",
+      "borough": "Brooklyn",
+      "year_built": 2017,
+      "stories": 16,
+      "total_units": 500,
+      "website": "https://www.325kent.com/",
+      "phone": "718-599-3250",
+      "management_company": "Two Trees",
+      "rent_range": {
+        "min": 3348,
+        "max": 8000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24-hour concierge", "Curated retail", "5-acre waterfront park access", "Rooftop outdoor grilling & dining", "Enormous windows", "Stainless steel Bosch & Blomberg appliances", "In-unit washer/dryer", "Hardwood floors", "Solar shades", "Custom closets"],
+      "pet_policy": "Pet-friendly (small dogs, cats, large dogs allowed)",
+      "notable": "First building of acclaimed Domino development, designed by SHoP Architects"
+    },
+    {
+      "name": "420 Kent",
+      "address": "420 Kent Avenue, Brooklyn, NY 11249",
+      "neighborhood": "Williamsburg",
+      "borough": "Brooklyn",
+      "stories": 22,
+      "total_units": 857,
+      "website": "https://420kent.com/",
+      "phone": "718-599-4200",
+      "rent_range": {
+        "min": 4050,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["24/7 front desk concierge", "Lifestyle concierge", "Free shuttle to J & M subway", "Outdoor rooftop pool club", "Wellness spa", "13,000+ sqft indoor/outdoor fitness", "Movement studio", "Functional training room", "Outdoor yoga pavilion", "Outdoor techno gym", "383-foot waterfront promenade", "East River Ferry access"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Three glass towers designed by ODA New York"
+    },
+    {
+      "name": "The Dime",
+      "address": "275 South 5th Street, Brooklyn, NY 11211",
+      "neighborhood": "Williamsburg",
+      "borough": "Brooklyn",
+      "year_built": 2020,
+      "stories": 23,
+      "total_units": 177,
+      "website": "https://residences.thedime.com/",
+      "phone": "718-218-3463",
+      "rent_range": {
+        "min": 2680,
+        "max": 6500
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "floor_plans": [
+        {"type": "Studio", "baths": 1, "rent": 2680},
+        {"type": "1BR", "baths": 1, "rent": 3460},
+        {"type": "2BR", "baths": 2, "rent": 5065},
+        {"type": "3BR", "baths": 2, "rent": 5780}
+      ],
+      "amenities": ["Fully-attended lobby", "Fitness center with outdoor space", "Half-court basketball", "Penthouse lounge", "Expansive outdoor terrace", "Multiple dining areas", "Grills", "Great lawn", "Community garden", "24-hour front desk", "Bike storage", "Rooftop deck"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "West Wharf",
+      "address": "21 India Street, Brooklyn, NY 11222",
+      "neighborhood": "Greenpoint",
+      "borough": "Brooklyn",
+      "website": "https://westwharf.com/",
+      "phone": "718-389-2100",
+      "rent_range": {
+        "min": 3500,
+        "max": 10000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["Harbor House amenities", "4+ floors of health & wellness", "Indoor & outdoor pools", "State-of-the-art fitness center", "Full spa with plunge pools", "Hammam", "Dry sauna", "Private massage rooms"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Greenpoint",
+      "address": "21 India Street, Brooklyn, NY 11222",
+      "neighborhood": "Greenpoint",
+      "borough": "Brooklyn",
+      "year_built": 2018,
+      "stories": 40,
+      "total_units": 287,
+      "website": "https://thegreenpoint.nyc/",
+      "rent_range": {
+        "min": 2963,
+        "max": 7734
+      },
+      "sqft_range": {
+        "min": 478,
+        "max": 1106
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "floor_plans": [
+        {"type": "Studio", "sqft": 523, "rent": 3970},
+        {"type": "1BR", "sqft": 655, "rent": 4325},
+        {"type": "2BR", "sqft": 922, "rent": 7550}
+      ],
+      "amenities": ["30,000 sqft amenities", "Fitness center with yoga studio", "Half basketball court", "Co-working spaces with waterfront views", "Children's playroom", "Billiards room", "Multiple outdoor terraces & lounges", "Wide plank walnut floors", "10-foot ceilings", "Floor-to-ceiling windows"],
+      "pet_policy": "Pet-friendly",
+      "notable": "40-story waterfront tower designed by Ismael Levy"
+    },
+    {
+      "name": "Lorimer House",
+      "address": "555 Broadway, Brooklyn, NY 11206",
+      "neighborhood": "Williamsburg",
+      "borough": "Brooklyn",
+      "website": "https://lorimerhousebk.com/",
+      "phone": "718-384-5550",
+      "rent_range": {
+        "min": 3500,
+        "max": 8000
+      },
+      "unit_types": ["1BR", "2BR", "3BR"],
+      "amenities": ["40,000+ sqft indoor/outdoor amenities", "Attended lobby & mailroom", "Coworking lounge with conference room", "Fitness center", "8th-story social terrace", "Roof terrace with outdoor kitchen", "Dog run", "Floor-to-ceiling windows", "Interiors by Durukan Design", "Custom closets", "In-unit laundry"],
+      "pet_policy": "Pet-friendly"
+    },
+    {
+      "name": "The Ashland",
+      "address": "250 Ashland Place, Brooklyn, NY 11217",
+      "neighborhood": "Fort Greene",
+      "borough": "Brooklyn",
+      "year_built": 2016,
+      "stories": 53,
+      "total_units": 580,
+      "website": "https://www.theashlandbk.com/",
+      "phone": "718-246-2500",
+      "management_company": "Gotham Organization",
+      "rent_range": {
+        "min": 2300,
+        "max": 5992
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["24-hour doorman", "Personal concierge", "Rooftop lounge with outdoor terraces", "3rd floor outdoor terrace with movie theater & bars", "BBQ area", "Fitness club with Peloton", "Yoga studio", "Outdoor fitness area", "Resident lounge with co-working", "Demonstration kitchen", "Business center", "Billiard room", "Screening room", "Children's playroom", "Complimentary bike storage", "Gotham Market dining hall"],
+      "pet_policy": "Pet-friendly with no fee",
+      "notable": "Brooklyn's Cultural District location, designed by SPAN Architects"
+    },
+    {
+      "name": "The Dupont",
+      "address": "16 Dupont Street, Brooklyn, NY 11222",
+      "neighborhood": "Greenpoint",
+      "borough": "Brooklyn",
+      "year_built": 2024,
+      "stories": 41,
+      "total_units": 381,
+      "website": "https://thedupontbk.com/",
+      "phone": "718-389-1490",
+      "management_company": "Rockefeller Group",
+      "rent_range": {
+        "min": 3500,
+        "max": 8000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["Rooftop clubhouse", "Heated outdoor pool", "Sundeck", "Social lounge", "Gaming room", "Children's play area", "Co-working lounges", "Fitness center", "Spa facilities", "East River waterfront access", "East River Ferry access", "9'8\" ceilings", "Hardwood oak flooring", "Keyless entry", "In-unit washer/dryer"],
+      "pet_policy": "Pet-friendly with gym & pool"
+    },
+    {
+      "name": "One Williamsburg Wharf",
+      "address": "482 Kent Avenue, Brooklyn, NY 11249",
+      "neighborhood": "Williamsburg",
+      "borough": "Brooklyn",
+      "year_built": 2025,
+      "stories": 22,
+      "total_units": 89,
+      "website": "https://www.onewilliamsburgwharf.com/",
+      "management_company": "Naftali Group",
+      "rent_range": {
+        "min": 7750,
+        "max": 15000
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "amenities": ["Rooftop pool deck (converts to ice rink in winter)", "World-class amenities", "Glass and metal facade with layered picture frame windows"],
+      "pet_policy": "Pet-friendly",
+      "notable": "First of five towers in Williamsburg Wharf development, designed by Brandon Haw Architecture"
+    },
+    {
+      "name": "One Domino Square",
+      "address": "346 Kent Avenue, Brooklyn, NY 11249",
+      "neighborhood": "Williamsburg",
+      "borough": "Brooklyn",
+      "year_built": 2024,
+      "stories": 42,
+      "total_units": 399,
+      "website": "https://www.onedominosquare.com/",
+      "management_company": "Two Trees",
+      "rent_range": {
+        "min": 5250,
+        "max": 11000
+      },
+      "unit_types": ["Studio", "1BR", "2BR"],
+      "amenities": ["45,000+ sqft amenities across 5 floors", "Resort-style sundeck with heated pool", "Outdoor shower", "Indoor pools", "Fitness center", "Resident lounges", "Outdoor terraces", "The Club at 1DSQ", "Bosch kitchen appliances with induction", "Caesarstone countertops", "In-unit washer/dryer", "Smart home thermostat", "Keyless entry", "Customized closets"],
+      "pet_policy": "Pet-friendly",
+      "notable": "Designed by Annabelle Selldorf on Domino Park waterfront"
+    },
+    {
+      "name": "The Brooklyn Tower",
+      "address": "9 DeKalb Avenue, Brooklyn, NY 11201",
+      "neighborhood": "Downtown Brooklyn",
+      "borough": "Brooklyn",
+      "year_built": 2022,
+      "stories": 92,
+      "total_units": 278,
+      "website": "https://www.thebrooklyntower.com/",
+      "rent_range": {
+        "min": 3940,
+        "max": 15000
+      },
+      "sqft_range": {
+        "min": 500,
+        "max": 1054
+      },
+      "unit_types": ["Studio", "1BR", "2BR", "3BR"],
+      "floor_plans": [
+        {"type": "Studio", "rent": 3750},
+        {"type": "1BR", "rent": 4640},
+        {"type": "2BR", "rent": 6975},
+        {"type": "3BR", "rent": 11825}
+      ],
+      "amenities": ["120,000+ sqft amenities", "Life Time Fitness center (Brooklyn's largest)", "Gustavino dome pool & terrace", "75-foot lap pool", "Kids pool", "Whirlpool", "Sundecks with hammock lounge", "Outdoor BBQ & fire pit", "Basketball court at 629 feet", "Children's playground", "Dog run", "Theater with wet bar", "Library lounge with co-working", "Sky Lounge on 85th floor"],
+      "pet_policy": "Pet-friendly with dog run",
+      "notable": "Brooklyn's tallest building, designed by SHoP Architects"
+    }
+  ]
+}
