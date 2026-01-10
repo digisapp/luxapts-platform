@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X } from "lucide-react";
+import Image from "next/image";
+import { Search, SlidersHorizontal, Building2, MapPin, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,77 +14,67 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { formatPrice } from "@/lib/utils";
 
-interface SearchResult {
-  building: {
-    id: string;
-    name: string;
-    address_1: string;
-    zip: string;
-    lat: number;
-    lng: number;
-    pet_policy: string | null;
-    parking_policy: string | null;
-    neighborhoods: { slug: string; name: string } | null;
-  };
-  unit: {
-    id: string;
-    unit_number: string | null;
-    beds: number | null;
-    baths: number | null;
-    sqft: number | null;
-    available_on: string | null;
-  };
-  pricing: {
-    rent: number;
-    net_effective_rent: number | null;
-    lease_term_months: number | null;
-    captured_at: string;
-  } | null;
+interface BuildingResult {
+  id: string;
+  name: string;
+  address: string;
+  zip: string | null;
+  year_built: number | null;
+  stories: number | null;
+  pet_policy: string | null;
+  description: string | null;
+  city: { id: string; name: string; slug: string } | null;
+  neighborhood: { id: string; name: string; slug: string } | null;
+  rent_min: number | null;
+  rent_max: number | null;
+  image: string | null;
+  move_in_specials: string | null;
+  total_units: number | null;
 }
 
-interface SearchResponse {
-  city: string;
-  captured_at_max: string | null;
-  results: SearchResult[];
+interface BrowseResponse {
+  total: number;
+  results: BuildingResult[];
 }
 
 export default function SearchPage() {
-  const [city, setCity] = useState("nyc");
-  const [bedsMin, setBedsMin] = useState("");
-  const [bedsMax, setBedsMax] = useState("");
+  const [city, setCity] = useState("miami");
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
-  const [sort, setSort] = useState("best_match");
   const [showFilters, setShowFilters] = useState(false);
 
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<BuildingResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [capturedAt, setCapturedAt] = useState<string | null>(null);
 
   const handleSearch = async () => {
     setLoading(true);
     try {
       const body: Record<string, unknown> = {
         city_slug: city,
-        sort,
-        limit: 20,
+        limit: 50,
       };
 
-      if (bedsMin) body.beds_min = parseInt(bedsMin);
-      if (bedsMax) body.beds_max = parseInt(bedsMax);
-      if (budgetMin) body.budget_min = parseInt(budgetMin);
-      if (budgetMax) body.budget_max = parseInt(budgetMax);
-
-      const res = await fetch("/api/search", {
+      const res = await fetch("/api/browse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
       if (res.ok) {
-        const data: SearchResponse = await res.json();
-        setResults(data.results);
-        setCapturedAt(data.captured_at_max);
+        const data: BrowseResponse = await res.json();
+        let filtered = data.results;
+
+        // Client-side budget filtering
+        if (budgetMin) {
+          const min = parseInt(budgetMin);
+          filtered = filtered.filter(b => !b.rent_min || b.rent_min >= min);
+        }
+        if (budgetMax) {
+          const max = parseInt(budgetMax);
+          filtered = filtered.filter(b => !b.rent_max || b.rent_max <= max);
+        }
+
+        setResults(filtered);
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -95,7 +86,7 @@ export default function SearchPage() {
   useEffect(() => {
     handleSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [city, sort]);
+  }, [city]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -110,7 +101,7 @@ export default function SearchPage() {
                 <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search buildings, neighborhoods, or try AI: '2 bed with rooftop'"
+                  placeholder="Search buildings, neighborhoods..."
                   className="h-12 pl-10"
                 />
               </div>
@@ -120,12 +111,8 @@ export default function SearchPage() {
                   <SelectValue placeholder="Select city" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="nyc">New York City</SelectItem>
                   <SelectItem value="miami">Miami</SelectItem>
-                  <SelectItem value="la">Los Angeles</SelectItem>
-                  <SelectItem value="austin">Austin</SelectItem>
-                  <SelectItem value="chicago">Chicago</SelectItem>
-                  <SelectItem value="sf">San Francisco</SelectItem>
+                  <SelectItem value="new-york">New York City</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -157,41 +144,7 @@ export default function SearchPage() {
                   </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-4">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">Beds (min)</label>
-                    <Select value={bedsMin} onValueChange={setBedsMin}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Any" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Any</SelectItem>
-                        <SelectItem value="0">Studio</SelectItem>
-                        <SelectItem value="1">1</SelectItem>
-                        <SelectItem value="2">2</SelectItem>
-                        <SelectItem value="3">3</SelectItem>
-                        <SelectItem value="4">4+</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">Beds (max)</label>
-                    <Select value={bedsMax} onValueChange={setBedsMax}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Any" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Any</SelectItem>
-                        <SelectItem value="0">Studio</SelectItem>
-                        <SelectItem value="1">1</SelectItem>
-                        <SelectItem value="2">2</SelectItem>
-                        <SelectItem value="3">3</SelectItem>
-                        <SelectItem value="4">4+</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
+                <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-medium">Min Budget</label>
                     <Input
@@ -218,8 +171,6 @@ export default function SearchPage() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setBedsMin("");
-                      setBedsMax("");
                       setBudgetMin("");
                       setBudgetMax("");
                     }}
@@ -235,27 +186,12 @@ export default function SearchPage() {
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">
-                {results.length} {results.length === 1 ? "Apartment" : "Apartments"} Found
+                {results.length} {results.length === 1 ? "Building" : "Buildings"} Found
               </h1>
-              {capturedAt && (
-                <p className="text-sm text-muted-foreground">
-                  Prices as of {new Date(capturedAt).toLocaleString()}
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground">
+                Luxury apartments in {city === "miami" ? "Miami" : city === "new-york" ? "New York City" : city}
+              </p>
             </div>
-
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="best_match">Best Match</SelectItem>
-                <SelectItem value="price_low">Price: Low to High</SelectItem>
-                <SelectItem value="price_high">Price: High to Low</SelectItem>
-                <SelectItem value="sqft_high">Largest First</SelectItem>
-                <SelectItem value="newest">Newest</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           {/* Results Grid */}
@@ -269,11 +205,6 @@ export default function SearchPage() {
                     <div className="p-4 space-y-3">
                       <Skeleton className="h-6 w-3/4" />
                       <Skeleton className="h-4 w-1/2" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-6 w-16" />
-                        <Skeleton className="h-6 w-16" />
-                        <Skeleton className="h-6 w-16" />
-                      </div>
                       <Skeleton className="h-8 w-24" />
                     </div>
                   </CardContent>
@@ -282,77 +213,87 @@ export default function SearchPage() {
             ) : results.length === 0 ? (
               <div className="col-span-full py-12 text-center">
                 <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">No apartments found</h3>
+                <h3 className="mt-4 text-lg font-semibold">No buildings found</h3>
                 <p className="mt-2 text-muted-foreground">
                   Try adjusting your filters or searching in a different city
                 </p>
               </div>
             ) : (
-              results.map((result) => (
+              results.map((building) => (
                 <Link
-                  key={result.unit.id}
-                  href={`/buildings/${result.building.id}`}
+                  key={building.id}
+                  href={`/buildings/${building.id}`}
                 >
                   <Card className="group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1">
                     <CardContent className="p-0">
-                      {/* Image placeholder */}
+                      {/* Image */}
                       <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Building2 className="h-16 w-16 text-muted-foreground/30" />
-                        </div>
-                        {result.building.neighborhoods && (
+                        {building.image ? (
+                          <img
+                            src={building.image}
+                            alt={building.name}
+                            className="absolute inset-0 h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Building2 className="h-16 w-16 text-muted-foreground/30" />
+                          </div>
+                        )}
+                        {building.neighborhood && (
                           <Badge className="absolute top-3 left-3" variant="secondary">
-                            {result.building.neighborhoods.name}
+                            {building.neighborhood.name}
+                          </Badge>
+                        )}
+                        {building.move_in_specials && (
+                          <Badge className="absolute top-3 right-3 bg-green-600">
+                            Special Offer
                           </Badge>
                         )}
                       </div>
 
                       <div className="p-4">
                         <h3 className="font-semibold group-hover:text-primary transition-colors">
-                          {result.building.name}
+                          {building.name}
                         </h3>
                         <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
                           <MapPin className="h-3 w-3" />
-                          {result.building.address_1}
+                          {building.address}
                         </p>
 
                         <div className="mt-3 flex flex-wrap gap-2">
-                          <Badge variant="outline" className="gap-1">
-                            <Bed className="h-3 w-3" />
-                            {result.unit.beds === 0 ? "Studio" : `${result.unit.beds} bed`}
-                          </Badge>
-                          {result.unit.baths && (
-                            <Badge variant="outline" className="gap-1">
-                              <Bath className="h-3 w-3" />
-                              {result.unit.baths} bath
+                          {building.year_built && (
+                            <Badge variant="outline">
+                              Built {building.year_built}
                             </Badge>
                           )}
-                          {result.unit.sqft && (
-                            <Badge variant="outline" className="gap-1">
-                              <Square className="h-3 w-3" />
-                              {result.unit.sqft.toLocaleString()} sqft
+                          {building.stories && (
+                            <Badge variant="outline">
+                              {building.stories} floors
                             </Badge>
                           )}
                         </div>
 
                         <div className="mt-4 flex items-end justify-between">
                           <div>
-                            {result.pricing ? (
+                            {building.rent_min ? (
                               <>
                                 <span className="text-xl font-bold">
-                                  {formatPrice(result.pricing.rent)}
+                                  {formatPrice(building.rent_min)}
                                 </span>
+                                {building.rent_max && building.rent_max !== building.rent_min && (
+                                  <span className="text-muted-foreground">
+                                    {" "}- {formatPrice(building.rent_max)}
+                                  </span>
+                                )}
                                 <span className="text-muted-foreground">/mo</span>
                               </>
                             ) : (
                               <span className="text-muted-foreground">Contact for pricing</span>
                             )}
                           </div>
-                          {result.unit.available_on && (
-                            <span className="text-sm text-muted-foreground">
-                              Avail {new Date(result.unit.available_on).toLocaleDateString()}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </CardContent>
