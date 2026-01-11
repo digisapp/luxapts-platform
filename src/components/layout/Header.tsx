@@ -51,18 +51,6 @@ export function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
           <Link
-            href="/search"
-            className="text-sm text-white/60 hover:text-white transition-colors"
-          >
-            Search
-          </Link>
-          <Link
-            href="/cities"
-            className="text-sm text-white/60 hover:text-white transition-colors"
-          >
-            Cities
-          </Link>
-          <Link
             href="/favorites"
             className="relative text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1.5"
           >
@@ -158,20 +146,6 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-16 bg-black/95 backdrop-blur-xl">
           <nav className="flex flex-col gap-1 px-6 py-8">
-            <Link
-              href="/search"
-              className="py-3 text-lg text-zinc-400 hover:text-white transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Search
-            </Link>
-            <Link
-              href="/cities"
-              className="py-3 text-lg text-zinc-400 hover:text-white transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Cities
-            </Link>
             <Link
               href="/favorites"
               className="py-3 text-lg text-zinc-400 hover:text-white transition-colors flex items-center gap-2"
