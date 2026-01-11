@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, Users, LayoutDashboard, Settings, FileText, LogOut } from "lucide-react";
+import { Building2, Users, LayoutDashboard, Settings, FileText, LogOut, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function AdminLayout({
@@ -49,6 +49,13 @@ export default function AdminLayout({
             >
               <FileText className="h-4 w-4" />
               Agents
+            </Link>
+            <Link
+              href="/admin/import"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent transition-colors"
+            >
+              <Upload className="h-4 w-4" />
+              Import
             </Link>
             <Link
               href="/admin/settings"
