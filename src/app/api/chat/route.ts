@@ -162,8 +162,9 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Chat error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to process chat message" },
+      { error: "Failed to process chat message", details: errorMessage },
       { status: 500 }
     );
   }
