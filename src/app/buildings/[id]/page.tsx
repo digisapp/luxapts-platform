@@ -31,6 +31,7 @@ import {
 import { ImageGallery } from "./ImageGallery";
 import { BuildingPageClient } from "./BuildingPageClient";
 import { BuildingContactButtons } from "./BuildingContactButtons";
+import { StickyMobileCTA } from "@/components/ui/StickyMobileCTA";
 
 interface BuildingPageProps {
   params: Promise<{ id: string }>;
@@ -599,6 +600,13 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
           </div>
         </div>
       </main>
+
+      <StickyMobileCTA
+        buildingId={building.id}
+        buildingName={building.name}
+        citySlug={building.cities?.slug || ""}
+        price={priceRange?.min}
+      />
 
       <Footer />
     </div>

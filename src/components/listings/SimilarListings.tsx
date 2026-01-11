@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, MapPin, Bed, Bath, Sparkles } from "lucide-react";
+import { Building2, MapPin, Bed, Bath, Sparkles, PawPrint, Car } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
 interface SimilarListing {
@@ -18,6 +18,8 @@ interface SimilarListing {
   minBeds: number;
   maxBeds: number;
   unitCount: number;
+  petPolicy?: string | null;
+  parkingPolicy?: string | null;
 }
 
 interface SimilarListingsProps {
@@ -138,6 +140,16 @@ export function SimilarListings({
                 <Badge variant="secondary" className="text-xs px-1.5 py-0">
                   {listing.unitCount} {listing.unitCount === 1 ? "unit" : "units"}
                 </Badge>
+                {listing.petPolicy && (
+                  <span title="Pet friendly">
+                    <PawPrint className="h-3 w-3 text-green-600" />
+                  </span>
+                )}
+                {listing.parkingPolicy && (
+                  <span title="Parking available">
+                    <Car className="h-3 w-3 text-blue-600" />
+                  </span>
+                )}
               </div>
             </div>
           </Link>

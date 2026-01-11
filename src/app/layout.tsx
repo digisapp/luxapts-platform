@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { CompareBar } from "@/components/compare/CompareBar";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
+          <MobileBottomNav />
           <CompareBar />
           <ChatWidget />
         </AuthProvider>

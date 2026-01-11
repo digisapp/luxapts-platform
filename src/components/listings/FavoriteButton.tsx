@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavorites, FavoriteItem } from "@/hooks/useFavorites";
@@ -19,14 +20,29 @@ export function FavoriteButton({
   className,
 }: FavoriteButtonProps) {
   const { toggleItem, isFavorite, isLoaded } = useFavorites();
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const isFav = isFavorite(item.id);
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Trigger animation when adding to favorites
+    if (!isFav) {
+      setIsAnimating(true);
+    }
+
     toggleItem(item);
   };
+
+  // Reset animation state
+  useEffect(() => {
+    if (isAnimating) {
+      const timer = setTimeout(() => setIsAnimating(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isAnimating]);
 
   const sizeClasses = {
     sm: "h-7 w-7",
@@ -70,7 +86,7 @@ export function FavoriteButton({
       onClick={handleClick}
       className={cn(
         sizeClasses[size],
-        "rounded-full bg-background/80 backdrop-blur-sm hover:bg-background",
+        "rounded-full bg-background/80 backdrop-blur-sm hover:bg-background press-effect",
         isFav && "text-red-500 hover:text-red-600",
         className
       )}
@@ -78,7 +94,8 @@ export function FavoriteButton({
       <Heart
         className={cn(
           iconSizes[size],
-          isFav && "fill-current"
+          isFav && "fill-current",
+          isAnimating && "heart-pop"
         )}
       />
     </Button>

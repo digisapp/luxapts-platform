@@ -37,6 +37,8 @@ export async function GET(req: NextRequest) {
         id,
         name,
         address_1,
+        pet_policy,
+        parking_policy,
         neighborhoods:neighborhood_id (name, slug)
       `)
       .eq("city_id", city.id)
@@ -68,6 +70,8 @@ export async function GET(req: NextRequest) {
           id,
           name,
           address_1,
+          pet_policy,
+          parking_policy,
           neighborhoods:neighborhood_id (name, slug)
         `)
         .eq("city_id", city.id)
@@ -99,6 +103,8 @@ async function processBuildings(
     id: string;
     name: string;
     address_1: string;
+    pet_policy: string | null;
+    parking_policy: string | null;
     neighborhoods: { name: string; slug: string } | { name: string; slug: string }[] | null;
   }>,
   minPrice: string | null,
@@ -196,6 +202,8 @@ async function processBuildings(
         minBeds: data.minBeds,
         maxBeds: data.maxBeds,
         unitCount: data.unitCount,
+        petPolicy: b.pet_policy,
+        parkingPolicy: b.parking_policy,
       };
     })
     .slice(0, 5);

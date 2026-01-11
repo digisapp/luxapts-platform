@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List } from "lucide-react";
+import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,6 +40,7 @@ interface SearchResult {
     lat: number | null;
     lng: number | null;
     pet_policy: string | null;
+    parking_policy: string | null;
     neighborhoods: { slug: string; name: string } | null;
   };
   unit: {
@@ -428,21 +429,21 @@ function SearchContent() {
           <div className={`flex gap-6 ${showMap ? "flex-col lg:flex-row" : ""}`}>
             {/* Results Grid */}
             <div className={`${showMap ? "lg:w-1/2 xl:w-3/5" : "w-full"} ${showMap ? "lg:h-[calc(100vh-300px)] lg:overflow-y-auto lg:pr-4" : ""}`}>
-              <div className={`grid gap-6 ${showMap ? "grid-cols-1 xl:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
+              <div className={`grid gap-6 stagger-children ${showMap ? "grid-cols-1 xl:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
-                    <Card key={i}>
+                    <Card key={i} className="overflow-hidden">
                       <CardContent className="p-0">
-                        <Skeleton className="h-48 w-full rounded-t-xl" />
+                        <div className="h-48 w-full rounded-t-xl bg-muted shimmer" />
                         <div className="p-4 space-y-3">
-                          <Skeleton className="h-6 w-3/4" />
-                          <Skeleton className="h-4 w-1/2" />
+                          <div className="h-6 w-3/4 bg-muted rounded shimmer" />
+                          <div className="h-4 w-1/2 bg-muted rounded shimmer" />
                           <div className="flex gap-2">
-                            <Skeleton className="h-6 w-16" />
-                            <Skeleton className="h-6 w-16" />
-                            <Skeleton className="h-6 w-16" />
+                            <div className="h-6 w-16 bg-muted rounded shimmer" />
+                            <div className="h-6 w-16 bg-muted rounded shimmer" />
+                            <div className="h-6 w-16 bg-muted rounded shimmer" />
                           </div>
-                          <Skeleton className="h-8 w-24" />
+                          <div className="h-8 w-24 bg-muted rounded shimmer" />
                         </div>
                       </CardContent>
                     </Card>
@@ -468,7 +469,7 @@ function SearchContent() {
                         onMouseEnter={() => setHighlightedListingId(result.unit.id)}
                         onMouseLeave={() => setHighlightedListingId(null)}
                       >
-                        <Card className={`group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 ${isHighlighted ? "ring-2 ring-primary shadow-lg" : ""}`}>
+                        <Card className={`group h-full cursor-pointer overflow-hidden hover-lift ${isHighlighted ? "ring-2 ring-primary shadow-lg" : ""}`}>
                           <CardContent className="p-0">
                             {/* Image section */}
                             <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
@@ -565,6 +566,18 @@ function SearchContent() {
                                   <Badge variant="outline" className="gap-1">
                                     <Square className="h-3 w-3" />
                                     {result.unit.sqft.toLocaleString()} sqft
+                                  </Badge>
+                                )}
+                                {result.building.pet_policy && (
+                                  <Badge variant="secondary" className="gap-1 bg-green-500/10 text-green-600 border-green-500/20">
+                                    <PawPrint className="h-3 w-3" />
+                                    Pets OK
+                                  </Badge>
+                                )}
+                                {result.building.parking_policy && (
+                                  <Badge variant="secondary" className="gap-1 bg-blue-500/10 text-blue-600 border-blue-500/20">
+                                    <Car className="h-3 w-3" />
+                                    Parking
                                   </Badge>
                                 )}
                               </div>
