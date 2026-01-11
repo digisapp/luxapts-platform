@@ -11,9 +11,11 @@ const FEATURED_CITIES = [
   { name: "New York", slug: "new-york" },
   { name: "Miami", slug: "miami" },
   { name: "Los Angeles", slug: "los-angeles" },
+  { name: "Dallas", slug: "dallas" },
   { name: "Austin", slug: "austin" },
-  { name: "Chicago", slug: "chicago" },
-  { name: "San Francisco", slug: "san-francisco" },
+  { name: "Nashville", slug: "nashville" },
+  { name: "Atlanta", slug: "atlanta" },
+  { name: "Brooklyn", slug: "brooklyn" },
 ];
 
 export default function HomePage() {

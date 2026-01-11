@@ -1,0 +1,4264 @@
+{
+  "buildings": [
+    {
+      "name": "One Uptown",
+      "address": "2619 McKinney Ave",
+      "neighborhood": "Uptown",
+      "phone": "214-468-0001",
+      "website": "https://www.oneuptown.com/",
+      "year_built": 2021,
+      "stories": 31,
+      "total_units": 345,
+      "rent_range": {
+        "min": 1490,
+        "max": 3490
+      },
+      "sqft_range": {
+        "min": 463,
+        "max": 1686
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 463,
+          "rent": 1490
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 771,
+          "rent": 2220
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 915,
+          "rent": 2430
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1152,
+          "rent": 2830
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1372,
+          "rent": 3220
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1686,
+          "rent": 3490
+        }
+      ],
+      "amenities": [
+        "Business Center",
+        "Fitness Center",
+        "Rooftop Pool",
+        "Bike Storage",
+        "Outdoor Grilling Area",
+        "EV Charging Stations",
+        "Package Lockers",
+        "Dog Park",
+        "Concierge Service",
+        "Pet Spa",
+        "Floor-to-Ceiling Windows",
+        "Quartz Countertops",
+        "Hardwood Floors",
+        "Smart Home Features",
+        "City Views",
+        "Stainless Steel Appliances",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {
+        "exterior": "https://www.oneuptown.com/wp-content/uploads/2023/08/1908-furnished2.jpg"
+      }
+    },
+    {
+      "name": "The Ashton",
+      "address": "2215 Cedar Springs Rd",
+      "neighborhood": "Uptown",
+      "phone": "866-730-3037",
+      "website": "https://www.ashtonuptown.com/",
+      "year_built": 2018,
+      "stories": 34,
+      "total_units": 258,
+      "rent_range": {
+        "min": 1550,
+        "max": 3460
+      },
+      "sqft_range": {
+        "min": 470,
+        "max": 1591
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 470,
+          "rent": 1550
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 755,
+          "rent": 2170
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 946,
+          "rent": 2190
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1020,
+          "rent": 2840
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1296,
+          "rent": 3160
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1591,
+          "rent": 3460
+        }
+      ],
+      "amenities": [
+        "Coffee Bar",
+        "Rooftop Pool",
+        "Business Center",
+        "Yoga Studio",
+        "Dog Park",
+        "Fitness Center",
+        "Package Lockers",
+        "Resident Lounge",
+        "Co-Working Space",
+        "Quartz Countertops",
+        "Private Balcony",
+        "City Views",
+        "Walk-In Closets",
+        "Hardwood Floors",
+        "In-Unit Washer/Dryer",
+        "Stainless Steel Appliances"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Peridot Residences",
+      "address": "1601 Elm St",
+      "neighborhood": "Downtown",
+      "phone": "469-228-8881",
+      "website": "https://peridotresidences.com/",
+      "year_built": 2023,
+      "stories": 17,
+      "total_units": 323,
+      "rent_range": {
+        "min": 1730,
+        "max": 3840
+      },
+      "sqft_range": {
+        "min": 540,
+        "max": 1683
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 540,
+          "rent": 1730
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 778,
+          "rent": 2150
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 938,
+          "rent": 2520
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1045,
+          "rent": 3010
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1228,
+          "rent": 3650
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1683,
+          "rent": 3840
+        }
+      ],
+      "amenities": [
+        "Dog Park",
+        "Concierge Service",
+        "Fitness Center",
+        "Package Lockers",
+        "Co-Working Space",
+        "Rooftop Pool",
+        "Valet Parking",
+        "Bike Storage",
+        "Pet Spa",
+        "Coffee Bar",
+        "EV Charging Stations",
+        "Yoga Studio",
+        "Smart Home Features",
+        "In-Unit Washer/Dryer",
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "Walk-In Closets",
+        "Quartz Countertops",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://peridotresidences.com/assets/images/cache/BMyhgOMwDVObhXRYR3hR8VUucPX6eDpmaoYuYnZ7-da5131c1284a5c2640a28f2b465b44db.jpg"
+      }
+    },
+    {
+      "name": "One Dallas Center",
+      "address": "350 N St Paul St",
+      "neighborhood": "Downtown",
+      "phone": "469-250-1400",
+      "website": "https://www.1dallascenterapartments.com/",
+      "year_built": 2022,
+      "stories": 16,
+      "total_units": 333,
+      "rent_range": {
+        "min": 1720,
+        "max": 3820
+      },
+      "sqft_range": {
+        "min": 536,
+        "max": 1423
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 536,
+          "rent": 1720
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 744,
+          "rent": 2190
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 859,
+          "rent": 2520
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1162,
+          "rent": 3070
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1274,
+          "rent": 3420
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1423,
+          "rent": 3820
+        }
+      ],
+      "amenities": [
+        "Yoga Studio",
+        "EV Charging Stations",
+        "Concierge Service",
+        "Resident Lounge",
+        "Fitness Center",
+        "Package Lockers",
+        "Co-Working Space",
+        "Coffee Bar",
+        "Dog Park",
+        "Stainless Steel Appliances",
+        "City Views",
+        "Private Balcony",
+        "Hardwood Floors",
+        "Smart Home Features",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "The Taylor",
+      "address": "2710 Cedar Springs Rd",
+      "neighborhood": "Uptown",
+      "phone": "214-505-8800",
+      "website": "https://tayloruptown.com/",
+      "year_built": 2023,
+      "stories": 23,
+      "total_units": 316,
+      "rent_range": {
+        "min": 1470,
+        "max": 3630
+      },
+      "sqft_range": {
+        "min": 534,
+        "max": 1429
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 534,
+          "rent": 1470
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 683,
+          "rent": 2130
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 803,
+          "rent": 2330
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1194,
+          "rent": 2920
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1229,
+          "rent": 3330
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1429,
+          "rent": 3630
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Fitness Center",
+        "Yoga Studio",
+        "Outdoor Grilling Area",
+        "Pet Spa",
+        "Coffee Bar",
+        "Valet Parking",
+        "Package Lockers",
+        "Concierge Service",
+        "Business Center",
+        "Dog Park",
+        "Co-Working Space",
+        "Walk-In Closets",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Private Balcony",
+        "City Views"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {}
+    },
+    {
+      "name": "The McKenzie",
+      "address": "4600 Travis St",
+      "neighborhood": "Knox Henderson",
+      "phone": "214-265-4600",
+      "website": "https://themckenziedallas.com/",
+      "year_built": 2019,
+      "stories": 17,
+      "total_units": 325,
+      "rent_range": {
+        "min": 1640,
+        "max": 3320
+      },
+      "sqft_range": {
+        "min": 457,
+        "max": 1665
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 457,
+          "rent": 1640
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 732,
+          "rent": 1760
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 919,
+          "rent": 2190
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1018,
+          "rent": 2640
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1391,
+          "rent": 2780
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1665,
+          "rent": 3320
+        }
+      ],
+      "amenities": [
+        "Fitness Center",
+        "Rooftop Pool",
+        "Coffee Bar",
+        "Dog Park",
+        "Business Center",
+        "Bike Storage",
+        "Resident Lounge",
+        "Valet Parking",
+        "Co-Working Space",
+        "Package Lockers",
+        "Yoga Studio",
+        "Smart Home Features",
+        "City Views",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Hardwood Floors",
+        "Walk-In Closets"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {}
+    },
+    {
+      "name": "Nove at Knox",
+      "address": "4611 Cole Ave",
+      "neighborhood": "Knox Henderson",
+      "phone": "214-238-4611",
+      "website": "https://noveatknox.com/",
+      "year_built": 2023,
+      "stories": 20,
+      "total_units": 234,
+      "rent_range": {
+        "min": 1510,
+        "max": 3170
+      },
+      "sqft_range": {
+        "min": 495,
+        "max": 1672
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 495,
+          "rent": 1510
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 672,
+          "rent": 1870
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 809,
+          "rent": 2130
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1129,
+          "rent": 2560
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1377,
+          "rent": 2880
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1672,
+          "rent": 3170
+        }
+      ],
+      "amenities": [
+        "Bike Storage",
+        "Concierge Service",
+        "Valet Parking",
+        "Business Center",
+        "Resident Lounge",
+        "Yoga Studio",
+        "Outdoor Grilling Area",
+        "Package Lockers",
+        "Dog Park",
+        "Pet Spa",
+        "Fitness Center",
+        "In-Unit Washer/Dryer",
+        "Walk-In Closets",
+        "Smart Home Features",
+        "City Views",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "Stainless Steel Appliances"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://noveatknox.com/assets/images/cache/Nove-Logos-OG-d467416ef0439817f54ca756f58e3578.png"
+      }
+    },
+    {
+      "name": "The Armstrong at Knox",
+      "address": "4207 Knox St",
+      "neighborhood": "Knox Henderson",
+      "phone": "214-559-4207",
+      "website": "https://thearmstrongatknox.com/",
+      "year_built": 2023,
+      "stories": 18,
+      "total_units": 241,
+      "rent_range": {
+        "min": 1460,
+        "max": 3100
+      },
+      "sqft_range": {
+        "min": 499,
+        "max": 1500
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 499,
+          "rent": 1460
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 714,
+          "rent": 1780
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 873,
+          "rent": 2210
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1037,
+          "rent": 2580
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1201,
+          "rent": 2740
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1500,
+          "rent": 3100
+        }
+      ],
+      "amenities": [
+        "Concierge Service",
+        "Coffee Bar",
+        "Business Center",
+        "Fitness Center",
+        "Outdoor Grilling Area",
+        "Rooftop Pool",
+        "Bike Storage",
+        "Co-Working Space",
+        "Package Lockers",
+        "Private Balcony",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows",
+        "Hardwood Floors",
+        "Smart Home Features",
+        "City Views"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://thearmstrongatknox.com/assets/images/cache/og_armstrong-1450b7f576e8d701ded60da5dbd7e136.jpg"
+      }
+    },
+    {
+      "name": "Selene Residences",
+      "address": "3000 Blackburn St",
+      "neighborhood": "Uptown",
+      "phone": "214-777-3000",
+      "website": "https://liveatselene.com/",
+      "year_built": 2022,
+      "stories": 33,
+      "total_units": 383,
+      "rent_range": {
+        "min": 1710,
+        "max": 3590
+      },
+      "sqft_range": {
+        "min": 497,
+        "max": 1446
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 497,
+          "rent": 1710
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 736,
+          "rent": 1960
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 813,
+          "rent": 2280
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1041,
+          "rent": 2670
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1397,
+          "rent": 3330
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1446,
+          "rent": 3590
+        }
+      ],
+      "amenities": [
+        "Dog Park",
+        "Concierge Service",
+        "Outdoor Grilling Area",
+        "Bike Storage",
+        "Fitness Center",
+        "Co-Working Space",
+        "Valet Parking",
+        "Package Lockers",
+        "City Views",
+        "Smart Home Features",
+        "Hardwood Floors",
+        "In-Unit Washer/Dryer",
+        "Quartz Countertops",
+        "Floor-to-Ceiling Windows",
+        "Stainless Steel Appliances"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://liveatselene.com/assets/images/cache/open-graph1-2d318b7117ed3467cb169efff2cb541d.jpg"
+      }
+    },
+    {
+      "name": "MAA Uptown Village",
+      "address": "3100 Carlisle St",
+      "neighborhood": "Uptown",
+      "phone": "214-855-3100",
+      "website": "https://www.maac.com/texas/dallas/maa-uptown-village/",
+      "management_company": "MAA",
+      "year_built": 2018,
+      "stories": 35,
+      "total_units": 307,
+      "rent_range": {
+        "min": 1720,
+        "max": 3710
+      },
+      "sqft_range": {
+        "min": 502,
+        "max": 1642
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 502,
+          "rent": 1720
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 659,
+          "rent": 2110
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 800,
+          "rent": 2330
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1001,
+          "rent": 2890
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1334,
+          "rent": 3200
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1642,
+          "rent": 3710
+        }
+      ],
+      "amenities": [
+        "EV Charging Stations",
+        "Rooftop Pool",
+        "Coffee Bar",
+        "Outdoor Grilling Area",
+        "Business Center",
+        "Yoga Studio",
+        "Fitness Center",
+        "Bike Storage",
+        "Dog Park",
+        "Walk-In Closets",
+        "Stainless Steel Appliances",
+        "In-Unit Washer/Dryer",
+        "Quartz Countertops",
+        "City Views"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://www.maac.com/-/media/images/social/maa-logo-600x315-new.jpg"
+      }
+    },
+    {
+      "name": "The Standard Dallas",
+      "address": "1801 N Lamar Street",
+      "neighborhood": "Victory Park",
+      "phone": "214-741-1801",
+      "website": "https://www.zrsapartments.com/",
+      "management_company": "ZRS Management",
+      "year_built": 2018,
+      "stories": 25,
+      "total_units": 324,
+      "rent_range": {
+        "min": 1760,
+        "max": 3630
+      },
+      "sqft_range": {
+        "min": 465,
+        "max": 1550
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 465,
+          "rent": 1760
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 785,
+          "rent": 2200
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 856,
+          "rent": 2480
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1059,
+          "rent": 3010
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1280,
+          "rent": 3430
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1550,
+          "rent": 3630
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Resident Lounge",
+        "Yoga Studio",
+        "Fitness Center",
+        "Package Lockers",
+        "Concierge Service",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Bike Storage",
+        "Coffee Bar",
+        "Pet Spa",
+        "In-Unit Washer/Dryer",
+        "Private Balcony",
+        "Smart Home Features",
+        "City Views",
+        "Floor-to-Ceiling Windows",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://sxxweb8cdn.cachefly.net/img/thumbnail.aspx?p=/common/uploads/zrs2019/701/media/abaeb8c2-1705-4e24-a87e-d129decf4ed6.png"
+      }
+    },
+    {
+      "name": "Miro Apartments",
+      "address": "2619 McKinney Ave",
+      "neighborhood": "Uptown",
+      "website": "https://www.greystar.com/miro-apartments-dallas-tx/p_15402",
+      "management_company": "Greystar",
+      "year_built": 2026,
+      "stories": 19,
+      "total_units": 284,
+      "rent_range": {
+        "min": 1940,
+        "max": 4210
+      },
+      "sqft_range": {
+        "min": 482,
+        "max": 1678
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 482,
+          "rent": 1940
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 664,
+          "rent": 2290
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 870,
+          "rent": 2750
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1171,
+          "rent": 3080
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1308,
+          "rent": 3820
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1678,
+          "rent": 4210
+        }
+      ],
+      "amenities": [
+        "Yoga Studio",
+        "Business Center",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Dog Park",
+        "Package Lockers",
+        "Bike Storage",
+        "Rooftop Pool",
+        "Concierge Service",
+        "Coffee Bar",
+        "Fitness Center",
+        "Stainless Steel Appliances",
+        "Private Balcony",
+        "Quartz Countertops",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {}
+    },
+    {
+      "name": "Seville Uptown",
+      "address": "4144 Bowser Ave",
+      "neighborhood": "Oak Lawn",
+      "website": "https://www.greystar.com/seville-uptown-dallas-tx/p_19293",
+      "management_company": "Greystar",
+      "year_built": 2026,
+      "stories": 24,
+      "total_units": 218,
+      "rent_range": {
+        "min": 1700,
+        "max": 3480
+      },
+      "sqft_range": {
+        "min": 495,
+        "max": 1554
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 495,
+          "rent": 1700
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 725,
+          "rent": 2130
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 890,
+          "rent": 2300
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1169,
+          "rent": 2620
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1266,
+          "rent": 3200
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1554,
+          "rent": 3480
+        }
+      ],
+      "amenities": [
+        "Concierge Service",
+        "Business Center",
+        "Package Lockers",
+        "Rooftop Pool",
+        "Valet Parking",
+        "Yoga Studio",
+        "Outdoor Grilling Area",
+        "Dog Park",
+        "Pet Spa",
+        "Resident Lounge",
+        "EV Charging Stations",
+        "Co-Working Space",
+        "Walk-In Closets",
+        "Private Balcony",
+        "Smart Home Features",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "The Sevens",
+      "address": "7777 Forest Ln",
+      "neighborhood": "Preston Hollow",
+      "website": "https://www.willowbridgepc.com/properties/the-sevens-dallas-texas",
+      "management_company": "Willow Bridge",
+      "year_built": 2020,
+      "stories": 26,
+      "total_units": 248,
+      "rent_range": {
+        "min": 1700,
+        "max": 4200
+      },
+      "sqft_range": {
+        "min": 480,
+        "max": 1401
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 480,
+          "rent": 1700
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 680,
+          "rent": 2540
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 882,
+          "rent": 2590
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1003,
+          "rent": 3250
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1304,
+          "rent": 3800
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1401,
+          "rent": 4200
+        }
+      ],
+      "amenities": [
+        "Outdoor Grilling Area",
+        "Rooftop Pool",
+        "Coffee Bar",
+        "Pet Spa",
+        "Business Center",
+        "Yoga Studio",
+        "Package Lockers",
+        "Valet Parking",
+        "Fitness Center",
+        "Stainless Steel Appliances",
+        "Walk-In Closets",
+        "Quartz Countertops",
+        "Smart Home Features",
+        "City Views",
+        "Hardwood Floors",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "8119",
+      "address": "8119 Southwestern Blvd",
+      "neighborhood": "Uptown",
+      "website": "https://www.willowbridgepc.com/properties/8119-dallas-texas",
+      "management_company": "Willow Bridge",
+      "year_built": 2019,
+      "stories": 18,
+      "total_units": 290,
+      "rent_range": {
+        "min": 1530,
+        "max": 3710
+      },
+      "sqft_range": {
+        "min": 538,
+        "max": 1642
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 538,
+          "rent": 1530
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 725,
+          "rent": 2130
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 847,
+          "rent": 2260
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1077,
+          "rent": 2870
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1261,
+          "rent": 3120
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1642,
+          "rent": 3710
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Fitness Center",
+        "Bike Storage",
+        "Business Center",
+        "Outdoor Grilling Area",
+        "Package Lockers",
+        "Yoga Studio",
+        "Dog Park",
+        "Concierge Service",
+        "Co-Working Space",
+        "Private Balcony",
+        "Floor-to-Ceiling Windows",
+        "City Views",
+        "In-Unit Washer/Dryer",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Moda Luxury Apartments",
+      "address": "2520 N Houston St",
+      "neighborhood": "Victory Park",
+      "website": "https://www.willowbridgepc.com/properties/moda-luxury-apartments-dallas-tx",
+      "management_company": "Willow Bridge",
+      "year_built": 2018,
+      "stories": 19,
+      "total_units": 335,
+      "rent_range": {
+        "min": 1960,
+        "max": 4350
+      },
+      "sqft_range": {
+        "min": 475,
+        "max": 1555
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 475,
+          "rent": 1960
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 709,
+          "rent": 2420
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 932,
+          "rent": 2660
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1077,
+          "rent": 3320
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1221,
+          "rent": 3890
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1555,
+          "rent": 4350
+        }
+      ],
+      "amenities": [
+        "Business Center",
+        "Concierge Service",
+        "Yoga Studio",
+        "Bike Storage",
+        "Coffee Bar",
+        "Pet Spa",
+        "Dog Park",
+        "Valet Parking",
+        "Rooftop Pool",
+        "Floor-to-Ceiling Windows",
+        "Walk-In Closets",
+        "Hardwood Floors",
+        "Quartz Countertops",
+        "City Views",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "The Pavilions",
+      "address": "16000 Midway Rd",
+      "neighborhood": "North Dallas",
+      "website": "https://www.willowbridgepc.com/properties/the-pavilions-dallas-tx",
+      "management_company": "Willow Bridge",
+      "year_built": 2019,
+      "stories": 34,
+      "total_units": 269,
+      "rent_range": {
+        "min": 1440,
+        "max": 2890
+      },
+      "sqft_range": {
+        "min": 475,
+        "max": 1529
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 475,
+          "rent": 1440
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 758,
+          "rent": 1570
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 884,
+          "rent": 1960
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1151,
+          "rent": 2240
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1331,
+          "rent": 2520
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1529,
+          "rent": 2890
+        }
+      ],
+      "amenities": [
+        "Concierge Service",
+        "Pet Spa",
+        "Business Center",
+        "Bike Storage",
+        "Resident Lounge",
+        "Dog Park",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Package Lockers",
+        "Coffee Bar",
+        "Walk-In Closets",
+        "Hardwood Floors",
+        "City Views",
+        "Quartz Countertops",
+        "Smart Home Features"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Brady",
+      "address": "3100 Cole Ave",
+      "neighborhood": "Uptown",
+      "website": "https://www.willowbridgepc.com/properties/brady-dallas-tx",
+      "management_company": "Willow Bridge",
+      "year_built": 2018,
+      "stories": 30,
+      "total_units": 352,
+      "rent_range": {
+        "min": 1510,
+        "max": 3560
+      },
+      "sqft_range": {
+        "min": 535,
+        "max": 1505
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 535,
+          "rent": 1510
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 719,
+          "rent": 2040
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 948,
+          "rent": 2190
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1166,
+          "rent": 2730
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1380,
+          "rent": 3320
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1505,
+          "rent": 3560
+        }
+      ],
+      "amenities": [
+        "Bike Storage",
+        "Dog Park",
+        "Outdoor Grilling Area",
+        "EV Charging Stations",
+        "Pet Spa",
+        "Valet Parking",
+        "Coffee Bar",
+        "Rooftop Pool",
+        "Smart Home Features",
+        "In-Unit Washer/Dryer",
+        "Stainless Steel Appliances",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "Private Balcony",
+        "City Views"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Leksa at CityPlace",
+      "address": "3030 Cityplace West Blvd",
+      "neighborhood": "Uptown",
+      "website": "https://www.willowbridgepc.com/",
+      "management_company": "Willow Bridge",
+      "year_built": 2018,
+      "stories": 26,
+      "total_units": 336,
+      "rent_range": {
+        "min": 1630,
+        "max": 3660
+      },
+      "sqft_range": {
+        "min": 476,
+        "max": 1525
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 476,
+          "rent": 1630
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 683,
+          "rent": 2080
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 802,
+          "rent": 2310
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1118,
+          "rent": 2860
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1273,
+          "rent": 3230
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1525,
+          "rent": 3660
+        }
+      ],
+      "amenities": [
+        "Yoga Studio",
+        "Pet Spa",
+        "Outdoor Grilling Area",
+        "EV Charging Stations",
+        "Fitness Center",
+        "Coffee Bar",
+        "Package Lockers",
+        "Bike Storage",
+        "Business Center",
+        "Rooftop Pool",
+        "Valet Parking",
+        "Floor-to-Ceiling Windows",
+        "Quartz Countertops",
+        "City Views",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "The Park at Katy Trail",
+      "address": "4525 Cole Ave",
+      "neighborhood": "Knox Henderson",
+      "website": "https://www.willowbridgepc.com/",
+      "management_company": "Willow Bridge",
+      "year_built": 2024,
+      "stories": 18,
+      "total_units": 273,
+      "rent_range": {
+        "min": 1490,
+        "max": 3220
+      },
+      "sqft_range": {
+        "min": 490,
+        "max": 1665
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 490,
+          "rent": 1490
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 751,
+          "rent": 2020
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 871,
+          "rent": 2150
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1096,
+          "rent": 2390
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1333,
+          "rent": 2750
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1665,
+          "rent": 3220
+        }
+      ],
+      "amenities": [
+        "Outdoor Grilling Area",
+        "EV Charging Stations",
+        "Pet Spa",
+        "Business Center",
+        "Resident Lounge",
+        "Co-Working Space",
+        "Concierge Service",
+        "Yoga Studio",
+        "Fitness Center",
+        "Package Lockers",
+        "Bike Storage",
+        "Dog Park",
+        "Private Balcony",
+        "Smart Home Features",
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "Walk-In Closets",
+        "Quartz Countertops",
+        "City Views"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Cortland North Dallas",
+      "address": "17811 Vail St",
+      "neighborhood": "North Dallas",
+      "website": "https://cortland.com/apartments/cortland-north-dallas/",
+      "management_company": "Cortland",
+      "year_built": 2018,
+      "stories": 19,
+      "total_units": 388,
+      "rent_range": {
+        "min": 1390,
+        "max": 2800
+      },
+      "sqft_range": {
+        "min": 522,
+        "max": 1463
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 522,
+          "rent": 1390
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 772,
+          "rent": 1570
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 948,
+          "rent": 1870
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1097,
+          "rent": 2210
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1313,
+          "rent": 2440
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1463,
+          "rent": 2800
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Dog Park",
+        "Outdoor Grilling Area",
+        "Package Lockers",
+        "Yoga Studio",
+        "Co-Working Space",
+        "Fitness Center",
+        "Concierge Service",
+        "Coffee Bar",
+        "EV Charging Stations",
+        "Bike Storage",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer",
+        "Smart Home Features",
+        "Private Balcony",
+        "Floor-to-Ceiling Windows",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://cortland.com/assets/images/cache/Aster-Livingroom2-f07246267614e4ecece55c936e929bb7.jpg"
+      }
+    },
+    {
+      "name": "Cortland M-Line",
+      "address": "3200 McKinney Ave",
+      "neighborhood": "Uptown",
+      "website": "https://cortland.com/apartments/cortland-m-line/",
+      "management_company": "Cortland",
+      "year_built": 2023,
+      "stories": 15,
+      "total_units": 316,
+      "rent_range": {
+        "min": 1670,
+        "max": 3640
+      },
+      "sqft_range": {
+        "min": 515,
+        "max": 1504
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 515,
+          "rent": 1670
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 753,
+          "rent": 2170
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 938,
+          "rent": 2190
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1049,
+          "rent": 2750
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1263,
+          "rent": 3280
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1504,
+          "rent": 3640
+        }
+      ],
+      "amenities": [
+        "Business Center",
+        "Coffee Bar",
+        "EV Charging Stations",
+        "Package Lockers",
+        "Concierge Service",
+        "Bike Storage",
+        "Fitness Center",
+        "Outdoor Grilling Area",
+        "Dog Park",
+        "Stainless Steel Appliances",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows",
+        "Quartz Countertops",
+        "Walk-In Closets",
+        "Smart Home Features"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://cortland.com/assets/images/cache/Cortland-M-Line-Model-HR-131-a796c92f87759113d7ea73a54978c597.jpg"
+      }
+    },
+    {
+      "name": "Cortland on McKinney",
+      "address": "1900 McKinney Ave",
+      "neighborhood": "Uptown",
+      "website": "https://cortland.com/apartments/cortland-on-mckinney/",
+      "management_company": "Cortland",
+      "year_built": 2021,
+      "stories": 18,
+      "total_units": 209,
+      "rent_range": {
+        "min": 1550,
+        "max": 3470
+      },
+      "sqft_range": {
+        "min": 503,
+        "max": 1534
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 503,
+          "rent": 1550
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 735,
+          "rent": 2230
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 924,
+          "rent": 2240
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1087,
+          "rent": 2940
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1336,
+          "rent": 3290
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1534,
+          "rent": 3470
+        }
+      ],
+      "amenities": [
+        "Coffee Bar",
+        "Co-Working Space",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Pet Spa",
+        "Bike Storage",
+        "Package Lockers",
+        "Fitness Center",
+        "Resident Lounge",
+        "Rooftop Pool",
+        "Dog Park",
+        "Hardwood Floors",
+        "Private Balcony",
+        "Quartz Countertops",
+        "Walk-In Closets",
+        "Floor-to-Ceiling Windows"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://cortland.com/assets/images/cache/cortland_og-images29-88501746e968a5306fd71e9966cbf933.jpg"
+      }
+    },
+    {
+      "name": "Cortland at West Village",
+      "address": "2901 Cityplace West Blvd",
+      "neighborhood": "Uptown",
+      "website": "https://cortland.com/apartments/cortland-at-west-village/",
+      "management_company": "Cortland",
+      "year_built": 2024,
+      "stories": 15,
+      "total_units": 290,
+      "rent_range": {
+        "min": 1530,
+        "max": 3550
+      },
+      "sqft_range": {
+        "min": 503,
+        "max": 1404
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 503,
+          "rent": 1530
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 661,
+          "rent": 2250
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 917,
+          "rent": 2460
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1048,
+          "rent": 2930
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1229,
+          "rent": 3160
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1404,
+          "rent": 3550
+        }
+      ],
+      "amenities": [
+        "Resident Lounge",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Bike Storage",
+        "Yoga Studio",
+        "Dog Park",
+        "Business Center",
+        "EV Charging Stations",
+        "Coffee Bar",
+        "Concierge Service",
+        "Private Balcony",
+        "Floor-to-Ceiling Windows",
+        "City Views",
+        "Hardwood Floors",
+        "Walk-In Closets",
+        "Smart Home Features"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://cortland.com/assets/images/cache/Model-Cortland-West-Village-HR-31-2863ccffd55cc433a1d68e6c54393f92.jpg"
+      }
+    },
+    {
+      "name": "Spanish Village",
+      "address": "3232 Sumter Dr",
+      "neighborhood": "Oak Cliff",
+      "website": "https://www.apartments.com/",
+      "management_company": "Cross Equities",
+      "year_built": 2020,
+      "stories": 27,
+      "total_units": 378,
+      "rent_range": {
+        "min": 1480,
+        "max": 3360
+      },
+      "sqft_range": {
+        "min": 550,
+        "max": 1661
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 550,
+          "rent": 1480
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 681,
+          "rent": 2040
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 813,
+          "rent": 2260
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1194,
+          "rent": 2570
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1297,
+          "rent": 2990
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1661,
+          "rent": 3360
+        }
+      ],
+      "amenities": [
+        "Co-Working Space",
+        "Valet Parking",
+        "Concierge Service",
+        "Fitness Center",
+        "Package Lockers",
+        "Pet Spa",
+        "Business Center",
+        "Resident Lounge",
+        "City Views",
+        "Private Balcony",
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "Walk-In Closets",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "Cirque Residences",
+      "address": "2520 Victory Park Ln",
+      "neighborhood": "Victory Park",
+      "website": "https://www.cirqueresidences.com/",
+      "management_company": "Madera Residential",
+      "year_built": 2020,
+      "stories": 23,
+      "total_units": 227,
+      "rent_range": {
+        "min": 1830,
+        "max": 3710
+      },
+      "sqft_range": {
+        "min": 467,
+        "max": 1513
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 467,
+          "rent": 1830
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 784,
+          "rent": 2100
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 931,
+          "rent": 2440
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1051,
+          "rent": 2780
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1337,
+          "rent": 3410
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1513,
+          "rent": 3710
+        }
+      ],
+      "amenities": [
+        "Business Center",
+        "EV Charging Stations",
+        "Concierge Service",
+        "Package Lockers",
+        "Co-Working Space",
+        "Bike Storage",
+        "Resident Lounge",
+        "Fitness Center",
+        "Yoga Studio",
+        "Dog Park",
+        "Stainless Steel Appliances",
+        "Smart Home Features",
+        "Quartz Countertops",
+        "Private Balcony",
+        "Walk-In Closets",
+        "City Views"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "Gallery at Turtle Creek",
+      "address": "4144 N Hall St",
+      "neighborhood": "Oak Lawn",
+      "website": "https://www.greystar.com/gallery-at-turtle-creek-apartments-dallas-tx/p_14950",
+      "management_company": "Greystar",
+      "year_built": 2026,
+      "stories": 22,
+      "total_units": 262,
+      "rent_range": {
+        "min": 1720,
+        "max": 3500
+      },
+      "sqft_range": {
+        "min": 450,
+        "max": 1593
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 450,
+          "rent": 1720
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 657,
+          "rent": 2040
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 804,
+          "rent": 2380
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1093,
+          "rent": 2900
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1220,
+          "rent": 3130
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1593,
+          "rent": 3500
+        }
+      ],
+      "amenities": [
+        "Resident Lounge",
+        "Business Center",
+        "Dog Park",
+        "Pet Spa",
+        "Valet Parking",
+        "Concierge Service",
+        "Co-Working Space",
+        "Yoga Studio",
+        "Fitness Center",
+        "Outdoor Grilling Area",
+        "Bike Storage",
+        "Private Balcony",
+        "Floor-to-Ceiling Windows",
+        "In-Unit Washer/Dryer",
+        "Smart Home Features",
+        "Walk-In Closets",
+        "Hardwood Floors",
+        "City Views"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {}
+    },
+    {
+      "name": "The Georgian",
+      "address": "17930 Marsh Ln",
+      "neighborhood": "North Dallas",
+      "website": "https://www.greystar.com/the-georgian-apartments-dallas-tx/p_10747",
+      "management_company": "Greystar",
+      "year_built": 2026,
+      "stories": 28,
+      "total_units": 338,
+      "rent_range": {
+        "min": 1570,
+        "max": 3140
+      },
+      "sqft_range": {
+        "min": 548,
+        "max": 1440
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 548,
+          "rent": 1570
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 750,
+          "rent": 2080
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 872,
+          "rent": 2150
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1024,
+          "rent": 2400
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1211,
+          "rent": 2880
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1440,
+          "rent": 3140
+        }
+      ],
+      "amenities": [
+        "Dog Park",
+        "Concierge Service",
+        "Pet Spa",
+        "Fitness Center",
+        "Business Center",
+        "Coffee Bar",
+        "Package Lockers",
+        "EV Charging Stations",
+        "Smart Home Features",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows",
+        "Walk-In Closets",
+        "City Views",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "4110 Fairmount",
+      "address": "4110 Fairmount St",
+      "neighborhood": "Oak Lawn",
+      "website": "https://www.greystar.com/",
+      "management_company": "Greystar",
+      "year_built": 2021,
+      "stories": 32,
+      "total_units": 315,
+      "rent_range": {
+        "min": 1730,
+        "max": 3460
+      },
+      "sqft_range": {
+        "min": 533,
+        "max": 1457
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 533,
+          "rent": 1730
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 664,
+          "rent": 2070
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 855,
+          "rent": 2250
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1133,
+          "rent": 2790
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1386,
+          "rent": 3130
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1457,
+          "rent": 3460
+        }
+      ],
+      "amenities": [
+        "Coffee Bar",
+        "Yoga Studio",
+        "Rooftop Pool",
+        "Fitness Center",
+        "Outdoor Grilling Area",
+        "Business Center",
+        "Co-Working Space",
+        "Concierge Service",
+        "Hardwood Floors",
+        "Smart Home Features",
+        "Floor-to-Ceiling Windows",
+        "Quartz Countertops",
+        "Stainless Steel Appliances",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Alara Uptown",
+      "address": "3333 Allen St",
+      "neighborhood": "Uptown",
+      "website": "https://www.greystar.com/",
+      "management_company": "Greystar",
+      "year_built": 2023,
+      "stories": 27,
+      "total_units": 243,
+      "rent_range": {
+        "min": 1920,
+        "max": 4180
+      },
+      "sqft_range": {
+        "min": 452,
+        "max": 1501
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 452,
+          "rent": 1920
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 709,
+          "rent": 2450
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 923,
+          "rent": 2590
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1125,
+          "rent": 3150
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1390,
+          "rent": 3590
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1501,
+          "rent": 4180
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Outdoor Grilling Area",
+        "Yoga Studio",
+        "Fitness Center",
+        "Bike Storage",
+        "Business Center",
+        "Coffee Bar",
+        "Concierge Service",
+        "Valet Parking",
+        "Hardwood Floors",
+        "Quartz Countertops",
+        "Walk-In Closets",
+        "Stainless Steel Appliances",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "555 Ross",
+      "address": "555 Ross Ave",
+      "neighborhood": "Downtown",
+      "website": "https://www.greystar.com/",
+      "management_company": "Greystar",
+      "year_built": 2023,
+      "stories": 18,
+      "total_units": 391,
+      "rent_range": {
+        "min": 1690,
+        "max": 3960
+      },
+      "sqft_range": {
+        "min": 468,
+        "max": 1464
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 468,
+          "rent": 1690
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 764,
+          "rent": 2340
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 812,
+          "rent": 2480
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1182,
+          "rent": 3100
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1282,
+          "rent": 3470
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1464,
+          "rent": 3960
+        }
+      ],
+      "amenities": [
+        "EV Charging Stations",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Bike Storage",
+        "Rooftop Pool",
+        "Fitness Center",
+        "Coffee Bar",
+        "Pet Spa",
+        "Co-Working Space",
+        "Concierge Service",
+        "Resident Lounge",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows",
+        "Private Balcony",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Oak and Ellum",
+      "address": "2202 N Good Latimer Expy",
+      "neighborhood": "Deep Ellum",
+      "website": "https://www.greystar.com/",
+      "management_company": "Greystar",
+      "year_built": 2023,
+      "stories": 20,
+      "total_units": 334,
+      "rent_range": {
+        "min": 1410,
+        "max": 3330
+      },
+      "sqft_range": {
+        "min": 488,
+        "max": 1669
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 488,
+          "rent": 1410
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 724,
+          "rent": 1960
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 879,
+          "rent": 2170
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1009,
+          "rent": 2700
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1312,
+          "rent": 3010
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1669,
+          "rent": 3330
+        }
+      ],
+      "amenities": [
+        "Bike Storage",
+        "Pet Spa",
+        "Business Center",
+        "Valet Parking",
+        "Package Lockers",
+        "Concierge Service",
+        "Coffee Bar",
+        "Fitness Center",
+        "Outdoor Grilling Area",
+        "Co-Working Space",
+        "EV Charging Stations",
+        "Dog Park",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Smart Home Features",
+        "City Views",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "The Laurel Preston Hollow",
+      "address": "8450 Southwestern Blvd",
+      "neighborhood": "Preston Hollow",
+      "website": "https://www.greystar.com/",
+      "management_company": "Greystar",
+      "year_built": 2023,
+      "stories": 35,
+      "total_units": 239,
+      "rent_range": {
+        "min": 2180,
+        "max": 4700
+      },
+      "sqft_range": {
+        "min": 530,
+        "max": 1514
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 530,
+          "rent": 2180
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 760,
+          "rent": 2610
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 875,
+          "rent": 3100
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1180,
+          "rent": 3590
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1243,
+          "rent": 4260
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1514,
+          "rent": 4700
+        }
+      ],
+      "amenities": [
+        "Resident Lounge",
+        "Dog Park",
+        "Valet Parking",
+        "Fitness Center",
+        "Pet Spa",
+        "EV Charging Stations",
+        "Yoga Studio",
+        "Outdoor Grilling Area",
+        "Concierge Service",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "City Views",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "Smart Home Features"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Renaissance at Preston Hollow",
+      "address": "6116 Luther Ln",
+      "neighborhood": "Preston Hollow",
+      "website": "https://www.greystar.com/",
+      "management_company": "Greystar",
+      "year_built": 2018,
+      "stories": 19,
+      "total_units": 244,
+      "rent_range": {
+        "min": 2030,
+        "max": 4930
+      },
+      "sqft_range": {
+        "min": 453,
+        "max": 1509
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 453,
+          "rent": 2030
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 660,
+          "rent": 2780
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 884,
+          "rent": 2900
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1061,
+          "rent": 3690
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1207,
+          "rent": 4250
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1509,
+          "rent": 4930
+        }
+      ],
+      "amenities": [
+        "Outdoor Grilling Area",
+        "Dog Park",
+        "Concierge Service",
+        "Business Center",
+        "Valet Parking",
+        "Rooftop Pool",
+        "Yoga Studio",
+        "Fitness Center",
+        "Floor-to-Ceiling Windows",
+        "Quartz Countertops",
+        "City Views",
+        "Hardwood Floors",
+        "In-Unit Washer/Dryer",
+        "Private Balcony",
+        "Smart Home Features"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Novel Turtle Creek",
+      "address": "4001 Turtle Creek Blvd",
+      "neighborhood": "Turtle Creek",
+      "website": "https://www.greystar.com/",
+      "management_company": "Greystar",
+      "year_built": 2020,
+      "stories": 21,
+      "total_units": 326,
+      "rent_range": {
+        "min": 2310,
+        "max": 5150
+      },
+      "sqft_range": {
+        "min": 491,
+        "max": 1488
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 491,
+          "rent": 2310
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 781,
+          "rent": 2730
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 809,
+          "rent": 3070
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1192,
+          "rent": 4040
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1253,
+          "rent": 4540
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1488,
+          "rent": 5150
+        }
+      ],
+      "amenities": [
+        "Coffee Bar",
+        "Business Center",
+        "Resident Lounge",
+        "Fitness Center",
+        "Pet Spa",
+        "Rooftop Pool",
+        "EV Charging Stations",
+        "Package Lockers",
+        "Private Balcony",
+        "Hardwood Floors",
+        "Smart Home Features",
+        "Quartz Countertops",
+        "City Views",
+        "In-Unit Washer/Dryer",
+        "Stainless Steel Appliances"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Ascent Victory Park",
+      "address": "2311 N Houston St",
+      "neighborhood": "Victory Park",
+      "website": "https://www.greystar.com/",
+      "management_company": "Greystar",
+      "year_built": 2018,
+      "stories": 33,
+      "total_units": 348,
+      "rent_range": {
+        "min": 2080,
+        "max": 4380
+      },
+      "sqft_range": {
+        "min": 512,
+        "max": 1618
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 512,
+          "rent": 2080
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 656,
+          "rent": 2470
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 949,
+          "rent": 2740
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1124,
+          "rent": 3310
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1391,
+          "rent": 3750
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1618,
+          "rent": 4380
+        }
+      ],
+      "amenities": [
+        "Coffee Bar",
+        "Concierge Service",
+        "EV Charging Stations",
+        "Valet Parking",
+        "Bike Storage",
+        "Fitness Center",
+        "Outdoor Grilling Area",
+        "Dog Park",
+        "Yoga Studio",
+        "Rooftop Pool",
+        "Quartz Countertops",
+        "City Views",
+        "Walk-In Closets",
+        "Stainless Steel Appliances",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Manchester State Thomas",
+      "address": "3030 State St",
+      "neighborhood": "State Thomas",
+      "website": "https://www.greystar.com/",
+      "management_company": "Greystar",
+      "year_built": 2021,
+      "stories": 33,
+      "total_units": 284,
+      "rent_range": {
+        "min": 1710,
+        "max": 3700
+      },
+      "sqft_range": {
+        "min": 536,
+        "max": 1545
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 536,
+          "rent": 1710
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 741,
+          "rent": 2240
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 880,
+          "rent": 2400
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1102,
+          "rent": 3110
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1352,
+          "rent": 3360
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1545,
+          "rent": 3700
+        }
+      ],
+      "amenities": [
+        "Outdoor Grilling Area",
+        "EV Charging Stations",
+        "Coffee Bar",
+        "Fitness Center",
+        "Concierge Service",
+        "Bike Storage",
+        "Pet Spa",
+        "Valet Parking",
+        "Rooftop Pool",
+        "Dog Park",
+        "Hardwood Floors",
+        "Smart Home Features",
+        "City Views",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Riviera at West Village",
+      "address": "3939 McKinney Ave",
+      "neighborhood": "Uptown",
+      "website": "https://www.greystar.com/",
+      "management_company": "Greystar",
+      "year_built": 2022,
+      "stories": 23,
+      "total_units": 379,
+      "rent_range": {
+        "min": 1900,
+        "max": 4270
+      },
+      "sqft_range": {
+        "min": 477,
+        "max": 1515
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 477,
+          "rent": 1900
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 745,
+          "rent": 2450
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 915,
+          "rent": 2770
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1124,
+          "rent": 3360
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1385,
+          "rent": 3690
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1515,
+          "rent": 4270
+        }
+      ],
+      "amenities": [
+        "Concierge Service",
+        "Yoga Studio",
+        "Outdoor Grilling Area",
+        "Fitness Center",
+        "Package Lockers",
+        "Valet Parking",
+        "Co-Working Space",
+        "Rooftop Pool",
+        "Stainless Steel Appliances",
+        "In-Unit Washer/Dryer",
+        "Private Balcony",
+        "City Views",
+        "Quartz Countertops",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Eastbridge Apartments",
+      "address": "5140 Willis Ave",
+      "neighborhood": "Greenville Ave",
+      "website": "https://www.willowbridgepc.com/properties/eastbridge-apartments-dallas-tx",
+      "management_company": "Willow Bridge",
+      "year_built": 2019,
+      "stories": 19,
+      "total_units": 313,
+      "rent_range": {
+        "min": 1440,
+        "max": 3220
+      },
+      "sqft_range": {
+        "min": 463,
+        "max": 1575
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 463,
+          "rent": 1440
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 758,
+          "rent": 1670
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 816,
+          "rent": 2010
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1133,
+          "rent": 2460
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1331,
+          "rent": 2620
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1575,
+          "rent": 3220
+        }
+      ],
+      "amenities": [
+        "Resident Lounge",
+        "Yoga Studio",
+        "Rooftop Pool",
+        "Dog Park",
+        "Concierge Service",
+        "Coffee Bar",
+        "Outdoor Grilling Area",
+        "Bike Storage",
+        "Fitness Center",
+        "Pet Spa",
+        "Business Center",
+        "Private Balcony",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer",
+        "City Views"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "The Lofts at Mockingbird Station",
+      "address": "5331 E Mockingbird Ln",
+      "neighborhood": "Mockingbird Station",
+      "website": "https://www.willowbridgepc.com/properties/the-lofts-at-mockingbird-station-dallas-tx",
+      "management_company": "Willow Bridge",
+      "year_built": 1948,
+      "stories": 30,
+      "total_units": 294,
+      "rent_range": {
+        "min": 1410,
+        "max": 2910
+      },
+      "sqft_range": {
+        "min": 462,
+        "max": 1646
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 462,
+          "rent": 1410
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 697,
+          "rent": 1800
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 934,
+          "rent": 2070
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1068,
+          "rent": 2440
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1332,
+          "rent": 2810
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1646,
+          "rent": 2910
+        }
+      ],
+      "amenities": [
+        "Outdoor Grilling Area",
+        "Resident Lounge",
+        "Co-Working Space",
+        "Yoga Studio",
+        "Rooftop Pool",
+        "Valet Parking",
+        "Fitness Center",
+        "Concierge Service",
+        "Bike Storage",
+        "In-Unit Washer/Dryer",
+        "City Views",
+        "Floor-to-Ceiling Windows",
+        "Stainless Steel Appliances",
+        "Quartz Countertops"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "The Gabriella",
+      "address": "4255 Cedar Springs Rd",
+      "neighborhood": "Oak Lawn",
+      "website": "https://thegabrielladallas.com/",
+      "year_built": 2021,
+      "stories": 23,
+      "total_units": 271,
+      "rent_range": {
+        "min": 1520,
+        "max": 3010
+      },
+      "sqft_range": {
+        "min": 532,
+        "max": 1470
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 532,
+          "rent": 1520
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 660,
+          "rent": 1720
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 883,
+          "rent": 2010
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1071,
+          "rent": 2450
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1375,
+          "rent": 2870
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1470,
+          "rent": 3010
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Package Lockers",
+        "Fitness Center",
+        "Outdoor Grilling Area",
+        "Dog Park",
+        "Resident Lounge",
+        "Business Center",
+        "EV Charging Stations",
+        "Yoga Studio",
+        "Concierge Service",
+        "Quartz Countertops",
+        "Stainless Steel Appliances",
+        "City Views",
+        "Smart Home Features",
+        "In-Unit Washer/Dryer",
+        "Hardwood Floors",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://thegabrielladallas.com/assets/images/cache/x3BRJLL3jjkalCIWCsYl3PFOtXD0pLzJIrj9ulN3-dae86c9b16241a9cb4c9494126f795d2.jpg"
+      }
+    },
+    {
+      "name": "The Alton Oak Lawn",
+      "address": "3017 Douglas Ave",
+      "neighborhood": "Oak Lawn",
+      "website": "https://www.thealtonoaklawn.com/",
+      "year_built": 2018,
+      "stories": 15,
+      "total_units": 318,
+      "rent_range": {
+        "min": 1410,
+        "max": 3230
+      },
+      "sqft_range": {
+        "min": 483,
+        "max": 1581
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 483,
+          "rent": 1410
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 786,
+          "rent": 1900
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 905,
+          "rent": 1910
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1080,
+          "rent": 2390
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1399,
+          "rent": 2860
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1581,
+          "rent": 3230
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Fitness Center",
+        "Coffee Bar",
+        "Valet Parking",
+        "Bike Storage",
+        "Resident Lounge",
+        "Yoga Studio",
+        "Co-Working Space",
+        "Dog Park",
+        "Package Lockers",
+        "Smart Home Features",
+        "Private Balcony",
+        "Hardwood Floors",
+        "City Views",
+        "Walk-In Closets",
+        "Floor-to-Ceiling Windows"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://sxxweb8cdn.cachefly.net/img/thumbnail.aspx?p=/common/uploads/zrs2019/622/media/3e246b5b-2663-4352-a2cb-de2189d4650f.jpg"
+      }
+    },
+    {
+      "name": "Maple Terrace",
+      "address": "3003 Maple Ave",
+      "neighborhood": "Uptown",
+      "phone": "214-855-5900",
+      "website": "https://www.mapleterracedallas.com/",
+      "year_built": 2024,
+      "stories": 22,
+      "total_units": 247,
+      "rent_range": {
+        "min": 1510,
+        "max": 3730
+      },
+      "sqft_range": {
+        "min": 509,
+        "max": 1453
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 509,
+          "rent": 1510
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 729,
+          "rent": 2110
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 800,
+          "rent": 2350
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1075,
+          "rent": 2920
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1392,
+          "rent": 3260
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1453,
+          "rent": 3730
+        }
+      ],
+      "amenities": [
+        "Fitness Center",
+        "Package Lockers",
+        "Pet Spa",
+        "Coffee Bar",
+        "Rooftop Pool",
+        "Business Center",
+        "EV Charging Stations",
+        "Co-Working Space",
+        "Concierge Service",
+        "Resident Lounge",
+        "Yoga Studio",
+        "Dog Park",
+        "Smart Home Features",
+        "Floor-to-Ceiling Windows",
+        "Hardwood Floors",
+        "Quartz Countertops",
+        "In-Unit Washer/Dryer",
+        "Private Balcony",
+        "Stainless Steel Appliances"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "The Oliver",
+      "address": "1999 Bryan St",
+      "neighborhood": "Downtown",
+      "phone": "469-243-8000",
+      "website": "https://www.theoliverdallas.com/",
+      "year_built": 2022,
+      "stories": 23,
+      "total_units": 267,
+      "rent_range": {
+        "min": 1580,
+        "max": 4030
+      },
+      "sqft_range": {
+        "min": 457,
+        "max": 1641
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 457,
+          "rent": 1580
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 675,
+          "rent": 2240
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 851,
+          "rent": 2670
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1063,
+          "rent": 3220
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1354,
+          "rent": 3580
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1641,
+          "rent": 4030
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Resident Lounge",
+        "Package Lockers",
+        "Co-Working Space",
+        "Yoga Studio",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Fitness Center",
+        "Coffee Bar",
+        "Business Center",
+        "Walk-In Closets",
+        "Smart Home Features",
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "Private Balcony",
+        "City Views",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://sxxweb8cdn.cachefly.net/img/thumbnail.aspx?p=/common/uploads/zrs2019/822/media/ec5733ca-12a8-486b-a19d-f15d26631bed.jpg"
+      }
+    },
+    {
+      "name": "Residences at Park District",
+      "address": "2627 Howell St",
+      "neighborhood": "Uptown",
+      "phone": "469-930-4500",
+      "website": "https://liveparkdistrict.com/",
+      "year_built": 2021,
+      "stories": 34,
+      "total_units": 328,
+      "rent_range": {
+        "min": 1520,
+        "max": 3510
+      },
+      "sqft_range": {
+        "min": 525,
+        "max": 1600
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 525,
+          "rent": 1520
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 693,
+          "rent": 2000
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 906,
+          "rent": 2210
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1011,
+          "rent": 2910
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1359,
+          "rent": 3210
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1600,
+          "rent": 3510
+        }
+      ],
+      "amenities": [
+        "Resident Lounge",
+        "Pet Spa",
+        "Valet Parking",
+        "Coffee Bar",
+        "Rooftop Pool",
+        "Co-Working Space",
+        "Package Lockers",
+        "Yoga Studio",
+        "Fitness Center",
+        "Hardwood Floors",
+        "Quartz Countertops",
+        "In-Unit Washer/Dryer",
+        "City Views",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {
+        "exterior": "https://liveparkdistrict.com/assets/images/cache/og-image-85e5cd043e537a51d534c8ba0df0c45c.jpg"
+      }
+    }
+  ]
+}

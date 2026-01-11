@@ -1,0 +1,1048 @@
+{
+  "buildings": [
+    {
+      "name": "One South First",
+      "address": "1 South First Street",
+      "neighborhood": "Williamsburg",
+      "phone": "718-302-0001",
+      "website": "https://www.onesouthfirst.com/",
+      "year_built": 2022,
+      "stories": 32,
+      "total_units": 308,
+      "rent_range": {
+        "min": 2930,
+        "max": 5970
+      },
+      "sqft_range": {
+        "min": 502,
+        "max": 1639
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 502,
+          "rent": 2930
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 654,
+          "rent": 3510
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 906,
+          "rent": 3870
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1030,
+          "rent": 4590
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1301,
+          "rent": 5150
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1639,
+          "rent": 5970
+        }
+      ],
+      "amenities": [
+        "Fitness Center",
+        "EV Charging Stations",
+        "Business Center",
+        "Concierge Service",
+        "Resident Lounge",
+        "Yoga Studio",
+        "Bike Storage",
+        "Valet Parking",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Private Balcony",
+        "Smart Home Features",
+        "Hardwood Floors",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {
+        "exterior": "https://s3.amazonaws.com/1south1splash/1s1share-1564599439632.png"
+      }
+    },
+    {
+      "name": "325 Kent",
+      "address": "325 Kent Avenue",
+      "neighborhood": "Williamsburg",
+      "phone": "718-599-3250",
+      "website": "https://www.325kent.com/",
+      "management_company": "Two Trees",
+      "year_built": 2018,
+      "stories": 20,
+      "total_units": 223,
+      "rent_range": {
+        "min": 2750,
+        "max": 5980
+      },
+      "sqft_range": {
+        "min": 477,
+        "max": 1504
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 477,
+          "rent": 2750
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 659,
+          "rent": 3460
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 806,
+          "rent": 3920
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1123,
+          "rent": 4420
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1232,
+          "rent": 5240
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1504,
+          "rent": 5980
+        }
+      ],
+      "amenities": [
+        "Dog Park",
+        "Rooftop Pool",
+        "Valet Parking",
+        "Business Center",
+        "Coffee Bar",
+        "EV Charging Stations",
+        "Co-Working Space",
+        "Package Lockers",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "In-Unit Washer/Dryer",
+        "Walk-In Closets",
+        "Smart Home Features"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "420 Kent",
+      "address": "420 Kent Avenue",
+      "neighborhood": "Williamsburg",
+      "phone": "718-599-4200",
+      "website": "https://420kent.com/",
+      "year_built": 2023,
+      "stories": 31,
+      "total_units": 374,
+      "rent_range": {
+        "min": 2680,
+        "max": 5940
+      },
+      "sqft_range": {
+        "min": 497,
+        "max": 1483
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 497,
+          "rent": 2680
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 775,
+          "rent": 3510
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 812,
+          "rent": 3910
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1060,
+          "rent": 4630
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1228,
+          "rent": 5110
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1483,
+          "rent": 5940
+        }
+      ],
+      "amenities": [
+        "Outdoor Grilling Area",
+        "Resident Lounge",
+        "Fitness Center",
+        "Concierge Service",
+        "Bike Storage",
+        "Valet Parking",
+        "Coffee Bar",
+        "Co-Working Space",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Hardwood Floors",
+        "In-Unit Washer/Dryer",
+        "Walk-In Closets",
+        "Floor-to-Ceiling Windows"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://420kent.com/wp-content/uploads/2019/02/cropped-favicon.png"
+      }
+    },
+    {
+      "name": "The Dime",
+      "address": "275 South 5th Street",
+      "neighborhood": "Williamsburg",
+      "phone": "718-218-3463",
+      "website": "https://residences.thedime.com/",
+      "year_built": 2020,
+      "stories": 29,
+      "total_units": 343,
+      "rent_range": {
+        "min": 2860,
+        "max": 6110
+      },
+      "sqft_range": {
+        "min": 491,
+        "max": 1659
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 491,
+          "rent": 2860
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 744,
+          "rent": 3510
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 910,
+          "rent": 3960
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1170,
+          "rent": 4440
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1317,
+          "rent": 5220
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1659,
+          "rent": 6110
+        }
+      ],
+      "amenities": [
+        "Package Lockers",
+        "Fitness Center",
+        "Yoga Studio",
+        "EV Charging Stations",
+        "Valet Parking",
+        "Coffee Bar",
+        "Dog Park",
+        "Business Center",
+        "Co-Working Space",
+        "Smart Home Features",
+        "In-Unit Washer/Dryer",
+        "Walk-In Closets",
+        "Floor-to-Ceiling Windows",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {
+        "exterior": "https://residences.thedime.com/wp-content/uploads/2020/03/equal-housing-icon.png"
+      }
+    },
+    {
+      "name": "West Wharf",
+      "address": "21 India Street",
+      "neighborhood": "Greenpoint",
+      "phone": "718-389-2100",
+      "website": "https://westwharf.com/",
+      "year_built": 2023,
+      "stories": 34,
+      "total_units": 288,
+      "rent_range": {
+        "min": 2680,
+        "max": 5490
+      },
+      "sqft_range": {
+        "min": 467,
+        "max": 1645
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 467,
+          "rent": 2680
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 781,
+          "rent": 3050
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 883,
+          "rent": 3440
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1180,
+          "rent": 4150
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1348,
+          "rent": 4810
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1645,
+          "rent": 5490
+        }
+      ],
+      "amenities": [
+        "Fitness Center",
+        "Rooftop Pool",
+        "Yoga Studio",
+        "EV Charging Stations",
+        "Resident Lounge",
+        "Dog Park",
+        "Valet Parking",
+        "Pet Spa",
+        "Bike Storage",
+        "Coffee Bar",
+        "Co-Working Space",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer",
+        "Smart Home Features",
+        "Private Balcony",
+        "Floor-to-Ceiling Windows",
+        "City Views",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "Lorimer House",
+      "address": "555 Broadway",
+      "neighborhood": "Williamsburg",
+      "phone": "718-384-5550",
+      "website": "https://lorimerhousebk.com/",
+      "year_built": 2023,
+      "stories": 32,
+      "total_units": 260,
+      "rent_range": {
+        "min": 2690,
+        "max": 5880
+      },
+      "sqft_range": {
+        "min": 519,
+        "max": 1539
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 519,
+          "rent": 2690
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 785,
+          "rent": 3460
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 867,
+          "rent": 3800
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1169,
+          "rent": 4460
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1271,
+          "rent": 5090
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1539,
+          "rent": 5880
+        }
+      ],
+      "amenities": [
+        "Fitness Center",
+        "Bike Storage",
+        "EV Charging Stations",
+        "Resident Lounge",
+        "Coffee Bar",
+        "Yoga Studio",
+        "Valet Parking",
+        "Rooftop Pool",
+        "Pet Spa",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Hardwood Floors",
+        "Private Balcony",
+        "Floor-to-Ceiling Windows"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {
+        "exterior": "https://lorimerhousebk.com/wp-content/plugins/bb-plugin/img/pixel.png"
+      }
+    },
+    {
+      "name": "The Ashland",
+      "address": "250 Ashland Place",
+      "neighborhood": "Fort Greene",
+      "phone": "718-246-2500",
+      "website": "https://theashlandbk.com/",
+      "management_company": "Gotham Organization",
+      "year_built": 2023,
+      "stories": 31,
+      "total_units": 281,
+      "rent_range": {
+        "min": 2370,
+        "max": 5220
+      },
+      "sqft_range": {
+        "min": 490,
+        "max": 1667
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 490,
+          "rent": 2370
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 675,
+          "rent": 3120
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 935,
+          "rent": 3370
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1184,
+          "rent": 4030
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1371,
+          "rent": 4480
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1667,
+          "rent": 5220
+        }
+      ],
+      "amenities": [
+        "Yoga Studio",
+        "Business Center",
+        "Pet Spa",
+        "Outdoor Grilling Area",
+        "Resident Lounge",
+        "Dog Park",
+        "Valet Parking",
+        "EV Charging Stations",
+        "Package Lockers",
+        "Concierge Service",
+        "Fitness Center",
+        "Floor-to-Ceiling Windows",
+        "Hardwood Floors",
+        "Smart Home Features",
+        "Walk-In Closets",
+        "City Views",
+        "In-Unit Washer/Dryer",
+        "Stainless Steel Appliances"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {
+        "exterior": "https://www.theashlandbk.com/wp-content/uploads/2025/07/the-ashland-homepage-hero-desktop.jpg"
+      }
+    },
+    {
+      "name": "The Dupont",
+      "address": "149 Dupont Street",
+      "neighborhood": "Greenpoint",
+      "phone": "718-389-1490",
+      "website": "https://www.thedupontgreenpoint.com/",
+      "management_company": "FirstService Residential",
+      "year_built": 2019,
+      "stories": 34,
+      "total_units": 228,
+      "rent_range": {
+        "min": 2590,
+        "max": 5590
+      },
+      "sqft_range": {
+        "min": 474,
+        "max": 1610
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 474,
+          "rent": 2590
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 784,
+          "rent": 3210
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 931,
+          "rent": 3490
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1028,
+          "rent": 4150
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1310,
+          "rent": 4730
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1610,
+          "rent": 5590
+        }
+      ],
+      "amenities": [
+        "Bike Storage",
+        "Rooftop Pool",
+        "Fitness Center",
+        "Package Lockers",
+        "Co-Working Space",
+        "Outdoor Grilling Area",
+        "Concierge Service",
+        "Business Center",
+        "Valet Parking",
+        "Yoga Studio",
+        "Resident Lounge",
+        "Coffee Bar",
+        "Quartz Countertops",
+        "Smart Home Features",
+        "Hardwood Floors",
+        "City Views",
+        "Floor-to-Ceiling Windows",
+        "Walk-In Closets",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "One Williamsburg Wharf",
+      "address": "1 Williamsburg Way",
+      "neighborhood": "Williamsburg",
+      "website": "https://www.onewilliamsburgwharf.com/",
+      "management_company": "Naftali Group",
+      "year_built": 2024,
+      "stories": 19,
+      "total_units": 241,
+      "rent_range": {
+        "min": 2880,
+        "max": 5930
+      },
+      "sqft_range": {
+        "min": 536,
+        "max": 1601
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 536,
+          "rent": 2880
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 716,
+          "rent": 3630
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 870,
+          "rent": 3970
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1135,
+          "rent": 4620
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1205,
+          "rent": 5230
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1601,
+          "rent": 5930
+        }
+      ],
+      "amenities": [
+        "Package Lockers",
+        "Rooftop Pool",
+        "Yoga Studio",
+        "Outdoor Grilling Area",
+        "Bike Storage",
+        "Concierge Service",
+        "Valet Parking",
+        "Fitness Center",
+        "Resident Lounge",
+        "Pet Spa",
+        "Co-Working Space",
+        "EV Charging Stations",
+        "City Views",
+        "Private Balcony",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "One Domino Square",
+      "address": "1 Domino Square",
+      "neighborhood": "Williamsburg",
+      "website": "https://www.onedominosquare.com/",
+      "management_company": "Two Trees",
+      "year_built": 2020,
+      "stories": 28,
+      "total_units": 201,
+      "rent_range": {
+        "min": 2740,
+        "max": 6090
+      },
+      "sqft_range": {
+        "min": 507,
+        "max": 1580
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 507,
+          "rent": 2740
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 799,
+          "rent": 3550
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 880,
+          "rent": 3980
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1190,
+          "rent": 4490
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1390,
+          "rent": 5210
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1580,
+          "rent": 6090
+        }
+      ],
+      "amenities": [
+        "Resident Lounge",
+        "Dog Park",
+        "Concierge Service",
+        "Pet Spa",
+        "Business Center",
+        "Valet Parking",
+        "Yoga Studio",
+        "Outdoor Grilling Area",
+        "Co-Working Space",
+        "Stainless Steel Appliances",
+        "Smart Home Features",
+        "Private Balcony",
+        "City Views",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {
+        "exterior": "https://d2yyifn60dazpx.cloudfront.net/media/mediaitem/190/attachment/large-043d4731dea306fafd3a8da78ea951e7.jpeg"
+      }
+    },
+    {
+      "name": "The Brooklyn Tower",
+      "address": "9 DeKalb Ave",
+      "neighborhood": "Downtown Brooklyn",
+      "website": "https://www.thebrooklyntower.com/",
+      "year_built": 2018,
+      "stories": 24,
+      "total_units": 390,
+      "rent_range": {
+        "min": 3230,
+        "max": 6620
+      },
+      "sqft_range": {
+        "min": 451,
+        "max": 1476
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 451,
+          "rent": 3230
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 788,
+          "rent": 3790
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 907,
+          "rent": 4290
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1169,
+          "rent": 5070
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1364,
+          "rent": 5870
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1476,
+          "rent": 6620
+        }
+      ],
+      "amenities": [
+        "Coffee Bar",
+        "Dog Park",
+        "Pet Spa",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Yoga Studio",
+        "Concierge Service",
+        "Fitness Center",
+        "Stainless Steel Appliances",
+        "Smart Home Features",
+        "Quartz Countertops",
+        "Hardwood Floors",
+        "Private Balcony",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    }
+  ]
+}

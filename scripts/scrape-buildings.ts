@@ -386,17 +386,31 @@ async function scrapeBuilding(building: CSVBuilding): Promise<ScrapedBuilding> {
   return result;
 }
 
+const CITY_CONFIG: Record<string, { name: string; state: string; slug: string }> = {
+  "austin": { name: "Austin", state: "TX", slug: "austin" },
+  "la": { name: "Los Angeles", state: "CA", slug: "la" },
+  "los-angeles": { name: "Los Angeles", state: "CA", slug: "la" },
+  "dallas": { name: "Dallas", state: "TX", slug: "dallas" },
+  "nashville": { name: "Nashville", state: "TN", slug: "nashville" },
+  "atlanta": { name: "Atlanta", state: "GA", slug: "atlanta" },
+  "brooklyn": { name: "Brooklyn", state: "NY", slug: "brooklyn" },
+  "miami": { name: "Miami", state: "FL", slug: "miami" },
+  "coral-gables": { name: "Coral Gables", state: "FL", slug: "coral-gables" },
+};
+
 async function main() {
   const cityArg = process.argv[2]?.toLowerCase();
 
-  if (!cityArg || !["austin", "los-angeles", "la"].includes(cityArg)) {
-    console.log("Usage: npx tsx scripts/scrape-buildings.ts [austin|los-angeles]");
+  if (!cityArg || !CITY_CONFIG[cityArg]) {
+    console.log("Usage: npx tsx scripts/scrape-buildings.ts [city]");
+    console.log("Available cities: austin, la, dallas, nashville, atlanta, brooklyn, miami, coral-gables");
     process.exit(1);
   }
 
-  const targetCity = cityArg === "la" ? "Los Angeles" : cityArg === "austin" ? "Austin" : "Los Angeles";
-  const targetState = targetCity === "Austin" ? "TX" : "CA";
-  const outputSlug = targetCity === "Austin" ? "austin" : "la";
+  const config = CITY_CONFIG[cityArg];
+  const targetCity = config.name;
+  const targetState = config.state;
+  const outputSlug = config.slug;
 
   console.log(`\n=== Scraping ${targetCity}, ${targetState} Buildings ===\n`);
 

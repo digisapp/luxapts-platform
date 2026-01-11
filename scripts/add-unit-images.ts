@@ -60,24 +60,42 @@ const getRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)
 async function main() {
   console.log("Starting unit image population...\n");
 
-  // Get all units that don't have images
-  const { data: allUnits, error: unitsError } = await supabase
-    .from("units")
-    .select(`
-      id,
-      unit_number,
-      beds,
-      building_id,
-      buildings:building_id (name)
-    `)
-    .eq("is_available", true);
+  // Get total count
+  const { count } = await supabase.from("units").select("*", { count: "exact", head: true });
+  console.log(`Total units in database: ${count}`);
 
-  if (unitsError || !allUnits) {
-    console.error("Failed to fetch units:", unitsError?.message);
-    process.exit(1);
+  // Fetch all units in pages of 1000
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allUnits: Array<any> = [];
+
+  let page = 0;
+  const pageSize = 1000;
+
+  while (true) {
+    const { data: pageData, error } = await supabase
+      .from("units")
+      .select(`
+        id,
+        unit_number,
+        beds,
+        building_id,
+        buildings:building_id (name)
+      `)
+      .range(page * pageSize, (page + 1) * pageSize - 1);
+
+    if (error) {
+      console.error("Failed to fetch units:", error.message);
+      process.exit(1);
+    }
+
+    if (!pageData || pageData.length === 0) break;
+
+    allUnits.push(...pageData);
+    console.log(`Fetched page ${page + 1}: ${pageData.length} units (total: ${allUnits.length})`);
+    page++;
   }
 
-  console.log(`Found ${allUnits.length} available units`);
+  console.log(`\nProcessing ${allUnits.length} units...`);
 
   let imagesAdded = 0;
   let unitsProcessed = 0;

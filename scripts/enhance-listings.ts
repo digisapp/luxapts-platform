@@ -1,7 +1,7 @@
 // Run with: npx tsx scripts/enhance-listings.ts
 // Enhances scraped Austin and LA listings with realistic floor plan data
 
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
 
 interface RawBuilding {
@@ -72,6 +72,54 @@ const LA_RENTS: Record<string, { studio: number; one: number; two: number; three
   "Sawtelle": { studio: 2000, one: 2500, two: 3200, three: 4200 },
   "West Los Angeles": { studio: 2200, one: 2800, two: 3600, three: 4800 },
   "West Adams": { studio: 1900, one: 2400, two: 3100, three: 4000 },
+};
+
+// Dallas market rent data by neighborhood (2024 averages)
+const DALLAS_RENTS: Record<string, { studio: number; one: number; two: number; three: number }> = {
+  "Uptown": { studio: 1600, one: 2100, two: 2800, three: 3600 },
+  "Downtown": { studio: 1500, one: 2000, two: 2700, three: 3400 },
+  "Victory Park": { studio: 1700, one: 2200, two: 2900, three: 3700 },
+  "Knox Henderson": { studio: 1500, one: 1900, two: 2500, three: 3200 },
+  "Oak Lawn": { studio: 1400, one: 1800, two: 2400, three: 3100 },
+  "Deep Ellum": { studio: 1300, one: 1700, two: 2300, three: 2900 },
+  "Preston Hollow": { studio: 1800, one: 2400, two: 3200, three: 4200 },
+  "Turtle Creek": { studio: 1900, one: 2500, two: 3400, three: 4500 },
+  "State Thomas": { studio: 1500, one: 1900, two: 2600, three: 3300 },
+  "North Dallas": { studio: 1300, one: 1700, two: 2200, three: 2800 },
+  "Mockingbird Station": { studio: 1400, one: 1800, two: 2400, three: 3000 },
+  "Greenville Ave": { studio: 1400, one: 1800, two: 2400, three: 3100 },
+};
+
+// Nashville market rent data by neighborhood (2024 averages)
+const NASHVILLE_RENTS: Record<string, { studio: number; one: number; two: number; three: number }> = {
+  "Downtown": { studio: 1700, one: 2200, two: 3000, three: 3900 },
+  "The Gulch": { studio: 1900, one: 2500, two: 3300, three: 4300 },
+  "Music Row": { studio: 1600, one: 2100, two: 2800, three: 3600 },
+  "Germantown": { studio: 1700, one: 2200, two: 2900, three: 3700 },
+  "East Nashville": { studio: 1500, one: 1900, two: 2500, three: 3200 },
+  "Midtown": { studio: 1600, one: 2100, two: 2800, three: 3500 },
+  "12 South": { studio: 1800, one: 2300, two: 3100, three: 4000 },
+};
+
+// Atlanta market rent data by neighborhood (2024 averages)
+const ATLANTA_RENTS: Record<string, { studio: number; one: number; two: number; three: number }> = {
+  "Buckhead": { studio: 1700, one: 2200, two: 3000, three: 4000 },
+  "Midtown": { studio: 1600, one: 2100, two: 2800, three: 3600 },
+  "Downtown": { studio: 1400, one: 1800, two: 2400, three: 3100 },
+  "West Midtown": { studio: 1500, one: 1900, two: 2600, three: 3300 },
+  "Virginia Highland": { studio: 1600, one: 2000, two: 2700, three: 3500 },
+  "Inman Park": { studio: 1700, one: 2200, two: 2900, three: 3700 },
+  "Old Fourth Ward": { studio: 1500, one: 1900, two: 2500, three: 3200 },
+};
+
+// Brooklyn market rent data by neighborhood (2024 averages)
+const BROOKLYN_RENTS: Record<string, { studio: number; one: number; two: number; three: number }> = {
+  "Williamsburg": { studio: 2800, one: 3500, two: 4500, three: 6000 },
+  "Greenpoint": { studio: 2600, one: 3200, two: 4200, three: 5500 },
+  "Downtown Brooklyn": { studio: 2700, one: 3400, two: 4400, three: 5800 },
+  "DUMBO": { studio: 3000, one: 3800, two: 5000, three: 6500 },
+  "Fort Greene": { studio: 2500, one: 3100, two: 4000, three: 5200 },
+  "Brooklyn Heights": { studio: 2800, one: 3500, two: 4600, three: 6000 },
 };
 
 // Common luxury amenities
@@ -290,24 +338,24 @@ function processCity(
   console.log(`  Average rent: $${avgRent}`);
 }
 
+const CITY_CONFIGS = [
+  { file: "austin_listings.json", rents: AUSTIN_RENTS, default: { studio: 1700, one: 2200, two: 2900, three: 3700 } },
+  { file: "la_listings.json", rents: LA_RENTS, default: { studio: 2200, one: 2800, two: 3600, three: 4800 } },
+  { file: "dallas_listings.json", rents: DALLAS_RENTS, default: { studio: 1500, one: 2000, two: 2600, three: 3400 } },
+  { file: "nashville_listings.json", rents: NASHVILLE_RENTS, default: { studio: 1700, one: 2200, two: 2900, three: 3800 } },
+  { file: "atlanta_listings.json", rents: ATLANTA_RENTS, default: { studio: 1600, one: 2000, two: 2700, three: 3500 } },
+  { file: "brooklyn_listings.json", rents: BROOKLYN_RENTS, default: { studio: 2700, one: 3400, two: 4400, three: 5800 } },
+];
+
 async function main() {
   const dataDir = join(process.cwd(), "data");
 
-  // Process Austin
-  processCity(
-    join(dataDir, "austin_listings.json"),
-    join(dataDir, "austin_listings.json"),
-    AUSTIN_RENTS,
-    { studio: 1700, one: 2200, two: 2900, three: 3700 }
-  );
-
-  // Process LA
-  processCity(
-    join(dataDir, "la_listings.json"),
-    join(dataDir, "la_listings.json"),
-    LA_RENTS,
-    { studio: 2200, one: 2800, two: 3600, three: 4800 }
-  );
+  for (const config of CITY_CONFIGS) {
+    const filePath = join(dataDir, config.file);
+    if (existsSync(filePath)) {
+      processCity(filePath, filePath, config.rents, config.default);
+    }
+  }
 
   console.log("\n=== Done! ===");
 }

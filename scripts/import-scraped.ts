@@ -407,36 +407,40 @@ async function importCity(
   return results;
 }
 
+const CITY_CONFIGS: Record<string, { name: string; slug: string; state: string; zip: string; lat: number; lng: number; file: string }> = {
+  austin: { name: "Austin", slug: "austin", state: "TX", zip: "78701", lat: 30.2672, lng: -97.7431, file: "austin_listings.json" },
+  la: { name: "Los Angeles", slug: "los-angeles", state: "CA", zip: "90012", lat: 34.0522, lng: -118.2437, file: "la_listings.json" },
+  dallas: { name: "Dallas", slug: "dallas", state: "TX", zip: "75201", lat: 32.7767, lng: -96.7970, file: "dallas_listings.json" },
+  nashville: { name: "Nashville", slug: "nashville", state: "TN", zip: "37203", lat: 36.1627, lng: -86.7816, file: "nashville_listings.json" },
+  atlanta: { name: "Atlanta", slug: "atlanta", state: "GA", zip: "30309", lat: 33.7490, lng: -84.3880, file: "atlanta_listings.json" },
+  brooklyn: { name: "Brooklyn", slug: "brooklyn", state: "NY", zip: "11201", lat: 40.6782, lng: -73.9442, file: "brooklyn_listings.json" },
+};
+
 async function main() {
   const cityArg = process.argv[2]?.toLowerCase();
+  const validCities = [...Object.keys(CITY_CONFIGS), "all"];
 
-  if (!cityArg || !["austin", "la", "los-angeles", "both"].includes(cityArg)) {
-    console.log("Usage: npx tsx scripts/import-scraped.ts [austin|la|both]");
+  if (!cityArg || !validCities.includes(cityArg)) {
+    console.log("Usage: npx tsx scripts/import-scraped.ts [city|all]");
+    console.log("Available cities: " + Object.keys(CITY_CONFIGS).join(", ") + ", all");
     process.exit(1);
   }
 
-  if (cityArg === "austin" || cityArg === "both") {
-    await importCity(
-      "Austin",
-      "austin",
-      "TX",
-      "78701",
-      30.2672,
-      -97.7431,
-      "austin_listings.json"
-    );
-  }
+  const citiesToProcess = cityArg === "all" ? Object.keys(CITY_CONFIGS) : [cityArg];
 
-  if (cityArg === "la" || cityArg === "los-angeles" || cityArg === "both") {
-    await importCity(
-      "Los Angeles",
-      "los-angeles",
-      "CA",
-      "90012",
-      34.0522,
-      -118.2437,
-      "la_listings.json"
-    );
+  for (const city of citiesToProcess) {
+    const config = CITY_CONFIGS[city];
+    if (config) {
+      await importCity(
+        config.name,
+        config.slug,
+        config.state,
+        config.zip,
+        config.lat,
+        config.lng,
+        config.file
+      );
+    }
   }
 
   console.log("\n=== Done! ===");

@@ -7,15 +7,15 @@
       "phone": "213-772-4272",
       "website": "https://avendtla.com/",
       "year_built": 2024,
-      "stories": 16,
-      "total_units": 382,
+      "stories": 27,
+      "total_units": 218,
       "rent_range": {
-        "min": 2540,
-        "max": 5700
+        "min": 2490,
+        "max": 5640
       },
       "sqft_range": {
-        "min": 505,
-        "max": 1476
+        "min": 461,
+        "max": 1455
       },
       "unit_types": [
         "Studio",
@@ -29,63 +29,68 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 505,
-          "rent": 2540
+          "sqft": 461,
+          "rent": 2490
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 712,
-          "rent": 3330
+          "sqft": 797,
+          "rent": 3300
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 810,
-          "rent": 3580
+          "sqft": 933,
+          "rent": 3560
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1136,
-          "rent": 4450
+          "sqft": 1089,
+          "rent": 4300
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1390,
-          "rent": 4920
+          "sqft": 1345,
+          "rent": 5080
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1476,
-          "rent": 5700
+          "sqft": 1455,
+          "rent": 5640
         }
       ],
       "amenities": [
-        "Rooftop Pool",
         "Valet Parking",
-        "Yoga Studio",
-        "Business Center",
-        "Fitness Center",
-        "Outdoor Grilling Area",
-        "Co-Working Space",
         "EV Charging Stations",
-        "Hardwood Floors",
-        "Quartz Countertops",
-        "Floor-to-Ceiling Windows",
+        "Pet Spa",
+        "Concierge Service",
+        "Business Center",
+        "Coffee Bar",
+        "Dog Park",
+        "Fitness Center",
+        "Package Lockers",
+        "Rooftop Pool",
+        "Co-Working Space",
         "City Views",
+        "Walk-In Closets",
+        "Hardwood Floors",
+        "In-Unit Washer/Dryer",
+        "Quartz Countertops",
+        "Private Balcony",
         "Stainless Steel Appliances"
       ],
       "pet_policy": "Pets welcome with deposit. Contact for details.",
@@ -102,15 +107,15 @@
       "website": "https://theadtla.com/",
       "management_company": "Greystar",
       "year_built": 2026,
-      "stories": 28,
-      "total_units": 298,
+      "stories": 18,
+      "total_units": 301,
       "rent_range": {
-        "min": 2540,
-        "max": 5880
+        "min": 2570,
+        "max": 5830
       },
       "sqft_range": {
-        "min": 531,
-        "max": 1489
+        "min": 546,
+        "max": 1559
       },
       "unit_types": [
         "Studio",
@@ -124,69 +129,67 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 531,
-          "rent": 2540
+          "sqft": 546,
+          "rent": 2570
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 694,
-          "rent": 3220
+          "sqft": 691,
+          "rent": 3240
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 867,
-          "rent": 3530
+          "sqft": 882,
+          "rent": 3520
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1052,
-          "rent": 4500
+          "sqft": 1200,
+          "rent": 4320
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1212,
-          "rent": 5060
+          "sqft": 1370,
+          "rent": 5070
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1489,
-          "rent": 5880
+          "sqft": 1559,
+          "rent": 5830
         }
       ],
       "amenities": [
+        "Yoga Studio",
+        "Outdoor Grilling Area",
+        "Business Center",
         "Valet Parking",
+        "Concierge Service",
+        "Co-Working Space",
+        "Package Lockers",
         "Pet Spa",
         "EV Charging Stations",
-        "Concierge Service",
-        "Bike Storage",
-        "Business Center",
-        "Outdoor Grilling Area",
-        "Co-Working Space",
-        "Rooftop Pool",
-        "Resident Lounge",
-        "Dog Park",
-        "Yoga Studio",
-        "Walk-In Closets",
-        "Stainless Steel Appliances",
         "Quartz Countertops",
+        "Floor-to-Ceiling Windows",
+        "In-Unit Washer/Dryer",
+        "Stainless Steel Appliances",
         "City Views",
-        "Hardwood Floors",
-        "Floor-to-Ceiling Windows"
+        "Private Balcony",
+        "Hardwood Floors"
       ],
       "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
       "images": {}
@@ -198,15 +201,15 @@
       "phone": "213-263-4262",
       "website": "https://circala.com/",
       "year_built": 2023,
-      "stories": 30,
-      "total_units": 214,
+      "stories": 31,
+      "total_units": 312,
       "rent_range": {
-        "min": 2510,
-        "max": 5830
+        "min": 2650,
+        "max": 5700
       },
       "sqft_range": {
-        "min": 530,
-        "max": 1484
+        "min": 500,
+        "max": 1581
       },
       "unit_types": [
         "Studio",
@@ -220,67 +223,67 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 530,
-          "rent": 2510
+          "sqft": 500,
+          "rent": 2650
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 680,
-          "rent": 3320
+          "sqft": 767,
+          "rent": 3120
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 908,
-          "rent": 3470
+          "sqft": 944,
+          "rent": 3630
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1019,
-          "rent": 4510
+          "sqft": 1043,
+          "rent": 4270
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1274,
-          "rent": 5060
+          "sqft": 1400,
+          "rent": 4960
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1484,
-          "rent": 5830
+          "sqft": 1581,
+          "rent": 5700
         }
       ],
       "amenities": [
-        "Dog Park",
-        "Outdoor Grilling Area",
-        "Pet Spa",
-        "Concierge Service",
-        "Yoga Studio",
-        "Fitness Center",
+        "Business Center",
         "EV Charging Stations",
+        "Co-Working Space",
+        "Yoga Studio",
         "Resident Lounge",
         "Bike Storage",
-        "Private Balcony",
-        "Floor-to-Ceiling Windows",
-        "Walk-In Closets",
-        "Hardwood Floors",
+        "Coffee Bar",
+        "Dog Park",
+        "Fitness Center",
         "In-Unit Washer/Dryer",
+        "Private Balcony",
+        "Walk-In Closets",
         "Quartz Countertops",
-        "Stainless Steel Appliances"
+        "Stainless Steel Appliances",
+        "City Views",
+        "Floor-to-Ceiling Windows"
       ],
       "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
       "images": {}
@@ -292,15 +295,15 @@
       "phone": "213-239-0900",
       "website": "https://www.parkfifthtower.com/",
       "year_built": 2018,
-      "stories": 33,
-      "total_units": 385,
+      "stories": 17,
+      "total_units": 262,
       "rent_range": {
-        "min": 2660,
-        "max": 5690
+        "min": 2590,
+        "max": 5810
       },
       "sqft_range": {
-        "min": 450,
-        "max": 1648
+        "min": 462,
+        "max": 1487
       },
       "unit_types": [
         "Studio",
@@ -314,15 +317,15 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 450,
-          "rent": 2660
+          "sqft": 462,
+          "rent": 2590
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 677,
+          "sqft": 751,
           "rent": 3160
         },
         {
@@ -330,48 +333,54 @@
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 810,
-          "rent": 3690
+          "sqft": 921,
+          "rent": 3660
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1025,
-          "rent": 4390
+          "sqft": 1087,
+          "rent": 4420
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1327,
-          "rent": 5130
+          "sqft": 1234,
+          "rent": 4970
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1648,
-          "rent": 5690
+          "sqft": 1487,
+          "rent": 5810
         }
       ],
       "amenities": [
-        "Bike Storage",
-        "Coffee Bar",
-        "Dog Park",
-        "Rooftop Pool",
-        "Fitness Center",
+        "Co-Working Space",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "EV Charging Stations",
         "Concierge Service",
         "Business Center",
-        "EV Charging Stations",
+        "Pet Spa",
+        "Fitness Center",
+        "Resident Lounge",
+        "Package Lockers",
+        "Coffee Bar",
+        "Bike Storage",
+        "Private Balcony",
+        "Floor-to-Ceiling Windows",
+        "City Views",
         "Stainless Steel Appliances",
-        "Walk-In Closets",
+        "In-Unit Washer/Dryer",
         "Smart Home Features",
-        "Quartz Countertops",
-        "In-Unit Washer/Dryer"
+        "Walk-In Closets"
       ],
       "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
       "images": {}
@@ -383,15 +392,15 @@
       "phone": "213-201-8888",
       "website": "https://888hope.com/",
       "year_built": 2019,
-      "stories": 21,
-      "total_units": 348,
+      "stories": 28,
+      "total_units": 223,
       "rent_range": {
-        "min": 2660,
-        "max": 5680
+        "min": 2580,
+        "max": 5870
       },
       "sqft_range": {
-        "min": 478,
-        "max": 1616
+        "min": 513,
+        "max": 1499
       },
       "unit_types": [
         "Studio",
@@ -405,71 +414,67 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 478,
-          "rent": 2660
+          "sqft": 513,
+          "rent": 2580
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 769,
-          "rent": 3130
+          "sqft": 756,
+          "rent": 3200
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 931,
-          "rent": 3610
+          "sqft": 936,
+          "rent": 3560
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1150,
-          "rent": 4440
+          "sqft": 1146,
+          "rent": 4460
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1300,
-          "rent": 5050
+          "sqft": 1380,
+          "rent": 5010
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1616,
-          "rent": 5680
+          "sqft": 1499,
+          "rent": 5870
         }
       ],
       "amenities": [
-        "EV Charging Stations",
+        "Dog Park",
         "Fitness Center",
-        "Package Lockers",
         "Co-Working Space",
         "Concierge Service",
-        "Yoga Studio",
         "Bike Storage",
-        "Dog Park",
-        "Business Center",
-        "Pet Spa",
-        "Rooftop Pool",
-        "Quartz Countertops",
-        "Stainless Steel Appliances",
-        "Private Balcony",
-        "Hardwood Floors",
+        "Yoga Studio",
+        "EV Charging Stations",
+        "Outdoor Grilling Area",
         "Walk-In Closets",
-        "Smart Home Features",
-        "Floor-to-Ceiling Windows"
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "Private Balcony",
+        "City Views",
+        "In-Unit Washer/Dryer"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
     },
     {
@@ -479,15 +484,15 @@
       "phone": "213-624-8250",
       "website": "https://www.825southhilldtla.com/",
       "year_built": 2018,
-      "stories": 25,
-      "total_units": 201,
+      "stories": 35,
+      "total_units": 329,
       "rent_range": {
-        "min": 2590,
-        "max": 5730
+        "min": 2470,
+        "max": 5850
       },
       "sqft_range": {
-        "min": 508,
-        "max": 1400
+        "min": 496,
+        "max": 1689
       },
       "unit_types": [
         "Studio",
@@ -501,67 +506,72 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 508,
-          "rent": 2590
+          "sqft": 496,
+          "rent": 2470
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 767,
-          "rent": 3310
+          "sqft": 701,
+          "rent": 3340
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 914,
-          "rent": 3610
+          "sqft": 907,
+          "rent": 3470
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1099,
-          "rent": 4370
+          "sqft": 1125,
+          "rent": 4410
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1395,
-          "rent": 5070
+          "sqft": 1378,
+          "rent": 5170
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1400,
-          "rent": 5730
+          "sqft": 1689,
+          "rent": 5850
         }
       ],
       "amenities": [
-        "Rooftop Pool",
-        "Resident Lounge",
-        "Valet Parking",
-        "Fitness Center",
-        "EV Charging Stations",
-        "Yoga Studio",
+        "Package Lockers",
         "Dog Park",
         "Outdoor Grilling Area",
+        "Resident Lounge",
+        "Co-Working Space",
         "Business Center",
-        "Stainless Steel Appliances",
-        "Quartz Countertops",
+        "Pet Spa",
+        "Bike Storage",
+        "Valet Parking",
+        "Concierge Service",
+        "Coffee Bar",
+        "Yoga Studio",
         "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows",
         "Walk-In Closets",
-        "Hardwood Floors"
+        "Hardwood Floors",
+        "Smart Home Features",
+        "Quartz Countertops",
+        "Private Balcony"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
     },
     {
@@ -571,15 +581,15 @@
       "phone": "213-748-8000",
       "website": "https://www.onyxdtla.com/",
       "year_built": 2018,
-      "stories": 22,
-      "total_units": 323,
+      "stories": 35,
+      "total_units": 298,
       "rent_range": {
-        "min": 2530,
-        "max": 5670
+        "min": 2470,
+        "max": 5800
       },
       "sqft_range": {
-        "min": 499,
-        "max": 1403
+        "min": 454,
+        "max": 1597
       },
       "unit_types": [
         "Studio",
@@ -593,16 +603,16 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 499,
-          "rent": 2530
+          "sqft": 454,
+          "rent": 2470
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 788,
-          "rent": 3180
+          "sqft": 650,
+          "rent": 3070
         },
         {
           "name": "A2 - Large One Bedroom",
@@ -610,52 +620,54 @@
           "beds": 1,
           "baths": 1,
           "sqft": 806,
-          "rent": 3400
+          "rent": 3430
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1171,
-          "rent": 4410
+          "sqft": 1151,
+          "rent": 4290
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1312,
-          "rent": 5070
+          "sqft": 1286,
+          "rent": 4900
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1403,
-          "rent": 5670
+          "sqft": 1597,
+          "rent": 5800
         }
       ],
       "amenities": [
-        "Outdoor Grilling Area",
-        "Concierge Service",
-        "EV Charging Stations",
-        "Dog Park",
-        "Valet Parking",
-        "Pet Spa",
-        "Yoga Studio",
         "Resident Lounge",
         "Co-Working Space",
-        "Quartz Countertops",
-        "City Views",
-        "Walk-In Closets",
-        "Hardwood Floors",
+        "Concierge Service",
+        "Outdoor Grilling Area",
+        "Business Center",
+        "Coffee Bar",
+        "Bike Storage",
+        "Fitness Center",
+        "Dog Park",
+        "Package Lockers",
+        "EV Charging Stations",
+        "Yoga Studio",
         "Private Balcony",
-        "Smart Home Features",
-        "Floor-to-Ceiling Windows"
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer",
+        "City Views",
+        "Floor-to-Ceiling Windows",
+        "Hardwood Floors"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
     },
     {
@@ -666,15 +678,15 @@
       "website": "https://rent.brookfieldproperties.com/property/the-met/",
       "management_company": "Brookfield",
       "year_built": 2019,
-      "stories": 33,
-      "total_units": 204,
+      "stories": 19,
+      "total_units": 282,
       "rent_range": {
-        "min": 2620,
-        "max": 5660
+        "min": 2590,
+        "max": 5810
       },
       "sqft_range": {
-        "min": 528,
-        "max": 1697
+        "min": 487,
+        "max": 1455
       },
       "unit_types": [
         "Studio",
@@ -688,67 +700,68 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 528,
-          "rent": 2620
+          "sqft": 487,
+          "rent": 2590
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 674,
-          "rent": 3090
+          "sqft": 770,
+          "rent": 3200
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 849,
-          "rent": 3660
+          "sqft": 848,
+          "rent": 3570
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1083,
-          "rent": 4370
+          "sqft": 1076,
+          "rent": 4310
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1367,
-          "rent": 5070
+          "sqft": 1209,
+          "rent": 5140
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1697,
-          "rent": 5660
+          "sqft": 1455,
+          "rent": 5810
         }
       ],
       "amenities": [
-        "EV Charging Stations",
-        "Outdoor Grilling Area",
-        "Bike Storage",
-        "Rooftop Pool",
-        "Fitness Center",
-        "Yoga Studio",
         "Coffee Bar",
+        "Outdoor Grilling Area",
+        "Pet Spa",
+        "Dog Park",
+        "Package Lockers",
         "Resident Lounge",
         "Business Center",
-        "Quartz Countertops",
-        "Hardwood Floors",
-        "Walk-In Closets",
-        "City Views",
+        "EV Charging Stations",
+        "Yoga Studio",
+        "Valet Parking",
+        "Co-Working Space",
+        "Concierge Service",
+        "Floor-to-Ceiling Windows",
+        "Stainless Steel Appliances",
         "Private Balcony",
-        "In-Unit Washer/Dryer",
-        "Floor-to-Ceiling Windows"
+        "Quartz Countertops",
+        "Walk-In Closets"
       ],
       "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
       "images": {
@@ -763,15 +776,15 @@
       "website": "https://www.windsorcommunities.com/properties/south-park-by-windsor/",
       "management_company": "Windsor",
       "year_built": 2020,
-      "stories": 31,
-      "total_units": 214,
+      "stories": 17,
+      "total_units": 332,
       "rent_range": {
-        "min": 2510,
-        "max": 5680
+        "min": 2450,
+        "max": 5850
       },
       "sqft_range": {
-        "min": 469,
-        "max": 1690
+        "min": 526,
+        "max": 1509
       },
       "unit_types": [
         "Studio",
@@ -785,69 +798,67 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 469,
-          "rent": 2510
+          "sqft": 526,
+          "rent": 2450
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 716,
-          "rent": 3080
+          "sqft": 799,
+          "rent": 3240
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 815,
-          "rent": 3510
+          "sqft": 923,
+          "rent": 3410
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1087,
-          "rent": 4290
+          "sqft": 1086,
+          "rent": 4450
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1255,
-          "rent": 5060
+          "sqft": 1303,
+          "rent": 5040
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1690,
-          "rent": 5680
+          "sqft": 1509,
+          "rent": 5850
         }
       ],
       "amenities": [
-        "Concierge Service",
-        "Pet Spa",
-        "Package Lockers",
-        "Co-Working Space",
-        "Rooftop Pool",
+        "Resident Lounge",
         "Bike Storage",
         "Outdoor Grilling Area",
-        "Fitness Center",
-        "EV Charging Stations",
-        "Resident Lounge",
         "Coffee Bar",
         "Yoga Studio",
-        "Floor-to-Ceiling Windows",
-        "Stainless Steel Appliances",
-        "City Views",
+        "Business Center",
+        "Pet Spa",
+        "Package Lockers",
+        "Valet Parking",
+        "Concierge Service",
+        "Fitness Center",
         "Walk-In Closets",
+        "Smart Home Features",
         "Hardwood Floors",
-        "Quartz Countertops"
+        "Quartz Countertops",
+        "Floor-to-Ceiling Windows"
       ],
       "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
       "images": {
@@ -861,15 +872,15 @@
       "phone": "213-623-2489",
       "website": "https://www.splofts.com/",
       "year_built": 2020,
-      "stories": 32,
-      "total_units": 251,
+      "stories": 16,
+      "total_units": 327,
       "rent_range": {
-        "min": 2420,
-        "max": 5630
+        "min": 2390,
+        "max": 5820
       },
       "sqft_range": {
-        "min": 482,
-        "max": 1458
+        "min": 525,
+        "max": 1483
       },
       "unit_types": [
         "Studio",
@@ -883,15 +894,15 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 482,
-          "rent": 2420
+          "sqft": 525,
+          "rent": 2390
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 726,
+          "sqft": 681,
           "rent": 3190
         },
         {
@@ -899,54 +910,54 @@
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 908,
-          "rent": 3620
+          "sqft": 801,
+          "rent": 3570
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1006,
-          "rent": 4320
+          "sqft": 1032,
+          "rent": 4450
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1205,
-          "rent": 5160
+          "sqft": 1313,
+          "rent": 4910
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1458,
-          "rent": 5630
+          "sqft": 1483,
+          "rent": 5820
         }
       ],
       "amenities": [
-        "Dog Park",
-        "Outdoor Grilling Area",
-        "EV Charging Stations",
         "Resident Lounge",
-        "Business Center",
-        "Coffee Bar",
         "Pet Spa",
-        "Co-Working Space",
-        "Bike Storage",
         "Package Lockers",
+        "Coffee Bar",
+        "Outdoor Grilling Area",
+        "Rooftop Pool",
         "Valet Parking",
+        "EV Charging Stations",
+        "Fitness Center",
+        "Business Center",
+        "Bike Storage",
+        "Co-Working Space",
         "Stainless Steel Appliances",
-        "In-Unit Washer/Dryer",
         "Quartz Countertops",
-        "Smart Home Features",
-        "City Views",
-        "Floor-to-Ceiling Windows"
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "In-Unit Washer/Dryer"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
     },
     {
@@ -956,15 +967,15 @@
       "phone": "323-656-0123",
       "website": "https://domainweho.com/",
       "year_built": 2020,
-      "stories": 26,
-      "total_units": 318,
+      "stories": 23,
+      "total_units": 260,
       "rent_range": {
-        "min": 2760,
-        "max": 6240
+        "min": 2910,
+        "max": 6230
       },
       "sqft_range": {
-        "min": 476,
-        "max": 1443
+        "min": 475,
+        "max": 1448
       },
       "unit_types": [
         "Studio",
@@ -978,69 +989,69 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 476,
-          "rent": 2760
+          "sqft": 475,
+          "rent": 2910
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 697,
-          "rent": 3580
+          "sqft": 705,
+          "rent": 3710
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 839,
-          "rent": 4020
+          "sqft": 843,
+          "rent": 3940
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1027,
-          "rent": 4850
+          "sqft": 1124,
+          "rent": 4820
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1269,
-          "rent": 5550
+          "sqft": 1385,
+          "rent": 5620
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1443,
-          "rent": 6240
+          "sqft": 1448,
+          "rent": 6230
         }
       ],
       "amenities": [
-        "Co-Working Space",
-        "Resident Lounge",
-        "Outdoor Grilling Area",
-        "Bike Storage",
-        "Pet Spa",
         "Valet Parking",
-        "Business Center",
+        "Coffee Bar",
         "Rooftop Pool",
+        "Yoga Studio",
+        "Pet Spa",
+        "Fitness Center",
+        "Dog Park",
+        "Concierge Service",
         "EV Charging Stations",
-        "Quartz Countertops",
+        "Package Lockers",
+        "Business Center",
+        "Private Balcony",
         "Stainless Steel Appliances",
-        "In-Unit Washer/Dryer",
-        "Hardwood Floors",
-        "Floor-to-Ceiling Windows",
-        "City Views",
-        "Private Balcony"
+        "Walk-In Closets",
+        "Smart Home Features",
+        "Quartz Countertops"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
     },
     {
@@ -1050,15 +1061,15 @@
       "phone": "310-859-9001",
       "website": "https://ninethousandone.com/",
       "year_built": 2020,
-      "stories": 18,
-      "total_units": 237,
+      "stories": 17,
+      "total_units": 330,
       "rent_range": {
-        "min": 2740,
-        "max": 6390
+        "min": 2830,
+        "max": 6230
       },
       "sqft_range": {
-        "min": 472,
-        "max": 1607
+        "min": 457,
+        "max": 1698
       },
       "unit_types": [
         "Studio",
@@ -1072,70 +1083,69 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 472,
-          "rent": 2740
+          "sqft": 457,
+          "rent": 2830
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 679,
-          "rent": 3690
+          "sqft": 663,
+          "rent": 3810
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 841,
-          "rent": 4170
+          "sqft": 883,
+          "rent": 3960
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1093,
-          "rent": 4720
+          "sqft": 1066,
+          "rent": 4940
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1388,
-          "rent": 5470
+          "sqft": 1229,
+          "rent": 5580
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1607,
-          "rent": 6390
+          "sqft": 1698,
+          "rent": 6230
         }
       ],
       "amenities": [
-        "Package Lockers",
-        "Outdoor Grilling Area",
         "Pet Spa",
-        "Valet Parking",
-        "EV Charging Stations",
         "Rooftop Pool",
-        "Concierge Service",
-        "Resident Lounge",
-        "Co-Working Space",
-        "Business Center",
-        "Private Balcony",
-        "City Views",
-        "Walk-In Closets",
-        "Quartz Countertops",
-        "Hardwood Floors",
+        "EV Charging Stations",
+        "Yoga Studio",
+        "Bike Storage",
+        "Valet Parking",
+        "Coffee Bar",
+        "Fitness Center",
+        "Outdoor Grilling Area",
+        "Dog Park",
         "Floor-to-Ceiling Windows",
-        "In-Unit Washer/Dryer"
+        "Smart Home Features",
+        "Stainless Steel Appliances",
+        "Walk-In Closets",
+        "City Views",
+        "Hardwood Floors"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
     },
     {
@@ -1145,15 +1155,15 @@
       "phone": "323-466-6230",
       "website": "https://www.smbhollywood.com/",
       "year_built": 2020,
-      "stories": 34,
-      "total_units": 256,
+      "stories": 20,
+      "total_units": 365,
       "rent_range": {
-        "min": 2200,
-        "max": 5180
+        "min": 2400,
+        "max": 5120
       },
       "sqft_range": {
-        "min": 535,
-        "max": 1575
+        "min": 465,
+        "max": 1624
       },
       "unit_types": [
         "Studio",
@@ -1167,71 +1177,70 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 535,
-          "rent": 2200
+          "sqft": 465,
+          "rent": 2400
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 687,
-          "rent": 2880
+          "sqft": 765,
+          "rent": 2850
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 827,
-          "rent": 3290
+          "sqft": 832,
+          "rent": 3160
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1014,
-          "rent": 3920
+          "sqft": 1038,
+          "rent": 3990
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1222,
-          "rent": 4440
+          "sqft": 1326,
+          "rent": 4410
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1575,
-          "rent": 5180
+          "sqft": 1624,
+          "rent": 5120
         }
       ],
       "amenities": [
-        "Rooftop Pool",
-        "Fitness Center",
+        "Resident Lounge",
+        "Business Center",
         "Yoga Studio",
-        "Bike Storage",
-        "Outdoor Grilling Area",
-        "Concierge Service",
-        "Co-Working Space",
-        "Valet Parking",
+        "Package Lockers",
         "Pet Spa",
-        "Dog Park",
-        "EV Charging Stations",
-        "In-Unit Washer/Dryer",
-        "Smart Home Features",
+        "Bike Storage",
+        "Valet Parking",
+        "Co-Working Space",
+        "Concierge Service",
+        "Coffee Bar",
+        "Private Balcony",
+        "City Views",
+        "Stainless Steel Appliances",
         "Quartz Countertops",
         "Hardwood Floors",
-        "Walk-In Closets",
-        "Floor-to-Ceiling Windows",
-        "Stainless Steel Appliances"
+        "Smart Home Features",
+        "Floor-to-Ceiling Windows"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
     },
     {
@@ -1241,15 +1250,15 @@
       "phone": "310-551-0100",
       "website": "https://www.livetenthousand.com/",
       "year_built": 2019,
-      "stories": 30,
-      "total_units": 269,
+      "stories": 28,
+      "total_units": 200,
       "rent_range": {
-        "min": 2670,
-        "max": 6150
+        "min": 2710,
+        "max": 6080
       },
       "sqft_range": {
-        "min": 459,
-        "max": 1501
+        "min": 492,
+        "max": 1420
       },
       "unit_types": [
         "Studio",
@@ -1263,66 +1272,67 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 459,
-          "rent": 2670
+          "sqft": 492,
+          "rent": 2710
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 708,
-          "rent": 3540
+          "sqft": 662,
+          "rent": 3390
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 822,
-          "rent": 3650
+          "sqft": 895,
+          "rent": 3720
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1057,
-          "rent": 4540
+          "sqft": 1166,
+          "rent": 4550
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1238,
-          "rent": 5130
+          "sqft": 1247,
+          "rent": 5070
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1501,
-          "rent": 6150
+          "sqft": 1420,
+          "rent": 6080
         }
       ],
       "amenities": [
+        "Business Center",
+        "Coffee Bar",
+        "Pet Spa",
+        "Package Lockers",
         "Rooftop Pool",
-        "Outdoor Grilling Area",
         "Fitness Center",
-        "Dog Park",
-        "Co-Working Space",
-        "EV Charging Stations",
-        "Bike Storage",
         "Yoga Studio",
-        "Quartz Countertops",
-        "Floor-to-Ceiling Windows",
-        "City Views",
+        "Valet Parking",
+        "In-Unit Washer/Dryer",
+        "Stainless Steel Appliances",
+        "Hardwood Floors",
         "Private Balcony",
-        "Walk-In Closets"
+        "Walk-In Closets",
+        "Smart Home Features"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {
         "exterior": "https://www.livetenthousand.com/wp-content/uploads/2023/03/TT-Seo-1.jpg"
       }
@@ -1334,15 +1344,15 @@
       "phone": "323-656-8560",
       "website": "https://thecrownweho.com/",
       "year_built": 2024,
-      "stories": 31,
-      "total_units": 301,
+      "stories": 27,
+      "total_units": 348,
       "rent_range": {
-        "min": 2750,
-        "max": 6330
+        "min": 2630,
+        "max": 6390
       },
       "sqft_range": {
-        "min": 452,
-        "max": 1557
+        "min": 532,
+        "max": 1605
       },
       "unit_types": [
         "Studio",
@@ -1356,68 +1366,71 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 452,
-          "rent": 2750
+          "sqft": 532,
+          "rent": 2630
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 771,
-          "rent": 3660
+          "sqft": 729,
+          "rent": 3680
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 803,
-          "rent": 4060
+          "sqft": 914,
+          "rent": 4080
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1161,
-          "rent": 4950
+          "sqft": 1182,
+          "rent": 4820
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1316,
-          "rent": 5520
+          "sqft": 1220,
+          "rent": 5700
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1557,
-          "rent": 6330
+          "sqft": 1605,
+          "rent": 6390
         }
       ],
       "amenities": [
-        "Rooftop Pool",
-        "Fitness Center",
-        "Coffee Bar",
+        "Valet Parking",
+        "Business Center",
+        "Resident Lounge",
+        "Package Lockers",
         "EV Charging Stations",
-        "Dog Park",
-        "Yoga Studio",
-        "Concierge Service",
+        "Rooftop Pool",
         "Pet Spa",
-        "Outdoor Grilling Area",
-        "In-Unit Washer/Dryer",
-        "City Views",
+        "Yoga Studio",
+        "Fitness Center",
+        "Dog Park",
+        "Concierge Service",
         "Smart Home Features",
         "Private Balcony",
-        "Stainless Steel Appliances",
-        "Floor-to-Ceiling Windows"
+        "Quartz Countertops",
+        "Floor-to-Ceiling Windows",
+        "Walk-In Closets",
+        "City Views",
+        "Stainless Steel Appliances"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {
         "exterior": "http://thecrownweho.com/wp-content/uploads/2016/08/combined-2.png"
       }
@@ -1429,15 +1442,15 @@
       "phone": "310-659-8530",
       "website": "https://www.burtonapts.com/",
       "year_built": 2020,
-      "stories": 20,
-      "total_units": 372,
+      "stories": 23,
+      "total_units": 353,
       "rent_range": {
-        "min": 3250,
-        "max": 7420
+        "min": 3080,
+        "max": 7470
       },
       "sqft_range": {
-        "min": 523,
-        "max": 1440
+        "min": 500,
+        "max": 1623
       },
       "unit_types": [
         "Studio",
@@ -1451,31 +1464,31 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 523,
-          "rent": 3250
+          "sqft": 500,
+          "rent": 3080
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 652,
-          "rent": 4060
+          "sqft": 693,
+          "rent": 4120
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 828,
-          "rent": 4530
+          "sqft": 940,
+          "rent": 4560
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1087,
+          "sqft": 1089,
           "rent": 5570
         },
         {
@@ -1483,35 +1496,37 @@
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1210,
-          "rent": 6320
+          "sqft": 1242,
+          "rent": 6350
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1440,
-          "rent": 7420
+          "sqft": 1623,
+          "rent": 7470
         }
       ],
       "amenities": [
-        "Outdoor Grilling Area",
-        "Resident Lounge",
-        "Rooftop Pool",
-        "Concierge Service",
-        "Fitness Center",
-        "Pet Spa",
-        "Co-Working Space",
         "Dog Park",
+        "Co-Working Space",
+        "Resident Lounge",
+        "Yoga Studio",
+        "Valet Parking",
         "Coffee Bar",
-        "Package Lockers",
+        "Rooftop Pool",
+        "Fitness Center",
+        "Concierge Service",
         "EV Charging Stations",
-        "Hardwood Floors",
+        "Outdoor Grilling Area",
+        "Pet Spa",
+        "Stainless Steel Appliances",
         "Smart Home Features",
+        "Walk-In Closets",
+        "Private Balcony",
         "City Views",
-        "In-Unit Washer/Dryer",
-        "Walk-In Closets"
+        "Quartz Countertops"
       ],
       "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
@@ -1524,15 +1539,15 @@
       "website": "https://www.jrk.com/",
       "management_company": "JRK Property Holdings",
       "year_built": 2022,
-      "stories": 21,
-      "total_units": 395,
+      "stories": 31,
+      "total_units": 240,
       "rent_range": {
         "min": 1660,
-        "max": 3760
+        "max": 3740
       },
       "sqft_range": {
-        "min": 456,
-        "max": 1517
+        "min": 503,
+        "max": 1643
       },
       "unit_types": [
         "Studio",
@@ -1546,7 +1561,7 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 456,
+          "sqft": 503,
           "rent": 1660
         },
         {
@@ -1554,62 +1569,60 @@
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 664,
-          "rent": 2230
+          "sqft": 757,
+          "rent": 2210
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 902,
-          "rent": 2380
+          "sqft": 860,
+          "rent": 2540
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1196,
-          "rent": 2900
+          "sqft": 1168,
+          "rent": 2970
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1341,
-          "rent": 3560
+          "sqft": 1308,
+          "rent": 3380
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1517,
-          "rent": 3760
+          "sqft": 1643,
+          "rent": 3740
         }
       ],
       "amenities": [
-        "Resident Lounge",
-        "Business Center",
-        "Bike Storage",
         "Pet Spa",
-        "Valet Parking",
-        "Yoga Studio",
-        "Outdoor Grilling Area",
-        "Co-Working Space",
-        "Concierge Service",
+        "Package Lockers",
+        "Coffee Bar",
         "Fitness Center",
+        "Yoga Studio",
+        "Dog Park",
+        "Business Center",
         "EV Charging Stations",
-        "Smart Home Features",
+        "Hardwood Floors",
+        "Stainless Steel Appliances",
+        "Private Balcony",
         "Quartz Countertops",
+        "In-Unit Washer/Dryer",
         "Floor-to-Ceiling Windows",
-        "Walk-In Closets",
-        "City Views",
-        "In-Unit Washer/Dryer"
+        "Smart Home Features"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
     },
     {
@@ -1620,15 +1633,15 @@
       "website": "https://www.apartments.com/c-on-pico-los-angeles-ca/",
       "management_company": "JRK Property Holdings",
       "year_built": 2019,
-      "stories": 29,
-      "total_units": 290,
+      "stories": 23,
+      "total_units": 315,
       "rent_range": {
-        "min": 2060,
-        "max": 4230
+        "min": 1970,
+        "max": 4300
       },
       "sqft_range": {
-        "min": 450,
-        "max": 1607
+        "min": 520,
+        "max": 1488
       },
       "unit_types": [
         "Studio",
@@ -1642,16 +1655,16 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 450,
-          "rent": 2060
+          "sqft": 520,
+          "rent": 1970
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 676,
-          "rent": 2570
+          "sqft": 754,
+          "rent": 2490
         },
         {
           "name": "A2 - Large One Bedroom",
@@ -1659,54 +1672,50 @@
           "beds": 1,
           "baths": 1,
           "sqft": 903,
-          "rent": 2850
+          "rent": 2670
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1144,
-          "rent": 3180
+          "sqft": 1008,
+          "rent": 3290
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1375,
-          "rent": 3630
+          "sqft": 1208,
+          "rent": 3570
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1607,
-          "rent": 4230
+          "sqft": 1488,
+          "rent": 4300
         }
       ],
       "amenities": [
-        "Package Lockers",
-        "Co-Working Space",
-        "Fitness Center",
-        "EV Charging Stations",
-        "Dog Park",
-        "Bike Storage",
-        "Yoga Studio",
-        "Rooftop Pool",
-        "Business Center",
         "Valet Parking",
-        "Coffee Bar",
-        "Hardwood Floors",
-        "In-Unit Washer/Dryer",
-        "Stainless Steel Appliances",
-        "Floor-to-Ceiling Windows",
-        "Private Balcony",
+        "Rooftop Pool",
+        "Co-Working Space",
+        "Bike Storage",
+        "Concierge Service",
+        "Package Lockers",
+        "Dog Park",
+        "Yoga Studio",
+        "Smart Home Features",
         "City Views",
+        "Hardwood Floors",
+        "Private Balcony",
+        "Floor-to-Ceiling Windows",
         "Quartz Countertops"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
     },
     {
@@ -1715,15 +1724,15 @@
       "neighborhood": "West Adams",
       "website": "https://arqatcumulus.com/",
       "year_built": 2022,
-      "stories": 30,
-      "total_units": 255,
+      "stories": 24,
+      "total_units": 300,
       "rent_range": {
-        "min": 1800,
-        "max": 3890
+        "min": 2020,
+        "max": 4060
       },
       "sqft_range": {
-        "min": 540,
-        "max": 1468
+        "min": 479,
+        "max": 1529
       },
       "unit_types": [
         "Studio",
@@ -1737,67 +1746,66 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 540,
-          "rent": 1800
+          "sqft": 479,
+          "rent": 2020
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 673,
-          "rent": 2360
+          "sqft": 754,
+          "rent": 2410
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 851,
-          "rent": 2510
+          "sqft": 831,
+          "rent": 2740
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1023,
-          "rent": 3100
+          "sqft": 1008,
+          "rent": 3120
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1253,
-          "rent": 3580
+          "sqft": 1264,
+          "rent": 3570
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1468,
-          "rent": 3890
+          "sqft": 1529,
+          "rent": 4060
         }
       ],
       "amenities": [
-        "Resident Lounge",
-        "Outdoor Grilling Area",
-        "Package Lockers",
-        "Rooftop Pool",
         "Valet Parking",
-        "EV Charging Stations",
-        "Dog Park",
-        "Co-Working Space",
+        "Fitness Center",
+        "Package Lockers",
         "Business Center",
-        "Pet Spa",
-        "Hardwood Floors",
-        "Quartz Countertops",
-        "Private Balcony",
+        "Rooftop Pool",
+        "Outdoor Grilling Area",
+        "Resident Lounge",
+        "Coffee Bar",
+        "Yoga Studio",
+        "Bike Storage",
+        "Smart Home Features",
+        "Walk-In Closets",
         "In-Unit Washer/Dryer",
-        "City Views",
-        "Walk-In Closets"
+        "Floor-to-Ceiling Windows",
+        "Private Balcony"
       ],
       "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {
@@ -1810,15 +1818,15 @@
       "neighborhood": "West Los Angeles",
       "website": "https://thelandmarklosangeles.com/",
       "year_built": 2020,
-      "stories": 28,
-      "total_units": 214,
+      "stories": 27,
+      "total_units": 228,
       "rent_range": {
-        "min": 2190,
-        "max": 4850
+        "min": 2280,
+        "max": 4720
       },
       "sqft_range": {
-        "min": 493,
-        "max": 1433
+        "min": 500,
+        "max": 1602
       },
       "unit_types": [
         "Studio",
@@ -1832,70 +1840,72 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 493,
-          "rent": 2190
+          "sqft": 500,
+          "rent": 2280
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 699,
-          "rent": 2850
+          "sqft": 779,
+          "rent": 2680
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 888,
-          "rent": 3070
+          "sqft": 926,
+          "rent": 2990
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1052,
-          "rent": 3640
+          "sqft": 1144,
+          "rent": 3730
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1329,
-          "rent": 4200
+          "sqft": 1315,
+          "rent": 4150
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1433,
-          "rent": 4850
+          "sqft": 1602,
+          "rent": 4720
         }
       ],
       "amenities": [
-        "Rooftop Pool",
-        "Dog Park",
-        "Co-Working Space",
-        "Fitness Center",
         "Concierge Service",
-        "EV Charging Stations",
-        "Business Center",
+        "Bike Storage",
         "Outdoor Grilling Area",
-        "Package Lockers",
-        "Valet Parking",
         "Coffee Bar",
-        "Private Balcony",
+        "Yoga Studio",
+        "Fitness Center",
+        "Dog Park",
+        "Package Lockers",
+        "Resident Lounge",
+        "Co-Working Space",
+        "Valet Parking",
+        "Pet Spa",
         "Walk-In Closets",
-        "City Views",
         "Stainless Steel Appliances",
         "Floor-to-Ceiling Windows",
-        "Quartz Countertops"
+        "Quartz Countertops",
+        "Private Balcony",
+        "In-Unit Washer/Dryer",
+        "Hardwood Floors"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {
         "exterior": "https://thelandmarklosangeles.com/wp-content/uploads/2022/03/Landmark_4x4.jpg"
       }
@@ -1906,15 +1916,15 @@
       "neighborhood": "West Los Angeles",
       "website": "https://www.lineala.com/",
       "year_built": 2024,
-      "stories": 15,
-      "total_units": 376,
+      "stories": 24,
+      "total_units": 294,
       "rent_range": {
-        "min": 2310,
-        "max": 4830
+        "min": 2280,
+        "max": 4910
       },
       "sqft_range": {
-        "min": 519,
-        "max": 1656
+        "min": 494,
+        "max": 1430
       },
       "unit_types": [
         "Studio",
@@ -1928,31 +1938,31 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 519,
-          "rent": 2310
+          "sqft": 494,
+          "rent": 2280
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 687,
-          "rent": 2910
+          "sqft": 692,
+          "rent": 2830
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 921,
-          "rent": 3010
+          "sqft": 945,
+          "rent": 2950
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1146,
+          "sqft": 1178,
           "rent": 3690
         },
         {
@@ -1960,37 +1970,35 @@
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1316,
-          "rent": 4070
+          "sqft": 1395,
+          "rent": 4000
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1656,
-          "rent": 4830
+          "sqft": 1430,
+          "rent": 4910
         }
       ],
       "amenities": [
-        "Valet Parking",
-        "Package Lockers",
-        "Rooftop Pool",
+        "Pet Spa",
         "Co-Working Space",
+        "Rooftop Pool",
+        "Business Center",
+        "Fitness Center",
+        "Concierge Service",
         "Coffee Bar",
         "EV Charging Stations",
-        "Resident Lounge",
+        "Package Lockers",
         "Yoga Studio",
-        "Fitness Center",
-        "Bike Storage",
-        "Business Center",
-        "Pet Spa",
-        "Smart Home Features",
-        "Walk-In Closets",
+        "Resident Lounge",
         "Stainless Steel Appliances",
         "Quartz Countertops",
-        "Hardwood Floors",
-        "In-Unit Washer/Dryer"
+        "Floor-to-Ceiling Windows",
+        "City Views",
+        "Walk-In Closets"
       ],
       "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
@@ -2003,15 +2011,15 @@
       "website": "https://www.sentral.com/los-angeles/dtla",
       "management_company": "Sentral",
       "year_built": 2022,
-      "stories": 34,
-      "total_units": 345,
+      "stories": 22,
+      "total_units": 326,
       "rent_range": {
-        "min": 2560,
-        "max": 5760
+        "min": 2490,
+        "max": 5780
       },
       "sqft_range": {
-        "min": 490,
-        "max": 1412
+        "min": 466,
+        "max": 1664
       },
       "unit_types": [
         "Studio",
@@ -2025,70 +2033,66 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 490,
-          "rent": 2560
+          "sqft": 466,
+          "rent": 2490
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 738,
-          "rent": 3330
+          "sqft": 770,
+          "rent": 3270
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 854,
-          "rent": 3450
+          "sqft": 802,
+          "rent": 3430
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1069,
-          "rent": 4340
+          "sqft": 1188,
+          "rent": 4330
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1235,
-          "rent": 5100
+          "sqft": 1361,
+          "rent": 5160
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1412,
-          "rent": 5760
+          "sqft": 1664,
+          "rent": 5780
         }
       ],
       "amenities": [
-        "Yoga Studio",
-        "Business Center",
-        "Pet Spa",
-        "EV Charging Stations",
-        "Bike Storage",
-        "Resident Lounge",
         "Valet Parking",
-        "Coffee Bar",
-        "Concierge Service",
-        "Co-Working Space",
-        "Outdoor Grilling Area",
+        "Bike Storage",
         "Dog Park",
-        "Stainless Steel Appliances",
-        "In-Unit Washer/Dryer",
+        "Pet Spa",
+        "Concierge Service",
+        "Business Center",
+        "Package Lockers",
+        "Yoga Studio",
         "Private Balcony",
-        "Walk-In Closets",
-        "City Views"
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "Quartz Countertops",
+        "Stainless Steel Appliances"
       ],
-      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
       "images": {}
     }
   ]

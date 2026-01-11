@@ -1,22 +1,21 @@
 {
   "buildings": [
     {
-      "name": "Hanover Republic Square",
-      "address": "303 W. 5th Street",
-      "neighborhood": "Downtown",
-      "phone": "512-501-2316",
-      "website": "https://hanoverrepublicsquare.com/",
-      "management_company": "Hanover",
-      "year_built": 2022,
-      "stories": 23,
-      "total_units": 261,
+      "name": "Elora at Buckhead",
+      "address": "3372 Peachtree Road NE",
+      "neighborhood": "Buckhead",
+      "phone": "888-823-4518",
+      "website": "https://www.eloraatbuckhead.com/",
+      "year_built": 2019,
+      "stories": 32,
+      "total_units": 392,
       "rent_range": {
-        "min": 1930,
-        "max": 4940
+        "min": 1840,
+        "max": 4000
       },
       "sqft_range": {
-        "min": 545,
-        "max": 1692
+        "min": 486,
+        "max": 1626
       },
       "unit_types": [
         "Studio",
@@ -30,184 +29,91 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 545,
-          "rent": 1930
+          "sqft": 486,
+          "rent": 1840
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 688,
-          "rent": 2900
+          "sqft": 699,
+          "rent": 2260
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 818,
-          "rent": 2980
+          "sqft": 935,
+          "rent": 2400
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1192,
-          "rent": 3800
+          "sqft": 1015,
+          "rent": 3120
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1215,
-          "rent": 4240
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1692,
-          "rent": 4940
-        }
-      ],
-      "amenities": [
-        "EV Charging Stations",
-        "Rooftop Pool",
-        "Fitness Center",
-        "Valet Parking",
-        "Resident Lounge",
-        "Dog Park",
-        "Outdoor Grilling Area",
-        "Package Lockers",
-        "Pet Spa",
-        "Business Center",
-        "Coffee Bar",
-        "Bike Storage",
-        "Walk-In Closets",
-        "Hardwood Floors",
-        "Quartz Countertops",
-        "In-Unit Washer/Dryer",
-        "Smart Home Features",
-        "Floor-to-Ceiling Windows"
-      ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {
-        "exterior": "https://hanoverrepublicsquare.com/assets/images/cache/opengraph_hanover_republic_2490-43ba09a181841726624cc7452669f53b.jpg"
-      }
-    },
-    {
-      "name": "The Shoal",
-      "address": "827 West 12th Street",
-      "neighborhood": "Downtown",
-      "phone": "855-536-2024",
-      "website": "https://theshoalatx.com/",
-      "year_built": 2024,
-      "stories": 20,
-      "total_units": 344,
-      "rent_range": {
-        "min": 1980,
-        "max": 4900
-      },
-      "sqft_range": {
-        "min": 504,
-        "max": 1509
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 504,
-          "rent": 1980
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 757,
-          "rent": 2660
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 920,
-          "rent": 3060
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1119,
+          "sqft": 1252,
           "rent": 3550
         },
         {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1378,
-          "rent": 4220
-        },
-        {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1509,
-          "rent": 4900
+          "sqft": 1626,
+          "rent": 4000
         }
       ],
       "amenities": [
-        "Valet Parking",
-        "Resident Lounge",
-        "Coffee Bar",
+        "Rooftop Pool",
+        "Fitness Center",
+        "Bike Storage",
         "Concierge Service",
         "Package Lockers",
-        "Fitness Center",
-        "Pet Spa",
-        "Rooftop Pool",
-        "Stainless Steel Appliances",
+        "EV Charging Stations",
+        "Valet Parking",
+        "Coffee Bar",
+        "Yoga Studio",
+        "Outdoor Grilling Area",
+        "Dog Park",
+        "Resident Lounge",
         "City Views",
-        "In-Unit Washer/Dryer",
+        "Stainless Steel Appliances",
         "Floor-to-Ceiling Windows",
-        "Quartz Countertops"
+        "Walk-In Closets",
+        "Quartz Countertops",
+        "In-Unit Washer/Dryer"
       ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
       "images": {
-        "exterior": "https://theshoalatx.com/assets/images/cache/gallery_16_the_shoal_26961-4bbbe65482c4bd8717cbff85e7479071.jpg"
+        "exterior": "https://www.eloraatbuckhead.com/wp-content/uploads/2023/06/full-width-img-home.jpg"
       }
     },
     {
-      "name": "Ashton Austin",
-      "address": "706 Congress Ave",
-      "neighborhood": "Downtown",
-      "phone": "512-551-3200",
-      "website": "https://ashtoninaustin.com/",
-      "year_built": 2023,
-      "stories": 23,
-      "total_units": 228,
+      "name": "The Tower on Piedmont",
+      "address": "3525 Piedmont Rd NE",
+      "neighborhood": "Buckhead",
+      "phone": "404-500-2525",
+      "website": "https://www.thetoweronpiedmont.com/",
+      "year_built": 2021,
+      "stories": 21,
+      "total_units": 381,
       "rent_range": {
-        "min": 1950,
-        "max": 4750
+        "min": 2070,
+        "max": 4700
       },
       "sqft_range": {
-        "min": 521,
-        "max": 1466
+        "min": 464,
+        "max": 1548
       },
       "unit_types": [
         "Studio",
@@ -221,15 +127,15 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 521,
-          "rent": 1950
+          "sqft": 464,
+          "rent": 2070
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 729,
+          "sqft": 790,
           "rent": 2670
         },
         {
@@ -237,842 +143,69 @@
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 941,
-          "rent": 2990
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1117,
-          "rent": 3570
-        },
-        {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1212,
-          "rent": 4140
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1466,
-          "rent": 4750
-        }
-      ],
-      "amenities": [
-        "EV Charging Stations",
-        "Outdoor Grilling Area",
-        "Rooftop Pool",
-        "Fitness Center",
-        "Concierge Service",
-        "Valet Parking",
-        "Coffee Bar",
-        "Package Lockers",
-        "Bike Storage",
-        "Co-Working Space",
-        "Resident Lounge",
-        "Dog Park",
-        "Floor-to-Ceiling Windows",
-        "Private Balcony",
-        "Walk-In Closets",
-        "In-Unit Washer/Dryer",
-        "Stainless Steel Appliances",
-        "Quartz Countertops",
-        "Hardwood Floors"
-      ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {
-        "exterior": "https://ashtoninaustin.com/assets/images/cache/vzUZS3RRsIqmroDiIBrCOheP4HocJpM4NCoNkvE7-96fc48e2e7e2d9ed167358eef0a8caef.jpg"
-      }
-    },
-    {
-      "name": "700 River",
-      "address": "700 E Riverside Dr",
-      "neighborhood": "Rainey Street",
-      "phone": "512-717-5000",
-      "website": "https://www.700riveraustin.com/",
-      "year_built": 2021,
-      "stories": 30,
-      "total_units": 201,
-      "rent_range": {
-        "min": 2020,
-        "max": 4400
-      },
-      "sqft_range": {
-        "min": 473,
-        "max": 1597
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 473,
-          "rent": 2020
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 655,
-          "rent": 2490
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 919,
-          "rent": 2850
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1057,
-          "rent": 3480
-        },
-        {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1202,
-          "rent": 3890
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1597,
-          "rent": 4400
-        }
-      ],
-      "amenities": [
-        "Outdoor Grilling Area",
-        "Valet Parking",
-        "Rooftop Pool",
-        "EV Charging Stations",
-        "Co-Working Space",
-        "Business Center",
-        "Bike Storage",
-        "Coffee Bar",
-        "Fitness Center",
-        "Private Balcony",
-        "Floor-to-Ceiling Windows",
-        "Hardwood Floors",
-        "In-Unit Washer/Dryer",
-        "City Views"
-      ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {}
-    },
-    {
-      "name": "The Travis",
-      "address": "80 Red River Street",
-      "neighborhood": "Rainey Street",
-      "phone": "512-900-0000",
-      "website": "https://www.thetravisaustin.com/",
-      "year_built": 2024,
-      "stories": 27,
-      "total_units": 391,
-      "rent_range": {
-        "min": 1960,
-        "max": 4520
-      },
-      "sqft_range": {
-        "min": 465,
-        "max": 1610
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 465,
-          "rent": 1960
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 747,
-          "rent": 2490
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 806,
-          "rent": 2770
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1032,
-          "rent": 3310
-        },
-        {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1379,
-          "rent": 3960
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1610,
-          "rent": 4520
-        }
-      ],
-      "amenities": [
-        "Outdoor Grilling Area",
-        "Rooftop Pool",
-        "Fitness Center",
-        "Dog Park",
-        "Resident Lounge",
-        "Yoga Studio",
-        "Co-Working Space",
-        "Package Lockers",
-        "Concierge Service",
-        "Smart Home Features",
-        "City Views",
-        "Floor-to-Ceiling Windows",
-        "Quartz Countertops",
-        "Walk-In Closets",
-        "Hardwood Floors",
-        "Stainless Steel Appliances"
-      ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {}
-    },
-    {
-      "name": "Mosaic at Mueller",
-      "address": "1900 Simond Ave",
-      "neighborhood": "Mueller",
-      "phone": "512-454-1900",
-      "website": "https://www.mosaicaustin.com/",
-      "year_built": 2024,
-      "stories": 19,
-      "total_units": 278,
-      "rent_range": {
-        "min": 1530,
-        "max": 3500
-      },
-      "sqft_range": {
-        "min": 504,
-        "max": 1478
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 504,
-          "rent": 1530
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 789,
-          "rent": 2070
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 843,
-          "rent": 2370
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1024,
-          "rent": 2950
-        },
-        {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1236,
-          "rent": 3110
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1478,
-          "rent": 3500
-        }
-      ],
-      "amenities": [
-        "Rooftop Pool",
-        "Business Center",
-        "Bike Storage",
-        "Valet Parking",
-        "Pet Spa",
-        "Yoga Studio",
-        "Fitness Center",
-        "EV Charging Stations",
-        "Outdoor Grilling Area",
-        "Concierge Service",
-        "Dog Park",
-        "Coffee Bar",
-        "Floor-to-Ceiling Windows",
-        "Hardwood Floors",
-        "Smart Home Features",
-        "Quartz Countertops",
-        "Stainless Steel Appliances",
-        "In-Unit Washer/Dryer"
-      ],
-      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
-      "images": {}
-    },
-    {
-      "name": "Rivette Tower",
-      "address": "4500 Mueller Blvd",
-      "neighborhood": "Mueller",
-      "phone": "512-900-4500",
-      "website": "https://rivettemueller.com/",
-      "year_built": 2021,
-      "stories": 23,
-      "total_units": 322,
-      "rent_range": {
-        "min": 1950,
-        "max": 4080
-      },
-      "sqft_range": {
-        "min": 471,
-        "max": 1696
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 471,
-          "rent": 1950
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 733,
-          "rent": 2430
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 904,
-          "rent": 2790
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1006,
-          "rent": 3240
-        },
-        {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1210,
-          "rent": 3760
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1696,
-          "rent": 4080
-        }
-      ],
-      "amenities": [
-        "Rooftop Pool",
-        "Business Center",
-        "Yoga Studio",
-        "Coffee Bar",
-        "Bike Storage",
-        "Co-Working Space",
-        "Concierge Service",
-        "Pet Spa",
-        "Fitness Center",
-        "Walk-In Closets",
-        "Quartz Countertops",
-        "Floor-to-Ceiling Windows",
-        "Smart Home Features",
-        "Private Balcony",
-        "Stainless Steel Appliances",
-        "City Views"
-      ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {
-        "exterior": "https://rivettemueller.com/assets/images/cache/rivette-tower-036--ffbc9fc4b833a68db8f9faa17f8a1928.jpg"
-      }
-    },
-    {
-      "name": "AMLI at Mueller",
-      "address": "1900 Aldrich St",
-      "neighborhood": "Mueller",
-      "phone": "512-649-1900",
-      "website": "https://www.amli.com/apartments/austin/mueller-apartments/amli-at-mueller",
-      "management_company": "AMLI",
-      "year_built": 2015,
-      "stories": 24,
-      "total_units": 291,
-      "rent_range": {
-        "min": 1630,
-        "max": 3650
-      },
-      "sqft_range": {
-        "min": 494,
-        "max": 1685
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 494,
-          "rent": 1630
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 788,
-          "rent": 2170
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 913,
-          "rent": 2440
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1022,
+          "sqft": 876,
           "rent": 2800
         },
         {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1104,
+          "rent": 3400
+        },
+        {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1246,
-          "rent": 3120
+          "sqft": 1331,
+          "rent": 4050
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1685,
-          "rent": 3650
+          "sqft": 1548,
+          "rent": 4700
         }
       ],
       "amenities": [
-        "Rooftop Pool",
-        "Outdoor Grilling Area",
-        "Fitness Center",
         "Concierge Service",
-        "Valet Parking",
-        "Coffee Bar",
-        "Package Lockers",
         "Bike Storage",
+        "Fitness Center",
+        "Business Center",
+        "Valet Parking",
+        "Co-Working Space",
         "EV Charging Stations",
         "Pet Spa",
-        "Business Center",
-        "Walk-In Closets",
+        "Private Balcony",
         "Stainless Steel Appliances",
-        "Quartz Countertops",
+        "Hardwood Floors",
         "City Views",
-        "Floor-to-Ceiling Windows",
-        "Hardwood Floors"
-      ],
-      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
-      "images": {
-        "exterior": "https://images.prismic.io/amli-website/31c6729f314bac98b92b2a6a6078810c1c55e771_mueller_exterior_building-lake.jpg"
-      }
-    },
-    {
-      "name": "AMLI Branch Park",
-      "address": "1900 Haskell St",
-      "neighborhood": "Mueller",
-      "phone": "512-649-1901",
-      "website": "https://www.amli.com/apartments/austin/mueller-apartments/amli-branch-park",
-      "management_company": "AMLI",
-      "year_built": 2021,
-      "stories": 15,
-      "total_units": 361,
-      "rent_range": {
-        "min": 1490,
-        "max": 3690
-      },
-      "sqft_range": {
-        "min": 479,
-        "max": 1448
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 479,
-          "rent": 1490
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 718,
-          "rent": 2050
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 850,
-          "rent": 2300
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1026,
-          "rent": 2870
-        },
-        {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1394,
-          "rent": 3280
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1448,
-          "rent": 3690
-        }
-      ],
-      "amenities": [
-        "Rooftop Pool",
-        "Fitness Center",
-        "Dog Park",
-        "Yoga Studio",
-        "Coffee Bar",
-        "Package Lockers",
-        "Pet Spa",
-        "Co-Working Space",
-        "Quartz Countertops",
-        "Stainless Steel Appliances",
         "Smart Home Features",
-        "City Views",
-        "In-Unit Washer/Dryer",
         "Walk-In Closets"
       ],
-      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
-      "images": {
-        "exterior": "https://images.prismic.io/amli-website/ZnQ3NJm069VX1692_BranchPark_exterior_building3-55.jpg"
-      }
-    },
-    {
-      "name": "Solomon",
-      "address": "2000 E Riverside Dr",
-      "neighborhood": "East Austin",
-      "phone": "512-428-2000",
-      "website": "https://solomonatx.com/",
-      "year_built": 2019,
-      "stories": 27,
-      "total_units": 261,
-      "rent_range": {
-        "min": 1600,
-        "max": 3070
-      },
-      "sqft_range": {
-        "min": 478,
-        "max": 1464
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 478,
-          "rent": 1600
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 769,
-          "rent": 2050
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 881,
-          "rent": 2210
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1193,
-          "rent": 2570
-        },
-        {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1215,
-          "rent": 2830
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1464,
-          "rent": 3070
-        }
-      ],
-      "amenities": [
-        "Resident Lounge",
-        "Package Lockers",
-        "Bike Storage",
-        "Valet Parking",
-        "Dog Park",
-        "Pet Spa",
-        "Outdoor Grilling Area",
-        "Concierge Service",
-        "Co-Working Space",
-        "Fitness Center",
-        "Quartz Countertops",
-        "City Views",
-        "Hardwood Floors",
-        "Walk-In Closets",
-        "Stainless Steel Appliances",
-        "Private Balcony",
-        "Floor-to-Ceiling Windows"
-      ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {
-        "exterior": "https://solomonatx.com/assets/images/cache/Solomon-552-f585e19631d918053c8202ec88ce1924.jpg"
-      }
-    },
-    {
-      "name": "Residences at ATX Tower",
-      "address": "321 West 6th Street",
-      "neighborhood": "Downtown",
-      "phone": "512-580-0321",
-      "website": "https://atxtower-residences.com/",
-      "management_company": "RPM Living",
-      "year_built": 2018,
-      "stories": 23,
-      "total_units": 233,
-      "rent_range": {
-        "min": 1940,
-        "max": 4820
-      },
-      "sqft_range": {
-        "min": 478,
-        "max": 1413
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 478,
-          "rent": 1940
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 764,
-          "rent": 2630
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 854,
-          "rent": 3130
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1193,
-          "rent": 3730
-        },
-        {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1242,
-          "rent": 4270
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1413,
-          "rent": 4820
-        }
-      ],
-      "amenities": [
-        "Yoga Studio",
-        "Bike Storage",
-        "Co-Working Space",
-        "Dog Park",
-        "Pet Spa",
-        "Package Lockers",
-        "Concierge Service",
-        "Business Center",
-        "Coffee Bar",
-        "Valet Parking",
-        "Fitness Center",
-        "Floor-to-Ceiling Windows",
-        "Hardwood Floors",
-        "Quartz Countertops",
-        "City Views",
-        "Walk-In Closets",
-        "In-Unit Washer/Dryer",
-        "Stainless Steel Appliances"
-      ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
       "images": {}
     },
     {
-      "name": "415 Colorado",
-      "address": "415 Colorado Street",
-      "neighborhood": "Downtown",
-      "phone": "512-580-0415",
-      "website": "https://www.415colorado.com/",
-      "management_company": "RPM Living",
-      "year_built": 2024,
-      "stories": 32,
-      "total_units": 386,
+      "name": "92 West Paces",
+      "address": "92 West Paces Ferry Rd",
+      "neighborhood": "Buckhead",
+      "phone": "404-303-9992",
+      "website": "https://www.92westpaces.com/",
+      "year_built": 2023,
+      "stories": 27,
+      "total_units": 217,
       "rent_range": {
-        "min": 2110,
-        "max": 4750
+        "min": 1800,
+        "max": 4050
       },
       "sqft_range": {
         "min": 501,
-        "max": 1610
+        "max": 1654
       },
       "unit_types": [
         "Studio",
@@ -1087,89 +220,87 @@
           "beds": 0,
           "baths": 1,
           "sqft": 501,
-          "rent": 2110
+          "rent": 1800
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 713,
-          "rent": 2840
+          "sqft": 746,
+          "rent": 2100
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 817,
-          "rent": 3020
+          "sqft": 856,
+          "rent": 2320
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1007,
-          "rent": 3800
+          "sqft": 1154,
+          "rent": 3050
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1216,
-          "rent": 4220
+          "sqft": 1343,
+          "rent": 3600
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1610,
-          "rent": 4750
+          "sqft": 1654,
+          "rent": 4050
         }
       ],
       "amenities": [
         "Valet Parking",
-        "Outdoor Grilling Area",
-        "Bike Storage",
-        "Pet Spa",
         "Business Center",
+        "Pet Spa",
+        "Resident Lounge",
+        "Bike Storage",
+        "Coffee Bar",
         "Dog Park",
         "Yoga Studio",
-        "Resident Lounge",
+        "Outdoor Grilling Area",
         "Concierge Service",
-        "Co-Working Space",
         "Fitness Center",
-        "Stainless Steel Appliances",
-        "City Views",
-        "Smart Home Features",
         "Quartz Countertops",
-        "Floor-to-Ceiling Windows"
+        "Hardwood Floors",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows",
+        "Smart Home Features"
       ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {
-        "exterior": "https://www.415colorado.com/wp-content/uploads/2024/10/17b272bf6ac2f644f6514c2076938e8b.jpg"
-      }
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
     },
     {
-      "name": "Lookout Austin",
-      "address": "1910 Wickersham Lane",
-      "neighborhood": "East Austin",
-      "phone": "512-730-1910",
-      "website": "https://rpmliving.com/",
-      "management_company": "RPM Living",
-      "year_built": 2022,
-      "stories": 28,
-      "total_units": 201,
+      "name": "MAA Lenox",
+      "address": "3280 Peachtree Rd NE",
+      "neighborhood": "Buckhead",
+      "phone": "404-418-2000",
+      "website": "https://www.maac.com/georgia/atlanta/maa-lenox/",
+      "management_company": "MAA",
+      "year_built": 2021,
+      "stories": 31,
+      "total_units": 314,
       "rent_range": {
-        "min": 1620,
-        "max": 3160
+        "min": 1660,
+        "max": 4100
       },
       "sqft_range": {
-        "min": 498,
-        "max": 1553
+        "min": 491,
+        "max": 1621
       },
       "unit_types": [
         "Studio",
@@ -1183,59 +314,158 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 498,
-          "rent": 1620
+          "sqft": 491,
+          "rent": 1660
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 765,
-          "rent": 1930
+          "sqft": 744,
+          "rent": 2150
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 821,
-          "rent": 2060
+          "sqft": 843,
+          "rent": 2300
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1024,
-          "rent": 2400
+          "sqft": 1044,
+          "rent": 3080
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1215,
-          "rent": 2880
+          "sqft": 1333,
+          "rent": 3390
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1553,
-          "rent": 3160
+          "sqft": 1621,
+          "rent": 4100
         }
       ],
       "amenities": [
-        "Rooftop Pool",
-        "Outdoor Grilling Area",
         "Bike Storage",
+        "Dog Park",
+        "Business Center",
+        "Rooftop Pool",
+        "Co-Working Space",
+        "Outdoor Grilling Area",
+        "Fitness Center",
+        "Resident Lounge",
+        "Package Lockers",
         "Concierge Service",
+        "Walk-In Closets",
+        "City Views",
+        "Quartz Countertops",
+        "Stainless Steel Appliances",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://www.maac.com/-/media/images/social/maa-logo-600x315-new.jpg"
+      }
+    },
+    {
+      "name": "Cortland at Phipps Plaza",
+      "address": "3500 Lenox Rd NE",
+      "neighborhood": "Buckhead",
+      "phone": "404-835-2000",
+      "website": "https://cortland.com/apartments/cortland-at-phipps-plaza/",
+      "management_company": "Cortland",
+      "year_built": 2021,
+      "stories": 29,
+      "total_units": 361,
+      "rent_range": {
+        "min": 1650,
+        "max": 3980
+      },
+      "sqft_range": {
+        "min": 459,
+        "max": 1525
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 459,
+          "rent": 1650
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 685,
+          "rent": 2060
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 826,
+          "rent": 2380
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1039,
+          "rent": 3050
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1334,
+          "rent": 3410
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1525,
+          "rent": 3980
+        }
+      ],
+      "amenities": [
+        "Resident Lounge",
+        "Business Center",
+        "Package Lockers",
         "Pet Spa",
         "Co-Working Space",
-        "Resident Lounge",
+        "Outdoor Grilling Area",
+        "Coffee Bar",
         "Fitness Center",
+        "Bike Storage",
+        "Concierge Service",
+        "Smart Home Features",
         "Stainless Steel Appliances",
         "Quartz Countertops",
         "Private Balcony",
@@ -1243,23 +473,27 @@
         "Hardwood Floors"
       ],
       "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {}
+      "images": {
+        "exterior": "https://cortland.com/assets/images/cache/DSCF1990-HDR-Edit-5fcc9ad07f333ef6206b6c937bf683ed.jpg"
+      }
     },
     {
-      "name": "The Modern Austin",
-      "address": "70 Rainey St",
-      "neighborhood": "Rainey Street",
-      "website": "https://www.themodernaustin.com/",
-      "year_built": 2025,
-      "stories": 17,
-      "total_units": 296,
+      "name": "Hanover Buckhead Village",
+      "address": "3195 Roswell Rd NE",
+      "neighborhood": "Buckhead",
+      "phone": "404-949-3195",
+      "website": "https://www.hanoverbuckheadvillage.com/",
+      "management_company": "Hanover",
+      "year_built": 2024,
+      "stories": 30,
+      "total_units": 334,
       "rent_range": {
         "min": 1780,
-        "max": 4630
+        "max": 3890
       },
       "sqft_range": {
-        "min": 547,
-        "max": 1495
+        "min": 537,
+        "max": 1408
       },
       "unit_types": [
         "Studio",
@@ -1273,7 +507,7 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 547,
+          "sqft": 537,
           "rent": 1780
         },
         {
@@ -1281,82 +515,173 @@
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 756,
+          "sqft": 768,
+          "rent": 2300
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 908,
+          "rent": 2550
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1131,
+          "rent": 2920
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1225,
+          "rent": 3470
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1408,
+          "rent": 3890
+        }
+      ],
+      "amenities": [
+        "Pet Spa",
+        "Valet Parking",
+        "Yoga Studio",
+        "Business Center",
+        "Outdoor Grilling Area",
+        "Concierge Service",
+        "Fitness Center",
+        "Rooftop Pool",
+        "Coffee Bar",
+        "In-Unit Washer/Dryer",
+        "Quartz Countertops",
+        "Walk-In Closets",
+        "Stainless Steel Appliances",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "The Huntley",
+      "address": "3630 Peachtree Rd NE",
+      "neighborhood": "Buckhead",
+      "phone": "404-816-3630",
+      "website": "https://www.thehuntley.com/",
+      "year_built": 2018,
+      "stories": 25,
+      "total_units": 354,
+      "rent_range": {
+        "min": 1690,
+        "max": 4110
+      },
+      "sqft_range": {
+        "min": 479,
+        "max": 1450
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 479,
+          "rent": 1690
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 783,
+          "rent": 2160
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 864,
           "rent": 2530
         },
         {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 830,
-          "rent": 2850
-        },
-        {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1041,
-          "rent": 3420
+          "sqft": 1055,
+          "rent": 2910
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1329,
-          "rent": 4050
+          "sqft": 1364,
+          "rent": 3530
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1495,
-          "rent": 4630
+          "sqft": 1450,
+          "rent": 4110
         }
       ],
       "amenities": [
         "Rooftop Pool",
         "Resident Lounge",
-        "Co-Working Space",
-        "Dog Park",
-        "Yoga Studio",
-        "Pet Spa",
-        "Bike Storage",
-        "Valet Parking",
-        "Coffee Bar",
-        "Outdoor Grilling Area",
         "Fitness Center",
+        "Bike Storage",
         "Concierge Service",
-        "City Views",
-        "Hardwood Floors",
-        "Smart Home Features",
-        "Private Balcony",
+        "Valet Parking",
+        "EV Charging Stations",
+        "Dog Park",
+        "Co-Working Space",
+        "Outdoor Grilling Area",
+        "Package Lockers",
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
         "Quartz Countertops",
-        "Stainless Steel Appliances"
+        "In-Unit Washer/Dryer",
+        "City Views"
       ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {
-        "exterior": "https://modernaustinresidences.com/wp-content/uploads/2025/07/featured-image-Modern-website.png"
-      }
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
     },
     {
-      "name": "Residences at 6G",
-      "address": "600 Guadalupe St",
-      "neighborhood": "Downtown",
-      "website": "https://www.6gaustin.com/",
-      "year_built": 2022,
-      "stories": 18,
-      "total_units": 313,
+      "name": "Marquis at Buckhead",
+      "address": "3335 Peachtree Rd NE",
+      "neighborhood": "Buckhead",
+      "phone": "404-814-3335",
+      "website": "https://www.marquisbuckhead.com/",
+      "year_built": 2020,
+      "stories": 26,
+      "total_units": 231,
       "rent_range": {
-        "min": 2220,
-        "max": 4700
+        "min": 1720,
+        "max": 3990
       },
       "sqft_range": {
-        "min": 532,
-        "max": 1618
+        "min": 539,
+        "max": 1453
       },
       "unit_types": [
         "Studio",
@@ -1370,176 +695,176 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 532,
-          "rent": 2220
+          "sqft": 539,
+          "rent": 1720
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 686,
-          "rent": 2880
+          "sqft": 674,
+          "rent": 2200
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 833,
-          "rent": 3050
+          "sqft": 885,
+          "rent": 2360
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1105,
-          "rent": 3770
+          "sqft": 1095,
+          "rent": 2940
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1362,
-          "rent": 4340
+          "sqft": 1270,
+          "rent": 3560
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1618,
-          "rent": 4700
+          "sqft": 1453,
+          "rent": 3990
         }
       ],
       "amenities": [
-        "Yoga Studio",
-        "Co-Working Space",
+        "Valet Parking",
+        "Concierge Service",
+        "Pet Spa",
+        "Bike Storage",
+        "Business Center",
+        "Rooftop Pool",
+        "Fitness Center",
+        "Resident Lounge",
+        "In-Unit Washer/Dryer",
+        "Hardwood Floors",
+        "Quartz Countertops",
+        "Stainless Steel Appliances",
+        "City Views"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "Momentum Midtown",
+      "address": "1080 Peachtree St NE",
+      "neighborhood": "Midtown",
+      "phone": "404-347-1080",
+      "website": "https://www.momentummidtown.com/",
+      "year_built": 2022,
+      "stories": 28,
+      "total_units": 366,
+      "rent_range": {
+        "min": 1570,
+        "max": 3500
+      },
+      "sqft_range": {
+        "min": 500,
+        "max": 1687
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 500,
+          "rent": 1570
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 732,
+          "rent": 2010
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 814,
+          "rent": 2260
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1095,
+          "rent": 2710
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1213,
+          "rent": 3160
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1687,
+          "rent": 3500
+        }
+      ],
+      "amenities": [
         "Dog Park",
         "Pet Spa",
         "Business Center",
-        "Valet Parking",
-        "Package Lockers",
-        "EV Charging Stations",
-        "Fitness Center",
-        "Hardwood Floors",
-        "Smart Home Features",
-        "Private Balcony",
-        "Quartz Countertops",
-        "Stainless Steel Appliances",
-        "In-Unit Washer/Dryer"
-      ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {}
-    },
-    {
-      "name": "Paseo Austin",
-      "address": "80 Rainey St",
-      "neighborhood": "Rainey Street",
-      "website": "https://www.paseoaustin.com/",
-      "year_built": 2018,
-      "stories": 31,
-      "total_units": 377,
-      "rent_range": {
-        "min": 1840,
-        "max": 4500
-      },
-      "sqft_range": {
-        "min": 483,
-        "max": 1565
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 483,
-          "rent": 1840
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 701,
-          "rent": 2470
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 807,
-          "rent": 2830
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1029,
-          "rent": 3320
-        },
-        {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1253,
-          "rent": 3860
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1565,
-          "rent": 4500
-        }
-      ],
-      "amenities": [
-        "Valet Parking",
-        "Resident Lounge",
+        "Coffee Bar",
+        "Yoga Studio",
         "Rooftop Pool",
-        "Pet Spa",
-        "Bike Storage",
         "Concierge Service",
-        "Package Lockers",
-        "Fitness Center",
-        "Stainless Steel Appliances",
-        "Smart Home Features",
+        "Outdoor Grilling Area",
+        "EV Charging Stations",
         "City Views",
+        "Quartz Countertops",
         "Private Balcony",
-        "Walk-In Closets",
-        "Quartz Countertops"
+        "Hardwood Floors",
+        "Walk-In Closets"
       ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
       "images": {}
     },
     {
-      "name": "Vesper Austin",
-      "address": "78 Rainey St",
-      "neighborhood": "Rainey Street",
-      "website": "https://www.vesperaustin.com/",
-      "year_built": 2021,
-      "stories": 33,
-      "total_units": 377,
+      "name": "Emmi Midtown",
+      "address": "1100 Peachtree St NE",
+      "neighborhood": "Midtown",
+      "phone": "404-347-1100",
+      "website": "https://www.emmimidtown.com/",
+      "year_built": 2018,
+      "stories": 21,
+      "total_units": 347,
       "rent_range": {
-        "min": 1860,
-        "max": 4480
+        "min": 1670,
+        "max": 3590
       },
       "sqft_range": {
-        "min": 530,
-        "max": 1410
+        "min": 541,
+        "max": 1429
       },
       "unit_types": [
         "Studio",
@@ -1553,16 +878,16 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 530,
-          "rent": 1860
+          "sqft": 541,
+          "rent": 1670
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 740,
-          "rent": 2450
+          "sqft": 709,
+          "rent": 1950
         },
         {
           "name": "A2 - Large One Bedroom",
@@ -1570,167 +895,68 @@
           "beds": 1,
           "baths": 1,
           "sqft": 861,
-          "rent": 2820
+          "rent": 2430
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1118,
-          "rent": 3280
+          "sqft": 1086,
+          "rent": 2790
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1400,
-          "rent": 3830
+          "sqft": 1253,
+          "rent": 3230
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1410,
-          "rent": 4480
+          "sqft": 1429,
+          "rent": 3590
         }
       ],
       "amenities": [
-        "Valet Parking",
-        "Outdoor Grilling Area",
-        "Yoga Studio",
-        "Package Lockers",
         "EV Charging Stations",
-        "Coffee Bar",
         "Resident Lounge",
-        "Fitness Center",
         "Business Center",
         "Pet Spa",
-        "Dog Park",
-        "Smart Home Features",
-        "Hardwood Floors",
-        "City Views",
-        "Walk-In Closets",
-        "Floor-to-Ceiling Windows",
-        "Private Balcony"
-      ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {
-        "exterior": "https://static.wixstatic.com/media/e0da40_6e6bed3bf747450c8262cb4126c48395~mv2.jpg/v1/fill/w_1242,h_817,al_c/e0da40_6e6bed3bf747450c8262cb4126c48395~mv2.jpg"
-      }
-    },
-    {
-      "name": "The Quincy",
-      "address": "78 E 7th St",
-      "neighborhood": "Rainey Street",
-      "phone": "512-580-7800",
-      "website": "https://quincyatx.com/",
-      "year_built": 2024,
-      "stories": 29,
-      "total_units": 349,
-      "rent_range": {
-        "min": 1920,
-        "max": 4570
-      },
-      "sqft_range": {
-        "min": 455,
-        "max": 1682
-      },
-      "unit_types": [
-        "Studio",
-        "1BR",
-        "2BR",
-        "3BR"
-      ],
-      "floor_plans": [
-        {
-          "name": "Studio",
-          "type": "Studio",
-          "beds": 0,
-          "baths": 1,
-          "sqft": 455,
-          "rent": 1920
-        },
-        {
-          "name": "A1 - One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 650,
-          "rent": 2420
-        },
-        {
-          "name": "A2 - Large One Bedroom",
-          "type": "1BR",
-          "beds": 1,
-          "baths": 1,
-          "sqft": 950,
-          "rent": 2760
-        },
-        {
-          "name": "B1 - Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1184,
-          "rent": 3530
-        },
-        {
-          "name": "B2 - Large Two Bedroom",
-          "type": "2BR",
-          "beds": 2,
-          "baths": 2,
-          "sqft": 1360,
-          "rent": 3870
-        },
-        {
-          "name": "C1 - Three Bedroom",
-          "type": "3BR",
-          "beds": 3,
-          "baths": 2,
-          "sqft": 1682,
-          "rent": 4570
-        }
-      ],
-      "amenities": [
-        "Rooftop Pool",
-        "Dog Park",
-        "Resident Lounge",
+        "Valet Parking",
+        "Concierge Service",
         "Package Lockers",
-        "Pet Spa",
+        "Bike Storage",
         "Coffee Bar",
-        "Business Center",
-        "Fitness Center",
-        "Smart Home Features",
-        "City Views",
-        "Walk-In Closets",
         "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "Smart Home Features",
+        "Private Balcony",
         "Quartz Countertops"
       ],
-      "pet_policy": "Pets welcome with deposit. Contact for details.",
-      "images": {
-        "exterior": "https://quincyatx.com/assets/images/cache/og-image2-97420b132fa5fce79d0b710df73a6804.jpg"
-      }
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
     },
     {
-      "name": "SkyHouse Austin",
-      "address": "51 Rainey St",
-      "neighborhood": "Rainey Street",
-      "phone": "512-494-5100",
-      "website": "https://www.skyhouseaustin.com/",
-      "management_company": "Simpson Property Group",
-      "year_built": 2020,
+      "name": "Atlantic House",
+      "address": "270 17th St NW",
+      "neighborhood": "Midtown",
+      "phone": "404-574-0270",
+      "website": "https://atlantichousemidtown.com/",
+      "year_built": 2019,
       "stories": 20,
-      "total_units": 282,
+      "total_units": 338,
       "rent_range": {
-        "min": 1900,
-        "max": 4500
+        "min": 1720,
+        "max": 3630
       },
       "sqft_range": {
-        "min": 484,
-        "max": 1690
+        "min": 493,
+        "max": 1612
       },
       "unit_types": [
         "Studio",
@@ -1744,69 +970,737 @@
           "type": "Studio",
           "beds": 0,
           "baths": 1,
-          "sqft": 484,
-          "rent": 1900
+          "sqft": 493,
+          "rent": 1720
         },
         {
           "name": "A1 - One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 676,
-          "rent": 2440
+          "sqft": 662,
+          "rent": 2030
         },
         {
           "name": "A2 - Large One Bedroom",
           "type": "1BR",
           "beds": 1,
           "baths": 1,
-          "sqft": 810,
-          "rent": 2700
+          "sqft": 912,
+          "rent": 2340
         },
         {
           "name": "B1 - Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1007,
-          "rent": 3390
+          "sqft": 1149,
+          "rent": 2810
         },
         {
           "name": "B2 - Large Two Bedroom",
           "type": "2BR",
           "beds": 2,
           "baths": 2,
-          "sqft": 1237,
-          "rent": 3840
+          "sqft": 1299,
+          "rent": 3340
         },
         {
           "name": "C1 - Three Bedroom",
           "type": "3BR",
           "beds": 3,
           "baths": 2,
-          "sqft": 1690,
-          "rent": 4500
+          "sqft": 1612,
+          "rent": 3630
         }
       ],
       "amenities": [
-        "Business Center",
-        "Valet Parking",
-        "Yoga Studio",
-        "Rooftop Pool",
-        "Fitness Center",
-        "Concierge Service",
-        "Dog Park",
-        "Outdoor Grilling Area",
+        "Coffee Bar",
         "Co-Working Space",
         "Resident Lounge",
+        "Outdoor Grilling Area",
+        "Yoga Studio",
+        "Business Center",
+        "Dog Park",
+        "Pet Spa",
+        "Private Balcony",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "City Views",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://atlantichousemidtown.com/assets/images/cache/footer-cta-bg-80-ffaf2354c5d84f6b5cc647ee37d920df.jpg"
+      }
+    },
+    {
+      "name": "Hanover Midtown",
+      "address": "1045 Juniper St NE",
+      "neighborhood": "Midtown",
+      "phone": "404-347-1045",
+      "website": "https://livehanovermidtown.com/",
+      "year_built": 2021,
+      "stories": 33,
+      "total_units": 373,
+      "rent_range": {
+        "min": 1670,
+        "max": 3510
+      },
+      "sqft_range": {
+        "min": 462,
+        "max": 1515
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 462,
+          "rent": 1670
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 686,
+          "rent": 2160
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 919,
+          "rent": 2360
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1171,
+          "rent": 2920
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1335,
+          "rent": 3300
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1515,
+          "rent": 3510
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Pet Spa",
+        "Outdoor Grilling Area",
+        "EV Charging Stations",
+        "Resident Lounge",
+        "Fitness Center",
+        "Business Center",
+        "Bike Storage",
+        "Coffee Bar",
         "Smart Home Features",
+        "Hardwood Floors",
+        "Private Balcony",
+        "Quartz Countertops",
         "Walk-In Closets",
         "City Views",
-        "Private Balcony",
-        "In-Unit Washer/Dryer",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://livehanovermidtown.com/assets/images/cache/HM-Exterior-Finals-JPEGs-0524-31-of-60-b16920fb09436fbf7b0a098b28622049.jpg"
+      }
+    },
+    {
+      "name": "Luxe Midtown",
+      "address": "785 W Peachtree St NW",
+      "neighborhood": "Midtown",
+      "phone": "404-347-0785",
+      "website": "https://www.allatlantacondos.com/luxe-midtown-atlanta-condos/",
+      "year_built": 2008,
+      "stories": 21,
+      "total_units": 224,
+      "rent_range": {
+        "min": 1720,
+        "max": 3710
+      },
+      "sqft_range": {
+        "min": 462,
+        "max": 1654
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 462,
+          "rent": 1720
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 748,
+          "rent": 1990
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 831,
+          "rent": 2270
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1017,
+          "rent": 2670
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1335,
+          "rent": 3170
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1654,
+          "rent": 3710
+        }
+      ],
+      "amenities": [
+        "EV Charging Stations",
+        "Rooftop Pool",
+        "Yoga Studio",
+        "Resident Lounge",
+        "Dog Park",
+        "Business Center",
+        "Pet Spa",
+        "Coffee Bar",
+        "Co-Working Space",
+        "Bike Storage",
+        "Outdoor Grilling Area",
+        "Fitness Center",
+        "Hardwood Floors",
+        "Quartz Countertops",
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "City Views",
+        "Smart Home Features",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {
+        "exterior": "https://www.allatlantacondos.com/wp-content/uploads/2018/05/LUXE-AllAtlantaCondos.Com1_.jpg"
+      }
+    },
+    {
+      "name": "Elle of Buckhead",
+      "address": "3250 Piedmont Road NE",
+      "neighborhood": "Buckhead",
+      "phone": "404-869-3250",
+      "website": "https://www.zrsapartments.com/",
+      "management_company": "ZRS Management",
+      "year_built": 2024,
+      "stories": 29,
+      "total_units": 280,
+      "rent_range": {
+        "min": 1690,
+        "max": 3890
+      },
+      "sqft_range": {
+        "min": 520,
+        "max": 1595
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 520,
+          "rent": 1690
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 668,
+          "rent": 2170
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 926,
+          "rent": 2290
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1089,
+          "rent": 3070
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1374,
+          "rent": 3440
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1595,
+          "rent": 3890
+        }
+      ],
+      "amenities": [
+        "EV Charging Stations",
+        "Resident Lounge",
+        "Co-Working Space",
+        "Outdoor Grilling Area",
+        "Rooftop Pool",
+        "Yoga Studio",
+        "Package Lockers",
+        "Fitness Center",
+        "Concierge Service",
+        "Valet Parking",
+        "Pet Spa",
+        "Bike Storage",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Smart Home Features",
+        "City Views",
+        "Hardwood Floors",
         "Floor-to-Ceiling Windows"
       ],
       "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://sxxweb8cdn.cachefly.net/img/thumbnail.aspx?p=/common/uploads/zrs2019/701/media/abaeb8c2-1705-4e24-a87e-d129decf4ed6.png"
+      }
+    },
+    {
+      "name": "Modera Parkside",
+      "address": "1075 Piedmont Ave NE",
+      "neighborhood": "Midtown",
+      "website": "https://www.moderaliving.com/",
+      "management_company": "Mill Creek Residential",
+      "year_built": 2018,
+      "stories": 21,
+      "total_units": 397,
+      "rent_range": {
+        "min": 1620,
+        "max": 3610
+      },
+      "sqft_range": {
+        "min": 471,
+        "max": 1439
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 471,
+          "rent": 1620
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 761,
+          "rent": 2140
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 845,
+          "rent": 2180
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1009,
+          "rent": 2660
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1231,
+          "rent": 3200
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1439,
+          "rent": 3610
+        }
+      ],
+      "amenities": [
+        "Outdoor Grilling Area",
+        "Package Lockers",
+        "Concierge Service",
+        "Fitness Center",
+        "Bike Storage",
+        "Yoga Studio",
+        "Co-Working Space",
+        "Rooftop Pool",
+        "Quartz Countertops",
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "City Views",
+        "Hardwood Floors",
+        "In-Unit Washer/Dryer",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "1081 Juniper",
+      "address": "1081 Juniper St NE",
+      "neighborhood": "Midtown",
+      "website": "https://www.1081juniper.com/",
+      "year_built": 2018,
+      "stories": 32,
+      "total_units": 395,
+      "rent_range": {
+        "min": 1660,
+        "max": 3600
+      },
+      "sqft_range": {
+        "min": 541,
+        "max": 1615
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 541,
+          "rent": 1660
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 795,
+          "rent": 2030
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 828,
+          "rent": 2190
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1041,
+          "rent": 2900
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1347,
+          "rent": 3120
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1615,
+          "rent": 3600
+        }
+      ],
+      "amenities": [
+        "Pet Spa",
+        "Concierge Service",
+        "Resident Lounge",
+        "Yoga Studio",
+        "Valet Parking",
+        "Coffee Bar",
+        "EV Charging Stations",
+        "Rooftop Pool",
+        "Outdoor Grilling Area",
+        "Package Lockers",
+        "Fitness Center",
+        "Bike Storage",
+        "Floor-to-Ceiling Windows",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Smart Home Features",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "Loria Ansley",
+      "address": "1441 Peachtree St NE",
+      "neighborhood": "Midtown",
+      "website": "https://www.loriaansley.com/",
+      "year_built": 2024,
+      "stories": 24,
+      "total_units": 223,
+      "rent_range": {
+        "min": 1580,
+        "max": 3480
+      },
+      "sqft_range": {
+        "min": 506,
+        "max": 1563
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 506,
+          "rent": 1580
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 757,
+          "rent": 2000
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 806,
+          "rent": 2270
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1076,
+          "rent": 2900
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1279,
+          "rent": 3240
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1563,
+          "rent": 3480
+        }
+      ],
+      "amenities": [
+        "Fitness Center",
+        "Rooftop Pool",
+        "Valet Parking",
+        "Dog Park",
+        "Pet Spa",
+        "Package Lockers",
+        "Co-Working Space",
+        "Business Center",
+        "Resident Lounge",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows",
+        "Quartz Countertops",
+        "Private Balcony",
+        "Smart Home Features",
+        "City Views",
+        "Stainless Steel Appliances"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "1655 Peachtree",
+      "address": "1655 Peachtree St NE",
+      "neighborhood": "Midtown",
+      "website": "https://www.1655peachtree.com/",
+      "year_built": 2024,
+      "stories": 35,
+      "total_units": 253,
+      "rent_range": {
+        "min": 1500,
+        "max": 3590
+      },
+      "sqft_range": {
+        "min": 450,
+        "max": 1609
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 450,
+          "rent": 1500
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 774,
+          "rent": 2210
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 934,
+          "rent": 2380
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1101,
+          "rent": 2780
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1239,
+          "rent": 3110
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1609,
+          "rent": 3590
+        }
+      ],
+      "amenities": [
+        "Fitness Center",
+        "Coffee Bar",
+        "Valet Parking",
+        "Business Center",
+        "Concierge Service",
+        "Co-Working Space",
+        "Bike Storage",
+        "Yoga Studio",
+        "EV Charging Stations",
+        "Package Lockers",
+        "Private Balcony",
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "Smart Home Features",
+        "Quartz Countertops",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
       "images": {}
     }
   ]

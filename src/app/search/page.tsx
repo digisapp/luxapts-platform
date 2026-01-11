@@ -240,6 +240,10 @@ function SearchContent() {
                   <SelectItem value="new-york">New York City</SelectItem>
                   <SelectItem value="los-angeles">Los Angeles</SelectItem>
                   <SelectItem value="austin">Austin</SelectItem>
+                  <SelectItem value="dallas">Dallas</SelectItem>
+                  <SelectItem value="nashville">Nashville</SelectItem>
+                  <SelectItem value="atlanta">Atlanta</SelectItem>
+                  <SelectItem value="brooklyn">Brooklyn</SelectItem>
                   <SelectItem value="chicago">Chicago</SelectItem>
                   <SelectItem value="san-francisco">San Francisco</SelectItem>
                 </SelectContent>
