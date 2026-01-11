@@ -42,7 +42,7 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative flex min-h-screen items-center justify-center px-6 overflow-hidden">
+        <section className="relative flex min-h-[85vh] items-center justify-center px-6 overflow-hidden">
           {/* Premium gradient background with aurora effect */}
           <div className="absolute inset-0">
             {/* Primary glow */}
@@ -114,13 +114,13 @@ export default function HomePage() {
           </div>
 
           {/* Scroll indicator */}
-          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce">
-            <div className="w-px h-16 bg-gradient-to-b from-white/20 to-transparent" />
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+            <div className="w-px h-12 bg-gradient-to-b from-white/20 to-transparent" />
           </div>
         </section>
 
         {/* Features Section */}
-        <section className="py-32 px-6 relative">
+        <section className="py-16 px-6 relative">
           {/* Background glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-blue-500/5 rounded-full blur-[100px]" />
 
