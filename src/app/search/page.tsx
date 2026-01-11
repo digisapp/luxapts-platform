@@ -4,19 +4,25 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car } from "lucide-react";
+import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, cn } from "@/lib/utils";
 import { SearchMap } from "@/components/map/SearchMap";
 import { CompareButton } from "@/components/compare/CompareButton";
 import { FavoriteButton } from "@/components/listings/FavoriteButton";
+
+interface Neighborhood {
+  slug: string;
+  name: string;
+}
 
 interface UnitImage {
   id: string;
@@ -93,6 +99,15 @@ function SearchContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState(queryParam || "");
 
+  // Advanced filter states
+  const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
+  const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
+  const [bathsMin, setBathsMin] = useState("");
+  const [petFriendly, setPetFriendly] = useState(false);
+  const [parkingRequired, setParkingRequired] = useState(false);
+  const [moveInDate, setMoveInDate] = useState("");
+  const [showNeighborhoodDropdown, setShowNeighborhoodDropdown] = useState(false);
+
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
@@ -105,6 +120,37 @@ function SearchContent() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiParsing, setAiParsing] = useState(false);
 
+  // Fetch neighborhoods when city changes
+  useEffect(() => {
+    async function fetchNeighborhoods() {
+      try {
+        const res = await fetch(`/api/cities/${city}/neighborhoods`);
+        if (res.ok) {
+          const data = await res.json();
+          setNeighborhoods(data.neighborhoods || []);
+          setSelectedNeighborhoods([]); // Reset selections when city changes
+        }
+      } catch (error) {
+        console.error("Error fetching neighborhoods:", error);
+        setNeighborhoods([]);
+      }
+    }
+    fetchNeighborhoods();
+  }, [city]);
+
+  // Count active filters
+  const activeFilterCount = [
+    bedsMin,
+    bedsMax,
+    budgetMin,
+    budgetMax,
+    bathsMin,
+    petFriendly,
+    parkingRequired,
+    moveInDate,
+    selectedNeighborhoods.length > 0,
+  ].filter(Boolean).length;
+
   const handleSearch = useCallback(async (filters?: ParsedFilters) => {
     setLoading(true);
     try {
@@ -114,6 +160,7 @@ function SearchContent() {
         limit: 30,
       };
 
+      // Basic filters
       const bedsMinVal = filters?.beds_min !== undefined ? filters.beds_min : (bedsMin ? parseInt(bedsMin) : undefined);
       const bedsMaxVal = filters?.beds_max !== undefined ? filters.beds_max : (bedsMax ? parseInt(bedsMax) : undefined);
       const budgetMinVal = filters?.budget_min !== undefined ? filters.budget_min : (budgetMin ? parseInt(budgetMin) : undefined);
@@ -123,6 +170,13 @@ function SearchContent() {
       if (bedsMaxVal !== undefined) body.beds_max = bedsMaxVal;
       if (budgetMinVal !== undefined) body.budget_min = budgetMinVal;
       if (budgetMaxVal !== undefined) body.budget_max = budgetMaxVal;
+
+      // Advanced filters
+      if (selectedNeighborhoods.length > 0) body.neighborhood_slugs = selectedNeighborhoods;
+      if (bathsMin) body.baths_min = parseInt(bathsMin);
+      if (filters?.pet_friendly || petFriendly) body.pet_friendly = true;
+      if (parkingRequired) body.parking_required = true;
+      if (moveInDate) body.move_in_date = moveInDate;
 
       const res = await fetch("/api/search", {
         method: "POST",
@@ -140,7 +194,7 @@ function SearchContent() {
     } finally {
       setLoading(false);
     }
-  }, [city, sort, bedsMin, bedsMax, budgetMin, budgetMax]);
+  }, [city, sort, bedsMin, bedsMax, budgetMin, budgetMax, selectedNeighborhoods, bathsMin, petFriendly, parkingRequired, moveInDate]);
 
   // Parse AI query and apply filters
   const parseAndSearch = useCallback(async (query: string) => {
@@ -260,12 +314,17 @@ function SearchContent() {
               </Select>
 
               <Button
-                variant="outline"
+                variant={activeFilterCount > 0 ? "default" : "outline"}
                 className="h-12"
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <SlidersHorizontal className="mr-2 h-4 w-4" />
                 Filters
+                {activeFilterCount > 0 && (
+                  <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                    {activeFilterCount}
+                  </Badge>
+                )}
               </Button>
 
               <Button
@@ -314,8 +373,8 @@ function SearchContent() {
 
             {/* Filters Panel */}
             {showFilters && (
-              <div className="mt-4 rounded-lg border bg-background p-4">
-                <div className="flex items-center justify-between mb-4">
+              <div className="mt-4 rounded-lg border bg-background p-4 space-y-6">
+                <div className="flex items-center justify-between">
                   <h3 className="font-semibold">Filters</h3>
                   <Button
                     variant="ghost"
@@ -326,62 +385,177 @@ function SearchContent() {
                   </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-4">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">Beds (min)</label>
-                    <Select value={bedsMin} onValueChange={setBedsMin}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Any" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Any</SelectItem>
-                        <SelectItem value="0">Studio</SelectItem>
-                        <SelectItem value="1">1</SelectItem>
-                        <SelectItem value="2">2</SelectItem>
-                        <SelectItem value="3">3+</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Basic Filters Row */}
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Basic</h4>
+                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium">Beds (min)</label>
+                      <Select value={bedsMin} onValueChange={setBedsMin}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Any</SelectItem>
+                          <SelectItem value="0">Studio</SelectItem>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="3">3+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">Beds (max)</label>
-                    <Select value={bedsMax} onValueChange={setBedsMax}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Any" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Any</SelectItem>
-                        <SelectItem value="0">Studio</SelectItem>
-                        <SelectItem value="1">1</SelectItem>
-                        <SelectItem value="2">2</SelectItem>
-                        <SelectItem value="3">3+</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium">Beds (max)</label>
+                      <Select value={bedsMax} onValueChange={setBedsMax}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Any</SelectItem>
+                          <SelectItem value="0">Studio</SelectItem>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="3">3+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">Min Budget</label>
-                    <Input
-                      type="number"
-                      placeholder="$0"
-                      value={budgetMin}
-                      onChange={(e) => setBudgetMin(e.target.value)}
-                    />
-                  </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium">Min Budget</label>
+                      <Input
+                        type="number"
+                        placeholder="$0"
+                        value={budgetMin}
+                        onChange={(e) => setBudgetMin(e.target.value)}
+                      />
+                    </div>
 
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">Max Budget</label>
-                    <Input
-                      type="number"
-                      placeholder="No max"
-                      value={budgetMax}
-                      onChange={(e) => setBudgetMax(e.target.value)}
-                    />
+                    <div>
+                      <label className="mb-2 block text-sm font-medium">Max Budget</label>
+                      <Input
+                        type="number"
+                        placeholder="No max"
+                        value={budgetMax}
+                        onChange={(e) => setBudgetMax(e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex gap-2">
-                  <Button onClick={() => { setAiSummary(null); handleSearch(); }}>Apply Filters</Button>
+                {/* Advanced Filters Row */}
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Advanced</h4>
+                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+                    {/* Neighborhoods Multi-select */}
+                    <div className="relative">
+                      <label className="mb-2 block text-sm font-medium">Neighborhoods</label>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between"
+                        onClick={() => setShowNeighborhoodDropdown(!showNeighborhoodDropdown)}
+                      >
+                        <span className="truncate">
+                          {selectedNeighborhoods.length === 0
+                            ? "All neighborhoods"
+                            : `${selectedNeighborhoods.length} selected`}
+                        </span>
+                        <ChevronDown className="h-4 w-4 opacity-50" />
+                      </Button>
+                      {showNeighborhoodDropdown && neighborhoods.length > 0 && (
+                        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-md border bg-popover p-1 shadow-md">
+                          {neighborhoods.map((n) => (
+                            <button
+                              key={n.slug}
+                              className={cn(
+                                "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer",
+                                selectedNeighborhoods.includes(n.slug) && "bg-accent"
+                              )}
+                              onClick={() => {
+                                setSelectedNeighborhoods((prev) =>
+                                  prev.includes(n.slug)
+                                    ? prev.filter((s) => s !== n.slug)
+                                    : [...prev, n.slug]
+                                );
+                              }}
+                            >
+                              <div className={cn(
+                                "h-4 w-4 border rounded flex items-center justify-center",
+                                selectedNeighborhoods.includes(n.slug) && "bg-primary border-primary"
+                              )}>
+                                {selectedNeighborhoods.includes(n.slug) && (
+                                  <Check className="h-3 w-3 text-primary-foreground" />
+                                )}
+                              </div>
+                              {n.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bathrooms */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium">Baths (min)</label>
+                      <Select value={bathsMin} onValueChange={setBathsMin}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Any</SelectItem>
+                          <SelectItem value="1">1+</SelectItem>
+                          <SelectItem value="2">2+</SelectItem>
+                          <SelectItem value="3">3+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Move-in Date */}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium">Move-in by</label>
+                      <Input
+                        type="date"
+                        value={moveInDate}
+                        onChange={(e) => setMoveInDate(e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Toggle Filters */}
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Amenities</h4>
+                  <div className="flex flex-wrap gap-6">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <Switch
+                        checked={petFriendly}
+                        onCheckedChange={setPetFriendly}
+                      />
+                      <span className="flex items-center gap-2 text-sm">
+                        <PawPrint className="h-4 w-4 text-green-600" />
+                        Pet-friendly
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <Switch
+                        checked={parkingRequired}
+                        onCheckedChange={setParkingRequired}
+                      />
+                      <span className="flex items-center gap-2 text-sm">
+                        <Car className="h-4 w-4 text-blue-600" />
+                        Parking available
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-2 border-t">
+                  <Button onClick={() => { setAiSummary(null); handleSearch(); }}>
+                    Apply Filters
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -389,10 +563,15 @@ function SearchContent() {
                       setBedsMax("");
                       setBudgetMin("");
                       setBudgetMax("");
+                      setSelectedNeighborhoods([]);
+                      setBathsMin("");
+                      setPetFriendly(false);
+                      setParkingRequired(false);
+                      setMoveInDate("");
                       setAiSummary(null);
                     }}
                   >
-                    Clear
+                    Clear All
                   </Button>
                 </div>
               </div>
