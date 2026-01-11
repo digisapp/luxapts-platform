@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,32 +44,58 @@ interface SearchResponse {
   results: SearchResult[];
 }
 
-export default function SearchPage() {
-  const [city, setCity] = useState("miami");
+interface ParsedFilters {
+  city_slug?: string;
+  beds_min?: number;
+  beds_max?: number;
+  budget_min?: number;
+  budget_max?: number;
+  pet_friendly?: boolean;
+  sort?: string;
+  summary?: string;
+}
+
+function SearchContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const queryParam = searchParams.get("q");
+  const cityParam = searchParams.get("city");
+
+  const [city, setCity] = useState(cityParam || "miami");
   const [bedsMin, setBedsMin] = useState("");
   const [bedsMax, setBedsMax] = useState("");
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
   const [sort, setSort] = useState("price_low");
   const [showFilters, setShowFilters] = useState(false);
+  const [searchInput, setSearchInput] = useState(queryParam || "");
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
 
-  const handleSearch = async () => {
+  // AI search state
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiParsing, setAiParsing] = useState(false);
+
+  const handleSearch = useCallback(async (filters?: ParsedFilters) => {
     setLoading(true);
     try {
       const body: Record<string, unknown> = {
-        city_slug: city,
-        sort,
+        city_slug: filters?.city_slug || city,
+        sort: filters?.sort || sort,
         limit: 30,
       };
 
-      if (bedsMin) body.beds_min = parseInt(bedsMin);
-      if (bedsMax) body.beds_max = parseInt(bedsMax);
-      if (budgetMin) body.budget_min = parseInt(budgetMin);
-      if (budgetMax) body.budget_max = parseInt(budgetMax);
+      const bedsMinVal = filters?.beds_min !== undefined ? filters.beds_min : (bedsMin ? parseInt(bedsMin) : undefined);
+      const bedsMaxVal = filters?.beds_max !== undefined ? filters.beds_max : (bedsMax ? parseInt(bedsMax) : undefined);
+      const budgetMinVal = filters?.budget_min !== undefined ? filters.budget_min : (budgetMin ? parseInt(budgetMin) : undefined);
+      const budgetMaxVal = filters?.budget_max !== undefined ? filters.budget_max : (budgetMax ? parseInt(budgetMax) : undefined);
+
+      if (bedsMinVal !== undefined) body.beds_min = bedsMinVal;
+      if (bedsMaxVal !== undefined) body.beds_max = bedsMaxVal;
+      if (budgetMinVal !== undefined) body.budget_min = budgetMinVal;
+      if (budgetMaxVal !== undefined) body.budget_max = budgetMaxVal;
 
       const res = await fetch("/api/search", {
         method: "POST",
@@ -86,12 +113,85 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
+  }, [city, sort, bedsMin, bedsMax, budgetMin, budgetMax]);
+
+  // Parse AI query and apply filters
+  const parseAndSearch = useCallback(async (query: string) => {
+    setAiParsing(true);
+    setAiSummary(null);
+
+    try {
+      const res = await fetch("/api/parse-query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const filters: ParsedFilters = data.filters;
+
+        // Update UI state with parsed filters
+        if (filters.city_slug) setCity(filters.city_slug);
+        if (filters.beds_min !== undefined) setBedsMin(filters.beds_min.toString());
+        if (filters.beds_max !== undefined) setBedsMax(filters.beds_max.toString());
+        if (filters.budget_min !== undefined) setBudgetMin(filters.budget_min.toString());
+        if (filters.budget_max !== undefined) setBudgetMax(filters.budget_max.toString());
+        if (filters.sort) setSort(filters.sort);
+        if (filters.summary) setAiSummary(filters.summary);
+
+        // Search with the parsed filters
+        await handleSearch(filters);
+      } else {
+        // Fallback to regular search
+        await handleSearch();
+      }
+    } catch (error) {
+      console.error("AI parsing error:", error);
+      await handleSearch();
+    } finally {
+      setAiParsing(false);
+    }
+  }, [handleSearch]);
+
+  // Handle AI search from input
+  const handleAiSearch = () => {
+    if (searchInput.trim()) {
+      // Update URL with query
+      router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
+      parseAndSearch(searchInput.trim());
+    } else {
+      setAiSummary(null);
+      handleSearch();
+    }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleAiSearch();
+    }
+  };
+
+  // Initial load - check for query param
   useEffect(() => {
-    handleSearch();
+    if (queryParam) {
+      parseAndSearch(queryParam);
+    } else if (cityParam) {
+      setCity(cityParam);
+      handleSearch();
+    } else {
+      handleSearch();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [city, sort]);
+  }, []);
+
+  // Re-search when sort changes (but not on initial load)
+  useEffect(() => {
+    if (!aiParsing && results.length > 0) {
+      handleSearch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sort]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -99,19 +199,22 @@ export default function SearchPage() {
 
       <main className="flex-1 bg-muted/30">
         <div className="container mx-auto px-4 py-8">
-          {/* Search Bar */}
+          {/* AI Search Bar */}
           <div className="mb-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-center">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Sparkles className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
                 <Input
                   type="text"
-                  placeholder="Search by neighborhood, building name..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Try: '2 bedroom in Miami under $3,500' or 'pet-friendly studio'"
                   className="h-12 pl-10"
                 />
               </div>
 
-              <Select value={city} onValueChange={setCity}>
+              <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); }}>
                 <SelectTrigger className="h-12 w-full md:w-[180px]">
                   <SelectValue placeholder="Select city" />
                 </SelectTrigger>
@@ -130,10 +233,40 @@ export default function SearchPage() {
                 Filters
               </Button>
 
-              <Button className="h-12" onClick={handleSearch}>
-                Search
+              <Button className="h-12 gap-2" onClick={handleAiSearch} disabled={aiParsing}>
+                {aiParsing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                AI Search
               </Button>
             </div>
+
+            {/* AI Summary Banner */}
+            {aiSummary && (
+              <div className="mt-4 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                <Sparkles className="h-5 w-5 text-primary flex-shrink-0" />
+                <p className="text-sm font-medium">{aiSummary}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto"
+                  onClick={() => {
+                    setAiSummary(null);
+                    setSearchInput("");
+                    setBedsMin("");
+                    setBedsMax("");
+                    setBudgetMin("");
+                    setBudgetMax("");
+                    router.push("/search");
+                    handleSearch();
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
 
             {/* Filters Panel */}
             {showFilters && (
@@ -204,7 +337,7 @@ export default function SearchPage() {
                 </div>
 
                 <div className="mt-4 flex gap-2">
-                  <Button onClick={handleSearch}>Apply Filters</Button>
+                  <Button onClick={() => { setAiSummary(null); handleSearch(); }}>Apply Filters</Button>
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -212,6 +345,7 @@ export default function SearchPage() {
                       setBedsMax("");
                       setBudgetMin("");
                       setBudgetMax("");
+                      setAiSummary(null);
                     }}
                   >
                     Clear
@@ -225,7 +359,7 @@ export default function SearchPage() {
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">
-                {results.length} {results.length === 1 ? "Apartment" : "Apartments"} Available
+                {loading ? "Searching..." : `${results.length} ${results.length === 1 ? "Apartment" : "Apartments"} Available`}
               </h1>
               {capturedAt && (
                 <p className="text-sm text-muted-foreground">
@@ -360,5 +494,21 @@ export default function SearchPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1 bg-muted/30 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </main>
+        <Footer />
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 }

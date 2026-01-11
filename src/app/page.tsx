@@ -1,10 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
 const FEATURED_CITIES = [
-  { name: "New York", slug: "nyc" },
+  { name: "New York", slug: "new-york" },
   { name: "Miami", slug: "miami" },
   { name: "Los Angeles", slug: "la" },
   { name: "Austin", slug: "austin" },
@@ -13,6 +17,23 @@ const FEATURED_CITIES = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push("/search");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-black">
       <Header />
@@ -42,16 +63,19 @@ export default function HomePage() {
               <div className="relative group">
                 <input
                   type="text"
-                  placeholder="Search by city, neighborhood, or describe your ideal home..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Try: '2 bedroom in Miami under $3,500' or 'pet-friendly studio NYC'"
                   className="w-full h-14 px-6 rounded-full bg-zinc-900/80 border border-zinc-800 text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all"
                 />
-                <Link
-                  href="/search"
+                <button
+                  onClick={handleSearch}
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 rounded-full bg-white text-black font-medium text-sm flex items-center gap-2 hover:bg-zinc-200 transition-colors"
                 >
                   Search
                   <ArrowRight className="h-4 w-4" />
-                </Link>
+                </button>
               </div>
             </div>
 
@@ -132,7 +156,7 @@ export default function HomePage() {
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                { name: "New York City", slug: "nyc", count: "12,000+" },
+                { name: "New York City", slug: "new-york", count: "12,000+" },
                 { name: "Miami", slug: "miami", count: "8,500+" },
                 { name: "Los Angeles", slug: "la", count: "10,000+" },
                 { name: "Chicago", slug: "chicago", count: "7,800+" },
