@@ -1,0 +1,1813 @@
+{
+  "buildings": [
+    {
+      "name": "Hanover Republic Square",
+      "address": "303 W. 5th Street",
+      "neighborhood": "Downtown",
+      "phone": "512-501-2316",
+      "website": "https://hanoverrepublicsquare.com/",
+      "management_company": "Hanover",
+      "year_built": 2022,
+      "stories": 15,
+      "total_units": 220,
+      "rent_range": {
+        "min": 2050,
+        "max": 4960
+      },
+      "sqft_range": {
+        "min": 476,
+        "max": 1594
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 476,
+          "rent": 2050
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 770,
+          "rent": 2880
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 935,
+          "rent": 3040
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1140,
+          "rent": 3810
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1298,
+          "rent": 4140
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1594,
+          "rent": 4960
+        }
+      ],
+      "amenities": [
+        "Fitness Center",
+        "Package Lockers",
+        "EV Charging Stations",
+        "Dog Park",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Resident Lounge",
+        "Pet Spa",
+        "Bike Storage",
+        "Business Center",
+        "In-Unit Washer/Dryer",
+        "Walk-In Closets",
+        "Floor-to-Ceiling Windows",
+        "City Views",
+        "Hardwood Floors"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://hanoverrepublicsquare.com/assets/images/cache/opengraph_hanover_republic_2490-43ba09a181841726624cc7452669f53b.jpg"
+      }
+    },
+    {
+      "name": "The Shoal",
+      "address": "827 West 12th Street",
+      "neighborhood": "Downtown",
+      "phone": "855-536-2024",
+      "website": "https://theshoalatx.com/",
+      "year_built": 2024,
+      "stories": 31,
+      "total_units": 353,
+      "rent_range": {
+        "min": 2170,
+        "max": 4910
+      },
+      "sqft_range": {
+        "min": 544,
+        "max": 1462
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 544,
+          "rent": 2170
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 781,
+          "rent": 2790
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 921,
+          "rent": 3120
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1176,
+          "rent": 3600
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1261,
+          "rent": 4150
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1462,
+          "rent": 4910
+        }
+      ],
+      "amenities": [
+        "Package Lockers",
+        "Coffee Bar",
+        "Resident Lounge",
+        "Yoga Studio",
+        "Rooftop Pool",
+        "Fitness Center",
+        "Co-Working Space",
+        "EV Charging Stations",
+        "Pet Spa",
+        "Private Balcony",
+        "City Views",
+        "Quartz Countertops",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://theshoalatx.com/assets/images/cache/gallery_16_the_shoal_26961-4bbbe65482c4bd8717cbff85e7479071.jpg"
+      }
+    },
+    {
+      "name": "Ashton Austin",
+      "address": "706 Congress Ave",
+      "neighborhood": "Downtown",
+      "phone": "512-551-3200",
+      "website": "https://ashtoninaustin.com/",
+      "year_built": 2023,
+      "stories": 33,
+      "total_units": 313,
+      "rent_range": {
+        "min": 2030,
+        "max": 4970
+      },
+      "sqft_range": {
+        "min": 489,
+        "max": 1625
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 489,
+          "rent": 2030
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 779,
+          "rent": 2910
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 933,
+          "rent": 3090
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1084,
+          "rent": 3700
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1266,
+          "rent": 4160
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1625,
+          "rent": 4970
+        }
+      ],
+      "amenities": [
+        "Concierge Service",
+        "Co-Working Space",
+        "Fitness Center",
+        "EV Charging Stations",
+        "Resident Lounge",
+        "Dog Park",
+        "Business Center",
+        "Yoga Studio",
+        "Valet Parking",
+        "Floor-to-Ceiling Windows",
+        "Stainless Steel Appliances",
+        "Walk-In Closets",
+        "Quartz Countertops",
+        "City Views"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://ashtoninaustin.com/assets/images/cache/vzUZS3RRsIqmroDiIBrCOheP4HocJpM4NCoNkvE7-96fc48e2e7e2d9ed167358eef0a8caef.jpg"
+      }
+    },
+    {
+      "name": "700 River",
+      "address": "700 E Riverside Dr",
+      "neighborhood": "Rainey Street",
+      "phone": "512-717-5000",
+      "website": "https://www.700riveraustin.com/",
+      "year_built": 2021,
+      "stories": 30,
+      "total_units": 280,
+      "rent_range": {
+        "min": 1790,
+        "max": 4400
+      },
+      "sqft_range": {
+        "min": 527,
+        "max": 1463
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 527,
+          "rent": 1790
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 755,
+          "rent": 2360
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 887,
+          "rent": 2690
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1036,
+          "rent": 3470
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1317,
+          "rent": 3980
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1463,
+          "rent": 4400
+        }
+      ],
+      "amenities": [
+        "EV Charging Stations",
+        "Resident Lounge",
+        "Concierge Service",
+        "Yoga Studio",
+        "Coffee Bar",
+        "Package Lockers",
+        "Business Center",
+        "Co-Working Space",
+        "Private Balcony",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "In-Unit Washer/Dryer",
+        "Walk-In Closets"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "The Travis",
+      "address": "80 Red River Street",
+      "neighborhood": "Rainey Street",
+      "phone": "512-900-0000",
+      "website": "https://www.thetravisaustin.com/",
+      "year_built": 2024,
+      "stories": 31,
+      "total_units": 222,
+      "rent_range": {
+        "min": 1800,
+        "max": 4370
+      },
+      "sqft_range": {
+        "min": 452,
+        "max": 1615
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 452,
+          "rent": 1800
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 666,
+          "rent": 2560
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 813,
+          "rent": 2640
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1172,
+          "rent": 3360
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1280,
+          "rent": 3770
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1615,
+          "rent": 4370
+        }
+      ],
+      "amenities": [
+        "Dog Park",
+        "Outdoor Grilling Area",
+        "Valet Parking",
+        "EV Charging Stations",
+        "Fitness Center",
+        "Co-Working Space",
+        "Package Lockers",
+        "Pet Spa",
+        "In-Unit Washer/Dryer",
+        "Stainless Steel Appliances",
+        "Walk-In Closets",
+        "Smart Home Features",
+        "Quartz Countertops"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "Mosaic at Mueller",
+      "address": "1900 Simond Ave",
+      "neighborhood": "Mueller",
+      "phone": "512-454-1900",
+      "website": "https://www.mosaicaustin.com/",
+      "year_built": 2024,
+      "stories": 29,
+      "total_units": 292,
+      "rent_range": {
+        "min": 1450,
+        "max": 3490
+      },
+      "sqft_range": {
+        "min": 524,
+        "max": 1518
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 524,
+          "rent": 1450
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 684,
+          "rent": 2130
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 825,
+          "rent": 2420
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1099,
+          "rent": 2660
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1248,
+          "rent": 3240
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1518,
+          "rent": 3490
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Fitness Center",
+        "Dog Park",
+        "EV Charging Stations",
+        "Pet Spa",
+        "Business Center",
+        "Bike Storage",
+        "Yoga Studio",
+        "Coffee Bar",
+        "Outdoor Grilling Area",
+        "Stainless Steel Appliances",
+        "In-Unit Washer/Dryer",
+        "City Views",
+        "Quartz Countertops",
+        "Walk-In Closets",
+        "Hardwood Floors",
+        "Smart Home Features"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {}
+    },
+    {
+      "name": "Rivette Tower",
+      "address": "4500 Mueller Blvd",
+      "neighborhood": "Mueller",
+      "phone": "512-900-4500",
+      "website": "https://rivettemueller.com/",
+      "year_built": 2021,
+      "stories": 33,
+      "total_units": 374,
+      "rent_range": {
+        "min": 1760,
+        "max": 4050
+      },
+      "sqft_range": {
+        "min": 509,
+        "max": 1658
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 509,
+          "rent": 1760
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 665,
+          "rent": 2350
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 947,
+          "rent": 2630
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1078,
+          "rent": 3100
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1373,
+          "rent": 3760
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1658,
+          "rent": 4050
+        }
+      ],
+      "amenities": [
+        "Business Center",
+        "Coffee Bar",
+        "Rooftop Pool",
+        "Bike Storage",
+        "EV Charging Stations",
+        "Dog Park",
+        "Yoga Studio",
+        "Fitness Center",
+        "Package Lockers",
+        "Concierge Service",
+        "Resident Lounge",
+        "Pet Spa",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer",
+        "Hardwood Floors",
+        "Quartz Countertops",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://rivettemueller.com/assets/images/cache/rivette-tower-036--ffbc9fc4b833a68db8f9faa17f8a1928.jpg"
+      }
+    },
+    {
+      "name": "AMLI at Mueller",
+      "address": "1900 Aldrich St",
+      "neighborhood": "Mueller",
+      "phone": "512-649-1900",
+      "website": "https://www.amli.com/apartments/austin/mueller-apartments/amli-at-mueller",
+      "management_company": "AMLI",
+      "year_built": 2015,
+      "stories": 33,
+      "total_units": 273,
+      "rent_range": {
+        "min": 1550,
+        "max": 3610
+      },
+      "sqft_range": {
+        "min": 485,
+        "max": 1409
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 485,
+          "rent": 1550
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 721,
+          "rent": 2220
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 809,
+          "rent": 2380
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1024,
+          "rent": 2880
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1324,
+          "rent": 3200
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1409,
+          "rent": 3610
+        }
+      ],
+      "amenities": [
+        "Bike Storage",
+        "Package Lockers",
+        "Dog Park",
+        "Outdoor Grilling Area",
+        "Concierge Service",
+        "Fitness Center",
+        "EV Charging Stations",
+        "Rooftop Pool",
+        "Yoga Studio",
+        "Resident Lounge",
+        "Quartz Countertops",
+        "In-Unit Washer/Dryer",
+        "City Views",
+        "Floor-to-Ceiling Windows",
+        "Private Balcony",
+        "Stainless Steel Appliances"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {
+        "exterior": "https://images.prismic.io/amli-website/31c6729f314bac98b92b2a6a6078810c1c55e771_mueller_exterior_building-lake.jpg"
+      }
+    },
+    {
+      "name": "AMLI Branch Park",
+      "address": "1900 Haskell St",
+      "neighborhood": "Mueller",
+      "phone": "512-649-1901",
+      "website": "https://www.amli.com/apartments/austin/mueller-apartments/amli-branch-park",
+      "management_company": "AMLI",
+      "year_built": 2021,
+      "stories": 30,
+      "total_units": 361,
+      "rent_range": {
+        "min": 1530,
+        "max": 3550
+      },
+      "sqft_range": {
+        "min": 547,
+        "max": 1632
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 547,
+          "rent": 1530
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 772,
+          "rent": 2090
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 941,
+          "rent": 2330
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1172,
+          "rent": 2950
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1255,
+          "rent": 3150
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1632,
+          "rent": 3550
+        }
+      ],
+      "amenities": [
+        "Fitness Center",
+        "Business Center",
+        "Yoga Studio",
+        "Concierge Service",
+        "Pet Spa",
+        "Rooftop Pool",
+        "Valet Parking",
+        "Package Lockers",
+        "Bike Storage",
+        "Co-Working Space",
+        "Coffee Bar",
+        "Outdoor Grilling Area",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "City Views",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pet-friendly community. Cats and dogs welcome with deposit.",
+      "images": {
+        "exterior": "https://images.prismic.io/amli-website/ZnQ3NJm069VX1692_BranchPark_exterior_building3-55.jpg"
+      }
+    },
+    {
+      "name": "Solomon",
+      "address": "2000 E Riverside Dr",
+      "neighborhood": "East Austin",
+      "phone": "512-428-2000",
+      "website": "https://solomonatx.com/",
+      "year_built": 2019,
+      "stories": 32,
+      "total_units": 247,
+      "rent_range": {
+        "min": 1600,
+        "max": 3130
+      },
+      "sqft_range": {
+        "min": 472,
+        "max": 1485
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 472,
+          "rent": 1600
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 765,
+          "rent": 1900
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 865,
+          "rent": 2150
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1073,
+          "rent": 2490
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1247,
+          "rent": 2890
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1485,
+          "rent": 3130
+        }
+      ],
+      "amenities": [
+        "Fitness Center",
+        "Valet Parking",
+        "Pet Spa",
+        "Business Center",
+        "Dog Park",
+        "Bike Storage",
+        "Yoga Studio",
+        "Concierge Service",
+        "Rooftop Pool",
+        "Package Lockers",
+        "Resident Lounge",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Private Balcony",
+        "Hardwood Floors",
+        "Walk-In Closets",
+        "Floor-to-Ceiling Windows"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://solomonatx.com/assets/images/cache/Solomon-552-f585e19631d918053c8202ec88ce1924.jpg"
+      }
+    },
+    {
+      "name": "Residences at ATX Tower",
+      "address": "321 West 6th Street",
+      "neighborhood": "Downtown",
+      "phone": "512-580-0321",
+      "website": "https://atxtower-residences.com/",
+      "management_company": "RPM Living",
+      "year_built": 2018,
+      "stories": 27,
+      "total_units": 388,
+      "rent_range": {
+        "min": 2020,
+        "max": 4690
+      },
+      "sqft_range": {
+        "min": 472,
+        "max": 1415
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 472,
+          "rent": 2020
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 683,
+          "rent": 2840
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 833,
+          "rent": 3010
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1194,
+          "rent": 3540
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1280,
+          "rent": 4380
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1415,
+          "rent": 4690
+        }
+      ],
+      "amenities": [
+        "Pet Spa",
+        "Fitness Center",
+        "Rooftop Pool",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Concierge Service",
+        "Dog Park",
+        "Resident Lounge",
+        "Hardwood Floors",
+        "Stainless Steel Appliances",
+        "Quartz Countertops",
+        "Floor-to-Ceiling Windows",
+        "In-Unit Washer/Dryer",
+        "Walk-In Closets",
+        "Smart Home Features"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "415 Colorado",
+      "address": "415 Colorado Street",
+      "neighborhood": "Downtown",
+      "phone": "512-580-0415",
+      "website": "https://www.415colorado.com/",
+      "management_company": "RPM Living",
+      "year_built": 2024,
+      "stories": 29,
+      "total_units": 212,
+      "rent_range": {
+        "min": 2090,
+        "max": 4860
+      },
+      "sqft_range": {
+        "min": 536,
+        "max": 1685
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 536,
+          "rent": 2090
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 691,
+          "rent": 2840
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 876,
+          "rent": 2940
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1066,
+          "rent": 3720
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1225,
+          "rent": 4270
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1685,
+          "rent": 4860
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Fitness Center",
+        "Co-Working Space",
+        "Yoga Studio",
+        "Concierge Service",
+        "Bike Storage",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Pet Spa",
+        "Coffee Bar",
+        "Business Center",
+        "Dog Park",
+        "Stainless Steel Appliances",
+        "Smart Home Features",
+        "Quartz Countertops",
+        "Private Balcony",
+        "City Views",
+        "Walk-In Closets"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://www.415colorado.com/wp-content/uploads/2024/10/17b272bf6ac2f644f6514c2076938e8b.jpg"
+      }
+    },
+    {
+      "name": "Lookout Austin",
+      "address": "1910 Wickersham Lane",
+      "neighborhood": "East Austin",
+      "phone": "512-730-1910",
+      "website": "https://rpmliving.com/",
+      "management_company": "RPM Living",
+      "year_built": 2022,
+      "stories": 20,
+      "total_units": 250,
+      "rent_range": {
+        "min": 1450,
+        "max": 3190
+      },
+      "sqft_range": {
+        "min": 541,
+        "max": 1555
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 541,
+          "rent": 1450
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 657,
+          "rent": 1890
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 812,
+          "rent": 2230
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1131,
+          "rent": 2380
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1237,
+          "rent": 2770
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1555,
+          "rent": 3190
+        }
+      ],
+      "amenities": [
+        "Concierge Service",
+        "Resident Lounge",
+        "Bike Storage",
+        "Outdoor Grilling Area",
+        "Business Center",
+        "Dog Park",
+        "Yoga Studio",
+        "Co-Working Space",
+        "Fitness Center",
+        "Valet Parking",
+        "Pet Spa",
+        "Smart Home Features",
+        "Stainless Steel Appliances",
+        "In-Unit Washer/Dryer",
+        "Hardwood Floors",
+        "Floor-to-Ceiling Windows",
+        "Quartz Countertops"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {}
+    },
+    {
+      "name": "The Modern Austin",
+      "address": "70 Rainey St",
+      "neighborhood": "Rainey Street",
+      "website": "https://www.themodernaustin.com/",
+      "year_built": 2025,
+      "stories": 15,
+      "total_units": 212,
+      "rent_range": {
+        "min": 1860,
+        "max": 4500
+      },
+      "sqft_range": {
+        "min": 477,
+        "max": 1466
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 477,
+          "rent": 1860
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 667,
+          "rent": 2500
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 901,
+          "rent": 2780
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1088,
+          "rent": 3360
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1243,
+          "rent": 3820
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1466,
+          "rent": 4500
+        }
+      ],
+      "amenities": [
+        "Co-Working Space",
+        "Concierge Service",
+        "Valet Parking",
+        "Fitness Center",
+        "EV Charging Stations",
+        "Coffee Bar",
+        "Package Lockers",
+        "Resident Lounge",
+        "Rooftop Pool",
+        "Dog Park",
+        "Bike Storage",
+        "Private Balcony",
+        "City Views",
+        "In-Unit Washer/Dryer",
+        "Stainless Steel Appliances",
+        "Quartz Countertops"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {
+        "exterior": "https://modernaustinresidences.com/wp-content/uploads/2025/07/featured-image-Modern-website.png"
+      }
+    },
+    {
+      "name": "Residences at 6G",
+      "address": "600 Guadalupe St",
+      "neighborhood": "Downtown",
+      "website": "https://www.6gaustin.com/",
+      "year_built": 2022,
+      "stories": 23,
+      "total_units": 203,
+      "rent_range": {
+        "min": 2020,
+        "max": 4960
+      },
+      "sqft_range": {
+        "min": 474,
+        "max": 1545
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 474,
+          "rent": 2020
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 731,
+          "rent": 2770
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 924,
+          "rent": 3100
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1179,
+          "rent": 3690
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1292,
+          "rent": 4190
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1545,
+          "rent": 4960
+        }
+      ],
+      "amenities": [
+        "Outdoor Grilling Area",
+        "Pet Spa",
+        "Valet Parking",
+        "Co-Working Space",
+        "Bike Storage",
+        "Business Center",
+        "Concierge Service",
+        "Yoga Studio",
+        "Fitness Center",
+        "Resident Lounge",
+        "Rooftop Pool",
+        "Coffee Bar",
+        "City Views",
+        "Stainless Steel Appliances",
+        "Smart Home Features",
+        "Quartz Countertops",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "Paseo Austin",
+      "address": "80 Rainey St",
+      "neighborhood": "Rainey Street",
+      "website": "https://www.paseoaustin.com/",
+      "year_built": 2018,
+      "stories": 16,
+      "total_units": 296,
+      "rent_range": {
+        "min": 1800,
+        "max": 4590
+      },
+      "sqft_range": {
+        "min": 522,
+        "max": 1553
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 522,
+          "rent": 1800
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 707,
+          "rent": 2520
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 830,
+          "rent": 2800
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1121,
+          "rent": 3270
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1265,
+          "rent": 3790
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1553,
+          "rent": 4590
+        }
+      ],
+      "amenities": [
+        "Package Lockers",
+        "Rooftop Pool",
+        "Fitness Center",
+        "Valet Parking",
+        "Resident Lounge",
+        "Pet Spa",
+        "EV Charging Stations",
+        "Yoga Studio",
+        "Concierge Service",
+        "Co-Working Space",
+        "Coffee Bar",
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "In-Unit Washer/Dryer",
+        "Smart Home Features",
+        "Private Balcony",
+        "City Views"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    },
+    {
+      "name": "Vesper Austin",
+      "address": "78 Rainey St",
+      "neighborhood": "Rainey Street",
+      "website": "https://www.vesperaustin.com/",
+      "year_built": 2021,
+      "stories": 35,
+      "total_units": 342,
+      "rent_range": {
+        "min": 2050,
+        "max": 4640
+      },
+      "sqft_range": {
+        "min": 459,
+        "max": 1436
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 459,
+          "rent": 2050
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 797,
+          "rent": 2640
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 905,
+          "rent": 2740
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1040,
+          "rent": 3440
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1343,
+          "rent": 3990
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1436,
+          "rent": 4640
+        }
+      ],
+      "amenities": [
+        "Concierge Service",
+        "Dog Park",
+        "Valet Parking",
+        "Outdoor Grilling Area",
+        "Resident Lounge",
+        "Bike Storage",
+        "Business Center",
+        "Package Lockers",
+        "Walk-In Closets",
+        "Quartz Countertops",
+        "Floor-to-Ceiling Windows",
+        "Stainless Steel Appliances",
+        "Hardwood Floors",
+        "Private Balcony"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {
+        "exterior": "https://static.wixstatic.com/media/e0da40_6e6bed3bf747450c8262cb4126c48395~mv2.jpg/v1/fill/w_1242,h_817,al_c/e0da40_6e6bed3bf747450c8262cb4126c48395~mv2.jpg"
+      }
+    },
+    {
+      "name": "The Quincy",
+      "address": "78 E 7th St",
+      "neighborhood": "Rainey Street",
+      "phone": "512-580-7800",
+      "website": "https://quincyatx.com/",
+      "year_built": 2024,
+      "stories": 15,
+      "total_units": 260,
+      "rent_range": {
+        "min": 1860,
+        "max": 4360
+      },
+      "sqft_range": {
+        "min": 515,
+        "max": 1631
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 515,
+          "rent": 1860
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 787,
+          "rent": 2450
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 862,
+          "rent": 2710
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1072,
+          "rent": 3460
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1220,
+          "rent": 3910
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1631,
+          "rent": 4360
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Valet Parking",
+        "Package Lockers",
+        "Outdoor Grilling Area",
+        "Co-Working Space",
+        "Business Center",
+        "EV Charging Stations",
+        "Coffee Bar",
+        "Yoga Studio",
+        "Private Balcony",
+        "Smart Home Features",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer",
+        "Floor-to-Ceiling Windows",
+        "Hardwood Floors",
+        "Quartz Countertops"
+      ],
+      "pet_policy": "Pets welcome with deposit. Contact for details.",
+      "images": {
+        "exterior": "https://quincyatx.com/assets/images/cache/og-image2-97420b132fa5fce79d0b710df73a6804.jpg"
+      }
+    },
+    {
+      "name": "SkyHouse Austin",
+      "address": "51 Rainey St",
+      "neighborhood": "Rainey Street",
+      "phone": "512-494-5100",
+      "website": "https://www.skyhouseaustin.com/",
+      "management_company": "Simpson Property Group",
+      "year_built": 2020,
+      "stories": 35,
+      "total_units": 309,
+      "rent_range": {
+        "min": 1810,
+        "max": 4470
+      },
+      "sqft_range": {
+        "min": 455,
+        "max": 1662
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 455,
+          "rent": 1810
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 720,
+          "rent": 2500
+        },
+        {
+          "name": "A2 - Large One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 922,
+          "rent": 2800
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1020,
+          "rent": 3430
+        },
+        {
+          "name": "B2 - Large Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1318,
+          "rent": 3900
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1662,
+          "rent": 4470
+        }
+      ],
+      "amenities": [
+        "Bike Storage",
+        "Valet Parking",
+        "Dog Park",
+        "Yoga Studio",
+        "Fitness Center",
+        "Package Lockers",
+        "Co-Working Space",
+        "Rooftop Pool",
+        "Pet Spa",
+        "Private Balcony",
+        "Stainless Steel Appliances",
+        "Floor-to-Ceiling Windows",
+        "Walk-In Closets",
+        "In-Unit Washer/Dryer",
+        "City Views"
+      ],
+      "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
+      "images": {}
+    }
+  ]
+}
