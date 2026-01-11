@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { createAdminClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -22,10 +23,45 @@ import {
   PawPrint,
   Car,
   ArrowLeft,
+  Layout,
+  ImageIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { ImageGallery } from "./ImageGallery";
 
 interface BuildingPageProps {
   params: Promise<{ id: string }>;
+}
+
+interface UnitImage {
+  id: string;
+  unit_id: string;
+  url: string;
+  alt_text: string | null;
+  category: string | null;
+  is_primary: boolean;
+  sort_order: number;
+}
+
+interface BuildingImage {
+  id: string;
+  building_id: string;
+  url: string;
+  alt_text: string | null;
+  category: string | null;
+  is_primary: boolean;
+  sort_order: number;
+}
+
+interface Floorplan {
+  id: string;
+  name: string;
+  beds: number;
+  baths: number;
+  sqft_min: number | null;
+  sqft_max: number | null;
+  layout_image_url: string | null;
 }
 
 export default async function BuildingPage({ params }: BuildingPageProps) {
@@ -64,6 +100,14 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     buildingFacts[fact.key] = fact.value as string | number;
   }
 
+  // Fetch building images
+  const { data: buildingImages } = await supabase
+    .from("building_images")
+    .select("*")
+    .eq("building_id", id)
+    .order("is_primary", { ascending: false })
+    .order("sort_order", { ascending: true });
+
   // Fetch available units with latest prices
   const { data: units } = await supabase
     .from("units")
@@ -72,10 +116,12 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     .eq("is_available", true)
     .order("beds", { ascending: true });
 
+  // Get unit IDs for fetching related data
+  const unitIds = units?.map((u) => u.id) || [];
+
   // Get latest prices for units
   const unitPrices: Record<string, { rent: number; captured_at: string }> = {};
-  if (units?.length) {
-    const unitIds = units.map((u) => u.id);
+  if (unitIds.length) {
     const { data: prices } = await supabase
       .from("unit_price_snapshots")
       .select("unit_id, rent, captured_at")
@@ -89,11 +135,64 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     }
   }
 
+  // Fetch unit images
+  const unitImages: Record<string, UnitImage[]> = {};
+  if (unitIds.length) {
+    const { data: images } = await supabase
+      .from("unit_images")
+      .select("*")
+      .in("unit_id", unitIds)
+      .order("is_primary", { ascending: false })
+      .order("sort_order", { ascending: true });
+
+    for (const img of images || []) {
+      if (!unitImages[img.unit_id]) {
+        unitImages[img.unit_id] = [];
+      }
+      unitImages[img.unit_id].push(img);
+    }
+  }
+
+  // Fetch floorplans for units
+  const floorplanIds = [...new Set(units?.map(u => u.floorplan_id).filter(Boolean) || [])];
+  const floorplans: Record<string, Floorplan> = {};
+  if (floorplanIds.length) {
+    const { data: fps } = await supabase
+      .from("floorplans")
+      .select("*")
+      .in("id", floorplanIds);
+
+    for (const fp of fps || []) {
+      floorplans[fp.id] = fp;
+    }
+  }
+
   // Calculate price range
   const prices = Object.values(unitPrices).map((p) => p.rent);
   const priceRange = prices.length
     ? { min: Math.min(...prices), max: Math.max(...prices) }
     : null;
+
+  // Combine all images for the gallery (building images + exterior from facts)
+  const allImages: { url: string; alt: string; category?: string }[] = [];
+
+  // Add building images from the new table
+  for (const img of buildingImages || []) {
+    allImages.push({
+      url: img.url,
+      alt: img.alt_text || building.name,
+      category: img.category || undefined,
+    });
+  }
+
+  // Add exterior image from building_facts if not already in building_images
+  if (buildingFacts.image_exterior && !allImages.some(img => img.url === buildingFacts.image_exterior)) {
+    allImages.unshift({
+      url: buildingFacts.image_exterior as string,
+      alt: `${building.name} exterior`,
+      category: "exterior",
+    });
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -112,29 +211,22 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
             </Link>
 
             <div className="grid gap-8 lg:grid-cols-3">
-              {/* Image */}
+              {/* Image Gallery */}
               <div className="lg:col-span-2">
-                <div className="relative h-64 md:h-96 rounded-xl bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
-                  {buildingFacts.image_exterior ? (
-                    <img
-                      src={buildingFacts.image_exterior as string}
-                      alt={building.name}
-                      className="absolute inset-0 h-full w-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                  ) : (
+                {allImages.length > 0 ? (
+                  <ImageGallery images={allImages} buildingName={building.name} />
+                ) : (
+                  <div className="relative h-64 md:h-96 rounded-xl bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Building2 className="h-24 w-24 text-muted-foreground/30" />
                     </div>
-                  )}
-                  {buildingFacts.move_in_specials && (
-                    <Badge className="absolute top-3 right-3 bg-green-600">
-                      Special Offer
-                    </Badge>
-                  )}
-                </div>
+                  </div>
+                )}
+                {buildingFacts.move_in_specials && (
+                  <Badge className="mt-4 bg-green-600">
+                    Special Offer Available
+                  </Badge>
+                )}
               </div>
 
               {/* Quick Info */}
@@ -260,45 +352,100 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                     <div className="space-y-4">
                       {units.map((unit) => {
                         const price = unitPrices[unit.id];
+                        const images = unitImages[unit.id] || [];
+                        const primaryImage = images[0];
+                        const floorplan = unit.floorplan_id ? floorplans[unit.floorplan_id] : null;
+
                         return (
                           <div
                             key={unit.id}
-                            className="flex flex-wrap items-center justify-between gap-4 rounded-lg border p-4"
+                            className="flex flex-col md:flex-row gap-4 rounded-lg border p-4"
                           >
-                            <div className="flex flex-wrap gap-3">
-                              <Badge variant="secondary" className="gap-1">
-                                <Bed className="h-3 w-3" />
-                                {unit.beds === 0 ? "Studio" : `${unit.beds} bed`}
-                              </Badge>
-                              {unit.baths && (
-                                <Badge variant="secondary" className="gap-1">
-                                  <Bath className="h-3 w-3" />
-                                  {unit.baths} bath
-                                </Badge>
+                            {/* Unit Image */}
+                            <div className="relative w-full md:w-48 h-32 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                              {primaryImage ? (
+                                <Image
+                                  src={primaryImage.url}
+                                  alt={primaryImage.alt_text || `Unit ${unit.unit_number}`}
+                                  fill
+                                  className="object-cover"
+                                  sizes="(max-width: 768px) 100vw, 192px"
+                                />
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <Building2 className="h-8 w-8 text-muted-foreground/30" />
+                                </div>
                               )}
-                              {unit.sqft && (
-                                <Badge variant="secondary" className="gap-1">
-                                  <Square className="h-3 w-3" />
-                                  {unit.sqft.toLocaleString()} sqft
-                                </Badge>
-                              )}
-                              {unit.available_on && (
-                                <Badge variant="outline" className="gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  {formatDate(unit.available_on)}
-                                </Badge>
+                              {images.length > 1 && (
+                                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                  <ImageIcon className="h-3 w-3" />
+                                  {images.length}
+                                </div>
                               )}
                             </div>
-                            <div className="flex items-center gap-4">
-                              {price ? (
-                                <span className="text-lg font-bold">
-                                  {formatPrice(price.rent)}
-                                  <span className="text-sm font-normal text-muted-foreground">/mo</span>
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground">Contact for pricing</span>
-                              )}
-                              <Button size="sm">View</Button>
+
+                            {/* Unit Details */}
+                            <div className="flex-1 flex flex-col justify-between">
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  {unit.unit_number && (
+                                    <span className="font-semibold">Unit {unit.unit_number}</span>
+                                  )}
+                                  {floorplan && (
+                                    <Badge variant="outline" className="gap-1">
+                                      <Layout className="h-3 w-3" />
+                                      {floorplan.name}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <Badge variant="secondary" className="gap-1">
+                                    <Bed className="h-3 w-3" />
+                                    {unit.beds === 0 ? "Studio" : `${unit.beds} bed`}
+                                  </Badge>
+                                  {unit.baths && (
+                                    <Badge variant="secondary" className="gap-1">
+                                      <Bath className="h-3 w-3" />
+                                      {unit.baths} bath
+                                    </Badge>
+                                  )}
+                                  {unit.sqft && (
+                                    <Badge variant="secondary" className="gap-1">
+                                      <Square className="h-3 w-3" />
+                                      {unit.sqft.toLocaleString()} sqft
+                                    </Badge>
+                                  )}
+                                  {unit.available_on && (
+                                    <Badge variant="outline" className="gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {formatDate(unit.available_on)}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Price and Actions */}
+                              <div className="flex items-center justify-between mt-4">
+                                <div>
+                                  {price ? (
+                                    <span className="text-lg font-bold">
+                                      {formatPrice(price.rent)}
+                                      <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground">Contact for pricing</span>
+                                  )}
+                                </div>
+                                <div className="flex gap-2">
+                                  {floorplan?.layout_image_url && (
+                                    <Button size="sm" variant="outline" className="gap-1">
+                                      <Layout className="h-3 w-3" />
+                                      Floor Plan
+                                    </Button>
+                                  )}
+                                  <Button size="sm">View</Button>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         );

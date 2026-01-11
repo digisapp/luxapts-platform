@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +14,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { formatPrice } from "@/lib/utils";
+
+interface UnitImage {
+  id: string;
+  url: string;
+  alt_text: string | null;
+  category: string | null;
+}
+
+interface Floorplan {
+  id: string;
+  name: string;
+  layout_image_url: string | null;
+}
 
 interface SearchResult {
   building: {
@@ -30,12 +44,15 @@ interface SearchResult {
     baths: number | null;
     sqft: number | null;
     available_on: string | null;
+    floorplan_id: string | null;
   };
   pricing: {
     rent: number;
     net_effective_rent: number | null;
     captured_at: string;
   } | null;
+  images?: UnitImage[];
+  floorplan?: Floorplan | null;
 }
 
 interface SearchResponse {
@@ -410,83 +427,116 @@ function SearchContent() {
                 </p>
               </div>
             ) : (
-              results.map((result) => (
-                <Link
-                  key={result.unit.id}
-                  href={`/buildings/${result.building.id}`}
-                >
-                  <Card className="group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1">
-                    <CardContent className="p-0">
-                      {/* Image placeholder */}
-                      <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Building2 className="h-16 w-16 text-muted-foreground/30" />
-                        </div>
-                        {result.building.neighborhoods && (
-                          <Badge className="absolute top-3 left-3" variant="secondary">
-                            {result.building.neighborhoods.name}
-                          </Badge>
-                        )}
-                        {result.unit.unit_number && (
-                          <Badge className="absolute top-3 right-3" variant="outline">
-                            Unit {result.unit.unit_number}
-                          </Badge>
-                        )}
-                      </div>
+              results.map((result) => {
+                const primaryImage = result.images?.[0];
+                const hasFloorplan = result.floorplan?.layout_image_url;
 
-                      <div className="p-4">
-                        <h3 className="font-semibold group-hover:text-primary transition-colors">
-                          {result.building.name}
-                        </h3>
-                        <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          {result.building.address_1}
-                        </p>
-
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <Badge variant="outline" className="gap-1">
-                            <Bed className="h-3 w-3" />
-                            {result.unit.beds === 0 ? "Studio" : `${result.unit.beds} bed`}
-                          </Badge>
-                          {result.unit.baths && (
-                            <Badge variant="outline" className="gap-1">
-                              <Bath className="h-3 w-3" />
-                              {result.unit.baths} bath
+                return (
+                  <Link
+                    key={result.unit.id}
+                    href={`/buildings/${result.building.id}`}
+                  >
+                    <Card className="group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1">
+                      <CardContent className="p-0">
+                        {/* Image section */}
+                        <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+                          {primaryImage ? (
+                            <Image
+                              src={primaryImage.url}
+                              alt={primaryImage.alt_text || `${result.building.name} - Unit ${result.unit.unit_number}`}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Building2 className="h-16 w-16 text-muted-foreground/30" />
+                            </div>
+                          )}
+                          {/* Overlay gradient for text readability */}
+                          {primaryImage && (
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                          )}
+                          {result.building.neighborhoods && (
+                            <Badge className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm" variant="secondary">
+                              {result.building.neighborhoods.name}
                             </Badge>
                           )}
-                          {result.unit.sqft && (
-                            <Badge variant="outline" className="gap-1">
-                              <Square className="h-3 w-3" />
-                              {result.unit.sqft.toLocaleString()} sqft
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="mt-4 flex items-end justify-between">
-                          <div>
-                            {result.pricing ? (
-                              <>
-                                <span className="text-xl font-bold">
-                                  {formatPrice(result.pricing.rent)}
-                                </span>
-                                <span className="text-muted-foreground">/mo</span>
-                              </>
-                            ) : (
-                              <span className="text-muted-foreground">Contact for pricing</span>
+                          <div className="absolute top-3 right-3 flex gap-2">
+                            {hasFloorplan && (
+                              <Badge className="bg-background/90 backdrop-blur-sm gap-1" variant="outline">
+                                <Layout className="h-3 w-3" />
+                                Floor Plan
+                              </Badge>
+                            )}
+                            {result.unit.unit_number && (
+                              <Badge className="bg-background/90 backdrop-blur-sm" variant="outline">
+                                Unit {result.unit.unit_number}
+                              </Badge>
                             )}
                           </div>
-                          {result.unit.available_on && (
-                            <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Calendar className="h-3 w-3" />
-                              {new Date(result.unit.available_on).toLocaleDateString()}
-                            </span>
+                          {/* Image count indicator */}
+                          {result.images && result.images.length > 1 && (
+                            <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                              +{result.images.length - 1} photos
+                            </div>
                           )}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))
+
+                        <div className="p-4">
+                          <h3 className="font-semibold group-hover:text-primary transition-colors">
+                            {result.building.name}
+                          </h3>
+                          <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            {result.building.address_1}
+                          </p>
+
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <Badge variant="outline" className="gap-1">
+                              <Bed className="h-3 w-3" />
+                              {result.unit.beds === 0 ? "Studio" : `${result.unit.beds} bed`}
+                            </Badge>
+                            {result.unit.baths && (
+                              <Badge variant="outline" className="gap-1">
+                                <Bath className="h-3 w-3" />
+                                {result.unit.baths} bath
+                              </Badge>
+                            )}
+                            {result.unit.sqft && (
+                              <Badge variant="outline" className="gap-1">
+                                <Square className="h-3 w-3" />
+                                {result.unit.sqft.toLocaleString()} sqft
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div className="mt-4 flex items-end justify-between">
+                            <div>
+                              {result.pricing ? (
+                                <>
+                                  <span className="text-xl font-bold">
+                                    {formatPrice(result.pricing.rent)}
+                                  </span>
+                                  <span className="text-muted-foreground">/mo</span>
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground">Contact for pricing</span>
+                              )}
+                            </div>
+                            {result.unit.available_on && (
+                              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(result.unit.available_on).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              }))
             )}
           </div>
         </div>

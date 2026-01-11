@@ -9,6 +9,8 @@ export type AssignmentStatus = "assigned" | "accepted" | "declined" | "reassigne
 export type AgentStatus = "active" | "paused";
 export type ListingSourceType = "api" | "csv" | "manual" | "scrape";
 export type EntityType = "building" | "floorplan" | "unit" | "doc";
+export type UnitImageCategory = "interior" | "kitchen" | "bathroom" | "bedroom" | "living" | "view" | "other";
+export type BuildingImageCategory = "exterior" | "lobby" | "amenity" | "pool" | "gym" | "rooftop" | "common" | "other";
 
 export interface Profile {
   id: string;
@@ -105,6 +107,32 @@ export interface Unit {
   sqft: number | null;
   is_available: boolean;
   available_on: string | null;
+  created_at: string;
+}
+
+export interface UnitImage {
+  id: string;
+  unit_id: string;
+  url: string;
+  alt_text: string | null;
+  category: UnitImageCategory | null;
+  is_primary: boolean;
+  sort_order: number;
+  width: number | null;
+  height: number | null;
+  created_at: string;
+}
+
+export interface BuildingImage {
+  id: string;
+  building_id: string;
+  url: string;
+  alt_text: string | null;
+  category: BuildingImageCategory | null;
+  is_primary: boolean;
+  sort_order: number;
+  width: number | null;
+  height: number | null;
   created_at: string;
 }
 
@@ -214,12 +242,14 @@ export interface BuildingWithRelations extends Building {
   city?: City;
   neighborhood?: Neighborhood;
   amenities?: Amenity[];
+  images?: BuildingImage[];
 }
 
 export interface UnitWithRelations extends Unit {
   building?: BuildingWithRelations;
   floorplan?: Floorplan;
   latest_price?: UnitPriceSnapshot;
+  images?: UnitImage[];
 }
 
 export interface LeadWithRelations extends Lead {
@@ -232,8 +262,10 @@ export interface LeadWithRelations extends Lead {
 // API Response types
 export interface SearchResult {
   building: BuildingWithRelations;
-  unit: Pick<Unit, "id" | "unit_number" | "beds" | "baths" | "sqft" | "available_on">;
+  unit: Pick<Unit, "id" | "unit_number" | "beds" | "baths" | "sqft" | "available_on" | "floorplan_id">;
   pricing: Pick<UnitPriceSnapshot, "rent" | "net_effective_rent" | "lease_term_months" | "captured_at"> | null;
+  images?: UnitImage[];
+  floorplan?: Pick<Floorplan, "id" | "name" | "layout_image_url"> | null;
 }
 
 export interface SearchResponse {

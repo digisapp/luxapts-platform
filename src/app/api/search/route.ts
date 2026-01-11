@@ -157,11 +157,90 @@ export async function POST(req: Request) {
       }
     }
 
-    // 5. Combine and filter by budget
+    // 5. Get unit images (primary image for each unit)
+    const unitImagesRes = await supabase
+      .from("unit_images")
+      .select("id, unit_id, url, alt_text, category, is_primary, sort_order")
+      .in("unit_id", unitIds)
+      .order("is_primary", { ascending: false })
+      .order("sort_order", { ascending: true });
+
+    // Map images by unit (get primary or first available)
+    const imagesByUnit = new Map<string, {
+      id: string;
+      url: string;
+      alt_text: string | null;
+      category: string | null;
+    }[]>();
+
+    for (const img of unitImagesRes.data || []) {
+      if (!imagesByUnit.has(img.unit_id)) {
+        imagesByUnit.set(img.unit_id, []);
+      }
+      imagesByUnit.get(img.unit_id)!.push(img);
+    }
+
+    // 6. Get building images (as fallback when unit has no images)
+    const buildingImagesRes = await supabase
+      .from("building_images")
+      .select("id, building_id, url, alt_text, category, is_primary, sort_order")
+      .in("building_id", buildingIds)
+      .order("is_primary", { ascending: false })
+      .order("sort_order", { ascending: true });
+
+    // Map images by building
+    const imagesByBuilding = new Map<string, {
+      id: string;
+      url: string;
+      alt_text: string | null;
+      category: string | null;
+    }[]>();
+
+    for (const img of buildingImagesRes.data || []) {
+      if (!imagesByBuilding.has(img.building_id)) {
+        imagesByBuilding.set(img.building_id, []);
+      }
+      imagesByBuilding.get(img.building_id)!.push(img);
+    }
+
+    // 7. Get floorplans for units that have them
+    const floorplanIds = [...new Set(
+      (unitsRes.data || [])
+        .map(u => u.floorplan_id)
+        .filter((id): id is string => id !== null)
+    )];
+
+    let floorplansByUnit = new Map<string, {
+      id: string;
+      name: string;
+      layout_image_url: string | null;
+    }>();
+
+    if (floorplanIds.length > 0) {
+      const floorplansRes = await supabase
+        .from("floorplans")
+        .select("id, name, layout_image_url")
+        .in("id", floorplanIds);
+
+      const floorplansById = new Map(
+        (floorplansRes.data || []).map(fp => [fp.id, fp])
+      );
+
+      for (const unit of unitsRes.data || []) {
+        if (unit.floorplan_id && floorplansById.has(unit.floorplan_id)) {
+          floorplansByUnit.set(unit.id, floorplansById.get(unit.floorplan_id)!);
+        }
+      }
+    }
+
+    // 8. Combine and filter by budget
     let results = (unitsRes.data || [])
       .map((u) => {
         const pricing = snapByUnit.get(u.id) || null;
-        return { unit: u, pricing };
+        const unitImages = imagesByUnit.get(u.id) || [];
+        const buildingImages = imagesByBuilding.get(u.building_id) || [];
+        const floorplan = floorplansByUnit.get(u.id) || null;
+        return { unit: u, pricing, unitImages, buildingImages, floorplan };
       })
       .filter((row) => {
         const rent = row.pricing?.rent;
@@ -171,7 +250,7 @@ export async function POST(req: Request) {
         return true;
       });
 
-    // 6. Sort results
+    // 9. Sort results
     const sort = body.sort || "best_match";
     results.sort((a, b) => {
       switch (sort) {
@@ -192,7 +271,7 @@ export async function POST(req: Request) {
     // Apply limit
     results = results.slice(0, limit);
 
-    // 7. Format response
+    // 10. Format response
     const captured_at_max = snapsRes.data?.[0]?.captured_at || null;
 
     const formattedResults = results.map((row) => ({
@@ -204,8 +283,12 @@ export async function POST(req: Request) {
         baths: row.unit.baths,
         sqft: row.unit.sqft,
         available_on: row.unit.available_on,
+        floorplan_id: row.unit.floorplan_id,
       },
       pricing: row.pricing,
+      // Use unit images if available, otherwise building images
+      images: row.unitImages.length > 0 ? row.unitImages : row.buildingImages,
+      floorplan: row.floorplan,
     }));
 
     return NextResponse.json({
