@@ -129,9 +129,6 @@ export function ChatWidget() {
               </div>
               <div>
                 <p className="text-sm font-medium text-white">LuxApts AI</p>
-                {!isMinimized && (
-                  <p className="text-xs text-zinc-400">Powered by Grok</p>
-                )}
               </div>
             </div>
             <div className="flex items-center gap-1">
