@@ -316,31 +316,41 @@ function SearchContent() {
   }, [sort]);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-black">
       <Header />
 
-      <main className="flex-1 bg-muted/30">
+      <main className="flex-1">
+        {/* Background effects */}
+        <div className="fixed inset-0 -z-10">
+          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px]" />
+        </div>
+
         <div className="container mx-auto px-4 py-8">
           {/* AI Search Bar */}
           <div className="mb-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-center">
-              <div className="relative flex-1">
-                <Sparkles className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
-                <Input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Try: '2 bedroom in Miami under $3,500' or 'pet-friendly studio'"
-                  className="h-12 pl-10"
-                />
+              <div className="relative flex-1 group">
+                {/* Glow effect on focus */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                <div className="relative">
+                  <Sparkles className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" />
+                  <Input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Try: '2 bedroom in Miami under $3,500' or 'pet-friendly studio'"
+                    className="h-12 pl-10 bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20"
+                  />
+                </div>
               </div>
 
               <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); }}>
-                <SelectTrigger className="h-12 w-full md:w-[180px]">
+                <SelectTrigger className="h-12 w-full md:w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="Select city" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
                   <SelectItem value="miami">Miami</SelectItem>
                   <SelectItem value="new-york">New York City</SelectItem>
                   <SelectItem value="los-angeles">Los Angeles</SelectItem>
@@ -355,21 +365,21 @@ function SearchContent() {
               </Select>
 
               <Button
-                variant={activeFilterCount > 0 ? "default" : "outline"}
+                variant={activeFilterCount > 0 ? "default" : "glass"}
                 className="h-12"
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <SlidersHorizontal className="mr-2 h-4 w-4" />
                 Filters
                 {activeFilterCount > 0 && (
-                  <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                  <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-white/20">
                     {activeFilterCount}
                   </Badge>
                 )}
               </Button>
 
               <Button
-                variant={showMap ? "default" : "outline"}
+                variant={showMap ? "default" : "glass"}
                 className="h-12"
                 onClick={() => setShowMap(!showMap)}
               >
@@ -377,7 +387,7 @@ function SearchContent() {
                 {showMap ? "List" : "Map"}
               </Button>
 
-              <Button className="h-12 gap-2" onClick={handleAiSearch} disabled={aiParsing}>
+              <Button className="h-12 gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-lg shadow-cyan-500/20" onClick={handleAiSearch} disabled={aiParsing}>
                 {aiParsing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -389,13 +399,13 @@ function SearchContent() {
 
             {/* AI Summary Banner */}
             {aiSummary && (
-              <div className="mt-4 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
-                <Sparkles className="h-5 w-5 text-primary flex-shrink-0" />
-                <p className="text-sm font-medium">{aiSummary}</p>
+              <div className="mt-4 flex items-center gap-3 rounded-xl bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 backdrop-blur-xl border border-cyan-500/20 p-4">
+                <Sparkles className="h-5 w-5 text-cyan-400 flex-shrink-0" />
+                <p className="text-sm font-medium text-white/90">{aiSummary}</p>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="ml-auto"
+                  className="ml-auto hover:bg-white/10"
                   onClick={() => {
                     setAiSummary(null);
                     setSearchInput("");
@@ -414,13 +424,14 @@ function SearchContent() {
 
             {/* Filters Panel */}
             {showFilters && (
-              <div className="mt-4 rounded-lg border bg-background p-4 space-y-6">
+              <div className="mt-4 rounded-xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-6 space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">Filters</h3>
+                  <h3 className="font-semibold text-white">Filters</h3>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowFilters(false)}
+                    className="hover:bg-white/10"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -428,7 +439,7 @@ function SearchContent() {
 
                 {/* Basic Filters Row */}
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Basic</h4>
+                  <h4 className="text-sm font-medium text-white/50 mb-3">Basic</h4>
                   <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div>
                       <label className="mb-2 block text-sm font-medium">Beds (min)</label>
@@ -486,7 +497,7 @@ function SearchContent() {
 
                 {/* Advanced Filters Row */}
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Advanced</h4>
+                  <h4 className="text-sm font-medium text-white/50 mb-3">Advanced</h4>
                   <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
                     {/* Neighborhoods Multi-select */}
                     <div className="relative">
@@ -566,7 +577,7 @@ function SearchContent() {
 
                 {/* Toggle Filters */}
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Amenities</h4>
+                  <h4 className="text-sm font-medium text-white/50 mb-3">Amenities</h4>
                   <div className="flex flex-wrap gap-6">
                     <label className="flex items-center gap-3 cursor-pointer">
                       <Switch
@@ -593,12 +604,12 @@ function SearchContent() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-2 border-t">
-                  <Button onClick={() => { setAiSummary(null); handleSearch(); }}>
+                <div className="flex gap-2 pt-4 border-t border-white/[0.06]">
+                  <Button onClick={() => { setAiSummary(null); handleSearch(); }} className="bg-white text-black hover:bg-white/90">
                     Apply Filters
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="glass"
                     onClick={() => {
                       setBedsMin("");
                       setBedsMax("");
@@ -622,21 +633,21 @@ function SearchContent() {
           {/* Results Header */}
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">
+              <h1 className="text-2xl font-bold text-white">
                 {loading ? "Searching..." : `${results.length} ${results.length === 1 ? "Apartment" : "Apartments"} Available`}
               </h1>
               {capturedAt && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-white/40">
                   Prices updated {new Date(capturedAt).toLocaleDateString()}
                 </p>
               )}
             </div>
 
             <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
                 <SelectItem value="price_low">Price: Low to High</SelectItem>
                 <SelectItem value="price_high">Price: High to Low</SelectItem>
                 <SelectItem value="sqft_high">Largest First</SelectItem>
@@ -670,9 +681,11 @@ function SearchContent() {
                   ))
                 ) : results.length === 0 ? (
                   <div className="col-span-full py-12 text-center">
-                    <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-semibold">No apartments found</h3>
-                    <p className="mt-2 text-muted-foreground">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] mb-4">
+                      <Building2 className="h-8 w-8 text-white/30" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">No apartments found</h3>
+                    <p className="mt-2 text-white/50">
                       Try adjusting your filters or searching in a different city
                     </p>
                   </div>
@@ -689,10 +702,10 @@ function SearchContent() {
                         onMouseEnter={() => setHighlightedListingId(result.unit.id)}
                         onMouseLeave={() => setHighlightedListingId(null)}
                       >
-                        <Card className={`group h-full cursor-pointer overflow-hidden hover-lift ${isHighlighted ? "ring-2 ring-primary shadow-lg" : ""}`}>
+                        <Card className={`group h-full cursor-pointer overflow-hidden bg-white/[0.02] backdrop-blur-xl border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-500 ${isHighlighted ? "ring-2 ring-cyan-500/50 shadow-lg shadow-cyan-500/10" : ""}`}>
                           <CardContent className="p-0">
                             {/* Image section */}
-                            <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+                            <div className="relative h-48 bg-gradient-to-br from-white/[0.03] to-black/20 overflow-hidden">
                               {primaryImage ? (
                                 <Image
                                   src={primaryImage.url}
@@ -763,39 +776,39 @@ function SearchContent() {
                             </div>
 
                             <div className="p-4">
-                              <h3 className="font-semibold group-hover:text-primary transition-colors">
+                              <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors">
                                 {result.building.name}
                               </h3>
-                              <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                              <p className="mt-1 flex items-center gap-1 text-sm text-white/50">
                                 <MapPin className="h-3 w-3" />
                                 {result.building.address_1}
                               </p>
 
                               <div className="mt-3 flex flex-wrap gap-2">
-                                <Badge variant="outline" className="gap-1">
+                                <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
                                   <Bed className="h-3 w-3" />
                                   {result.unit.beds === 0 ? "Studio" : `${result.unit.beds} bed`}
                                 </Badge>
                                 {result.unit.baths && (
-                                  <Badge variant="outline" className="gap-1">
+                                  <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
                                     <Bath className="h-3 w-3" />
                                     {result.unit.baths} bath
                                   </Badge>
                                 )}
                                 {result.unit.sqft && (
-                                  <Badge variant="outline" className="gap-1">
+                                  <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
                                     <Square className="h-3 w-3" />
                                     {result.unit.sqft.toLocaleString()} sqft
                                   </Badge>
                                 )}
                                 {result.building.pet_policy && (
-                                  <Badge variant="secondary" className="gap-1 bg-green-500/10 text-green-600 border-green-500/20">
+                                  <Badge variant="secondary" className="gap-1 bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
                                     <PawPrint className="h-3 w-3" />
                                     Pets OK
                                   </Badge>
                                 )}
                                 {result.building.parking_policy && (
-                                  <Badge variant="secondary" className="gap-1 bg-blue-500/10 text-blue-600 border-blue-500/20">
+                                  <Badge variant="secondary" className="gap-1 bg-blue-500/10 text-blue-400 border-blue-500/20">
                                     <Car className="h-3 w-3" />
                                     Parking
                                   </Badge>
@@ -806,17 +819,17 @@ function SearchContent() {
                                 <div>
                                   {result.pricing ? (
                                     <>
-                                      <span className="text-xl font-bold">
+                                      <span className="text-xl font-bold text-white">
                                         {formatPrice(result.pricing.rent)}
                                       </span>
-                                      <span className="text-muted-foreground">/mo</span>
+                                      <span className="text-white/50">/mo</span>
                                     </>
                                   ) : (
-                                    <span className="text-muted-foreground">Contact for pricing</span>
+                                    <span className="text-white/50">Contact for pricing</span>
                                   )}
                                 </div>
                                 {result.unit.available_on && (
-                                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <span className="flex items-center gap-1 text-sm text-white/40">
                                     <Calendar className="h-3 w-3" />
                                     {new Date(result.unit.available_on).toLocaleDateString()}
                                   </span>
@@ -834,7 +847,7 @@ function SearchContent() {
 
             {/* Map View */}
             {showMap && (
-              <div className="lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100vh-300px)] rounded-xl overflow-hidden border sticky top-4">
+              <div className="lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100vh-300px)] rounded-xl overflow-hidden border border-white/[0.08] sticky top-4">
                 <SearchMap
                   listings={results
                     .filter((r) => r.building.lat && r.building.lng && r.pricing)
@@ -874,10 +887,16 @@ function SearchContent() {
 export default function SearchPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col bg-black">
         <Header />
-        <main className="flex-1 bg-muted/30 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-xl animate-pulse" />
+              <Loader2 className="h-8 w-8 animate-spin text-cyan-400 relative" />
+            </div>
+            <p className="text-white/50 text-sm">Loading apartments...</p>
+          </div>
         </main>
         <Footer />
       </div>

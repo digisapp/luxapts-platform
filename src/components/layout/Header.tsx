@@ -38,7 +38,9 @@ export function Header() {
 
   return (
     <header className="fixed top-0 z-50 w-full">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      {/* Glass background with subtle gradient */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xl border-b border-white/[0.05]" />
+      <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
           <span className="text-lg font-medium tracking-tight text-white group-hover:opacity-70 transition-opacity">
@@ -50,24 +52,24 @@ export function Header() {
         <nav className="hidden md:flex items-center gap-8">
           <Link
             href="/search"
-            className="text-sm text-zinc-400 hover:text-white transition-colors"
+            className="text-sm text-white/60 hover:text-white transition-colors"
           >
             Search
           </Link>
           <Link
             href="/cities"
-            className="text-sm text-zinc-400 hover:text-white transition-colors"
+            className="text-sm text-white/60 hover:text-white transition-colors"
           >
             Cities
           </Link>
           <Link
             href="/favorites"
-            className="relative text-sm text-zinc-400 hover:text-white transition-colors flex items-center gap-1"
+            className="relative text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1.5"
           >
             <Heart className="h-4 w-4" />
             Saved
             {favoritesCount > 0 && (
-              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-2.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center shadow-lg shadow-rose-500/30">
                 {favoritesCount > 9 ? "9+" : favoritesCount}
               </span>
             )}
@@ -89,15 +91,15 @@ export function Header() {
                 </div>
               </button>
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-lg bg-zinc-900 border border-zinc-800 shadow-xl py-1">
-                  <div className="px-4 py-3 border-b border-zinc-800">
+                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-black/80 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/50 py-1 animate-in fade-in-0 zoom-in-95">
+                  <div className="px-4 py-3 border-b border-white/10">
                     <p className="text-sm font-medium text-white truncate">{userName}</p>
-                    <p className="text-xs text-zinc-400 truncate">{user.email}</p>
+                    <p className="text-xs text-white/50 truncate">{user.email}</p>
                   </div>
                   <Link
                     href="/favorites"
                     onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
                     <Heart className="h-4 w-4" />
                     Saved Listings
@@ -105,14 +107,14 @@ export function Header() {
                   <Link
                     href="/account"
                     onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
                     <Settings className="h-4 w-4" />
                     Account Settings
                   </Link>
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign Out
@@ -124,13 +126,13 @@ export function Header() {
             <>
               <Link
                 href="/auth/login"
-                className="text-sm text-zinc-400 hover:text-white transition-colors"
+                className="text-sm text-white/60 hover:text-white transition-colors"
               >
                 Sign in
               </Link>
               <Link
                 href="/auth/signup"
-                className="text-sm px-4 py-2 rounded-full bg-white text-black font-medium hover:bg-zinc-200 transition-colors"
+                className="text-sm px-5 py-2.5 rounded-full bg-white text-black font-medium hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all"
               >
                 Get Started
               </Link>
