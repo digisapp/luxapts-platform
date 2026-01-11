@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useSavedSearches } from "@/hooks/useSavedSearches";
+import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -15,16 +16,19 @@ import {
   Building2,
   MapPin,
   Bed,
-  Bath,
+  Bell,
+  BellOff,
   Trash2,
   Search,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
 export default function FavoritesPage() {
-  const { items: favorites, removeItem: removeFavorite, clearAll: clearFavorites, isLoaded: favoritesLoaded } = useFavorites();
-  const { searches, removeSearch, clearAll: clearSearches, isLoaded: searchesLoaded } = useSavedSearches();
+  const { user } = useAuth();
+  const { items: favorites, removeItem: removeFavorite, clearAll: clearFavorites, isLoaded: favoritesLoaded, isSyncing: favoritesSyncing } = useFavorites();
+  const { searches, removeSearch, toggleEmailAlerts, clearAll: clearSearches, isLoaded: searchesLoaded, isSyncing: searchesSyncing } = useSavedSearches();
 
   const buildSearchUrl = (filters: typeof searches[0]["filters"]) => {
     const params = new URLSearchParams();
@@ -80,7 +84,7 @@ export default function FavoritesPage() {
                         </div>
                       ))}
                     </div>
-                  ) : favorites.length === 0 ? (
+                  ) : favorites.length === 0 && !favoritesSyncing ? (
                     <div className="text-center py-8">
                       <Heart className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
                       <p className="text-muted-foreground mb-4">
@@ -207,13 +211,33 @@ export default function FavoritesPage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
+                      {!user && (
+                        <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+                          <Link href="/auth/login" className="text-primary hover:underline">Sign in</Link>
+                          {" "}to sync your searches across devices and enable email alerts.
+                        </div>
+                      )}
+                      {searchesSyncing && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Syncing...
+                        </div>
+                      )}
                       {searches.map((search) => (
                         <div
                           key={search.id}
                           className="flex items-center justify-between gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors"
                         >
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{search.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium truncate">{search.name}</p>
+                              {search.emailAlerts && (
+                                <Badge variant="outline" className="text-xs gap-1">
+                                  <Bell className="h-3 w-3" />
+                                  Alerts On
+                                </Badge>
+                              )}
+                            </div>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {search.filters.city && (
                                 <Badge variant="secondary" className="text-xs">
@@ -240,6 +264,21 @@ export default function FavoritesPage() {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
+                            {user && (
+                              <Button
+                                size="sm"
+                                variant={search.emailAlerts ? "default" : "outline"}
+                                className="gap-1"
+                                onClick={() => toggleEmailAlerts(search.id, !search.emailAlerts)}
+                                title={search.emailAlerts ? "Disable email alerts" : "Enable email alerts"}
+                              >
+                                {search.emailAlerts ? (
+                                  <Bell className="h-3 w-3" />
+                                ) : (
+                                  <BellOff className="h-3 w-3" />
+                                )}
+                              </Button>
+                            )}
                             <Link href={buildSearchUrl(search.filters)}>
                               <Button size="sm" variant="outline" className="gap-1">
                                 Run

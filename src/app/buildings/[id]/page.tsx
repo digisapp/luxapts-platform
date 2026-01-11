@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { ImageGallery } from "./ImageGallery";
 import { BuildingPageClient } from "./BuildingPageClient";
+import { BuildingContactButtons } from "./BuildingContactButtons";
 
 interface BuildingPageProps {
   params: Promise<{ id: string }>;
@@ -288,14 +289,12 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   </div>
                 )}
 
-                <div className="flex flex-col gap-3">
-                  <Button size="lg" className="w-full">
-                    Request a Tour
-                  </Button>
-                  <Button size="lg" variant="outline" className="w-full">
-                    Contact Leasing
-                  </Button>
-                </div>
+                <BuildingContactButtons
+                  buildingId={building.id}
+                  buildingName={building.name}
+                  citySlug={building.cities?.slug || ""}
+                  leasingEmail={building.leasing_email}
+                />
 
                 {/* Contact Info */}
                 <div className="space-y-2 text-sm">
