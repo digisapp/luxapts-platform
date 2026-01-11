@@ -29,6 +29,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { ImageGallery } from "./ImageGallery";
+import { BuildingPageClient } from "./BuildingPageClient";
 
 interface BuildingPageProps {
   params: Promise<{ id: string }>;
@@ -121,6 +122,8 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
 
   // Get latest prices for units
   const unitPrices: Record<string, { rent: number; captured_at: string }> = {};
+  const allPriceSnapshots: { date: string; price: number }[] = [];
+
   if (unitIds.length) {
     const { data: prices } = await supabase
       .from("unit_price_snapshots")
@@ -132,8 +135,28 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
       if (!unitPrices[p.unit_id]) {
         unitPrices[p.unit_id] = { rent: p.rent, captured_at: p.captured_at };
       }
+      // Collect all snapshots for price history
+      allPriceSnapshots.push({ date: p.captured_at, price: p.rent });
     }
   }
+
+  // Aggregate price history by date (average rent per date)
+  const priceByDate: Record<string, { total: number; count: number }> = {};
+  for (const snap of allPriceSnapshots) {
+    const dateKey = snap.date.split("T")[0];
+    if (!priceByDate[dateKey]) {
+      priceByDate[dateKey] = { total: 0, count: 0 };
+    }
+    priceByDate[dateKey].total += snap.price;
+    priceByDate[dateKey].count++;
+  }
+
+  const priceHistory = Object.entries(priceByDate)
+    .map(([date, { total, count }]) => ({
+      date,
+      price: Math.round(total / count),
+    }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   // Fetch unit images
   const unitImages: Record<string, UnitImage[]> = {};
@@ -557,6 +580,22 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Client-side components: Price History, Similar, Recently Viewed */}
+              <BuildingPageClient
+                building={{
+                  id: building.id,
+                  name: building.name,
+                  address: building.address_1,
+                  neighborhood: building.neighborhoods?.name,
+                  citySlug: building.cities?.slug || "",
+                  neighborhoodSlug: building.neighborhoods?.slug,
+                  image: allImages[0]?.url,
+                  minPrice: priceRange?.min,
+                  priceRange: priceRange || undefined,
+                }}
+                priceHistory={priceHistory}
+              />
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout } from "lucide-react";
+import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { formatPrice } from "@/lib/utils";
+import { SearchMap } from "@/components/map/SearchMap";
 
 interface UnitImage {
   id: string;
@@ -34,6 +35,8 @@ interface SearchResult {
     name: string;
     address_1: string;
     zip: string;
+    lat: number | null;
+    lng: number | null;
     pet_policy: string | null;
     neighborhoods: { slug: string; name: string } | null;
   };
@@ -90,6 +93,10 @@ function SearchContent() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
+
+  // Map view state
+  const [showMap, setShowMap] = useState(true);
+  const [highlightedListingId, setHighlightedListingId] = useState<string | null>(null);
 
   // AI search state
   const [aiSummary, setAiSummary] = useState<string | null>(null);
@@ -258,6 +265,15 @@ function SearchContent() {
                 Filters
               </Button>
 
+              <Button
+                variant={showMap ? "default" : "outline"}
+                className="h-12"
+                onClick={() => setShowMap(!showMap)}
+              >
+                {showMap ? <List className="mr-2 h-4 w-4" /> : <MapIcon className="mr-2 h-4 w-4" />}
+                {showMap ? "List" : "Map"}
+              </Button>
+
               <Button className="h-12 gap-2" onClick={handleAiSearch} disabled={aiParsing}>
                 {aiParsing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -406,145 +422,184 @@ function SearchContent() {
             </Select>
           </div>
 
-          {/* Results Grid */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {loading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="p-0">
-                    <Skeleton className="h-48 w-full rounded-t-xl" />
-                    <div className="p-4 space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-6 w-16" />
-                        <Skeleton className="h-6 w-16" />
-                        <Skeleton className="h-6 w-16" />
-                      </div>
-                      <Skeleton className="h-8 w-24" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : results.length === 0 ? (
-              <div className="col-span-full py-12 text-center">
-                <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">No apartments found</h3>
-                <p className="mt-2 text-muted-foreground">
-                  Try adjusting your filters or searching in a different city
-                </p>
-              </div>
-            ) : (
-              results.map((result) => {
-                const primaryImage = result.images?.[0];
-                const hasFloorplan = result.floorplan?.layout_image_url;
-
-                return (
-                  <Link
-                    key={result.unit.id}
-                    href={`/buildings/${result.building.id}`}
-                  >
-                    <Card className="group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1">
+          {/* Split Layout - Listings + Map */}
+          <div className={`flex gap-6 ${showMap ? "flex-col lg:flex-row" : ""}`}>
+            {/* Results Grid */}
+            <div className={`${showMap ? "lg:w-1/2 xl:w-3/5" : "w-full"} ${showMap ? "lg:h-[calc(100vh-300px)] lg:overflow-y-auto lg:pr-4" : ""}`}>
+              <div className={`grid gap-6 ${showMap ? "grid-cols-1 xl:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
+                {loading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <Card key={i}>
                       <CardContent className="p-0">
-                        {/* Image section */}
-                        <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
-                          {primaryImage ? (
-                            <Image
-                              src={primaryImage.url}
-                              alt={primaryImage.alt_text || `${result.building.name} - Unit ${result.unit.unit_number}`}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Building2 className="h-16 w-16 text-muted-foreground/30" />
-                            </div>
-                          )}
-                          {/* Overlay gradient for text readability */}
-                          {primaryImage && (
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                          )}
-                          {result.building.neighborhoods && (
-                            <Badge className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm" variant="secondary">
-                              {result.building.neighborhoods.name}
-                            </Badge>
-                          )}
-                          <div className="absolute top-3 right-3 flex gap-2">
-                            {hasFloorplan && (
-                              <Badge className="bg-background/90 backdrop-blur-sm gap-1" variant="outline">
-                                <Layout className="h-3 w-3" />
-                                Floor Plan
-                              </Badge>
-                            )}
-                            {result.unit.unit_number && (
-                              <Badge className="bg-background/90 backdrop-blur-sm" variant="outline">
-                                Unit {result.unit.unit_number}
-                              </Badge>
-                            )}
+                        <Skeleton className="h-48 w-full rounded-t-xl" />
+                        <div className="p-4 space-y-3">
+                          <Skeleton className="h-6 w-3/4" />
+                          <Skeleton className="h-4 w-1/2" />
+                          <div className="flex gap-2">
+                            <Skeleton className="h-6 w-16" />
+                            <Skeleton className="h-6 w-16" />
+                            <Skeleton className="h-6 w-16" />
                           </div>
-                          {/* Image count indicator */}
-                          {result.images && result.images.length > 1 && (
-                            <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                              +{result.images.length - 1} photos
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="p-4">
-                          <h3 className="font-semibold group-hover:text-primary transition-colors">
-                            {result.building.name}
-                          </h3>
-                          <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                            <MapPin className="h-3 w-3" />
-                            {result.building.address_1}
-                          </p>
-
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <Badge variant="outline" className="gap-1">
-                              <Bed className="h-3 w-3" />
-                              {result.unit.beds === 0 ? "Studio" : `${result.unit.beds} bed`}
-                            </Badge>
-                            {result.unit.baths && (
-                              <Badge variant="outline" className="gap-1">
-                                <Bath className="h-3 w-3" />
-                                {result.unit.baths} bath
-                              </Badge>
-                            )}
-                            {result.unit.sqft && (
-                              <Badge variant="outline" className="gap-1">
-                                <Square className="h-3 w-3" />
-                                {result.unit.sqft.toLocaleString()} sqft
-                              </Badge>
-                            )}
-                          </div>
-
-                          <div className="mt-4 flex items-end justify-between">
-                            <div>
-                              {result.pricing ? (
-                                <>
-                                  <span className="text-xl font-bold">
-                                    {formatPrice(result.pricing.rent)}
-                                  </span>
-                                  <span className="text-muted-foreground">/mo</span>
-                                </>
-                              ) : (
-                                <span className="text-muted-foreground">Contact for pricing</span>
-                              )}
-                            </div>
-                            {result.unit.available_on && (
-                              <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Calendar className="h-3 w-3" />
-                                {new Date(result.unit.available_on).toLocaleDateString()}
-                              </span>
-                            )}
-                          </div>
+                          <Skeleton className="h-8 w-24" />
                         </div>
                       </CardContent>
                     </Card>
-                  </Link>
-                );
-              })
+                  ))
+                ) : results.length === 0 ? (
+                  <div className="col-span-full py-12 text-center">
+                    <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-semibold">No apartments found</h3>
+                    <p className="mt-2 text-muted-foreground">
+                      Try adjusting your filters or searching in a different city
+                    </p>
+                  </div>
+                ) : (
+                  results.map((result) => {
+                    const primaryImage = result.images?.[0];
+                    const hasFloorplan = result.floorplan?.layout_image_url;
+                    const isHighlighted = highlightedListingId === result.unit.id;
+
+                    return (
+                      <Link
+                        key={result.unit.id}
+                        href={`/buildings/${result.building.id}`}
+                        onMouseEnter={() => setHighlightedListingId(result.unit.id)}
+                        onMouseLeave={() => setHighlightedListingId(null)}
+                      >
+                        <Card className={`group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 ${isHighlighted ? "ring-2 ring-primary shadow-lg" : ""}`}>
+                          <CardContent className="p-0">
+                            {/* Image section */}
+                            <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+                              {primaryImage ? (
+                                <Image
+                                  src={primaryImage.url}
+                                  alt={primaryImage.alt_text || `${result.building.name} - Unit ${result.unit.unit_number}`}
+                                  fill
+                                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                />
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <Building2 className="h-16 w-16 text-muted-foreground/30" />
+                                </div>
+                              )}
+                              {/* Overlay gradient for text readability */}
+                              {primaryImage && (
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                              )}
+                              {result.building.neighborhoods && (
+                                <Badge className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm" variant="secondary">
+                                  {result.building.neighborhoods.name}
+                                </Badge>
+                              )}
+                              <div className="absolute top-3 right-3 flex gap-2">
+                                {hasFloorplan && (
+                                  <Badge className="bg-background/90 backdrop-blur-sm gap-1" variant="outline">
+                                    <Layout className="h-3 w-3" />
+                                    Floor Plan
+                                  </Badge>
+                                )}
+                                {result.unit.unit_number && (
+                                  <Badge className="bg-background/90 backdrop-blur-sm" variant="outline">
+                                    Unit {result.unit.unit_number}
+                                  </Badge>
+                                )}
+                              </div>
+                              {/* Image count indicator */}
+                              {result.images && result.images.length > 1 && (
+                                <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                                  +{result.images.length - 1} photos
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="p-4">
+                              <h3 className="font-semibold group-hover:text-primary transition-colors">
+                                {result.building.name}
+                              </h3>
+                              <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                {result.building.address_1}
+                              </p>
+
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <Badge variant="outline" className="gap-1">
+                                  <Bed className="h-3 w-3" />
+                                  {result.unit.beds === 0 ? "Studio" : `${result.unit.beds} bed`}
+                                </Badge>
+                                {result.unit.baths && (
+                                  <Badge variant="outline" className="gap-1">
+                                    <Bath className="h-3 w-3" />
+                                    {result.unit.baths} bath
+                                  </Badge>
+                                )}
+                                {result.unit.sqft && (
+                                  <Badge variant="outline" className="gap-1">
+                                    <Square className="h-3 w-3" />
+                                    {result.unit.sqft.toLocaleString()} sqft
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <div className="mt-4 flex items-end justify-between">
+                                <div>
+                                  {result.pricing ? (
+                                    <>
+                                      <span className="text-xl font-bold">
+                                        {formatPrice(result.pricing.rent)}
+                                      </span>
+                                      <span className="text-muted-foreground">/mo</span>
+                                    </>
+                                  ) : (
+                                    <span className="text-muted-foreground">Contact for pricing</span>
+                                  )}
+                                </div>
+                                {result.unit.available_on && (
+                                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                    <Calendar className="h-3 w-3" />
+                                    {new Date(result.unit.available_on).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Map View */}
+            {showMap && (
+              <div className="lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100vh-300px)] rounded-xl overflow-hidden border sticky top-4">
+                <SearchMap
+                  listings={results
+                    .filter((r) => r.building.lat && r.building.lng && r.pricing)
+                    .map((r) => ({
+                      id: r.unit.id,
+                      buildingId: r.building.id,
+                      buildingName: r.building.name,
+                      unitNumber: r.unit.unit_number || "",
+                      lat: r.building.lat!,
+                      lng: r.building.lng!,
+                      rent: r.pricing!.rent,
+                      beds: r.unit.beds || 0,
+                      baths: r.unit.baths || 1,
+                      sqft: r.unit.sqft,
+                      neighborhood: r.building.neighborhoods?.name || "",
+                    }))}
+                  onListingClick={(id) => {
+                    const result = results.find((r) => r.unit.id === id);
+                    if (result) {
+                      router.push(`/buildings/${result.building.id}`);
+                    }
+                  }}
+                  onListingHover={setHighlightedListingId}
+                  highlightedListingId={highlightedListingId}
+                />
+              </div>
             )}
           </div>
         </div>
