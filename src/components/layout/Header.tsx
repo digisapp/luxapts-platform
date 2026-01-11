@@ -48,8 +48,9 @@ export function Header() {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
+        {/* Desktop Actions */}
+        <div className="hidden md:flex items-center gap-4">
+          {/* Saved button */}
           <Link
             href="/favorites"
             className="relative text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1.5"
@@ -62,10 +63,7 @@ export function Header() {
               </span>
             )}
           </Link>
-        </nav>
 
-        {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-4">
           {loading ? (
             <div className="w-8 h-8 rounded-full bg-zinc-800 animate-pulse" />
           ) : user ? (
