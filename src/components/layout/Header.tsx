@@ -53,12 +53,11 @@ export function Header() {
           {/* Saved button */}
           <Link
             href="/favorites"
-            className="relative text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1.5"
+            className="relative p-2 text-white/60 hover:text-white transition-colors"
           >
-            <Heart className="h-4 w-4" />
-            Saved
+            <Heart className="h-5 w-5" />
             {favoritesCount > 0 && (
-              <span className="absolute -top-1.5 -right-2.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center shadow-lg shadow-rose-500/30">
+              <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow-lg shadow-rose-500/30">
                 {favoritesCount > 9 ? "9+" : favoritesCount}
               </span>
             )}
