@@ -10,10 +10,10 @@ import { Footer } from "@/components/layout/Footer";
 const FEATURED_CITIES = [
   { name: "New York", slug: "new-york" },
   { name: "Miami", slug: "miami" },
-  { name: "Los Angeles", slug: "la" },
+  { name: "Los Angeles", slug: "los-angeles" },
   { name: "Austin", slug: "austin" },
   { name: "Chicago", slug: "chicago" },
-  { name: "San Francisco", slug: "sf" },
+  { name: "San Francisco", slug: "san-francisco" },
 ];
 
 export default function HomePage() {
