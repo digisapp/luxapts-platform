@@ -15,6 +15,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { formatPrice } from "@/lib/utils";
 import { SearchMap } from "@/components/map/SearchMap";
+import { CompareButton } from "@/components/compare/CompareButton";
+import { FavoriteButton } from "@/components/listings/FavoriteButton";
 
 interface UnitImage {
   id: string;
@@ -511,6 +513,32 @@ function SearchContent() {
                                   +{result.images.length - 1} photos
                                 </div>
                               )}
+                              {/* Compare and Favorite buttons */}
+                              <div className="absolute bottom-3 left-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <CompareButton
+                                  building={{
+                                    id: result.building.id,
+                                    name: result.building.name,
+                                    address: result.building.address_1,
+                                    neighborhood: result.building.neighborhoods?.name,
+                                    image: primaryImage?.url,
+                                  }}
+                                />
+                                <FavoriteButton
+                                  item={{
+                                    id: result.building.id,
+                                    type: "building",
+                                    name: result.building.name,
+                                    address: result.building.address_1,
+                                    neighborhood: result.building.neighborhoods?.name,
+                                    image: primaryImage?.url,
+                                    price: result.pricing?.rent,
+                                    beds: result.unit.beds ?? undefined,
+                                    baths: result.unit.baths ?? undefined,
+                                  }}
+                                  size="md"
+                                />
+                              </div>
                             </div>
 
                             <div className="p-4">
