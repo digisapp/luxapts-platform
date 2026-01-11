@@ -536,7 +536,7 @@ function SearchContent() {
                     </Card>
                   </Link>
                 );
-              }))
+              })
             )}
           </div>
         </div>
