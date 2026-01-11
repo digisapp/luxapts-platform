@@ -179,7 +179,8 @@ export async function POST() {
           continue; // Skip units that already have images
         }
 
-        const buildingName = (unit.buildings as { name: string } | null)?.name || "Apartment";
+        const buildings = unit.buildings as { name: string } | { name: string }[] | null;
+        const buildingName = Array.isArray(buildings) ? buildings[0]?.name : buildings?.name || "Apartment";
 
         // Add living room image (primary)
         const livingImage = getRandomItem(UNIT_IMAGES.living);
