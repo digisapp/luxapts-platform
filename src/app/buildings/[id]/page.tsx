@@ -32,6 +32,7 @@ import { ImageGallery } from "./ImageGallery";
 import { BuildingPageClient } from "./BuildingPageClient";
 import { BuildingContactButtons } from "./BuildingContactButtons";
 import { StickyMobileCTA } from "@/components/ui/StickyMobileCTA";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 
 interface BuildingPageProps {
   params: Promise<{ id: string }>;
@@ -227,13 +228,15 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
         {/* Hero/Header */}
         <div className="bg-gradient-to-b from-muted/50 to-background">
           <div className="container mx-auto px-4 py-8">
-            <Link
-              href="/search"
-              className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to search
-            </Link>
+            <Breadcrumb
+              items={[
+                { label: "Search", href: "/search" },
+                ...(building.cities ? [{ label: building.cities.name, href: `/search?city=${building.cities.slug}` }] : []),
+                ...(building.neighborhoods ? [{ label: building.neighborhoods.name, href: `/neighborhoods/${building.neighborhoods.slug}` }] : []),
+                { label: building.name },
+              ]}
+              className="mb-6"
+            />
 
             <div className="grid gap-8 lg:grid-cols-3">
               {/* Image Gallery */}

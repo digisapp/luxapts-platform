@@ -120,6 +120,47 @@ function SearchContent() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiParsing, setAiParsing] = useState(false);
 
+  // Load saved filters from localStorage on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("luxapts-search-filters");
+    if (saved && !queryParam && !cityParam) {
+      try {
+        const filters = JSON.parse(saved);
+        if (filters.city) setCity(filters.city);
+        if (filters.bedsMin) setBedsMin(filters.bedsMin);
+        if (filters.bedsMax) setBedsMax(filters.bedsMax);
+        if (filters.budgetMin) setBudgetMin(filters.budgetMin);
+        if (filters.budgetMax) setBudgetMax(filters.budgetMax);
+        if (filters.bathsMin) setBathsMin(filters.bathsMin);
+        if (filters.petFriendly) setPetFriendly(filters.petFriendly);
+        if (filters.parkingRequired) setParkingRequired(filters.parkingRequired);
+        if (filters.moveInDate) setMoveInDate(filters.moveInDate);
+        if (filters.sort) setSort(filters.sort);
+      } catch (e) {
+        console.error("Error loading saved filters:", e);
+      }
+    }
+  }, [queryParam, cityParam]);
+
+  // Save filters to localStorage when they change
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const filters = {
+      city,
+      bedsMin,
+      bedsMax,
+      budgetMin,
+      budgetMax,
+      bathsMin,
+      petFriendly,
+      parkingRequired,
+      moveInDate,
+      sort,
+    };
+    localStorage.setItem("luxapts-search-filters", JSON.stringify(filters));
+  }, [city, bedsMin, bedsMax, budgetMin, budgetMax, bathsMin, petFriendly, parkingRequired, moveInDate, sort]);
+
   // Fetch neighborhoods when city changes
   useEffect(() => {
     async function fetchNeighborhoods() {

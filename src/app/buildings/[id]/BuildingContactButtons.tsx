@@ -2,6 +2,7 @@
 
 import { ScheduleTourModal } from "@/components/forms/ScheduleTourModal";
 import { ContactLeasingModal } from "@/components/forms/ContactLeasingModal";
+import { ShareButton } from "@/components/ui/ShareButton";
 import { Button } from "@/components/ui/button";
 import { Calendar, Mail } from "lucide-react";
 
@@ -31,18 +32,21 @@ export function BuildingContactButtons({
           </Button>
         }
       />
-      <ContactLeasingModal
-        buildingId={buildingId}
-        buildingName={buildingName}
-        citySlug={citySlug}
-        leasingEmail={leasingEmail}
-        trigger={
-          <Button size="lg" variant="outline" className="w-full gap-2">
-            <Mail className="h-4 w-4" />
-            Contact Leasing
-          </Button>
-        }
-      />
+      <div className="flex gap-2">
+        <ContactLeasingModal
+          buildingId={buildingId}
+          buildingName={buildingName}
+          citySlug={citySlug}
+          leasingEmail={leasingEmail}
+          trigger={
+            <Button size="lg" variant="outline" className="flex-1 gap-2">
+              <Mail className="h-4 w-4" />
+              Contact
+            </Button>
+          }
+        />
+        <ShareButton title={buildingName} />
+      </div>
     </div>
   );
 }
