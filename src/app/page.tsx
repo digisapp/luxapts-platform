@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Mic } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
@@ -18,9 +18,71 @@ const FEATURED_CITIES = [
   { name: "Brooklyn", slug: "brooklyn" },
 ];
 
+// Type for SpeechRecognition
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  // Check for speech recognition support
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      setSpeechSupported(!!SpeechRecognition);
+    }
+  }, []);
+
+  const startListening = () => {
+    if (!speechSupported) return;
+
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) return;
+
+    const recognition = new SpeechRecognitionAPI();
+
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error("Speech recognition error:", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  };
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -78,22 +140,39 @@ export default function HomePage() {
               <div className="relative group">
                 {/* Glow effect on focus */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
-                <div className="relative">
+                <div className="relative flex items-center">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Try: '2 bedroom in Miami under $3,500' or 'pet-friendly studio NYC'"
-                    className="w-full h-14 px-6 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all duration-300"
+                    placeholder="Try: '2 bedroom in Miami under $3,500'"
+                    className="w-full h-14 px-6 pr-36 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all duration-300"
                   />
-                  <button
-                    onClick={handleSearch}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 rounded-full bg-white text-black font-medium text-sm flex items-center gap-2 hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all duration-300"
-                  >
-                    Search
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    {/* Voice Search Button */}
+                    {speechSupported && (
+                      <button
+                        onClick={isListening ? stopListening : startListening}
+                        className={`h-10 w-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                          isListening
+                            ? "bg-red-500 text-white animate-pulse"
+                            : "bg-white/[0.08] text-white/60 hover:bg-white/[0.15] hover:text-white"
+                        }`}
+                        aria-label={isListening ? "Stop listening" : "Voice search"}
+                      >
+                        <Mic className="h-4 w-4" />
+                      </button>
+                    )}
+                    {/* Search Button */}
+                    <button
+                      onClick={handleSearch}
+                      className="h-10 px-5 rounded-full bg-white text-black font-medium text-sm flex items-center gap-2 hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all duration-300"
+                    >
+                      Search
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
