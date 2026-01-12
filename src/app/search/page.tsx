@@ -326,10 +326,82 @@ function SearchContent() {
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px]" />
         </div>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 pt-20 pb-8 md:pt-24">
           {/* AI Search Bar */}
-          <div className="mb-8">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <div className="mb-6 md:mb-8">
+            {/* Mobile: Search input with AI button */}
+            <div className="flex gap-2 mb-3 md:hidden">
+              <div className="relative flex-1 group">
+                <Sparkles className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
+                <Input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Try: '2BR in Miami under $3,500'"
+                  className="h-10 pl-9 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20"
+                />
+              </div>
+              <Button
+                size="icon"
+                className="h-10 w-10 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-lg shadow-cyan-500/20"
+                onClick={handleAiSearch}
+                disabled={aiParsing}
+              >
+                {aiParsing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+
+            {/* Mobile: Compact filter row */}
+            <div className="flex gap-2 md:hidden">
+              <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); }}>
+                <SelectTrigger className="h-9 flex-1 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                  <SelectValue placeholder="City" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
+                  <SelectItem value="miami">Miami</SelectItem>
+                  <SelectItem value="new-york">New York City</SelectItem>
+                  <SelectItem value="los-angeles">Los Angeles</SelectItem>
+                  <SelectItem value="austin">Austin</SelectItem>
+                  <SelectItem value="dallas">Dallas</SelectItem>
+                  <SelectItem value="nashville">Nashville</SelectItem>
+                  <SelectItem value="atlanta">Atlanta</SelectItem>
+                  <SelectItem value="brooklyn">Brooklyn</SelectItem>
+                  <SelectItem value="chicago">Chicago</SelectItem>
+                  <SelectItem value="san-francisco">San Francisco</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant={activeFilterCount > 0 ? "default" : "glass"}
+                size="sm"
+                className="h-9 px-3"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                {activeFilterCount > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] bg-white/20">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </Button>
+
+              <Button
+                variant={showMap ? "default" : "glass"}
+                size="sm"
+                className="h-9 px-3"
+                onClick={() => setShowMap(!showMap)}
+              >
+                {showMap ? <List className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            {/* Desktop: Full search bar */}
+            <div className="hidden md:flex flex-row items-center gap-4">
               <div className="relative flex-1 group">
                 {/* Glow effect on focus */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
@@ -347,7 +419,7 @@ function SearchContent() {
               </div>
 
               <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); }}>
-                <SelectTrigger className="h-12 w-full md:w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                <SelectTrigger className="h-12 w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="Select city" />
                 </SelectTrigger>
                 <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
