@@ -25,6 +25,11 @@ CREATE INDEX IF NOT EXISTS idx_user_favorites_unit_id ON user_favorites(unit_id)
 -- Enable RLS
 ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own favorites" ON user_favorites;
+DROP POLICY IF EXISTS "Users can insert own favorites" ON user_favorites;
+DROP POLICY IF EXISTS "Users can delete own favorites" ON user_favorites;
+
 -- Policy: Users can only see their own favorites
 CREATE POLICY "Users can view own favorites"
   ON user_favorites
@@ -61,6 +66,12 @@ CREATE INDEX IF NOT EXISTS idx_user_saved_searches_email_alerts ON user_saved_se
 -- Enable RLS
 ALTER TABLE user_saved_searches ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own saved searches" ON user_saved_searches;
+DROP POLICY IF EXISTS "Users can insert own saved searches" ON user_saved_searches;
+DROP POLICY IF EXISTS "Users can update own saved searches" ON user_saved_searches;
+DROP POLICY IF EXISTS "Users can delete own saved searches" ON user_saved_searches;
+
 -- Policy: Users can only see their own saved searches
 CREATE POLICY "Users can view own saved searches"
   ON user_saved_searches
@@ -85,7 +96,7 @@ CREATE POLICY "Users can delete own saved searches"
   FOR DELETE
   USING (auth.uid() = user_id);
 
--- Add updated_at trigger
+-- Add updated_at trigger function if it doesn't exist
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -93,6 +104,9 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Drop existing trigger if it exists and recreate
+DROP TRIGGER IF EXISTS update_user_saved_searches_updated_at ON user_saved_searches;
 
 CREATE TRIGGER update_user_saved_searches_updated_at
   BEFORE UPDATE ON user_saved_searches
