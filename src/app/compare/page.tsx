@@ -112,17 +112,17 @@ export default function ComparePage() {
       <Header />
 
       <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 pt-20 pb-8 md:pt-24">
           <Link
             href="/search"
-            className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="mb-4 md:mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to search
           </Link>
 
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold">Compare Buildings</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold">Compare Buildings</h1>
             {buildings.length > 0 && (
               <Button variant="ghost" onClick={clearAll}>
                 Clear All

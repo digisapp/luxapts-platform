@@ -227,7 +227,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
       <main className="flex-1">
         {/* Hero/Header */}
         <div className="bg-gradient-to-b from-muted/50 to-background">
-          <div className="container mx-auto px-4 py-8">
+          <div className="container mx-auto px-4 pt-20 pb-6 md:pt-24 md:pb-8">
             <Breadcrumb
               items={[
                 { label: "Search", href: "/search" },

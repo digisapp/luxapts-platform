@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createXAIClient, AI_TOOLS, SYSTEM_PROMPT } from "@/lib/xai/client";
+import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import type OpenAI from "openai";
 
 interface ChatMessage {
@@ -71,6 +72,23 @@ async function executeTool(
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting
+    const clientIp = getClientIp(req);
+    const rateLimitResult = rateLimit(`chat:${clientIp}`, RATE_LIMITS.chat);
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment." },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+          },
+        }
+      );
+    }
+
     const body = (await req.json()) as ChatBody;
 
     if (!body.messages?.length) {
