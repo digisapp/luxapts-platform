@@ -62,6 +62,10 @@ export default function HomePage() {
       const transcript = event.results[0][0].transcript;
       setSearchQuery(transcript);
       setIsListening(false);
+      // Auto-search after voice input
+      if (transcript.trim()) {
+        router.push(`/search?q=${encodeURIComponent(transcript.trim())}`);
+      }
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
