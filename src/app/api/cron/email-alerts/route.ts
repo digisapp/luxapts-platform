@@ -5,6 +5,15 @@ import { Resend } from "resend";
 // This endpoint should be called by a cron job (e.g., Vercel Cron, GitHub Actions)
 // to send email alerts for new listings matching saved searches
 
+// Type for the nested building data from Supabase join
+interface UnitBuilding {
+  id: string;
+  name: string;
+  address_1: string;
+  neighborhoods: { name: string; slug: string } | { name: string; slug: string }[] | null;
+  cities: { name: string; slug: string } | { name: string; slug: string }[] | null;
+}
+
 export async function GET(req: Request) {
   try {
     // Verify cron secret (for security)
@@ -130,8 +139,9 @@ export async function GET(req: Request) {
 
       // Filter units matching the search criteria
       const matchingUnits = (newUnits || []).filter((unit) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const building = unit.buildings as any;
+        // Supabase returns joined relations as arrays
+        const buildingsArr = unit.buildings as unknown as UnitBuilding[] | null;
+        const building = buildingsArr?.[0];
         if (!building) return false;
 
         const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
@@ -166,8 +176,8 @@ export async function GET(req: Request) {
 
       // Build email content
       const listingsHtml = matchingUnits.slice(0, 5).map((unit) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const building = unit.buildings as any;
+        const buildingsArr = unit.buildings as unknown as UnitBuilding[];
+        const building = buildingsArr[0];
         const price = unitPrices[unit.id];
         const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
 

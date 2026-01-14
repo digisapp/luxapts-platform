@@ -1,12 +1,21 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Building2, Users, LayoutDashboard, Settings, FileText, LogOut, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getUserRole } from "@/lib/admin/auth";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Check if user has admin role
+  const role = await getUserRole();
+
+  if (role !== "admin") {
+    redirect("/");
+  }
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}

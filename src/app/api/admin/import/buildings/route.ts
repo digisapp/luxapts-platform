@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
 import type {
   BuildingCSVRow,
   ImportResponse,
@@ -8,6 +9,15 @@ import type {
 
 export async function POST(req: Request) {
   try {
+    // Check admin authentication
+    const authResult = await checkAdminAuth();
+    if (!authResult.isAdmin) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: authResult.status }
+      );
+    }
+
     const { rows } = (await req.json()) as { rows: BuildingCSVRow[] };
 
     if (!rows || !Array.isArray(rows)) {
