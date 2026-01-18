@@ -80,9 +80,96 @@ interface ParsedFilters {
   budget_min?: number;
   budget_max?: number;
   pet_friendly?: boolean;
+  amenities?: string[];
   sort?: string;
   summary?: string;
 }
+
+// Available amenities for filtering - organized by category
+const AMENITY_OPTIONS = [
+  // Most Popular (top of list)
+  { name: "Pool", icon: "waves", category: "popular" },
+  { name: "Gym", icon: "dumbbell", category: "popular" },
+  { name: "Washer Dryer", icon: "shirt", category: "popular" },
+  { name: "Doorman", icon: "shield", category: "popular" },
+  { name: "Rooftop", icon: "sun", category: "popular" },
+  { name: "Concierge", icon: "user", category: "popular" },
+
+  // In-Unit Features
+  { name: "Balcony", icon: "door-open", category: "in-unit" },
+  { name: "Walk-in Closet", icon: "box", category: "in-unit" },
+  { name: "Hardwood Floors", icon: "grid", category: "in-unit" },
+  { name: "High Ceilings", icon: "maximize", category: "in-unit" },
+  { name: "Stainless Steel", icon: "utensils", category: "in-unit" },
+  { name: "Smart Home", icon: "smartphone", category: "in-unit" },
+  { name: "Fireplace", icon: "flame", category: "in-unit" },
+  { name: "Den", icon: "briefcase", category: "in-unit" },
+
+  // Wellness & Fitness
+  { name: "Hot Tub", icon: "droplet", category: "wellness" },
+  { name: "Cold Plunge", icon: "snowflake", category: "wellness" },
+  { name: "Sauna", icon: "thermometer", category: "wellness" },
+  { name: "Steam Room", icon: "cloud", category: "wellness" },
+  { name: "Spa", icon: "sparkles", category: "wellness" },
+  { name: "Yoga", icon: "flower", category: "wellness" },
+
+  // Sports & Recreation
+  { name: "Basketball", icon: "circle", category: "sports" },
+  { name: "Tennis", icon: "target", category: "sports" },
+  { name: "Golf", icon: "flag", category: "sports" },
+  { name: "Spin", icon: "bike", category: "sports" },
+  { name: "Running Track", icon: "footprints", category: "sports" },
+  { name: "Boxing", icon: "target", category: "sports" },
+  { name: "Rock Climbing", icon: "mountain", category: "sports" },
+
+  // Pet
+  { name: "Pet Spa", icon: "paw-print", category: "pet" },
+  { name: "Dog Park", icon: "paw-print", category: "pet" },
+
+  // Social & Entertainment
+  { name: "Coworking", icon: "briefcase", category: "social" },
+  { name: "Game Room", icon: "gamepad", category: "social" },
+  { name: "Movie Theater", icon: "film", category: "social" },
+  { name: "Lounge", icon: "sofa", category: "social" },
+  { name: "Library", icon: "book", category: "social" },
+  { name: "Wine Room", icon: "wine", category: "social" },
+  { name: "Private Dining", icon: "utensils", category: "social" },
+  { name: "Podcast", icon: "mic", category: "social" },
+  { name: "Karaoke", icon: "mic", category: "social" },
+
+  // Outdoor
+  { name: "BBQ", icon: "flame", category: "outdoor" },
+  { name: "Garden", icon: "tree", category: "outdoor" },
+  { name: "Cabana", icon: "umbrella", category: "outdoor" },
+  { name: "Fire Pit", icon: "flame", category: "outdoor" },
+  { name: "Pool Deck", icon: "sun", category: "outdoor" },
+
+  // Services
+  { name: "Valet", icon: "car", category: "services" },
+  { name: "Package Room", icon: "package", category: "services" },
+  { name: "Dry Cleaning", icon: "shirt", category: "services" },
+
+  // Parking & Transportation
+  { name: "Parking", icon: "car", category: "parking" },
+  { name: "EV Charging", icon: "zap", category: "parking" },
+  { name: "Bike Storage", icon: "bike", category: "parking" },
+
+  // Family
+  { name: "Playroom", icon: "smile", category: "family" },
+  { name: "Daycare", icon: "baby", category: "family" },
+
+  // Views
+  { name: "City View", icon: "building", category: "views" },
+  { name: "Water View", icon: "waves", category: "views" },
+  { name: "Park View", icon: "tree", category: "views" },
+
+  // Additional In-Unit
+  { name: "Floor To Ceiling Windows", icon: "maximize", category: "in-unit" },
+  { name: "Granite", icon: "square", category: "in-unit" },
+  { name: "Central Air", icon: "wind", category: "in-unit" },
+  { name: "Soaking Tub", icon: "droplet", category: "in-unit" },
+  { name: "Double Vanity", icon: "square", category: "in-unit" },
+];
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -106,7 +193,9 @@ function SearchContent() {
   const [petFriendly, setPetFriendly] = useState(false);
   const [parkingRequired, setParkingRequired] = useState(false);
   const [moveInDate, setMoveInDate] = useState("");
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [showNeighborhoodDropdown, setShowNeighborhoodDropdown] = useState(false);
+  const [showAmenityDropdown, setShowAmenityDropdown] = useState(false);
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -136,6 +225,7 @@ function SearchContent() {
         if (filters.petFriendly) setPetFriendly(filters.petFriendly);
         if (filters.parkingRequired) setParkingRequired(filters.parkingRequired);
         if (filters.moveInDate) setMoveInDate(filters.moveInDate);
+        if (filters.selectedAmenities) setSelectedAmenities(filters.selectedAmenities);
         if (filters.sort) setSort(filters.sort);
       } catch (e) {
         console.error("Error loading saved filters:", e);
@@ -156,10 +246,11 @@ function SearchContent() {
       petFriendly,
       parkingRequired,
       moveInDate,
+      selectedAmenities,
       sort,
     };
     localStorage.setItem("luxapts-search-filters", JSON.stringify(filters));
-  }, [city, bedsMin, bedsMax, budgetMin, budgetMax, bathsMin, petFriendly, parkingRequired, moveInDate, sort]);
+  }, [city, bedsMin, bedsMax, budgetMin, budgetMax, bathsMin, petFriendly, parkingRequired, moveInDate, selectedAmenities, sort]);
 
   // Fetch neighborhoods when city changes
   useEffect(() => {
@@ -190,6 +281,7 @@ function SearchContent() {
     parkingRequired,
     moveInDate,
     selectedNeighborhoods.length > 0,
+    selectedAmenities.length > 0,
   ].filter(Boolean).length;
 
   const handleSearch = useCallback(async (filters?: ParsedFilters) => {
@@ -219,6 +311,11 @@ function SearchContent() {
       if (parkingRequired) body.parking_required = true;
       if (moveInDate) body.move_in_date = moveInDate;
 
+      // Amenities - use AI parsed amenities or selected amenities
+      // Use amenities_all so buildings must have ALL selected amenities
+      const amenities = filters?.amenities || selectedAmenities;
+      if (amenities.length > 0) body.amenities_all = amenities;
+
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -235,7 +332,7 @@ function SearchContent() {
     } finally {
       setLoading(false);
     }
-  }, [city, sort, bedsMin, bedsMax, budgetMin, budgetMax, selectedNeighborhoods, bathsMin, petFriendly, parkingRequired, moveInDate]);
+  }, [city, sort, bedsMin, bedsMax, budgetMin, budgetMax, selectedNeighborhoods, bathsMin, petFriendly, parkingRequired, moveInDate, selectedAmenities]);
 
   // Parse AI query and apply filters
   const parseAndSearch = useCallback(async (query: string) => {
@@ -259,6 +356,7 @@ function SearchContent() {
         if (filters.beds_max !== undefined) setBedsMax(filters.beds_max.toString());
         if (filters.budget_min !== undefined) setBudgetMin(filters.budget_min.toString());
         if (filters.budget_max !== undefined) setBudgetMax(filters.budget_max.toString());
+        if (filters.amenities?.length) setSelectedAmenities(filters.amenities);
         if (filters.sort) setSort(filters.sort);
         if (filters.summary) setAiSummary(filters.summary);
 
@@ -647,31 +745,101 @@ function SearchContent() {
                   </div>
                 </div>
 
-                {/* Toggle Filters */}
+                {/* Amenities */}
                 <div>
                   <h4 className="text-sm font-medium text-white/50 mb-3">Amenities</h4>
-                  <div className="flex flex-wrap gap-6">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <Switch
-                        checked={petFriendly}
-                        onCheckedChange={setPetFriendly}
-                      />
-                      <span className="flex items-center gap-2 text-sm">
-                        <PawPrint className="h-4 w-4 text-green-600" />
-                        Pet-friendly
-                      </span>
-                    </label>
+                  <div className="space-y-4">
+                    {/* Amenity Multi-select */}
+                    <div className="relative">
+                      <Button
+                        variant="outline"
+                        className="w-full sm:w-auto min-w-[200px] justify-between"
+                        onClick={() => setShowAmenityDropdown(!showAmenityDropdown)}
+                      >
+                        <span className="truncate">
+                          {selectedAmenities.length === 0
+                            ? "Select amenities..."
+                            : `${selectedAmenities.length} amenity${selectedAmenities.length > 1 ? "ies" : ""} selected`}
+                        </span>
+                        <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
+                      </Button>
+                      {showAmenityDropdown && (
+                        <div className="absolute z-50 mt-1 w-full sm:w-[300px] max-h-60 overflow-auto rounded-md border bg-popover p-1 shadow-md">
+                          {AMENITY_OPTIONS.map((amenity) => (
+                            <button
+                              key={amenity.name}
+                              className={cn(
+                                "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer",
+                                selectedAmenities.includes(amenity.name) && "bg-accent"
+                              )}
+                              onClick={() => {
+                                setSelectedAmenities((prev) =>
+                                  prev.includes(amenity.name)
+                                    ? prev.filter((a) => a !== amenity.name)
+                                    : [...prev, amenity.name]
+                                );
+                              }}
+                            >
+                              <div className={cn(
+                                "h-4 w-4 border rounded flex items-center justify-center",
+                                selectedAmenities.includes(amenity.name) && "bg-primary border-primary"
+                              )}>
+                                {selectedAmenities.includes(amenity.name) && (
+                                  <Check className="h-3 w-3 text-primary-foreground" />
+                                )}
+                              </div>
+                              {amenity.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <Switch
-                        checked={parkingRequired}
-                        onCheckedChange={setParkingRequired}
-                      />
-                      <span className="flex items-center gap-2 text-sm">
-                        <Car className="h-4 w-4 text-blue-600" />
-                        Parking available
-                      </span>
-                    </label>
+                    {/* Selected amenities badges */}
+                    {selectedAmenities.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedAmenities.map((amenity) => (
+                          <Badge
+                            key={amenity}
+                            variant="secondary"
+                            className="gap-1 bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+                          >
+                            {amenity}
+                            <button
+                              onClick={() => setSelectedAmenities((prev) => prev.filter((a) => a !== amenity))}
+                              className="ml-1 hover:text-white"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Pet & Parking toggles */}
+                    <div className="flex flex-wrap gap-6 pt-2">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <Switch
+                          checked={petFriendly}
+                          onCheckedChange={setPetFriendly}
+                        />
+                        <span className="flex items-center gap-2 text-sm">
+                          <PawPrint className="h-4 w-4 text-green-600" />
+                          Pet-friendly
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <Switch
+                          checked={parkingRequired}
+                          onCheckedChange={setParkingRequired}
+                        />
+                        <span className="flex items-center gap-2 text-sm">
+                          <Car className="h-4 w-4 text-blue-600" />
+                          Parking available
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -692,6 +860,7 @@ function SearchContent() {
                       setPetFriendly(false);
                       setParkingRequired(false);
                       setMoveInDate("");
+                      setSelectedAmenities([]);
                       setAiSummary(null);
                     }}
                   >

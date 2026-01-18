@@ -78,13 +78,163 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: buildingsRes.error.message }, { status: 500 });
     }
 
-    const buildingIds = buildingsRes.data?.map((b) => b.id) || [];
+    let buildingIds = buildingsRes.data?.map((b) => b.id) || [];
     if (!buildingIds.length) {
       return NextResponse.json({
         city: body.city_slug,
         captured_at_max: null,
         results: [],
       });
+    }
+
+    // Filter by amenities if specified (using keyword matching)
+    if (body.amenities_any?.length || body.amenities_all?.length) {
+      // Keyword mapping: search term -> keywords to look for in amenity names
+      const AMENITY_KEYWORDS: Record<string, string[]> = {
+        // Pools & Water Features
+        "pool": ["pool", "swimming", "lap pool", "infinity pool"],
+        "hot tub": ["hot tub", "jacuzzi", "whirlpool", "spa tub"],
+        "cold plunge": ["cold plunge", "plunge pool", "ice bath"],
+        "sauna": ["sauna", "infrared sauna"],
+        "steam room": ["steam room", "steam"],
+        "spa": ["spa", "sauna", "steam", "hot tub", "jacuzzi", "plunge", "wellness"],
+
+        // Fitness & Sports
+        "gym": ["gym", "fitness", "workout", "exercise", "weight room", "cardio"],
+        "yoga": ["yoga", "pilates", "meditation"],
+        "basketball": ["basketball", "sport court", "half court"],
+        "tennis": ["tennis", "pickleball", "racquet"],
+        "golf": ["golf simulator", "golf"],
+        "running track": ["running track", "jogging", "track"],
+        "boxing": ["boxing", "mma", "martial arts"],
+        "spin": ["spin", "cycling", "peloton"],
+        "rock climbing": ["climbing wall", "rock climbing", "bouldering"],
+
+        // Outdoor & Recreation
+        "rooftop": ["rooftop", "roof deck", "sky deck", "sky lounge", "terrace"],
+        "pool deck": ["pool deck", "sundeck", "sun deck"],
+        "cabana": ["cabana", "poolside"],
+        "bbq": ["bbq", "grill", "barbecue", "outdoor kitchen"],
+        "garden": ["garden", "courtyard", "green space"],
+        "fire pit": ["fire pit", "firepit", "outdoor fireplace"],
+
+        // Pet Amenities
+        "pet spa": ["pet spa", "dog grooming", "pet grooming", "dog wash", "pet wash", "grooming station"],
+        "dog park": ["dog run", "dog park", "bark park", "pet park"],
+
+        // Social & Entertainment
+        "lounge": ["lounge", "club room", "resident lounge", "sky lounge"],
+        "game room": ["game room", "billiard", "pool table", "gaming"],
+        "movie theater": ["movie", "theater", "screening", "cinema"],
+        "library": ["library", "reading room", "book"],
+        "coworking": ["coworking", "co-working", "work space", "business center", "conference room"],
+        "podcast": ["podcast", "recording studio", "music room"],
+        "wine room": ["wine room", "wine cellar", "wine lounge", "wine storage", "wine locker"],
+        "private dining": ["private dining", "chef", "demonstration kitchen", "catering"],
+        "karaoke": ["karaoke"],
+
+        // Services & Security
+        "concierge": ["concierge", "24-hour", "24 hour", "front desk"],
+        "doorman": ["doorman", "door attendant", "attended lobby"],
+        "valet": ["valet", "valet parking"],
+        "package room": ["package room", "package locker", "amazon locker", "cold storage"],
+        "dry cleaning": ["dry cleaning", "laundry service"],
+
+        // Parking & Transportation
+        "parking": ["parking", "garage", "covered parking"],
+        "ev charging": ["ev charging", "electric vehicle", "tesla", "charging station"],
+        "bike storage": ["bike storage", "bicycle", "bike room", "bike repair"],
+
+        // Children & Family
+        "playroom": ["playroom", "children", "kids room", "play area", "tot lot"],
+        "daycare": ["daycare", "childcare"],
+
+        // In-Unit Features
+        "washer dryer": ["washer", "dryer", "laundry", "w/d", "in-unit laundry"],
+        "balcony": ["balcony", "patio", "terrace", "private outdoor", "juliet balcony"],
+        "floor to ceiling windows": ["floor-to-ceiling", "floor to ceiling", "large windows", "panoramic"],
+        "high ceilings": ["high ceiling", "tall ceiling", "10 foot", "11 foot", "12 foot", "loft"],
+        "walk-in closet": ["walk-in closet", "walk in closet", "custom closet", "california closet"],
+        "hardwood floors": ["hardwood", "wood floor", "oak floor"],
+        "stainless steel": ["stainless steel", "stainless appliances", "chef kitchen", "gourmet kitchen"],
+        "granite": ["granite", "marble", "quartz", "stone countertop"],
+        "smart home": ["smart home", "smart lock", "nest", "smart thermostat", "keyless"],
+        "central air": ["central air", "central ac", "hvac", "climate control"],
+        "fireplace": ["fireplace", "gas fireplace"],
+        "den": ["den", "office", "home office", "study"],
+        "soaking tub": ["soaking tub", "spa tub", "freestanding tub", "jacuzzi tub"],
+        "double vanity": ["double vanity", "dual sink", "his and hers"],
+
+        // Views & Location
+        "city view": ["city view", "skyline view", "manhattan view"],
+        "water view": ["water view", "ocean view", "bay view", "river view", "waterfront"],
+        "park view": ["park view", "central park", "garden view"],
+      };
+
+      // Get all amenities and their IDs
+      const amenitiesRes = await supabase
+        .from("amenities")
+        .select("id, name");
+
+      if (amenitiesRes.data?.length) {
+        // Build a map of amenity ID to its lowercase name
+        const amenityIdToName = new Map(amenitiesRes.data.map(a => [a.id, a.name.toLowerCase()]));
+
+        // Get building_amenities for the current buildings
+        const buildingAmenitiesRes = await supabase
+          .from("building_amenities")
+          .select("building_id, amenity_id")
+          .in("building_id", buildingIds);
+
+        if (buildingAmenitiesRes.data) {
+          // Build a map of building -> amenity names (lowercase)
+          const buildingToAmenityNames = new Map<string, string[]>();
+          for (const ba of buildingAmenitiesRes.data) {
+            if (!buildingToAmenityNames.has(ba.building_id)) {
+              buildingToAmenityNames.set(ba.building_id, []);
+            }
+            const amenityName = amenityIdToName.get(ba.amenity_id);
+            if (amenityName) {
+              buildingToAmenityNames.get(ba.building_id)!.push(amenityName);
+            }
+          }
+
+          // Helper function to check if building has amenity by keyword
+          const buildingHasAmenity = (buildingId: string, searchTerm: string): boolean => {
+            const buildingAmenities = buildingToAmenityNames.get(buildingId) || [];
+            const keywords = AMENITY_KEYWORDS[searchTerm.toLowerCase()] || [searchTerm.toLowerCase()];
+
+            return buildingAmenities.some(amenityName =>
+              keywords.some(keyword => amenityName.includes(keyword))
+            );
+          };
+
+          // Filter buildings based on amenity requirements
+          buildingIds = buildingIds.filter(buildingId => {
+            // Check amenities_any: building must have at least one of these
+            if (body.amenities_any?.length) {
+              const hasAny = body.amenities_any.some(term => buildingHasAmenity(buildingId, term));
+              if (!hasAny) return false;
+            }
+
+            // Check amenities_all: building must have all of these
+            if (body.amenities_all?.length) {
+              const hasAll = body.amenities_all.every(term => buildingHasAmenity(buildingId, term));
+              if (!hasAll) return false;
+            }
+
+            return true;
+          });
+
+          if (!buildingIds.length) {
+            return NextResponse.json({
+              city: body.city_slug,
+              captured_at_max: null,
+              results: [],
+            });
+          }
+        }
+      }
     }
 
     // 3. Get available units in these buildings
