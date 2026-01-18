@@ -12,10 +12,10 @@ interface Message {
 }
 
 const SUGGESTED_PROMPTS = [
-  "Find me a 2BR under $4k in Manhattan",
-  "What buildings have rooftop pools?",
-  "Compare pet-friendly options in Brooklyn",
-  "Show me studios in Miami Beach",
+  "2 bed in Miami with pool, gym, and concierge under $5,000",
+  "Dog-friendly buildings with a dog park in NYC",
+  "Luxury high-rise with doorman and rooftop in Brickell",
+  "Studios with in-unit washer dryer in Manhattan",
 ];
 
 export function ChatWidget() {
