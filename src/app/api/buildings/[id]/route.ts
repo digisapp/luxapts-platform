@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { isValidUUID } from "@/lib/utils";
 
 export async function GET(
   req: Request,
@@ -7,9 +8,15 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    // Validate UUID to prevent invalid queries
+    if (!isValidUUID(id)) {
+      return NextResponse.json({ error: "Invalid building ID" }, { status: 400 });
+    }
+
     const supabase = createAdminClient();
 
-    // Fetch building with relations
+    // Fetch building with relations first (needed to validate existence)
     const buildingRes = await supabase
       .from("buildings")
       .select(`
@@ -24,28 +31,30 @@ export async function GET(
       return NextResponse.json({ error: "Building not found" }, { status: 404 });
     }
 
-    // Fetch amenities
-    const amenitiesRes = await supabase
-      .from("building_amenities")
-      .select("details, amenities(id, name, category, icon)")
-      .eq("building_id", id);
+    // Fetch amenities, floorplans, units, and facts in parallel
+    const [amenitiesRes, floorplansRes, unitsRes, factsRes] = await Promise.all([
+      supabase
+        .from("building_amenities")
+        .select("details, amenities(id, name, category, icon)")
+        .eq("building_id", id),
+      supabase
+        .from("floorplans")
+        .select("*")
+        .eq("building_id", id)
+        .order("beds", { ascending: true }),
+      supabase
+        .from("units")
+        .select("*")
+        .eq("building_id", id)
+        .eq("is_available", true),
+      supabase
+        .from("building_facts")
+        .select("key, value, source, updated_at")
+        .eq("building_id", id),
+    ]);
 
-    // Fetch floorplans
-    const floorplansRes = await supabase
-      .from("floorplans")
-      .select("*")
-      .eq("building_id", id)
-      .order("beds", { ascending: true });
-
-    // Fetch available units with latest prices
-    const unitsRes = await supabase
-      .from("units")
-      .select("*")
-      .eq("building_id", id)
-      .eq("is_available", true);
-
-    // Get latest prices for units
-    let unitPrices: Record<string, { rent: number; captured_at: string }> = {};
+    // Get latest prices for units (depends on unitsRes)
+    const unitPrices: Record<string, { rent: number; captured_at: string }> = {};
     if (unitsRes.data?.length) {
       const unitIds = unitsRes.data.map((u) => u.id);
       const pricesRes = await supabase
@@ -60,12 +69,6 @@ export async function GET(
         }
       }
     }
-
-    // Fetch building facts
-    const factsRes = await supabase
-      .from("building_facts")
-      .select("key, value, source, updated_at")
-      .eq("building_id", id);
 
     // Calculate price range
     const prices = Object.values(unitPrices).map((p) => p.rent);

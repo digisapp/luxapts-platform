@@ -7,6 +7,17 @@ import "mapbox-gl/dist/mapbox-gl.css";
 // Mapbox access token - using public token for client-side
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
+// HTML escape for safe popup rendering
+function esc(str: string | null | undefined): string {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 interface MapListing {
   id: string;
   buildingId: string;
@@ -135,23 +146,23 @@ export function SearchMap({
         `;
       }
 
-      // Create popup content
+      // Create popup content (escaped to prevent XSS)
       const popupContent = count > 1
         ? `
           <div class="map-popup">
-            <h4>${firstListing.buildingName}</h4>
+            <h4>${esc(firstListing.buildingName)}</h4>
             <p>${count} units available</p>
             <p class="popup-price">$${minRent.toLocaleString()} - $${maxRent.toLocaleString()}/mo</p>
-            <p class="popup-neighborhood">${firstListing.neighborhood}</p>
+            <p class="popup-neighborhood">${esc(firstListing.neighborhood)}</p>
           </div>
         `
         : `
           <div class="map-popup">
-            <h4>${firstListing.buildingName}</h4>
-            <p>Unit ${firstListing.unitNumber}</p>
+            <h4>${esc(firstListing.buildingName)}</h4>
+            <p>Unit ${esc(firstListing.unitNumber)}</p>
             <p class="popup-price">$${firstListing.rent.toLocaleString()}/mo</p>
             <p class="popup-details">${firstListing.beds === 0 ? "Studio" : `${firstListing.beds} bed`} · ${firstListing.baths} bath${firstListing.sqft ? ` · ${firstListing.sqft} sqft` : ""}</p>
-            <p class="popup-neighborhood">${firstListing.neighborhood}</p>
+            <p class="popup-neighborhood">${esc(firstListing.neighborhood)}</p>
           </div>
         `;
 

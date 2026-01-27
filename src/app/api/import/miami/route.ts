@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
 import miamiListings from "../../../../../data/miami_listings.json";
 
 interface MiamiBuilding {
@@ -44,6 +45,11 @@ interface MiamiBuilding {
 
 export async function POST(req: Request) {
   try {
+    const auth = await checkAdminAuth();
+    if (!auth.isAdmin) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const supabase = createAdminClient();
     const results = {
       cities_created: 0,
@@ -332,7 +338,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Import error:", error);
     return NextResponse.json(
-      { error: "Import failed", details: String(error) },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

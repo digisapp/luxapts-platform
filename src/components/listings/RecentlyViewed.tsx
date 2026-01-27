@@ -94,6 +94,7 @@ export function RecentlyViewed({ currentBuildingId, className = "" }: RecentlyVi
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Remove from recently viewed"
               className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
                 e.preventDefault();

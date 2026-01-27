@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/Header";
@@ -5,6 +6,11 @@ import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, MapPin, ArrowRight } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Explore Cities - LuxApts",
+  description: "Browse luxury apartments across major US cities including Miami, New York, Los Angeles, Dallas, Austin, Nashville, Atlanta, and Brooklyn.",
+};
 
 export const dynamic = "force-dynamic";
 

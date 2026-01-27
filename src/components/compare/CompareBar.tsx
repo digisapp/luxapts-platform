@@ -56,6 +56,7 @@ export function CompareBar() {
                   </span>
                   <button
                     onClick={() => removeBuilding(building.id)}
+                    aria-label="Remove from comparison"
                     className="p-0.5 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
                   >
                     <X className="h-3 w-3" />

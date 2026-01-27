@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
 import laListings from "../../../../../data/la_listings.json";
 
 interface LABuilding {
@@ -32,6 +33,11 @@ interface LABuilding {
 }
 
 export async function POST() {
+  const authResult = await checkAdminAuth();
+  if (!authResult.isAdmin) {
+    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+  }
+
   try {
     const supabase = createAdminClient();
     const results = {
@@ -66,7 +72,7 @@ export async function POST() {
         .single();
 
       if (error) {
-        return NextResponse.json({ error: `Failed to create LA: ${error.message}` }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
       }
       laCity = newCity;
     }
@@ -340,7 +346,7 @@ export async function POST() {
     });
   } catch (error) {
     console.error("Import error:", error);
-    return NextResponse.json({ error: "Import failed", details: String(error) }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 

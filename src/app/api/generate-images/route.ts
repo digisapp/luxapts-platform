@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
 
 // High-quality apartment/real estate images from Unsplash
 // Using direct Unsplash URLs with photo IDs for reliability
@@ -67,6 +68,11 @@ function getRandomItems<T>(array: T[], count: number): T[] {
 }
 
 export async function POST() {
+  const authResult = await checkAdminAuth();
+  if (!authResult.isAdmin) {
+    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+  }
+
   try {
     const supabase = createAdminClient();
     const results = {
@@ -264,13 +270,18 @@ export async function POST() {
   } catch (error) {
     console.error("Generate images error:", error);
     return NextResponse.json(
-      { error: "Generation failed", details: String(error) },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
 
 export async function GET() {
+  const authResult = await checkAdminAuth();
+  if (!authResult.isAdmin) {
+    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+  }
+
   return NextResponse.json({
     message: "POST to this endpoint to generate images for buildings and units",
     note: "This will use Unsplash images to populate building_images and unit_images tables",

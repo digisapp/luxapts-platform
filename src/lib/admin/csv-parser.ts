@@ -1,29 +1,56 @@
 import type { BuildingCSVRow } from "@/types/import";
 
-// Handle quoted values and commas within quotes
+/**
+ * RFC 4180 compliant CSV line parser
+ * Handles: quoted fields, escaped quotes (""), commas within quotes, \r\n line endings
+ */
 function parseCSVLine(line: string): string[] {
   const result: string[] = [];
   let current = "";
   let inQuotes = false;
+  let i = 0;
 
-  for (const char of line) {
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
-      result.push(current.replace(/^"|"$/g, "").trim());
-      current = "";
+  while (i < line.length) {
+    const char = line[i];
+
+    if (inQuotes) {
+      if (char === '"') {
+        // Check for escaped quote ""
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i += 2;
+          continue;
+        }
+        // End of quoted field
+        inQuotes = false;
+      } else {
+        current += char;
+      }
     } else {
-      current += char;
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ",") {
+        result.push(current.trim());
+        current = "";
+      } else if (char === "\r") {
+        // Skip carriage return
+      } else {
+        current += char;
+      }
     }
+    i++;
   }
-  result.push(current.replace(/^"|"$/g, "").trim());
+  result.push(current.trim());
 
   return result;
 }
 
 // Parse CSV text into BuildingCSVRow array
 export function parseCSV(text: string): BuildingCSVRow[] {
-  const lines = text.split("\n").filter((line) => line.trim());
+  // Normalize line endings to \n
+  const normalizedText = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const lines = normalizedText.split("\n").filter((line) => line.trim());
+
   if (lines.length < 2) {
     throw new Error("CSV must have header and at least one data row");
   }
@@ -55,6 +82,9 @@ export function parseCSV(text: string): BuildingCSVRow[] {
       continue;
     }
 
+    const yearBuilt = row.year_built ? parseInt(row.year_built, 10) : undefined;
+    const stories = row.stories ? parseInt(row.stories, 10) : undefined;
+
     rows.push({
       name: row.name || "",
       address_1: row.address_1 || "",
@@ -62,8 +92,8 @@ export function parseCSV(text: string): BuildingCSVRow[] {
       zip: row.zip || undefined,
       city_slug: row.city_slug || "",
       neighborhood_slug: row.neighborhood_slug || undefined,
-      year_built: row.year_built ? parseInt(row.year_built) : undefined,
-      stories: row.stories ? parseInt(row.stories) : undefined,
+      year_built: yearBuilt && !isNaN(yearBuilt) ? yearBuilt : undefined,
+      stories: stories && !isNaN(stories) ? stories : undefined,
       description: row.description || undefined,
       website_url: row.website_url || undefined,
       leasing_phone: row.leasing_phone || undefined,

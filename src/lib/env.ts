@@ -40,6 +40,31 @@ export function assertEnv() {
   if (missing.length > 0) {
     throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
   }
+
+  // Validate URL format
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  try {
+    new URL(supabaseUrl);
+  } catch {
+    throw new Error(`NEXT_PUBLIC_SUPABASE_URL is not a valid URL: ${supabaseUrl}`);
+  }
+
+  // Warn about optional missing vars in development
+  if (process.env.NODE_ENV === "development") {
+    const optional = [
+      { key: "XAI_API_KEY", feature: "AI chat" },
+      { key: "RESEND_API_KEY", feature: "Email notifications" },
+      { key: "NEXT_PUBLIC_MAPBOX_TOKEN", feature: "Map display" },
+      { key: "NEXT_PUBLIC_SIMLI_API_KEY", feature: "Simli avatar" },
+      { key: "CRON_SECRET", feature: "Cron job authentication" },
+    ];
+
+    for (const { key, feature } of optional) {
+      if (!process.env[key]) {
+        console.warn(`[env] ${key} not set — ${feature} will be disabled`);
+      }
+    }
+  }
 }
 
 /**

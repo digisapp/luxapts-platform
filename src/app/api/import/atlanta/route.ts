@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
 import { importCityBuildings } from "@/lib/import/city-importer";
 import atlantaListings from "../../../../../data/atlanta_listings.json";
 
@@ -12,6 +13,11 @@ const CITY_CONFIG = {
 };
 
 export async function POST() {
+  const authResult = await checkAdminAuth();
+  if (!authResult.isAdmin) {
+    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+  }
+
   try {
     const supabase = createAdminClient();
     const buildings = (atlantaListings as { buildings: unknown[] }).buildings;
@@ -26,7 +32,7 @@ export async function POST() {
   } catch (error) {
     console.error("Import error:", error);
     return NextResponse.json(
-      { error: "Import failed", details: String(error) },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

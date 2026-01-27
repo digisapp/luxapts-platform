@@ -67,7 +67,10 @@ export async function POST(req: Request) {
 
     // Filter by pet/parking policies if needed
     if (body.pet_friendly) {
-      buildingsQuery = buildingsQuery.not("pet_policy", "is", null);
+      buildingsQuery = buildingsQuery.not("pet_policy", "is", null)
+        .not("pet_policy", "ilike", "%no pet%")
+        .not("pet_policy", "ilike", "%not allowed%")
+        .not("pet_policy", "ilike", "%no animal%");
     }
     if (body.parking_required) {
       buildingsQuery = buildingsQuery.not("parking_policy", "is", null);

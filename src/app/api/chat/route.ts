@@ -98,6 +98,21 @@ export async function POST(req: Request) {
       );
     }
 
+    // Validate message limits to prevent cost attacks
+    if (body.messages.length > 50) {
+      return NextResponse.json(
+        { error: "Too many messages. Maximum 50 allowed." },
+        { status: 400 }
+      );
+    }
+    const totalLength = body.messages.reduce((sum, m) => sum + (m.content?.length || 0), 0);
+    if (totalLength > 50000) {
+      return NextResponse.json(
+        { error: "Message content too large." },
+        { status: 400 }
+      );
+    }
+
     // Check if xAI is configured
     if (!process.env.XAI_API_KEY) {
       return NextResponse.json(
@@ -137,8 +152,11 @@ export async function POST(req: Request) {
 
     let assistantMessage = response.choices[0].message;
 
-    // Handle tool calls (loop for multiple calls)
-    while (assistantMessage.tool_calls?.length) {
+    // Handle tool calls (loop for multiple calls, max 5 iterations to prevent infinite loops)
+    const MAX_TOOL_ITERATIONS = 5;
+    let toolIterations = 0;
+    while (assistantMessage.tool_calls?.length && toolIterations < MAX_TOOL_ITERATIONS) {
+      toolIterations++;
       const toolResults: OpenAI.ChatCompletionMessageParam[] = [];
 
       // Add assistant message with tool calls
@@ -180,9 +198,8 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Chat error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to process chat message", details: errorMessage },
+      { error: "Failed to process chat message" },
       { status: 500 }
     );
   }

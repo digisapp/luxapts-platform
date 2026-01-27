@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
 
 export async function POST() {
+  const authResult = await checkAdminAuth();
+  if (!authResult.isAdmin) {
+    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+  }
+
   try {
     const supabase = createAdminClient();
     const results = {
@@ -132,7 +138,7 @@ export async function POST() {
   } catch (error) {
     console.error("Fix data error:", error);
     return NextResponse.json(
-      { error: "Fix failed", details: String(error) },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
 
 // Admin endpoint for viewing and managing scraping status
 
 export async function GET(req: Request) {
+  const authResult = await checkAdminAuth();
+  if (!authResult.isAdmin) {
+    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+  }
+
   try {
     const url = new URL(req.url);
     const citySlug = url.searchParams.get("city");
@@ -53,7 +59,8 @@ export async function GET(req: Request) {
     const { data: buildings, error } = await query.limit(limit);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Admin scrape query error:", error);
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 
     // Process and filter buildings
@@ -141,6 +148,11 @@ export async function GET(req: Request) {
 
 // POST to trigger scraping for specific buildings or cities
 export async function POST(req: Request) {
+  const authResult = await checkAdminAuth();
+  if (!authResult.isAdmin) {
+    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+  }
+
   try {
     const body = await req.json();
     const { action, building_ids, city_slug } = body;
@@ -164,7 +176,8 @@ export async function POST(req: Request) {
         );
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("Admin scrape upsert error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
       }
 
       return NextResponse.json({

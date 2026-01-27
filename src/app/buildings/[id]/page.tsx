@@ -1,9 +1,39 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createAdminClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = createAdminClient();
+
+  const { data: building } = await supabase
+    .from("buildings")
+    .select("name, address_1, cities:city_id(name)")
+    .eq("id", id)
+    .single();
+
+  if (!building) {
+    return { title: "Building Not Found - LuxApts" };
+  }
+
+  const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
+  const title = `${building.name} - Luxury Apartments${city?.name ? ` in ${city.name}` : ""} | LuxApts`;
+  const description = `View available units, pricing, amenities, and floor plans at ${building.name}, ${building.address_1}${city?.name ? `, ${city.name}` : ""}.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
+  };
+}
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -33,6 +63,7 @@ import { BuildingPageClient } from "./BuildingPageClient";
 import { BuildingContactButtons } from "./BuildingContactButtons";
 import { StickyMobileCTA } from "@/components/ui/StickyMobileCTA";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
+import { ApartmentComplexJsonLd } from "@/components/seo/JsonLd";
 
 interface BuildingPageProps {
   params: Promise<{ id: string }>;
@@ -220,9 +251,32 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     });
   }
 
+  // Gather amenity names for JSON-LD
+  const amenityNames = amenities
+    ?.map((a) => {
+      const am = a.amenities as { name: string } | { name: string }[] | null;
+      return Array.isArray(am) ? am[0]?.name : am?.name;
+    })
+    .filter((name): name is string => !!name);
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
+    <>
+      <ApartmentComplexJsonLd
+        name={building.name}
+        description={building.description || undefined}
+        address={building.address_1}
+        city={building.cities?.name || ""}
+        state={building.cities?.state}
+        zip={building.zip}
+        url={`https://luxapts.co/buildings/${building.id}`}
+        image={allImages[0]?.url}
+        priceRange={priceRange || undefined}
+        amenities={amenityNames}
+        latitude={building.lat}
+        longitude={building.lng}
+      />
+      <div className="flex min-h-screen flex-col">
+        <Header />
 
       <main className="flex-1">
         {/* Hero/Header */}
@@ -612,6 +666,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
       />
 
       <Footer />
-    </div>
+      </div>
+    </>
   );
 }

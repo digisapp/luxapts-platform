@@ -69,6 +69,11 @@ export function Header() {
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setUserMenuOpen(false);
+                }}
+                aria-expanded={userMenuOpen}
+                aria-haspopup="true"
                 className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-zinc-600 to-zinc-800 flex items-center justify-center text-white text-sm font-medium">
@@ -76,13 +81,21 @@ export function Header() {
                 </div>
               </button>
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-black/80 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/50 py-1 animate-in fade-in-0 zoom-in-95">
+                <div
+                  role="menu"
+                  aria-label="User menu"
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setUserMenuOpen(false);
+                  }}
+                  className="absolute right-0 mt-2 w-56 rounded-xl bg-black/80 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/50 py-1 animate-in fade-in-0 zoom-in-95"
+                >
                   <div className="px-4 py-3 border-b border-white/10">
                     <p className="text-sm font-medium text-white truncate">{userName}</p>
                     <p className="text-xs text-white/50 truncate">{user.email}</p>
                   </div>
                   <Link
                     href="/favorites"
+                    role="menuitem"
                     onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
@@ -91,6 +104,7 @@ export function Header() {
                   </Link>
                   <Link
                     href="/account"
+                    role="menuitem"
                     onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
@@ -98,6 +112,7 @@ export function Header() {
                     Account Settings
                   </Link>
                   <button
+                    role="menuitem"
                     onClick={handleSignOut}
                     className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >

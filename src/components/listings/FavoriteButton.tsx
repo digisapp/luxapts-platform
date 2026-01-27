@@ -66,6 +66,7 @@ export function FavoriteButton({
         variant={isFav ? "default" : "outline"}
         size="sm"
         onClick={handleClick}
+        aria-label={isFav ? "Remove from saved listings" : "Save listing"}
         className={cn("gap-2", className)}
       >
         <Heart
@@ -84,6 +85,7 @@ export function FavoriteButton({
       variant="ghost"
       size="icon"
       onClick={handleClick}
+      aria-label={isFav ? "Remove from saved listings" : "Save listing"}
       className={cn(
         sizeClasses[size],
         "rounded-full bg-background/80 backdrop-blur-sm hover:bg-background press-effect",

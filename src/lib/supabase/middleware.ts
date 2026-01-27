@@ -37,7 +37,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes
+  // Protected routes - check authentication
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
   const isAgentRoute = request.nextUrl.pathname.startsWith("/agent");
   const isPartnerRoute = request.nextUrl.pathname.startsWith("/partner");
@@ -49,6 +49,27 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/auth/login";
     url.searchParams.set("redirect", request.nextUrl.pathname);
     return NextResponse.redirect(url);
+  }
+
+  // Role-based access control for protected routes
+  if (user && (isAdminRoute || isAgentRoute || isPartnerRoute)) {
+    const userRole = user.user_metadata?.role || "renter";
+
+    if (isAdminRoute && userRole !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+    if (isAgentRoute && !["admin", "agent"].includes(userRole)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+    if (isPartnerRoute && !["admin", "partner"].includes(userRole)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
   }
 
   // If logged in user tries to access auth pages, redirect to home

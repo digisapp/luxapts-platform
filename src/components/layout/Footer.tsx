@@ -16,23 +16,25 @@ export function Footer() {
           </div>
 
           {/* Links */}
-          <div className="flex flex-wrap gap-x-8 gap-y-4 text-sm">
-            <Link href="/search" className="text-zinc-500 hover:text-white transition-colors">
-              Search
-            </Link>
-            <Link href="/cities" className="text-zinc-500 hover:text-white transition-colors">
-              Cities
-            </Link>
-            <Link href="/about" className="text-zinc-500 hover:text-white transition-colors">
-              About
-            </Link>
-            <Link href="/privacy" className="text-zinc-500 hover:text-white transition-colors">
-              Privacy
-            </Link>
-            <Link href="/terms" className="text-zinc-500 hover:text-white transition-colors">
-              Terms
-            </Link>
-          </div>
+          <nav aria-label="Footer navigation">
+            <div className="flex flex-wrap gap-x-8 gap-y-4 text-sm">
+              <Link href="/search" className="text-zinc-500 hover:text-white transition-colors">
+                Search
+              </Link>
+              <Link href="/cities" className="text-zinc-500 hover:text-white transition-colors">
+                Cities
+              </Link>
+              <Link href="/about" className="text-zinc-500 hover:text-white transition-colors">
+                About
+              </Link>
+              <Link href="/privacy" className="text-zinc-500 hover:text-white transition-colors">
+                Privacy
+              </Link>
+              <Link href="/terms" className="text-zinc-500 hover:text-white transition-colors">
+                Terms
+              </Link>
+            </div>
+          </nav>
         </div>
 
         <div className="mt-12 pt-8 border-t border-zinc-900 flex flex-col md:flex-row md:items-center md:justify-between gap-4">

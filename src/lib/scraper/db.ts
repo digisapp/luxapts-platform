@@ -252,12 +252,28 @@ export async function markUnitsUnavailable(
   // Mark units as unavailable if they weren't found in the latest scrape
   if (activeUnitNumbers.length === 0) return;
 
+  // First get all available units for this building
+  const { data: availableUnits, error: fetchError } = await supabase
+    .from("units")
+    .select("id, unit_number")
+    .eq("building_id", buildingId)
+    .eq("is_available", true);
+
+  if (fetchError || !availableUnits?.length) {
+    if (fetchError) console.error("Error fetching available units:", fetchError);
+    return;
+  }
+
+  // Filter to units NOT in the active list
+  const activeSet = new Set(activeUnitNumbers);
+  const unitsToMark = availableUnits.filter(u => !activeSet.has(u.unit_number));
+
+  if (unitsToMark.length === 0) return;
+
   const { error } = await supabase
     .from("units")
     .update({ is_available: false })
-    .eq("building_id", buildingId)
-    .eq("is_available", true)
-    .not("unit_number", "in", `(${activeUnitNumbers.map(n => `'${n}'`).join(",")})`);
+    .in("id", unitsToMark.map(u => u.id));
 
   if (error) {
     console.error("Error marking units unavailable:", error);

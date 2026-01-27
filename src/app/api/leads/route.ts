@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
+import { escapeHtml } from "@/lib/utils";
 import { Resend } from "resend";
 import type { CreateLeadRequest, CreateLeadResponse } from "@/types/database";
 
@@ -113,15 +115,15 @@ export async function POST(req: Request) {
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #1a1a1a;">New Lead Received</h2>
               <div style="background: #f5f5f5; padding: 20px; border-radius: 8px;">
-                <p><strong>City:</strong> ${cityRes.data.name}</p>
-                <p><strong>Source:</strong> ${body.source}</p>
-                <p><strong>Name:</strong> ${body.name || "Not provided"}</p>
-                <p><strong>Email:</strong> ${body.email || "Not provided"}</p>
-                <p><strong>Phone:</strong> ${body.phone || "Not provided"}</p>
+                <p><strong>City:</strong> ${escapeHtml(cityRes.data.name)}</p>
+                <p><strong>Source:</strong> ${escapeHtml(body.source)}</p>
+                <p><strong>Name:</strong> ${escapeHtml(body.name) || "Not provided"}</p>
+                <p><strong>Email:</strong> ${escapeHtml(body.email) || "Not provided"}</p>
+                <p><strong>Phone:</strong> ${escapeHtml(body.phone) || "Not provided"}</p>
                 <p><strong>Budget:</strong> $${body.budget_min || "?"} - $${body.budget_max || "?"}</p>
                 <p><strong>Beds:</strong> ${body.beds || "Not specified"}</p>
-                <p><strong>Move-in:</strong> ${body.move_in_date || "Not specified"}</p>
-                ${body.notes ? `<p><strong>Notes:</strong> ${body.notes}</p>` : ""}
+                <p><strong>Move-in:</strong> ${escapeHtml(body.move_in_date) || "Not specified"}</p>
+                ${body.notes ? `<p><strong>Notes:</strong> ${escapeHtml(body.notes)}</p>` : ""}
               </div>
               <p style="margin-top: 20px; color: #666;">
                 <strong>Lead ID:</strong> ${leadId}
@@ -152,13 +154,18 @@ export async function POST(req: Request) {
   }
 }
 
-// GET endpoint to list leads (admin only via RLS)
+// GET endpoint to list leads (admin only)
 export async function GET(req: Request) {
   try {
+    const auth = await checkAdminAuth();
+    if (!auth.isAdmin) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
-    const limit = parseInt(searchParams.get("limit") || "50", 10);
-    const offset = parseInt(searchParams.get("offset") || "0", 10);
+    const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "50", 10) || 50, 1), 100);
+    const offset = Math.max(parseInt(searchParams.get("offset") || "0", 10) || 0, 0);
 
     const supabase = createAdminClient();
 
@@ -179,7 +186,8 @@ export async function GET(req: Request) {
     const { data, error, count } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("List leads query error:", error);
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 
     return NextResponse.json({
