@@ -21,7 +21,7 @@ interface SearchBody {
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as SearchBody;
-    const limit = Math.min(Math.max(body.limit ?? 20, 1), 50);
+    const limit = Math.min(Math.max(body.limit ?? 50, 1), 500);
 
     if (!body.city_slug) {
       return NextResponse.json(

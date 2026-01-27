@@ -77,6 +77,19 @@ export function SearchMap({
     map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
 
     map.current.on("load", () => {
+      // Hide Mapbox's built-in neighborhood/subdivision labels to avoid
+      // confusion with our own database-driven neighborhood labels
+      const style = map.current?.getStyle();
+      if (style?.layers) {
+        for (const layer of style.layers) {
+          if (
+            layer.id === "settlement-subdivision-label" ||
+            layer.id === "settlement-minor-label"
+          ) {
+            map.current?.setLayoutProperty(layer.id, "visibility", "none");
+          }
+        }
+      }
       setMapLoaded(true);
     });
 

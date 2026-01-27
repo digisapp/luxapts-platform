@@ -290,7 +290,7 @@ function SearchContent() {
       const body: Record<string, unknown> = {
         city_slug: filters?.city_slug || city,
         sort: filters?.sort || sort,
-        limit: 30,
+        limit: 200,
       };
 
       // Basic filters
