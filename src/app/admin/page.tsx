@@ -7,6 +7,7 @@ import { LeadSourceChart } from "@/components/admin/analytics/LeadSourceChart";
 import { LeadsOverTimeChart } from "@/components/admin/analytics/LeadsOverTimeChart";
 import { BuildingPerformanceTable } from "@/components/admin/analytics/BuildingPerformanceTable";
 import { GeographicInsights } from "@/components/admin/analytics/GeographicInsights";
+import { VisitorAnalytics } from "@/components/admin/analytics/VisitorAnalytics";
 
 export const dynamic = "force-dynamic";
 
@@ -134,6 +135,16 @@ export default async function AdminDashboardPage() {
             mostFavorited={analytics.mostFavorited}
             buildingsWithAvailability={analytics.buildingsWithAvailability}
           />
+        </CardContent>
+      </Card>
+
+      {/* Visitor Analytics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Visitor Analytics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <VisitorAnalytics days={30} />
         </CardContent>
       </Card>
 

@@ -94,19 +94,53 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
-  // Default to showing all buildings
+export async function GET(req: Request) {
+  // Support city filter via query params
+  const { searchParams } = new URL(req.url);
+  const citySlug = searchParams.get("city");
+  const neighborhoodSlug = searchParams.get("neighborhood");
+  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "50"), 1), 100);
+
   const supabase = createAdminClient();
 
-  const { data: buildings, error } = await supabase
+  // Build query
+  let query = supabase
     .from("buildings")
     .select(`
       id, name, address_1,
-      cities:city_id (name, slug),
-      neighborhoods:neighborhood_id (name)
+      cities:city_id (id, name, slug),
+      neighborhoods:neighborhood_id (id, name, slug)
     `)
-    .eq("status", "active")
-    .limit(50);
+    .eq("status", "active");
+
+  // Filter by city if provided
+  if (citySlug) {
+    const { data: city } = await supabase
+      .from("cities")
+      .select("id")
+      .eq("slug", citySlug)
+      .single();
+
+    if (city) {
+      query = query.eq("city_id", city.id);
+
+      // Filter by neighborhood if provided (only when city is specified)
+      if (neighborhoodSlug) {
+        const { data: neighborhood } = await supabase
+          .from("neighborhoods")
+          .select("id")
+          .eq("city_id", city.id)
+          .eq("slug", neighborhoodSlug)
+          .single();
+
+        if (neighborhood) {
+          query = query.eq("neighborhood_id", neighborhood.id);
+        }
+      }
+    }
+  }
+
+  const { data: buildings, error } = await query.limit(limit);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1043,6 +1043,405 @@
       ],
       "pet_policy": "Pets welcome with deposit. Breed restrictions may apply.",
       "images": {}
+    },
+    {
+      "name": "Magnolia DUMBO",
+      "address": "98 Front Street",
+      "neighborhood": "DUMBO",
+      "phone": "718-422-0016",
+      "website": "https://www.magnolia-dumbo.com/",
+      "management_company": "Two Trees",
+      "year_built": 2024,
+      "stories": 10,
+      "total_units": 160,
+      "rent_range": {
+        "min": 4200,
+        "max": 12500
+      },
+      "sqft_range": {
+        "min": 550,
+        "max": 1800
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 550,
+          "rent": 4200
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 750,
+          "rent": 5500
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1200,
+          "rent": 8500
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1800,
+          "rent": 12500
+        }
+      ],
+      "amenities": [
+        "23,000 sqft Private Park",
+        "Rooftop Terrace",
+        "Fitness Center",
+        "Resident Lounge",
+        "Children's Playroom",
+        "Co-Working Space",
+        "Bike Storage",
+        "Pet Spa",
+        "Concierge Service",
+        "Package Room",
+        "Manhattan Bridge Views",
+        "Floor-to-Ceiling Windows",
+        "In-Unit Washer/Dryer",
+        "White Oak Hardwood Floors"
+      ],
+      "pet_policy": "Pet-friendly with on-site pet spa",
+      "notable": "Morris Adjmi designed, features 23,000 sqft private park",
+      "images": {}
+    },
+    {
+      "name": "Olympia DUMBO",
+      "address": "30 Front Street",
+      "neighborhood": "DUMBO",
+      "phone": "718-222-0030",
+      "website": "https://olympiadumbo.com/",
+      "management_company": "Fortis Property Group",
+      "year_built": 2020,
+      "stories": 33,
+      "total_units": 76,
+      "rent_range": {
+        "min": 5500,
+        "max": 18000
+      },
+      "sqft_range": {
+        "min": 700,
+        "max": 2500
+      },
+      "unit_types": [
+        "1BR",
+        "2BR",
+        "3BR",
+        "4BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 700,
+          "rent": 5500
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1200,
+          "rent": 9500
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2.5,
+          "sqft": 1800,
+          "rent": 14000
+        },
+        {
+          "name": "D1 - Four Bedroom",
+          "type": "4BR",
+          "beds": 4,
+          "baths": 3,
+          "sqft": 2500,
+          "rent": 18000
+        }
+      ],
+      "amenities": [
+        "38,000 sqft Amenities",
+        "Indoor Swimming Pool",
+        "Fitness Center",
+        "Spa with Treatment Rooms",
+        "Sauna & Steam Room",
+        "Rooftop Terrace",
+        "Harbor Views",
+        "Children's Playroom",
+        "Screening Room",
+        "Golf Simulator",
+        "Billiards Room",
+        "Wine Storage",
+        "24-Hour Doorman",
+        "Concierge Service",
+        "Valet Parking",
+        "Brooklyn Bridge Views",
+        "Floor-to-Ceiling Windows",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pet-friendly",
+      "notable": "Boutique luxury tower with 38,000 sqft amenities and panoramic harbor views",
+      "images": {}
+    },
+    {
+      "name": "Bridge View DUMBO",
+      "address": "50 Bridge Park Drive",
+      "neighborhood": "DUMBO",
+      "phone": "718-222-5050",
+      "website": "https://bridgeview.exrny.com/",
+      "management_company": "EXR",
+      "year_built": 2024,
+      "stories": 28,
+      "total_units": 220,
+      "rent_range": {
+        "min": 3800,
+        "max": 11000
+      },
+      "sqft_range": {
+        "min": 500,
+        "max": 1600
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 500,
+          "rent": 3800
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 700,
+          "rent": 4800
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1100,
+          "rent": 7500
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1600,
+          "rent": 11000
+        }
+      ],
+      "amenities": [
+        "Rooftop Pool",
+        "Fitness Center",
+        "Yoga Studio",
+        "Resident Lounge",
+        "Co-Working Space",
+        "Children's Playroom",
+        "Outdoor Terrace",
+        "BBQ Grills",
+        "Dog Run",
+        "Bike Storage",
+        "Package Room",
+        "24-Hour Concierge",
+        "Brooklyn Bridge Park Access",
+        "Manhattan Skyline Views",
+        "Floor-to-Ceiling Windows",
+        "In-Unit Washer/Dryer",
+        "Smart Home Features"
+      ],
+      "pet_policy": "Pet-friendly with dog run",
+      "notable": "Brooklyn's newest luxury complex with direct Brooklyn Bridge Park access",
+      "images": {}
+    },
+    {
+      "name": "Front & York",
+      "address": "85 Jay Street",
+      "neighborhood": "DUMBO",
+      "phone": "718-222-8500",
+      "website": "https://frontandyork.com/",
+      "management_company": "CIM Group",
+      "year_built": 2022,
+      "stories": 21,
+      "total_units": 320,
+      "rent_range": {
+        "min": 3500,
+        "max": 9500
+      },
+      "sqft_range": {
+        "min": 550,
+        "max": 1400
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR",
+        "3BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 550,
+          "rent": 3500
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 750,
+          "rent": 4800
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1100,
+          "rent": 7200
+        },
+        {
+          "name": "C1 - Three Bedroom",
+          "type": "3BR",
+          "beds": 3,
+          "baths": 2,
+          "sqft": 1400,
+          "rent": 9500
+        }
+      ],
+      "amenities": [
+        "150,000+ sqft Amenities",
+        "Life Time Fitness (77,000 sqft)",
+        "Full-Size Indoor Basketball Court",
+        "25-Meter Indoor Lap Pool",
+        "Sauna & Steam Rooms",
+        "Hot Tub",
+        "Massage Treatment Rooms",
+        "Half-Acre Private Park by Michael van Valkenburgh",
+        "Rooftop Pool",
+        "Outdoor Theater",
+        "Dining Terrace with Built-in Grills",
+        "Billiards Bar & Lounge",
+        "Wine Room",
+        "Party Lounge",
+        "Co-Working Lounge",
+        "Media Lounge",
+        "Game Room",
+        "Yoga Studios",
+        "Kids Academy",
+        "712-Space Parking Garage",
+        "10-Foot Ceilings",
+        "Chevron White Oak Flooring",
+        "Gaggenau Appliances",
+        "Caldia Marble Countertops",
+        "Custom Waterworks Fixtures",
+        "In-Unit Washer/Dryer"
+      ],
+      "pet_policy": "Pet-friendly",
+      "notable": "Morris Adjmi designed, largest amenity program in Brooklyn with 150,000+ sqft including Life Time Fitness",
+      "images": {}
+    },
+    {
+      "name": "The Maxwell",
+      "address": "80 Flatbush Avenue Extension",
+      "neighborhood": "DUMBO",
+      "phone": "718-522-8000",
+      "website": "https://themaxwellbrooklyn.com/",
+      "management_company": "Triangle Equities & The Michaels Organization",
+      "year_built": 2025,
+      "stories": 40,
+      "total_units": 227,
+      "rent_range": {
+        "min": 3300,
+        "max": 8500
+      },
+      "sqft_range": {
+        "min": 450,
+        "max": 1200
+      },
+      "unit_types": [
+        "Studio",
+        "1BR",
+        "2BR"
+      ],
+      "floor_plans": [
+        {
+          "name": "Studio",
+          "type": "Studio",
+          "beds": 0,
+          "baths": 1,
+          "sqft": 450,
+          "rent": 3300
+        },
+        {
+          "name": "A1 - One Bedroom",
+          "type": "1BR",
+          "beds": 1,
+          "baths": 1,
+          "sqft": 700,
+          "rent": 4500
+        },
+        {
+          "name": "B1 - Two Bedroom",
+          "type": "2BR",
+          "beds": 2,
+          "baths": 2,
+          "sqft": 1200,
+          "rent": 8500
+        }
+      ],
+      "amenities": [
+        "4,000 sqft Rooftop Lounge",
+        "40th Floor Sky Lounge & Co-Working",
+        "Rooftop Dog Run",
+        "Outdoor Grills",
+        "Manhattan & Brooklyn Views",
+        "Fitness Center",
+        "Yoga & Movement Studio",
+        "24-Hour Attended Lobby",
+        "Deep Soaking Tubs",
+        "In-Unit Washer/Dryer",
+        "Custom Kitchen Cabinetry",
+        "Floor-to-Ceiling Windows",
+        "Soundproof Units"
+      ],
+      "pet_policy": "Pet-friendly with rooftop dog run",
+      "notable": "40-story tower at the epicenter of DUMBO, Brooklyn Heights, and Brooklyn Bridge Park",
+      "images": {}
     }
   ]
 }

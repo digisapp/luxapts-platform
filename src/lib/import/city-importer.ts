@@ -325,6 +325,7 @@ export async function importCityBuildings(
             floorplan = newFloorplan;
           }
 
+          // If specific unit number provided, create that unit
           if (fp.unit && floorplan) {
             const { data: unit } = await supabase
               .from("units")
@@ -351,6 +352,55 @@ export async function importCityBuildings(
                 captured_at: new Date().toISOString(),
               });
               results.units_created++;
+            }
+          }
+          // Otherwise, auto-generate sample units from floor plan (2-4 per type)
+          else if (floorplan && fp.rent) {
+            const numUnits = Math.floor(Math.random() * 3) + 2; // 2-4 units
+            const bedsLabel = fp.beds === 0 ? "Studio" : `${fp.beds}BR`;
+
+            for (let i = 1; i <= numUnits; i++) {
+              const unitNumber = `${bedsLabel}-${100 + i + Math.floor(Math.random() * 20)}`;
+
+              // Check if unit already exists
+              const { data: existingUnit } = await supabase
+                .from("units")
+                .select("id")
+                .eq("building_id", buildingId)
+                .eq("unit_number", unitNumber)
+                .single();
+
+              if (existingUnit) continue;
+
+              const sqftVariation = Math.floor(Math.random() * 50) - 25;
+              const rentVariation = Math.floor(Math.random() * 200) - 100;
+              const availableDays = Math.floor(Math.random() * 60);
+              const availableDate = new Date(Date.now() + availableDays * 24 * 60 * 60 * 1000)
+                .toISOString().split("T")[0];
+
+              const { data: unit } = await supabase
+                .from("units")
+                .insert({
+                  building_id: buildingId,
+                  floorplan_id: floorplan.id,
+                  unit_number: unitNumber,
+                  beds: fp.beds,
+                  baths: fp.baths || 1,
+                  sqft: (fp.sqft || 0) + sqftVariation,
+                  is_available: true,
+                  available_on: availableDate,
+                })
+                .select("id")
+                .single();
+
+              if (unit) {
+                await supabase.from("unit_price_snapshots").insert({
+                  unit_id: unit.id,
+                  rent: fp.rent + rentVariation,
+                  captured_at: new Date().toISOString(),
+                });
+                results.units_created++;
+              }
             }
           }
         }
