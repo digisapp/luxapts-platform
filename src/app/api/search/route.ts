@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { getUnitFallbackImages, getBuildingFallbackImage } from "@/lib/images/fallback";
 
 interface SearchBody {
   city_slug: string;
@@ -443,8 +444,20 @@ export async function POST(req: Request) {
         floorplan_id: row.unit.floorplan_id,
       },
       pricing: row.pricing,
-      // Use unit images if available, otherwise building images
-      images: row.unitImages.length > 0 ? row.unitImages : row.buildingImages,
+      // Use unit images if available, then building images, then deterministic fallbacks
+      images: row.unitImages.length > 0
+        ? row.unitImages
+        : row.buildingImages.length > 0
+          ? row.buildingImages
+          : getUnitFallbackImages(
+              row.unit.id,
+              (() => {
+                const b = row.unit.buildings;
+                if (Array.isArray(b)) return b[0]?.name || "Apartment";
+                return (b as { name: string } | null)?.name || "Apartment";
+              })(),
+              row.unit.unit_number,
+            ),
       floorplan: row.floorplan,
     }));
 

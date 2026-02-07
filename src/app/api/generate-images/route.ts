@@ -169,10 +169,8 @@ export async function POST() {
       });
     }
 
-    // Generate unit images (limit to avoid too many inserts)
-    const unitsToProcess = units.slice(0, 200);
-
-    for (const unit of unitsToProcess) {
+    // Generate unit images for all available units
+    for (const unit of units) {
       try {
         // Check if unit already has images
         const { data: existingImages } = await supabase

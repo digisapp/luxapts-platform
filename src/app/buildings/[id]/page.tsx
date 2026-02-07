@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createAdminClient } from "@/lib/supabase/server";
+import { getBuildingGalleryFallbacks } from "@/lib/images/fallback";
 
 export const dynamic = "force-dynamic";
 
@@ -249,6 +250,11 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
       alt: `${building.name} exterior`,
       category: "exterior",
     });
+  }
+
+  // If still no images, use deterministic Unsplash fallbacks
+  if (allImages.length === 0) {
+    allImages.push(...getBuildingGalleryFallbacks(building.id, building.name));
   }
 
   // Gather amenity names for JSON-LD
