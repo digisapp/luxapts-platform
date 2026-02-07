@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { checkAdminAuth } from "@/lib/auth/admin";
+import { checkAdminAuth } from "@/lib/admin/auth";
 
 export async function GET(req: Request) {
-  const authError = await checkAdminAuth();
-  if (authError) return authError;
+  const auth = await checkAdminAuth();
+  if (!auth.isAdmin) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
 
   try {
     const { searchParams } = new URL(req.url);
@@ -74,10 +76,14 @@ export async function GET(req: Request) {
     buildingViews.data?.forEach((bv) => {
       const id = bv.building_id;
       if (!buildingViewCounts[id]) {
-        const building = bv.buildings as { name: string; neighborhoods: { name: string } | null } | null;
+        // Handle both array and object return types from Supabase
+        const buildingsData = bv.buildings;
+        const building = Array.isArray(buildingsData) ? buildingsData[0] : buildingsData;
+        const neighborhoods = building?.neighborhoods;
+        const neighborhood = Array.isArray(neighborhoods) ? neighborhoods[0] : neighborhoods;
         buildingViewCounts[id] = {
           name: building?.name || "Unknown",
-          neighborhood: building?.neighborhoods?.name || null,
+          neighborhood: neighborhood?.name || null,
           count: 0,
         };
       }

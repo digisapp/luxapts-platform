@@ -1,14 +1,33 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 
+interface UnitInfo {
+  beds: number;
+  baths: number;
+  sqft: number | null;
+}
+
+interface RawPriceSnapshot {
+  unit_id: string;
+  rent: number;
+  captured_at: string;
+  units: UnitInfo | UnitInfo[] | null;
+}
+
 interface PriceSnapshot {
   unit_id: string;
   rent: number;
   captured_at: string;
-  units: {
-    beds: number;
-    baths: number;
-    sqft: number | null;
+  unit?: UnitInfo;
+}
+
+function normalizeSnapshot(raw: RawPriceSnapshot): PriceSnapshot {
+  const unit = Array.isArray(raw.units) ? raw.units[0] : raw.units;
+  return {
+    unit_id: raw.unit_id,
+    rent: raw.rent,
+    captured_at: raw.captured_at,
+    unit: unit || undefined,
   };
 }
 
@@ -78,10 +97,13 @@ export async function GET(
       return NextResponse.json({ error: snapshotsError.message }, { status: 500 });
     }
 
+    // Normalize snapshots to handle Supabase array/object differences
+    const normalizedSnapshots = (snapshots as RawPriceSnapshot[] || []).map(normalizeSnapshot);
+
     // Group by date and calculate averages
     const dailyPrices: Record<string, { total: number; count: number; min: number; max: number }> = {};
 
-    for (const snap of (snapshots as PriceSnapshot[]) || []) {
+    for (const snap of normalizedSnapshots) {
       const date = snap.captured_at.split("T")[0];
       if (!dailyPrices[date]) {
         dailyPrices[date] = { total: 0, count: 0, min: Infinity, max: -Infinity };
@@ -104,7 +126,7 @@ export async function GET(
       .sort((a, b) => a.date.localeCompare(b.date));
 
     // Calculate summary
-    const allRents = (snapshots as PriceSnapshot[])?.map((s) => s.rent) || [];
+    const allRents = normalizedSnapshots.map((s) => s.rent);
     const summary = allRents.length > 0 ? {
       current_avg: Math.round(allRents.reduce((a, b) => a + b, 0) / allRents.length),
       current_min: Math.min(...allRents),
@@ -121,8 +143,8 @@ export async function GET(
 
     // Group by bedroom type
     const byBedroom: Record<number, { avg: number; min: number; max: number; count: number }> = {};
-    for (const snap of (snapshots as PriceSnapshot[]) || []) {
-      const beds = snap.units?.beds ?? 0;
+    for (const snap of normalizedSnapshots) {
+      const beds = snap.unit?.beds ?? 0;
       if (!byBedroom[beds]) {
         byBedroom[beds] = { avg: 0, min: Infinity, max: -Infinity, count: 0 };
       }

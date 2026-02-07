@@ -25,6 +25,7 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [statusText, setStatusText] = useState("Thinking...");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -52,9 +53,10 @@ export function ChatWidget() {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
+    setStatusText("Thinking...");
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("/api/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -65,11 +67,65 @@ export function ChatWidget() {
 
       if (!res.ok) throw new Error("Failed to get response");
 
-      const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.message },
-      ]);
+      // Handle streaming response
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No response body");
+
+      const decoder = new TextDecoder();
+      let assistantContent = "";
+      let hasStartedResponse = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.type === "status") {
+                setStatusText(data.content);
+              } else if (data.type === "content") {
+                if (!hasStartedResponse) {
+                  // Add empty assistant message to start
+                  setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+                  hasStartedResponse = true;
+                  setLoading(false);
+                }
+                assistantContent += data.content;
+                // Update the last message with accumulated content
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = {
+                    role: "assistant",
+                    content: assistantContent,
+                  };
+                  return updated;
+                });
+              } else if (data.type === "error") {
+                throw new Error(data.content);
+              }
+            } catch (parseError) {
+              // Skip invalid JSON lines
+              if (line.slice(6).trim()) {
+                console.debug("Skipping non-JSON chunk:", line.slice(6));
+              }
+            }
+          }
+        }
+      }
+
+      // If we never got content, add error message
+      if (!hasStartedResponse) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: "I couldn't generate a response. Please try again." },
+        ]);
+      }
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -209,7 +265,7 @@ export function ChatWidget() {
                   <div className="flex justify-start">
                     <div className="bg-zinc-800 rounded-2xl px-4 py-3 flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
-                      <span className="text-sm text-zinc-400">Thinking...</span>
+                      <span className="text-sm text-zinc-400">{statusText}</span>
                     </div>
                   </div>
                 )}
