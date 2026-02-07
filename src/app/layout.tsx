@@ -29,11 +29,20 @@ export const metadata: Metadata = {
     url: "https://luxapts.co",
     siteName: "LuxApts",
     type: "website",
+    images: [
+      {
+        url: "https://luxapts.co/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "LuxApts - AI-Powered Luxury Apartment Search",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "LuxApts - Find Your Perfect Apartment",
     description: "The intelligent rental search platform. AI-powered apartment discovery.",
+    images: ["https://luxapts.co/og-image.png"],
   },
 };
 

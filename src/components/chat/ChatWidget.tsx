@@ -18,6 +18,9 @@ const SUGGESTED_PROMPTS = [
   "Studios with in-unit washer dryer in Manhattan",
 ];
 
+// Max messages to send to the API to prevent unbounded context growth
+const MAX_HISTORY_MESSAGES = 20;
+
 export function ChatWidget() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -56,11 +59,13 @@ export function ChatWidget() {
     setStatusText("Thinking...");
 
     try {
+      // Send only the most recent messages to prevent unbounded context
+      const recentMessages = [...messages, userMessage].slice(-MAX_HISTORY_MESSAGES);
       const res = await fetch("/api/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
+          messages: recentMessages,
           building_id: getBuildingId(),
         }),
       });

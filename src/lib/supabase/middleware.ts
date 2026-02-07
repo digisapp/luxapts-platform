@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
@@ -52,8 +53,21 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Role-based access control for protected routes
+  // Query the profiles table directly instead of trusting user_metadata
   if (user && (isAdminRoute || isAgentRoute || isPartnerRoute)) {
-    const userRole = user.user_metadata?.role || "renter";
+    const adminClient = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const userRole = profile?.role || "renter";
 
     if (isAdminRoute && userRole !== "admin") {
       const url = request.nextUrl.clone();

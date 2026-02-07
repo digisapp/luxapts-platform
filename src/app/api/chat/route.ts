@@ -122,7 +122,9 @@ export async function POST(req: Request) {
     }
 
     const client = createXAIClient();
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
     // Build context-aware system prompt
     let systemPrompt = SYSTEM_PROMPT;

@@ -21,7 +21,9 @@ export const env = {
   MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "",
 
   // App
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  NEXT_PUBLIC_APP_URL:
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
 } as const;
 
 /**
@@ -47,6 +49,11 @@ export function assertEnv() {
     new URL(supabaseUrl);
   } catch {
     throw new Error(`NEXT_PUBLIC_SUPABASE_URL is not a valid URL: ${supabaseUrl}`);
+  }
+
+  // Warn about missing APP_URL in production
+  if (process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_APP_URL && !process.env.VERCEL_URL) {
+    console.warn("[env] NEXT_PUBLIC_APP_URL not set in production — internal API calls may fail");
   }
 
   // Warn about optional missing vars in development

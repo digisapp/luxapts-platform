@@ -1,21 +1,30 @@
 /**
- * Simple in-memory rate limiter for API routes
- * In production, consider using Redis for distributed rate limiting
+ * Rate limiter for API routes.
+ *
+ * IMPORTANT: This uses in-memory storage which works per-instance only.
+ * On Vercel serverless, each function invocation may run in a different
+ * container, so this provides best-effort limiting (not strict).
+ *
+ * For strict distributed rate limiting, replace with:
+ *   - @upstash/ratelimit + @upstash/redis (recommended for Vercel)
+ *   - Vercel KV
+ *   - Redis (self-hosted)
  */
 
-interface RateLimitStore {
-  count: number;
-  resetTime: number;
+interface RateLimitEntry {
+  timestamps: number[];
 }
 
-const store = new Map<string, RateLimitStore>();
+const store = new Map<string, RateLimitEntry>();
 
 // Clean up old entries every 5 minutes
 if (typeof setInterval !== "undefined") {
   setInterval(() => {
     const now = Date.now();
-    for (const [key, value] of store.entries()) {
-      if (now > value.resetTime) {
+    for (const [key, entry] of store.entries()) {
+      // Remove entries with no recent timestamps
+      entry.timestamps = entry.timestamps.filter((t) => now - t < 10 * 60 * 1000);
+      if (entry.timestamps.length === 0) {
         store.delete(key);
       }
     }
@@ -33,60 +42,64 @@ interface RateLimitResult {
   resetTime: number;
 }
 
+/**
+ * Sliding window rate limiter.
+ * Tracks individual request timestamps for more accurate limiting
+ * compared to fixed-window counters.
+ */
 export function rateLimit(
   identifier: string,
   config: RateLimitConfig = { limit: 60, windowMs: 60 * 1000 }
 ): RateLimitResult {
   const now = Date.now();
-  const key = identifier;
+  const windowStart = now - config.windowMs;
 
-  const current = store.get(key);
+  let entry = store.get(identifier);
 
-  if (!current || now > current.resetTime) {
-    // New window
-    store.set(key, {
-      count: 1,
-      resetTime: now + config.windowMs,
-    });
-    return {
-      success: true,
-      remaining: config.limit - 1,
-      resetTime: now + config.windowMs,
-    };
+  if (!entry) {
+    entry = { timestamps: [] };
+    store.set(identifier, entry);
   }
 
-  if (current.count >= config.limit) {
-    // Rate limited
+  // Remove timestamps outside the current window
+  entry.timestamps = entry.timestamps.filter((t) => t > windowStart);
+
+  if (entry.timestamps.length >= config.limit) {
+    // Rate limited - find when the oldest request in window expires
+    const oldestInWindow = entry.timestamps[0];
     return {
       success: false,
       remaining: 0,
-      resetTime: current.resetTime,
+      resetTime: oldestInWindow + config.windowMs,
     };
   }
 
-  // Increment count
-  current.count++;
-  store.set(key, current);
+  // Allow request
+  entry.timestamps.push(now);
 
   return {
     success: true,
-    remaining: config.limit - current.count,
-    resetTime: current.resetTime,
+    remaining: config.limit - entry.timestamps.length,
+    resetTime: now + config.windowMs,
   };
 }
 
 /**
- * Get client IP from request headers
+ * Get client IP from request headers.
+ * Handles Vercel's x-forwarded-for (which includes the real client IP)
+ * and falls back to x-real-ip.
  */
 export function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0].trim();
-  }
-
+  // Vercel sets x-real-ip to the actual client IP
   const realIp = request.headers.get("x-real-ip");
   if (realIp) {
     return realIp;
+  }
+
+  // x-forwarded-for may contain multiple IPs: client, proxy1, proxy2
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0].trim();
   }
 
   return "unknown";

@@ -203,12 +203,16 @@ export async function POST(req: Request) {
           }
 
           // Helper function to check if building has amenity by keyword
+          // Uses word-boundary matching to prevent false positives (e.g. "pool" matching "carpool")
           const buildingHasAmenity = (buildingId: string, searchTerm: string): boolean => {
             const buildingAmenities = buildingToAmenityNames.get(buildingId) || [];
             const keywords = AMENITY_KEYWORDS[searchTerm.toLowerCase()] || [searchTerm.toLowerCase()];
 
             return buildingAmenities.some(amenityName =>
-              keywords.some(keyword => amenityName.includes(keyword))
+              keywords.some(keyword => {
+                const pattern = new RegExp(`(^|\\W)${keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\W|$)`, "i");
+                return pattern.test(amenityName);
+              })
             );
           };
 

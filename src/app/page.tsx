@@ -10,11 +10,20 @@ export const metadata: Metadata = {
     url: "https://luxapts.co",
     siteName: "LuxApts",
     type: "website",
+    images: [
+      {
+        url: "https://luxapts.co/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "LuxApts - AI-Powered Luxury Apartment Search",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "LuxApts - AI-Powered Luxury Apartment Search",
     description: "Real-time pricing, instant comparisons, zero hassle.",
+    images: ["https://luxapts.co/og-image.png"],
   },
   alternates: {
     canonical: "https://luxapts.co",
