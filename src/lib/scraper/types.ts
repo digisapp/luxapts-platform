@@ -55,11 +55,30 @@ export interface ScrapeResult {
   ai_tokens_used?: number;
 }
 
+export interface ScrapedImage {
+  url: string;
+  alt_text?: string;
+  category: 'exterior' | 'lobby' | 'amenity' | 'pool' | 'gym' | 'rooftop' | 'common' | 'interior' | 'kitchen' | 'bathroom' | 'bedroom' | 'living' | 'view' | 'floorplan' | 'other';
+  /** Whether this looks like a primary/hero image */
+  is_hero?: boolean;
+  /** Estimated width from srcset or attributes */
+  width?: number;
+  /** Estimated height from srcset or attributes */
+  height?: number;
+}
+
+export interface ImageScrapeResult {
+  building_images: ScrapedImage[];
+  unit_images: ScrapedImage[];
+  gallery_page_url?: string;
+}
+
 export interface ScrapeJobResult {
   building_id: string;
   building_name: string;
   success: boolean;
   units_found: number;
   amenities_found: number;
+  images_found?: number;
   error?: string;
 }

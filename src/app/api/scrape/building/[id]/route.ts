@@ -4,9 +4,12 @@ import {
   scrapeUnitsOnly,
   scrapeAmenitiesOnly,
   scrapeFullBuilding,
+  scrapeImagesOnly,
   updateScrapeStatus,
   saveScrapedUnits,
   saveScrapedAmenities,
+  saveScrapedBuildingImages,
+  saveScrapedUnitImages,
   markUnitsUnavailable,
 } from "@/lib/scraper";
 
@@ -18,7 +21,7 @@ export async function POST(req: Request, context: RouteContext) {
   try {
     const { id: buildingId } = await context.params;
     const body = await req.json().catch(() => ({}));
-    const scrapeType = (body.type as "units" | "amenities" | "full") || "full";
+    const scrapeType = (body.type as "units" | "amenities" | "images" | "full") || "full";
 
     // Verify admin access or cron secret
     const authHeader = req.headers.get("authorization");
@@ -51,7 +54,66 @@ export async function POST(req: Request, context: RouteContext) {
       return NextResponse.json({ error: "Building has no website URL" }, { status: 400 });
     }
 
-    // Perform scrape based on type
+    // Handle image scraping separately since it has a different result shape
+    if (scrapeType === "images") {
+      const imageResult = await scrapeImagesOnly(building.website_url);
+
+      if (!imageResult.success || !imageResult.data) {
+        await updateScrapeStatus(supabase, buildingId, {
+          type: "images",
+          success: false,
+          error: imageResult.error,
+          websiteUrl: building.website_url,
+        });
+
+        return NextResponse.json({
+          success: false,
+          error: imageResult.error,
+          building: { id: buildingId, name: building.name },
+        });
+      }
+
+      const buildingImagesSaved = await saveScrapedBuildingImages(
+        supabase,
+        buildingId,
+        imageResult.data.building_images
+      );
+
+      const unitImagesSaved = await saveScrapedUnitImages(
+        supabase,
+        buildingId,
+        imageResult.data.unit_images
+      );
+
+      const totalImages = buildingImagesSaved + unitImagesSaved;
+
+      await updateScrapeStatus(supabase, buildingId, {
+        type: "images",
+        success: true,
+        imagesFound: totalImages,
+        websiteUrl: building.website_url,
+      });
+
+      return NextResponse.json({
+        success: true,
+        building: { id: buildingId, name: building.name },
+        results: {
+          building_images_found: imageResult.data.building_images.length,
+          building_images_saved: buildingImagesSaved,
+          unit_images_found: imageResult.data.unit_images.length,
+          unit_images_saved: unitImagesSaved,
+          total_saved: totalImages,
+          gallery_page: imageResult.data.gallery_page_url,
+        },
+        metadata: {
+          source_url: building.website_url,
+          scraped_at: new Date().toISOString(),
+          html_length: imageResult.raw_html_length,
+        },
+      });
+    }
+
+    // Perform scrape based on type (units/amenities/full)
     let result;
     if (scrapeType === "units") {
       result = await scrapeUnitsOnly(building.website_url);

@@ -1,7 +1,7 @@
 // Database operations for the scraper
 
 import { SupabaseClient } from "@supabase/supabase-js";
-import { ScrapedUnit, ScrapedAmenity } from "./types";
+import { ScrapedUnit, ScrapedAmenity, ScrapedImage } from "./types";
 
 export async function getBuildingsToScrape(
   supabase: SupabaseClient,
@@ -74,10 +74,11 @@ export async function updateScrapeStatus(
   supabase: SupabaseClient,
   buildingId: string,
   update: {
-    type: "amenities" | "units" | "full";
+    type: "amenities" | "units" | "images" | "full";
     success: boolean;
     error?: string;
     unitsFound?: number;
+    imagesFound?: number;
     websiteUrl?: string;
   }
 ) {
@@ -103,6 +104,15 @@ export async function updateScrapeStatus(
     updateData.units_scrape_error = update.success ? null : update.error;
     if (update.unitsFound !== undefined) {
       updateData.units_found = update.unitsFound;
+    }
+  }
+
+  if (update.type === "images" || update.type === "full") {
+    updateData.images_scraped_at = now;
+    updateData.images_scrape_success = update.success;
+    updateData.images_scrape_error = update.success ? null : update.error;
+    if (update.imagesFound !== undefined) {
+      updateData.images_found = update.imagesFound;
     }
   }
 
@@ -280,9 +290,193 @@ export async function markUnitsUnavailable(
   }
 }
 
+export async function saveScrapedBuildingImages(
+  supabase: SupabaseClient,
+  buildingId: string,
+  images: ScrapedImage[],
+  options: { replaceExisting?: boolean } = {}
+) {
+  const { replaceExisting = true } = options;
+
+  if (images.length === 0) return 0;
+
+  // Building image categories
+  const buildingCategories = new Set(['exterior', 'lobby', 'amenity', 'pool', 'gym', 'rooftop', 'common', 'other']);
+
+  const buildingImages = images.filter(
+    (img) => buildingCategories.has(img.category) || !img.category
+  );
+
+  if (buildingImages.length === 0) return 0;
+
+  if (replaceExisting) {
+    // Remove old Unsplash placeholder images but keep any previously scraped real images
+    // We identify Unsplash images by URL pattern
+    const { data: existing } = await supabase
+      .from("building_images")
+      .select("id, url")
+      .eq("building_id", buildingId);
+
+    if (existing?.length) {
+      const unsplashIds = existing
+        .filter((img) => img.url.includes("unsplash.com"))
+        .map((img) => img.id);
+
+      if (unsplashIds.length > 0) {
+        await supabase
+          .from("building_images")
+          .delete()
+          .in("id", unsplashIds);
+      }
+    }
+  }
+
+  // Check for existing URLs to avoid duplicates
+  const { data: existingUrls } = await supabase
+    .from("building_images")
+    .select("url")
+    .eq("building_id", buildingId);
+
+  const existingUrlSet = new Set(existingUrls?.map((r) => r.url) || []);
+
+  // Find which image should be primary (hero image, or first exterior)
+  const heroIdx = buildingImages.findIndex((img) => img.is_hero);
+  const exteriorIdx = buildingImages.findIndex((img) => img.category === "exterior");
+  const primaryIdx = heroIdx >= 0 ? heroIdx : exteriorIdx >= 0 ? exteriorIdx : 0;
+
+  // Check if building already has a primary image
+  const { data: existingPrimary } = await supabase
+    .from("building_images")
+    .select("id")
+    .eq("building_id", buildingId)
+    .eq("is_primary", true)
+    .limit(1);
+
+  const hasPrimary = (existingPrimary?.length || 0) > 0;
+
+  const rows = buildingImages
+    .filter((img) => !existingUrlSet.has(img.url))
+    .map((img, i) => ({
+      building_id: buildingId,
+      url: img.url,
+      alt_text: img.alt_text || null,
+      category: buildingCategories.has(img.category) ? img.category : "other",
+      is_primary: !hasPrimary && i === primaryIdx,
+      sort_order: i,
+      width: img.width || null,
+      height: img.height || null,
+    }));
+
+  if (rows.length === 0) return 0;
+
+  const { error } = await supabase.from("building_images").insert(rows);
+
+  if (error) {
+    console.error("Error saving building images:", error);
+    return 0;
+  }
+
+  return rows.length;
+}
+
+export async function saveScrapedUnitImages(
+  supabase: SupabaseClient,
+  buildingId: string,
+  images: ScrapedImage[]
+) {
+  const unitCategories = new Set(['interior', 'kitchen', 'bathroom', 'bedroom', 'living', 'view', 'other']);
+
+  const unitImages = images.filter(
+    (img) => unitCategories.has(img.category)
+  );
+
+  if (unitImages.length === 0) return 0;
+
+  // Get all units for this building to distribute images
+  const { data: units } = await supabase
+    .from("units")
+    .select("id, unit_number")
+    .eq("building_id", buildingId)
+    .order("unit_number");
+
+  if (!units?.length) {
+    // No units yet - store as building-level images with "other" category
+    return saveScrapedBuildingImages(supabase, buildingId, unitImages.map((img) => ({
+      ...img,
+      category: "other" as const,
+    })));
+  }
+
+  // Remove old Unsplash images from all units of this building
+  for (const unit of units) {
+    const { data: existing } = await supabase
+      .from("unit_images")
+      .select("id, url")
+      .eq("unit_id", unit.id);
+
+    if (existing?.length) {
+      const unsplashIds = existing
+        .filter((img) => img.url.includes("unsplash.com"))
+        .map((img) => img.id);
+
+      if (unsplashIds.length > 0) {
+        await supabase
+          .from("unit_images")
+          .delete()
+          .in("id", unsplashIds);
+      }
+    }
+  }
+
+  // Distribute unit-level images across all units
+  // (Most building websites show model/sample unit photos, not per-unit photos)
+  let totalSaved = 0;
+
+  for (const unit of units) {
+    // Check existing non-unsplash images
+    const { data: existingUrls } = await supabase
+      .from("unit_images")
+      .select("url")
+      .eq("unit_id", unit.id);
+
+    const existingUrlSet = new Set(existingUrls?.map((r) => r.url) || []);
+
+    const { data: existingPrimary } = await supabase
+      .from("unit_images")
+      .select("id")
+      .eq("unit_id", unit.id)
+      .eq("is_primary", true)
+      .limit(1);
+
+    const hasPrimary = (existingPrimary?.length || 0) > 0;
+
+    const rows = unitImages
+      .filter((img) => !existingUrlSet.has(img.url))
+      .map((img, i) => ({
+        unit_id: unit.id,
+        url: img.url,
+        alt_text: img.alt_text || null,
+        category: unitCategories.has(img.category) ? img.category : "other",
+        is_primary: !hasPrimary && i === 0,
+        sort_order: i,
+        width: img.width || null,
+        height: img.height || null,
+      }));
+
+    if (rows.length > 0) {
+      const { error } = await supabase.from("unit_images").insert(rows);
+      if (!error) {
+        totalSaved += rows.length;
+      }
+    }
+  }
+
+  return totalSaved;
+}
+
 export async function createScrapeJob(
   supabase: SupabaseClient,
-  jobType: "amenities" | "units" | "full",
+  jobType: "amenities" | "units" | "images" | "full",
   scope: { buildingId?: string; cityId?: string }
 ) {
   const { data, error } = await supabase

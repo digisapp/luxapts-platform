@@ -1,8 +1,8 @@
 // HTML fetcher for building websites
 // Handles different website types and anti-bot measures
 
-import { ScrapeResult } from "./types";
-import { extractUnitsWithAI, extractAmenitiesWithAI, extractFullBuildingData } from "./ai-extractor";
+import { ScrapeResult, ImageScrapeResult } from "./types";
+import { extractUnitsWithAI, extractAmenitiesWithAI, extractFullBuildingData, extractImagesWithAI } from "./ai-extractor";
 
 // Common headers to appear as a real browser
 const BROWSER_HEADERS = {
@@ -205,6 +205,96 @@ export async function scrapeAmenitiesOnly(websiteUrl: string): Promise<ScrapeRes
         source_url: sourceUrl,
       },
       raw_html_length: htmlToProcess.length,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+// Try to find the photo gallery page from the main website
+export async function findGalleryPage(websiteUrl: string, mainHtml: string): Promise<string | null> {
+  const patterns = [
+    /href=["']([^"']*(?:gallery|photos|photo-gallery|images|media|virtual-tour)[^"']*)["']/gi,
+    /href=["']([^"']*(?:gallery|photos)[^"']*)["']/gi,
+  ];
+
+  for (const pattern of patterns) {
+    const matches = mainHtml.matchAll(pattern);
+    for (const match of matches) {
+      const galleryPath = match[1];
+      if (galleryPath.startsWith("#")) continue;
+
+      try {
+        const baseUrl = new URL(websiteUrl);
+        const galleryUrl = new URL(galleryPath, baseUrl).href;
+
+        if (/gallery|photos|photo-gallery|images|media|virtual/i.test(galleryUrl)) {
+          return galleryUrl;
+        }
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  return null;
+}
+
+export async function scrapeImagesOnly(websiteUrl: string): Promise<{ success: boolean; data?: ImageScrapeResult; error?: string; raw_html_length?: number }> {
+  try {
+    // Fetch main page
+    const mainResult = await fetchBuildingHTML(websiteUrl);
+    if (!mainResult) {
+      return { success: false, error: "Failed to fetch main page" };
+    }
+
+    // Look for gallery/photos page
+    const galleryPageUrl = await findGalleryPage(websiteUrl, mainResult.html);
+
+    // Also look for amenities page (often has pool/gym photos)
+    const amenitiesPageUrl = await findAmenitiesPage(websiteUrl, mainResult.html);
+
+    // Combine HTML from all relevant pages
+    const pages: string[] = [mainResult.html];
+
+    if (galleryPageUrl) {
+      const galleryResult = await fetchBuildingHTML(galleryPageUrl);
+      if (galleryResult) {
+        pages.push(`<!-- GALLERY PAGE: ${galleryResult.finalUrl} -->\n${galleryResult.html}`);
+      }
+    }
+
+    if (amenitiesPageUrl) {
+      const amenitiesResult = await fetchBuildingHTML(amenitiesPageUrl);
+      if (amenitiesResult) {
+        pages.push(`<!-- AMENITIES PAGE: ${amenitiesResult.finalUrl} -->\n${amenitiesResult.html}`);
+      }
+    }
+
+    // Also try floor plans page for floorplan images
+    const unitsPageUrl = await findUnitsPage(websiteUrl, mainResult.html);
+    if (unitsPageUrl) {
+      const unitsResult = await fetchBuildingHTML(unitsPageUrl);
+      if (unitsResult) {
+        pages.push(`<!-- FLOORPLANS PAGE: ${unitsResult.finalUrl} -->\n${unitsResult.html}`);
+      }
+    }
+
+    const fullHtml = pages.join("\n\n");
+
+    // Extract images with AI
+    const imageData = await extractImagesWithAI(fullHtml, mainResult.finalUrl);
+
+    return {
+      success: true,
+      data: {
+        ...imageData,
+        gallery_page_url: galleryPageUrl || undefined,
+      },
+      raw_html_length: fullHtml.length,
     };
   } catch (error) {
     return {

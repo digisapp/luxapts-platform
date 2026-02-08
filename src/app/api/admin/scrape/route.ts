@@ -39,6 +39,10 @@ export async function GET(req: Request) {
           units_scrape_success,
           units_scrape_error,
           units_found,
+          images_scraped_at,
+          images_scrape_success,
+          images_scrape_error,
+          images_found,
           updated_at
         )
       `)
@@ -101,6 +105,12 @@ export async function GET(req: Request) {
           success: scrapeStatus?.units_scrape_success,
           error: scrapeStatus?.units_scrape_error,
           count: scrapeStatus?.units_found || 0,
+        },
+        images: {
+          scraped_at: scrapeStatus?.images_scraped_at,
+          success: scrapeStatus?.images_scrape_success,
+          error: scrapeStatus?.images_scrape_error,
+          count: scrapeStatus?.images_found || 0,
         },
       };
     });
@@ -190,7 +200,7 @@ export async function POST(req: Request) {
       // Trigger scraping - this just returns the endpoint to call
       // In a real implementation, you might queue this as a background job
 
-      const scrapeType = body.type || "units"; // 'units', 'amenities', or 'full'
+      const scrapeType = body.type || "units"; // 'units', 'amenities', 'images', or 'full'
 
       if (building_ids?.length === 1) {
         // Single building - direct scrape
