@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { getUnitFallbackImages, getBuildingFallbackImage } from "@/lib/images/fallback";
+// Fallback images removed — only listings with real images are returned
 
 interface SearchBody {
   city_slug: string;
@@ -391,7 +391,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 8. Combine and filter by budget
+    // 8. Combine and filter by budget + require real images
     let results = (unitsRes.data || [])
       .map((u) => {
         const pricing = snapByUnit.get(u.id) || null;
@@ -401,6 +401,8 @@ export async function POST(req: Request) {
         return { unit: u, pricing, unitImages, buildingImages, floorplan };
       })
       .filter((row) => {
+        // Must have real images (unit or building level) — hide listings with no images
+        if (row.unitImages.length === 0 && row.buildingImages.length === 0) return false;
         const rent = row.pricing?.rent;
         if (!rent) return false;
         if (typeof body.budget_min === "number" && rent < body.budget_min) return false;
@@ -444,20 +446,10 @@ export async function POST(req: Request) {
         floorplan_id: row.unit.floorplan_id,
       },
       pricing: row.pricing,
-      // Use unit images if available, then building images, then deterministic fallbacks
+      // Use unit images if available, then building images
       images: row.unitImages.length > 0
         ? row.unitImages
-        : row.buildingImages.length > 0
-          ? row.buildingImages
-          : getUnitFallbackImages(
-              row.unit.id,
-              (() => {
-                const b = row.unit.buildings;
-                if (Array.isArray(b)) return b[0]?.name || "Apartment";
-                return (b as { name: string } | null)?.name || "Apartment";
-              })(),
-              row.unit.unit_number,
-            ),
+        : row.buildingImages,
       floorplan: row.floorplan,
     }));
 

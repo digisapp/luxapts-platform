@@ -183,9 +183,9 @@ async function processBuildings(
     bd.unitCount++;
   }
 
-  // Format response
+  // Format response — only include buildings with real images
   const listings = buildings
-    .filter((b) => buildingData[b.id])
+    .filter((b) => buildingData[b.id] && imageByBuilding[b.id])
     .map((b) => {
       const data = buildingData[b.id];
       const neighborhood = Array.isArray(b.neighborhoods)
