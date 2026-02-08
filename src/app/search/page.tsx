@@ -201,6 +201,9 @@ function SearchContent() {
   const [loading, setLoading] = useState(false);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
 
+  // Track listings whose images failed to load in the browser
+  const [brokenImageIds, setBrokenImageIds] = useState<Set<string>>(new Set());
+
   // Map view state
   const [showMap, setShowMap] = useState(true);
   const [highlightedListingId, setHighlightedListingId] = useState<string | null>(null);
@@ -326,6 +329,7 @@ function SearchContent() {
         const data: SearchResponse = await res.json();
         setResults(data.results);
         setCapturedAt(data.captured_at_max);
+        setBrokenImageIds(new Set());
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -931,7 +935,7 @@ function SearchContent() {
                     </p>
                   </div>
                 ) : (
-                  results.map((result) => {
+                  results.filter((r) => !brokenImageIds.has(r.unit.id)).map((result) => {
                     const primaryImage = result.images?.[0];
                     const hasFloorplan = result.floorplan?.layout_image_url;
                     const isHighlighted = highlightedListingId === result.unit.id;
@@ -954,6 +958,9 @@ function SearchContent() {
                                   fill
                                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                  onError={() => {
+                                    setBrokenImageIds((prev) => new Set([...prev, result.unit.id]));
+                                  }}
                                 />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center">
