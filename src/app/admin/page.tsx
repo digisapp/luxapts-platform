@@ -14,6 +14,7 @@ import { ActivityFeed, type ActivityEvent } from "@/components/admin/dashboard/A
 export const dynamic = "force-dynamic";
 
 async function fetchQuickActionCounts(supabase: ReturnType<typeof createAdminClient>) {
+  try {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -78,9 +79,14 @@ async function fetchQuickActionCounts(supabase: ReturnType<typeof createAdminCli
   ).length;
 
   return { newLeadsCount, buildingsNeedImages, staleScrapes, unassignedLeads };
+  } catch (error) {
+    console.error("fetchQuickActionCounts error:", error);
+    return { newLeadsCount: 0, buildingsNeedImages: 0, staleScrapes: 0, unassignedLeads: 0 };
+  }
 }
 
 async function fetchActivityFeed(supabase: ReturnType<typeof createAdminClient>): Promise<ActivityEvent[]> {
+  try {
   const [leadEventsRes, scrapeJobsRes, assignmentsRes] = await Promise.all([
     supabase
       .from("lead_events")
@@ -89,7 +95,7 @@ async function fetchActivityFeed(supabase: ReturnType<typeof createAdminClient>)
       .limit(10),
     supabase
       .from("scrape_jobs")
-      .select("id, type, status, buildings_processed, created_at")
+      .select("id, job_type, status, buildings_processed, created_at")
       .order("created_at", { ascending: false })
       .limit(10),
     supabase
@@ -115,7 +121,7 @@ async function fetchActivityFeed(supabase: ReturnType<typeof createAdminClient>)
     events.push({
       id: `sj-${j.id}`,
       type: "scrape_job",
-      description: `Scrape ${j.type}: ${j.status} (${j.buildings_processed || 0} buildings)`,
+      description: `Scrape ${j.job_type}: ${j.status} (${j.buildings_processed || 0} buildings)`,
       timestamp: j.created_at,
       link: "/admin/scraping",
     });
@@ -137,6 +143,10 @@ async function fetchActivityFeed(supabase: ReturnType<typeof createAdminClient>)
   // Sort by timestamp descending, take top 10
   events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   return events.slice(0, 10);
+  } catch (error) {
+    console.error("fetchActivityFeed error:", error);
+    return [];
+  }
 }
 
 export default async function AdminDashboardPage() {
