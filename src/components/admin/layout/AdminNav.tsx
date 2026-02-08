@@ -11,6 +11,8 @@ import {
   Upload,
   RefreshCw,
   LogOut,
+  Mail,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,6 +22,8 @@ const navLinks = [
   { href: "/admin/leads", label: "Leads", icon: Users, exact: false },
   { href: "/admin/buildings", label: "Buildings", icon: Building2, exact: false },
   { href: "/admin/agents", label: "Agents", icon: FileText, exact: false },
+  { href: "/admin/email", label: "Email", icon: Mail, exact: false },
+  { href: "/admin/conversations", label: "Chat Log", icon: MessageCircle, exact: false },
   { href: "/admin/import", label: "Import", icon: Upload, exact: false },
   { href: "/admin/scraping", label: "Scraping", icon: RefreshCw, exact: false },
   { href: "/admin/settings", label: "Settings", icon: Settings, exact: false },

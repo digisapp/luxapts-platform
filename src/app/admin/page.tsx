@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { fetchDashboardAnalytics } from "@/lib/admin/analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building2, TrendingUp, Calendar } from "lucide-react";
+import { Users, Building2, TrendingUp, Calendar, Mail, MessageCircle, Target } from "lucide-react";
 import { LeadFunnelChart } from "@/components/admin/analytics/LeadFunnelChart";
 import { LeadSourceChart } from "@/components/admin/analytics/LeadSourceChart";
 import { LeadsOverTimeChart } from "@/components/admin/analytics/LeadsOverTimeChart";
@@ -152,8 +152,11 @@ async function fetchActivityFeed(supabase: ReturnType<typeof createAdminClient>)
 export default async function AdminDashboardPage() {
   const supabase = createAdminClient();
 
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
   // Fetch all data in parallel
-  const [analytics, buildingsRes, citiesRes, recentLeads, quickActions, activityFeed] =
+  const [analytics, buildingsRes, citiesRes, recentLeads, quickActions, activityFeed, campaignsRes, chatSessionsRes, chatTodayRes, pipelineRes] =
     await Promise.all([
       fetchDashboardAnalytics(),
       supabase.from("buildings").select("id", { count: "exact" }).eq("status", "active"),
@@ -165,10 +168,31 @@ export default async function AdminDashboardPage() {
         .limit(5),
       fetchQuickActionCounts(supabase),
       fetchActivityFeed(supabase),
+      supabase
+        .from("email_campaigns")
+        .select("id, sent_at", { count: "exact" })
+        .order("sent_at", { ascending: false })
+        .limit(1),
+      supabase
+        .from("chat_sessions")
+        .select("id", { count: "exact", head: true }),
+      supabase
+        .from("chat_sessions")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", todayStart.toISOString()),
+      supabase
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["touring", "applied"]),
     ]);
 
   const activeBuildings = buildingsRes.count || 0;
   const activeCities = citiesRes.count || 0;
+  const campaignsCount = campaignsRes.count || 0;
+  const lastCampaignDate = campaignsRes.data?.[0]?.sent_at;
+  const chatSessionsTotal = chatSessionsRes.count || 0;
+  const chatSessionsToday = chatTodayRes.count || 0;
+  const pipelineCount = pipelineRes.count || 0;
 
   return (
     <div className="space-y-8">
@@ -247,6 +271,50 @@ export default async function AdminDashboardPage() {
             <div className="text-2xl font-bold">{analytics.newLeadsThisWeek}</div>
             <p className="text-xs text-muted-foreground">
               New leads in last 7 days
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Additional Stats */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Emails Sent</CardTitle>
+            <Mail className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{campaignsCount}</div>
+            <p className="text-xs text-muted-foreground">
+              {lastCampaignDate
+                ? `Last campaign: ${new Date(lastCampaignDate).toLocaleDateString()}`
+                : "No campaigns yet"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">AI Chat Sessions</CardTitle>
+            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{chatSessionsTotal}</div>
+            <p className="text-xs text-muted-foreground">
+              {chatSessionsToday} sessions today
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Revenue Pipeline</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pipelineCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Active leads (touring + applied)
             </p>
           </CardContent>
         </Card>

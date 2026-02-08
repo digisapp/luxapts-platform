@@ -6,8 +6,14 @@ export const dynamic = "force-dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/lib/utils";
-import { ArrowLeft, Mail, Phone, Calendar, DollarSign, Bed, Building2 } from "lucide-react";
+import {
+  ArrowLeft, Mail, Phone, Calendar, DollarSign, Bed, Building2,
+  UserPlus, ArrowRight, UserCheck, Send, MessageSquare, MessageCircle,
+} from "lucide-react";
+import { SendEmailDialog } from "@/components/admin/leads/SendEmailDialog";
+import { LeadEmailButton } from "./LeadEmailButton";
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>;
@@ -108,6 +114,22 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
     redirect(`/admin/leads/${id}`);
   }
 
+  // Handle add note
+  async function addNote(formData: FormData) {
+    "use server";
+    const note = formData.get("note") as string;
+    if (!note?.trim()) return;
+    const supabase = createAdminClient();
+
+    await supabase.from("lead_events").insert({
+      lead_id: id,
+      type: "note_added",
+      payload: { note: note.trim() },
+    });
+
+    redirect(`/admin/leads/${id}`);
+  }
+
   const statusColors: Record<string, string> = {
     new: "bg-green-100 text-green-800",
     contacted: "bg-blue-100 text-blue-800",
@@ -116,6 +138,63 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
     leased: "bg-emerald-100 text-emerald-800",
     lost: "bg-gray-100 text-gray-800",
   };
+
+  // Timeline rendering helper
+  function renderEvent(event: { id: string; type: string; payload: Record<string, unknown>; created_at: string }) {
+    const iconMap: Record<string, { icon: typeof UserPlus; color: string; label: string }> = {
+      lead_created: {
+        icon: UserPlus,
+        color: "text-green-600 bg-green-50",
+        label: `Lead created from ${(event.payload?.source as string) || "unknown"}`,
+      },
+      status_changed: {
+        icon: ArrowRight,
+        color: "text-blue-600 bg-blue-50",
+        label: `Status changed to ${(event.payload?.new_status as string) || "unknown"}`,
+      },
+      agent_assigned: {
+        icon: UserCheck,
+        color: "text-purple-600 bg-purple-50",
+        label: "Agent assigned",
+      },
+      email_sent: {
+        icon: Send,
+        color: "text-amber-600 bg-amber-50",
+        label: `Email sent: ${(event.payload?.subject as string) || ""}`,
+      },
+      note_added: {
+        icon: MessageSquare,
+        color: "text-gray-600 bg-gray-50",
+        label: (event.payload?.note as string) || "Note added",
+      },
+      conversation_summary: {
+        icon: MessageCircle,
+        color: "text-cyan-600 bg-cyan-50",
+        label: `Chat: ${(event.payload?.summary as string) || "Conversation recorded"}`,
+      },
+    };
+
+    const config = iconMap[event.type] || {
+      icon: MessageSquare,
+      color: "text-gray-600 bg-gray-50",
+      label: event.type.replace(/_/g, " "),
+    };
+    const Icon = config.icon;
+
+    return (
+      <div key={event.id} className="flex gap-3">
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${config.color}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm">{config.label}</p>
+          <p className="text-xs text-muted-foreground">
+            {new Date(event.created_at).toLocaleString()}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -132,9 +211,14 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
             <h1 className="text-3xl font-bold">{lead.name || "Unnamed Lead"}</h1>
             <p className="text-muted-foreground">Lead ID: {lead.id}</p>
           </div>
-          <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusColors[lead.status]}`}>
-            {lead.status}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusColors[lead.status]}`}>
+              {lead.status}
+            </span>
+            {lead.user_email && (
+              <LeadEmailButton leadId={lead.id} leadName={lead.name} leadEmail={lead.user_email} />
+            )}
+          </div>
         </div>
       </div>
 
@@ -251,26 +335,12 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
           {/* Events Timeline */}
           <Card>
             <CardHeader>
-              <CardTitle>Activity</CardTitle>
+              <CardTitle>Activity Timeline</CardTitle>
             </CardHeader>
             <CardContent>
               {events && events.length > 0 ? (
                 <div className="space-y-4">
-                  {events.map((event) => (
-                    <div key={event.id} className="flex gap-4 border-l-2 pl-4">
-                      <div>
-                        <p className="font-medium text-sm">{event.type.replace(/_/g, " ")}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(event.created_at).toLocaleString()}
-                        </p>
-                        {event.payload && Object.keys(event.payload).length > 0 && (
-                          <pre className="mt-1 text-xs text-muted-foreground">
-                            {JSON.stringify(event.payload, null, 2)}
-                          </pre>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                  {events.map((event) => renderEvent(event))}
                 </div>
               ) : (
                 <p className="text-muted-foreground">No activity yet</p>
@@ -302,6 +372,26 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
                 </select>
                 <Button type="submit" className="mt-3 w-full">
                   Update Status
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Add Note */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Add Note</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form action={addNote}>
+                <Textarea
+                  name="note"
+                  placeholder="Write a note about this lead..."
+                  rows={3}
+                />
+                <Button type="submit" className="mt-3 w-full" variant="outline">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Add Note
                 </Button>
               </form>
             </CardContent>

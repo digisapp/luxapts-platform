@@ -164,7 +164,9 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
-    const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "50", 10) || 50, 1), 100);
+    const search = searchParams.get("search");
+    const source = searchParams.get("source");
+    const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "25", 10) || 25, 1), 100);
     const offset = Math.max(parseInt(searchParams.get("offset") || "0", 10) || 0, 0);
 
     const supabase = createAdminClient();
@@ -183,18 +185,47 @@ export async function GET(req: Request) {
       query = query.eq("status", status);
     }
 
-    const { data, error, count } = await query;
+    if (source) {
+      query = query.eq("source", source);
+    }
 
-    if (error) {
-      console.error("List leads query error:", error);
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,user_email.ilike.%${search}%,user_phone.ilike.%${search}%`);
+    }
+
+    // Fetch leads and status counts in parallel
+    const [leadsResult, statusCountsResult] = await Promise.all([
+      query,
+      supabase.from("leads").select("status"),
+    ]);
+
+    if (leadsResult.error) {
+      console.error("List leads query error:", leadsResult.error);
       return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 
+    // Aggregate status counts
+    const status_counts: Record<string, number> = {
+      new: 0,
+      contacted: 0,
+      touring: 0,
+      applied: 0,
+      leased: 0,
+      lost: 0,
+    };
+    statusCountsResult.data?.forEach((row) => {
+      const s = row.status as string;
+      if (s in status_counts) {
+        status_counts[s]++;
+      }
+    });
+
     return NextResponse.json({
-      leads: data,
-      total: count,
+      leads: leadsResult.data,
+      total: leadsResult.count,
       limit,
       offset,
+      status_counts,
     });
   } catch (error) {
     console.error("List leads error:", error);
