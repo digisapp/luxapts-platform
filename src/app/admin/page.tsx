@@ -8,23 +8,154 @@ import { LeadsOverTimeChart } from "@/components/admin/analytics/LeadsOverTimeCh
 import { BuildingPerformanceTable } from "@/components/admin/analytics/BuildingPerformanceTable";
 import { GeographicInsights } from "@/components/admin/analytics/GeographicInsights";
 import { VisitorAnalytics } from "@/components/admin/analytics/VisitorAnalytics";
+import { QuickActions } from "@/components/admin/dashboard/QuickActions";
+import { ActivityFeed, type ActivityEvent } from "@/components/admin/dashboard/ActivityFeed";
 
 export const dynamic = "force-dynamic";
+
+async function fetchQuickActionCounts(supabase: ReturnType<typeof createAdminClient>) {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const [newLeadsRes, allBuildingsRes, buildingImagesRes, scrapeStatusRes, leadsRes, assignmentsRes] =
+    await Promise.all([
+      // New leads count
+      supabase
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new"),
+      // All active building IDs
+      supabase
+        .from("buildings")
+        .select("id")
+        .eq("status", "active"),
+      // Building images (to find buildings with 0)
+      supabase
+        .from("building_images")
+        .select("building_id"),
+      // Scrape status for stale check
+      supabase
+        .from("building_scrape_status")
+        .select("building_id, units_scraped_at"),
+      // All lead IDs for unassigned check
+      supabase
+        .from("leads")
+        .select("id")
+        .neq("status", "lost")
+        .neq("status", "leased"),
+      // All assignments to find unassigned leads
+      supabase
+        .from("agent_assignments")
+        .select("lead_id"),
+    ]);
+
+  const newLeadsCount = newLeadsRes.count || 0;
+
+  // Buildings with 0 images
+  const buildingIdsWithImages = new Set(
+    (buildingImagesRes.data || []).map((img) => img.building_id)
+  );
+  const buildingsNeedImages = (allBuildingsRes.data || []).filter(
+    (b) => !buildingIdsWithImages.has(b.id)
+  ).length;
+
+  // Stale scrapes: buildings where units_scraped_at is null or > 7 days old
+  const scrapedMap = new Map(
+    (scrapeStatusRes.data || []).map((s) => [s.building_id, s.units_scraped_at])
+  );
+  const staleScrapes = (allBuildingsRes.data || []).filter((b) => {
+    const scrapedAt = scrapedMap.get(b.id);
+    if (!scrapedAt) return true;
+    return new Date(scrapedAt).getTime() < sevenDaysAgo.getTime();
+  }).length;
+
+  // Unassigned leads
+  const assignedLeadIds = new Set(
+    (assignmentsRes.data || []).map((a) => a.lead_id)
+  );
+  const unassignedLeads = (leadsRes.data || []).filter(
+    (l) => !assignedLeadIds.has(l.id)
+  ).length;
+
+  return { newLeadsCount, buildingsNeedImages, staleScrapes, unassignedLeads };
+}
+
+async function fetchActivityFeed(supabase: ReturnType<typeof createAdminClient>): Promise<ActivityEvent[]> {
+  const [leadEventsRes, scrapeJobsRes, assignmentsRes] = await Promise.all([
+    supabase
+      .from("lead_events")
+      .select("id, lead_id, type, payload, created_at")
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("scrape_jobs")
+      .select("id, type, status, buildings_processed, created_at")
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("agent_assignments")
+      .select("id, lead_id, agent_user_id, assigned_at, status, profiles:agent_user_id(full_name)")
+      .order("assigned_at", { ascending: false })
+      .limit(10),
+  ]);
+
+  const events: ActivityEvent[] = [];
+
+  (leadEventsRes.data || []).forEach((e) => {
+    events.push({
+      id: `le-${e.id}`,
+      type: "lead_event",
+      description: `Lead event: ${e.type}`,
+      timestamp: e.created_at,
+      link: `/admin/leads/${e.lead_id}`,
+    });
+  });
+
+  (scrapeJobsRes.data || []).forEach((j) => {
+    events.push({
+      id: `sj-${j.id}`,
+      type: "scrape_job",
+      description: `Scrape ${j.type}: ${j.status} (${j.buildings_processed || 0} buildings)`,
+      timestamp: j.created_at,
+      link: "/admin/scraping",
+    });
+  });
+
+  (assignmentsRes.data || []).forEach((a) => {
+    const profiles = a.profiles as { full_name: string | null } | { full_name: string | null }[] | null;
+    const profile = Array.isArray(profiles) ? profiles[0] : profiles;
+    const agentName = profile?.full_name || "Unknown agent";
+    events.push({
+      id: `aa-${a.id}`,
+      type: "assignment",
+      description: `Lead ${a.status} to ${agentName}`,
+      timestamp: a.assigned_at,
+      link: `/admin/leads/${a.lead_id}`,
+    });
+  });
+
+  // Sort by timestamp descending, take top 10
+  events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return events.slice(0, 10);
+}
 
 export default async function AdminDashboardPage() {
   const supabase = createAdminClient();
 
-  // Fetch analytics and basic stats in parallel
-  const [analytics, buildingsRes, citiesRes, recentLeads] = await Promise.all([
-    fetchDashboardAnalytics(),
-    supabase.from("buildings").select("id", { count: "exact" }).eq("status", "active"),
-    supabase.from("cities").select("id", { count: "exact" }),
-    supabase
-      .from("leads")
-      .select("id, name, user_email, status, created_at, cities:city_id(name)")
-      .order("created_at", { ascending: false })
-      .limit(5),
-  ]);
+  // Fetch all data in parallel
+  const [analytics, buildingsRes, citiesRes, recentLeads, quickActions, activityFeed] =
+    await Promise.all([
+      fetchDashboardAnalytics(),
+      supabase.from("buildings").select("id", { count: "exact" }).eq("status", "active"),
+      supabase.from("cities").select("id", { count: "exact" }),
+      supabase
+        .from("leads")
+        .select("id, name, user_email, status, created_at, cities:city_id(name)")
+        .order("created_at", { ascending: false })
+        .limit(5),
+      fetchQuickActionCounts(supabase),
+      fetchActivityFeed(supabase),
+    ]);
 
   const activeBuildings = buildingsRes.count || 0;
   const activeCities = citiesRes.count || 0;
@@ -33,8 +164,26 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Analytics and insights for LuxApts</p>
+        <p className="text-muted-foreground">Command center for LuxApts</p>
       </div>
+
+      {/* Quick Actions */}
+      <QuickActions
+        newLeadsCount={quickActions.newLeadsCount}
+        buildingsNeedImages={quickActions.buildingsNeedImages}
+        staleScrapes={quickActions.staleScrapes}
+        unassignedLeads={quickActions.unassignedLeads}
+      />
+
+      {/* Activity Feed */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ActivityFeed events={activityFeed} />
+        </CardContent>
+      </Card>
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
