@@ -3,27 +3,21 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { escapeHtml } from "@/lib/utils";
 import { Resend } from "resend";
-import type { CreateLeadRequest, CreateLeadResponse } from "@/types/database";
+import { createLeadSchema } from "@/lib/validations";
+import type { CreateLeadResponse } from "@/types/database";
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as CreateLeadRequest;
+    const rawBody = await req.json();
 
-    // Validate required fields
-    if (!body.source || !body.city_slug) {
-      return NextResponse.json(
-        { error: "source and city_slug are required" },
-        { status: 400 }
-      );
+    // Validate with Zod schema (email, phone, budget, dates, etc.)
+    const parsed = createLeadSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message || "Invalid request";
+      return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    // Validate source
-    if (!["web_form", "chat", "voice"].includes(body.source)) {
-      return NextResponse.json(
-        { error: "Invalid source. Must be web_form, chat, or voice" },
-        { status: 400 }
-      );
-    }
+    const body = parsed.data;
 
     const supabase = createAdminClient();
 
@@ -190,7 +184,11 @@ export async function GET(req: Request) {
     }
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,user_email.ilike.%${search}%,user_phone.ilike.%${search}%`);
+      // Sanitize search input to prevent wildcard injection
+      const sanitized = search.replace(/[%_\\]/g, "");
+      if (sanitized.length > 0) {
+        query = query.or(`name.ilike.%${sanitized}%,user_email.ilike.%${sanitized}%,user_phone.ilike.%${sanitized}%`);
+      }
     }
 
     // Fetch leads and status counts in parallel

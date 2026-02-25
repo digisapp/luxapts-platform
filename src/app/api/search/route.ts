@@ -1,35 +1,20 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-// Fallback images removed — only listings with real images are returned
-
-interface SearchBody {
-  city_slug: string;
-  neighborhood_slugs?: string[];
-  beds_min?: number;
-  beds_max?: number;
-  baths_min?: number;
-  budget_min?: number;
-  budget_max?: number;
-  amenities_any?: string[];
-  amenities_all?: string[];
-  pet_friendly?: boolean;
-  parking_required?: boolean;
-  move_in_date?: string;
-  sort?: "best_match" | "price_low" | "price_high" | "newest" | "sqft_high";
-  limit?: number;
-}
+import { searchRequestSchema } from "@/lib/validations";
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as SearchBody;
-    const limit = Math.min(Math.max(body.limit ?? 50, 1), 500);
+    const rawBody = await req.json();
 
-    if (!body.city_slug) {
-      return NextResponse.json(
-        { error: "city_slug is required" },
-        { status: 400 }
-      );
+    // Validate with Zod schema
+    const parsed = searchRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message || "Invalid request";
+      return NextResponse.json({ error: firstError }, { status: 400 });
     }
+
+    const body = parsed.data;
+    const limit = body.limit ?? 50;
 
     const supabase = createAdminClient();
 

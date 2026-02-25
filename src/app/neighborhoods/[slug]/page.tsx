@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 interface NeighborhoodPageProps {
   params: Promise<{ slug: string }>;
@@ -45,8 +45,7 @@ export default async function NeighborhoodPage({ params }: NeighborhoodPageProps
     notFound();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const citiesData = neighborhood.cities as any;
+  const citiesData = neighborhood.cities as { id: string; name: string; slug: string; state: string } | { id: string; name: string; slug: string; state: string }[] | null;
   const city = Array.isArray(citiesData) ? citiesData[0] : citiesData;
 
   // Get buildings in this neighborhood

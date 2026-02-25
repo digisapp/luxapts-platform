@@ -1,18 +1,8 @@
 import { NextResponse } from "next/server";
 import { createXAIClient, AI_TOOLS, SYSTEM_PROMPT } from "@/lib/xai/client";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+import { chatRequestSchema } from "@/lib/validations";
 import type OpenAI from "openai";
-
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
-interface ChatBody {
-  messages: ChatMessage[];
-  city_slug?: string;
-  building_id?: string;
-}
 
 // Execute tool calls by making internal API requests
 async function executeTool(
@@ -89,29 +79,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = (await req.json()) as ChatBody;
+    const rawBody = await req.json();
 
-    if (!body.messages?.length) {
-      return NextResponse.json(
-        { error: "messages array is required" },
-        { status: 400 }
-      );
+    // Validate request with Zod schema
+    const parsed = chatRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message || "Invalid request";
+      return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    // Validate message limits to prevent cost attacks
-    if (body.messages.length > 50) {
-      return NextResponse.json(
-        { error: "Too many messages. Maximum 50 allowed." },
-        { status: 400 }
-      );
-    }
-    const totalLength = body.messages.reduce((sum, m) => sum + (m.content?.length || 0), 0);
-    if (totalLength > 50000) {
-      return NextResponse.json(
-        { error: "Message content too large." },
-        { status: 400 }
-      );
-    }
+    const body = parsed.data;
 
     // Check if xAI is configured
     if (!process.env.XAI_API_KEY) {
@@ -127,6 +104,8 @@ export async function POST(req: Request) {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
     // Build context-aware system prompt
+    // city_slug and building_id are validated by Zod (slug format / UUID format)
+    // so they cannot contain prompt injection payloads
     let systemPrompt = SYSTEM_PROMPT;
     if (body.city_slug) {
       systemPrompt += `\n\nUser is browsing apartments in ${body.city_slug}. Default to this city for searches.`;

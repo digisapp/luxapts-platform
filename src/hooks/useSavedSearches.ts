@@ -74,8 +74,15 @@ export function useSavedSearches() {
           }
 
           // Convert database searches to local format
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const dbItems: SavedSearch[] = dbSearches.map((s: any) => ({
+          interface SavedSearchRecord {
+            id: string;
+            name: string;
+            query_params?: SavedSearch["filters"];
+            email_alerts?: boolean;
+            created_at: string;
+            updated_at?: string;
+          }
+          const dbItems: SavedSearch[] = dbSearches.map((s: SavedSearchRecord) => ({
             id: s.id,
             name: s.name,
             filters: s.query_params || {},

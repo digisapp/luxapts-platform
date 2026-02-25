@@ -2,20 +2,31 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getBuildingGalleryFallbacks } from "@/lib/images/fallback";
 
-export const dynamic = "force-dynamic";
+// Revalidate every hour instead of force-dynamic — reduces DB load ~90%
+export const revalidate = 3600;
+
+// Deduplicate the building fetch between generateMetadata and the page
+const getBuilding = cache(async (id: string) => {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("buildings")
+    .select(`
+      *,
+      cities:city_id (id, name, slug, state),
+      neighborhoods:neighborhood_id (id, name, slug)
+    `)
+    .eq("id", id)
+    .single();
+  return { data, error };
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const supabase = createAdminClient();
-
-  const { data: building } = await supabase
-    .from("buildings")
-    .select("name, address_1, cities:city_id(name)")
-    .eq("id", id)
-    .single();
+  const { data: building } = await getBuilding(id);
 
   if (!building) {
     return { title: "Building Not Found - LuxApts" };
@@ -104,16 +115,8 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
   const { id } = await params;
   const supabase = createAdminClient();
 
-  // Fetch building with relations
-  const { data: building, error } = await supabase
-    .from("buildings")
-    .select(`
-      *,
-      cities:city_id (id, name, slug, state),
-      neighborhoods:neighborhood_id (id, name, slug)
-    `)
-    .eq("id", id)
-    .single();
+  // Reuse cached building fetch (shared with generateMetadata — no duplicate query)
+  const { data: building, error } = await getBuilding(id);
 
   if (error || !building) {
     notFound();

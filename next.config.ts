@@ -7,7 +7,19 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "*.supabase.in",
+      },
+      {
+        protocol: "https",
+        hostname: "source.unsplash.com",
       },
     ],
   },
@@ -44,7 +56,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com",
+              "script-src 'self' 'unsafe-inline' https://api.mapbox.com",
               "style-src 'self' 'unsafe-inline' https://api.mapbox.com",
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",

@@ -35,12 +35,17 @@ export default function HomeClient() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
-  // Check for speech recognition support
+  // Check for speech recognition support + cleanup on unmount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       setSpeechSupported(!!SpeechRecognition);
     }
+    return () => {
+      // Prevent memory leak: stop recognition if component unmounts while listening
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+    };
   }, []);
 
   const startListening = () => {

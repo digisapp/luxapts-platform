@@ -52,31 +52,44 @@ export function useFavorites() {
         if (response.ok) {
           const { favorites } = await response.json();
 
-          // Merge local favorites to database
+          // Batch sync local favorites to database (single request instead of N)
           const localItems = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as FavoriteItem[];
-          for (const item of localItems) {
-            const exists = favorites.some((f: { building_id?: string; unit_id?: string }) =>
-              f.building_id === item.id || f.unit_id === item.id
-            );
-            if (!exists) {
-              await fetch("/api/favorites", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
+          const newItems = localItems.filter(
+            (item) =>
+              !favorites.some((f: { building_id?: string; unit_id?: string }) =>
+                f.building_id === item.id || f.unit_id === item.id
+              )
+          );
+          if (newItems.length > 0) {
+            await fetch("/api/favorites/batch", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                favorites: newItems.map((item) => ({
                   building_id: item.type === "building" ? item.id : undefined,
                   unit_id: item.type === "unit" ? item.id : undefined,
-                }),
-              });
-            }
+                })),
+              }),
+            });
           }
 
           // Merge database favorites to local state
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const dbItems: FavoriteItem[] = favorites.map((f: any) => {
+          interface FavoriteRecord {
+            building_id?: string;
+            unit_id?: string;
+            created_at: string;
+            buildings?: {
+              name?: string;
+              address_1?: string;
+              neighborhoods?: { name: string } | { name: string }[];
+              cities?: { slug: string } | { slug: string }[];
+            };
+          }
+          const dbItems: FavoriteItem[] = favorites.map((f: FavoriteRecord) => {
             const building = f.buildings;
             return {
-              id: f.building_id || f.unit_id,
-              type: f.building_id ? "building" : "unit",
+              id: f.building_id || f.unit_id || "",
+              type: (f.building_id ? "building" : "unit") as "building" | "unit",
               name: building?.name || "Unknown",
               address: building?.address_1 || "",
               neighborhood: Array.isArray(building?.neighborhoods)
