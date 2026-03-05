@@ -118,3 +118,13 @@ export const batchFavoritesSchema = z.object({
 });
 
 export type BatchFavoritesInput = z.infer<typeof batchFavoritesSchema>;
+
+// ---- Semantic search ----
+
+export const semanticSearchSchema = z.object({
+  query: z.string().min(1, "Search query is required").max(500, "Query too long"),
+  city_slug: citySlugSchema.optional(),
+  limit: z.number().int().min(1).max(20).optional(),
+});
+
+export type SemanticSearchInput = z.infer<typeof semanticSearchSchema>;

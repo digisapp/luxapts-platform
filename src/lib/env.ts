@@ -9,6 +9,8 @@ export const env = {
   // xAI (optional - only needed for chat/AI features)
   XAI_API_KEY: process.env.XAI_API_KEY || "",
   XAI_BASE_URL: process.env.XAI_BASE_URL || "https://api.x.ai/v1",
+  XAI_MANAGEMENT_API_KEY: process.env.XAI_MANAGEMENT_API_KEY || "",
+  XAI_COLLECTION_ID: process.env.XAI_COLLECTION_ID || "",
 
   // Resend (optional - only needed for email features)
   RESEND_API_KEY: process.env.RESEND_API_KEY || "",
@@ -60,6 +62,7 @@ export function assertEnv() {
   if (process.env.NODE_ENV === "development") {
     const optional = [
       { key: "XAI_API_KEY", feature: "AI chat" },
+      { key: "XAI_COLLECTION_ID", feature: "Semantic search (RAG)" },
       { key: "RESEND_API_KEY", feature: "Email notifications" },
       { key: "NEXT_PUBLIC_MAPBOX_TOKEN", feature: "Map display" },
       { key: "NEXT_PUBLIC_SIMLI_API_KEY", feature: "Simli avatar" },
@@ -79,6 +82,13 @@ export function assertEnv() {
  */
 export function isXAIConfigured(): boolean {
   return !!process.env.XAI_API_KEY;
+}
+
+/**
+ * Check if xAI Collections (RAG) is configured
+ */
+export function isCollectionsConfigured(): boolean {
+  return !!process.env.XAI_API_KEY && !!process.env.XAI_COLLECTION_ID;
 }
 
 /**

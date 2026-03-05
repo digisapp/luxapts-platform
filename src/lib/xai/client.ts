@@ -107,6 +107,29 @@ export const AI_TOOLS: OpenAI.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "search_knowledge",
+      description:
+        "Search the building knowledge base using natural language. Best for descriptive or vague queries like 'modern finishes with a view' or 'quiet building with a pool'. Returns relevant building descriptions and details.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description:
+              "Natural language search query describing what the user is looking for",
+          },
+          city_slug: {
+            type: "string",
+            description: "Optional city slug to narrow results (e.g., miami, nyc)",
+          },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "create_lead",
       description:
         "Create a lead record when user wants to schedule a tour, get more info, or connect with an agent.",
@@ -160,8 +183,10 @@ IMPORTANT RULES:
 4. Be helpful and conversational, but focused on finding the right apartment
 
 When users ask about apartments:
+- For specific filter queries (beds, price, city), use search_listings
+- For descriptive or vague queries ("modern finishes", "quiet with a view", "luxury with spa"), use search_knowledge first to discover matching buildings
+- You can combine both: use search_knowledge to discover buildings, then search_listings for live pricing and availability
 - Ask clarifying questions about budget, location, beds/baths, move-in date
-- Use search_listings to find matching units
 - Present results clearly with key details (price, beds, location, amenities)
 - Offer to compare buildings if the user is considering multiple options
 

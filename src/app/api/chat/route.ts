@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createXAIClient, AI_TOOLS, SYSTEM_PROMPT } from "@/lib/xai/client";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { chatRequestSchema } from "@/lib/validations";
+import { searchDocuments } from "@/lib/xai/collections";
 import type OpenAI from "openai";
 
 // Execute tool calls by making internal API requests
@@ -35,6 +36,19 @@ async function executeTool(
           method: "GET",
         });
         break;
+
+      case "search_knowledge": {
+        const collectionId = process.env.XAI_COLLECTION_ID;
+        if (!collectionId) {
+          return { message: "Knowledge base not configured. Use search_listings for structured search instead." };
+        }
+        const results = await searchDocuments(
+          args.query as string,
+          [collectionId],
+          "hybrid"
+        );
+        return results;
+      }
 
       case "create_lead":
         response = await fetch(`${baseUrl}/api/leads`, {
