@@ -13,6 +13,7 @@ import {
   LogOut,
   Mail,
   MessageCircle,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ const navLinks = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/leads", label: "Leads", icon: Users, exact: false },
   { href: "/admin/buildings", label: "Buildings", icon: Building2, exact: false },
+  { href: "/admin/data-quality", label: "Data Quality", icon: BarChart3, exact: false },
   { href: "/admin/agents", label: "Agents", icon: FileText, exact: false },
   { href: "/admin/email", label: "Email", icon: Mail, exact: false },
   { href: "/admin/conversations", label: "Chat Log", icon: MessageCircle, exact: false },
