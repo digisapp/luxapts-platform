@@ -112,7 +112,7 @@ export default function ComparePage() {
       <Header />
 
       <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto px-4 pt-20 pb-8 md:pt-24">
+        <div className="container mx-auto px-4 pt-20 pb-24 md:pt-24 lg:pb-8">
           <Link
             href="/search"
             className="mb-4 md:mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"

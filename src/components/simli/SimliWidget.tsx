@@ -30,24 +30,24 @@ export function SimliWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-24 right-6 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-lg hover:from-violet-500 hover:to-purple-600 transition-all hover:scale-105 group ring-2 ring-white/20"
+          className="fixed bottom-36 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-lg hover:from-violet-500 hover:to-purple-600 transition-all hover:scale-105 group ring-2 ring-white/20 lg:bottom-24 lg:right-6 lg:h-16 lg:w-16"
           aria-label="Talk to Lexi"
         >
-          <Video className="h-7 w-7" />
+          <Video className="h-6 w-6 lg:h-7 lg:w-7" />
           <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 ring-2 ring-white">
             <Sparkles className="h-3 w-3" />
           </span>
 
-          {/* Tooltip */}
-          <span className="absolute right-full mr-3 px-3 py-1.5 bg-zinc-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Talk to Lexi 🎥
+          {/* Tooltip - hidden on mobile */}
+          <span className="absolute right-full mr-3 px-3 py-1.5 bg-zinc-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden lg:block">
+            Talk to Lexi
           </span>
         </button>
       )}
 
       {/* Video Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-40 w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="fixed bottom-20 right-4 z-40 w-[calc(100vw-2rem)] max-w-xs bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden lg:bottom-24 lg:right-6 lg:w-80">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-gradient-to-r from-violet-900/50 to-purple-900/50">
             <div className="flex items-center gap-2">

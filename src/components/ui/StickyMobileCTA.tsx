@@ -19,7 +19,7 @@ export function StickyMobileCTA({
   price,
 }: StickyMobileCTAProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-30 lg:hidden">
       <div className="bg-background/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-pb">
         <div className="flex items-center justify-between gap-4">
           {price && (

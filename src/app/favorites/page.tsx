@@ -45,7 +45,7 @@ export default function FavoritesPage() {
       <Header />
 
       <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto px-4 pt-20 pb-8 md:pt-24">
+        <div className="container mx-auto px-4 pt-20 pb-24 md:pt-24 lg:pb-8">
           <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Saved Items</h1>
 
           <div className="grid gap-6 lg:gap-8 lg:grid-cols-2">

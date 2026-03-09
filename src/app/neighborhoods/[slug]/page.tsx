@@ -130,7 +130,7 @@ export default async function NeighborhoodPage({ params }: NeighborhoodPageProps
     <div className="flex min-h-screen flex-col">
       <Header />
 
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-16 pb-20 lg:pb-0">
         {/* Hero */}
         <div className="bg-gradient-to-b from-zinc-900 to-black py-16 px-6">
           <div className="max-w-6xl mx-auto">

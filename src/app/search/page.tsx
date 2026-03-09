@@ -428,7 +428,7 @@ function SearchContent() {
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px]" />
         </div>
 
-        <div className="container mx-auto px-4 pt-20 pb-8 md:pt-24">
+        <div className="container mx-auto px-4 pt-20 pb-24 md:pt-24 lg:pb-8">
           {/* AI Search Bar */}
           <div className="mb-6 md:mb-8">
             {/* Mobile: Search input with AI button */}

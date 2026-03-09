@@ -26,6 +26,18 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   const handleSignOut = async () => {
     await signOut();
     setUserMenuOpen(false);
@@ -97,7 +109,7 @@ export function Header() {
                     href="/favorites"
                     role="menuitem"
                     onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    className="flex items-center gap-2 px-4 py-3 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
                     <Heart className="h-4 w-4" />
                     Saved Listings
@@ -106,7 +118,7 @@ export function Header() {
                     href="/account"
                     role="menuitem"
                     onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    className="flex items-center gap-2 px-4 py-3 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
                     <Settings className="h-4 w-4" />
                     Account Settings
@@ -142,7 +154,7 @@ export function Header() {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
+          className="md:hidden flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors -mr-2"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? (

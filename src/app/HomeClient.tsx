@@ -134,13 +134,13 @@ export default function HomeClient() {
               <span className="text-sm text-white/70">AI-Powered Search</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-medium tracking-tight text-white mb-8 animate-fade-in [animation-delay:100ms]">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-medium tracking-tight text-white mb-6 sm:mb-8 animate-fade-in [animation-delay:100ms]">
               Find your
               <br />
               <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">perfect home</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in [animation-delay:200ms]">
+            <p className="text-base sm:text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed animate-fade-in [animation-delay:200ms]">
               Real-time pricing, instant comparisons, zero hassle.
             </p>
 
@@ -155,15 +155,15 @@ export default function HomeClient() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Try: '2 bedroom in Miami under $3,500'"
-                    className="w-full h-14 px-6 pr-36 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all duration-300"
+                    placeholder="2 bedroom in Miami under $3,500"
+                    className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-36 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white text-sm sm:text-base placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all duration-300"
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2">
                     {/* Voice Search Button */}
                     {speechSupported && (
                       <button
                         onClick={isListening ? stopListening : startListening}
-                        className={`h-10 w-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center transition-all duration-300 ${
                           isListening
                             ? "bg-red-500 text-white animate-pulse"
                             : "bg-white/[0.08] text-white/60 hover:bg-white/[0.15] hover:text-white"
@@ -176,10 +176,10 @@ export default function HomeClient() {
                     {/* Search Button */}
                     <button
                       onClick={handleSearch}
-                      className="h-10 px-5 rounded-full bg-white text-black font-medium text-sm flex items-center gap-2 hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all duration-300"
+                      className="h-9 w-9 sm:h-10 sm:w-auto sm:px-5 rounded-full bg-white text-black font-medium text-sm flex items-center justify-center gap-2 hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all duration-300"
                     >
-                      Search
                       <ArrowRight className="h-4 w-4" />
+                      <span className="hidden sm:inline">Search</span>
                     </button>
                   </div>
                 </div>
@@ -187,12 +187,12 @@ export default function HomeClient() {
             </div>
 
             {/* Quick links - Glass Pills */}
-            <div className="flex flex-wrap justify-center gap-3 text-sm animate-fade-in [animation-delay:400ms]">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 text-sm animate-fade-in [animation-delay:400ms]">
               {FEATURED_CITIES.map((city, index) => (
                 <Link
                   key={city.slug}
                   href={`/search?city=${city.slug}`}
-                  className="px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] text-white/50 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-300"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] text-white/50 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-300 text-xs sm:text-sm"
                   style={{ animationDelay: `${400 + index * 50}ms` }}
                 >
                   {city.name}
