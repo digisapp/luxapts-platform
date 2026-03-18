@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { isValidUUID } from "@/lib/utils";
+import { apiError } from "@/lib/api-helpers";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -11,7 +11,7 @@ export async function PATCH(req: Request, context: RouteContext) {
   const { id } = await context.params;
 
   if (!isValidUUID(id)) {
-    return NextResponse.json({ error: "Invalid assignment ID" }, { status: 400 });
+    return apiError("Invalid assignment ID");
   }
 
   // Get current user
@@ -22,17 +22,14 @@ export async function PATCH(req: Request, context: RouteContext) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError("Unauthorized", 401);
   }
 
   const body = await req.json();
   const { status } = body;
 
   if (!status || !["accepted", "declined"].includes(status)) {
-    return NextResponse.json(
-      { error: "Status must be 'accepted' or 'declined'" },
-      { status: 400 }
-    );
+    return apiError("Status must be 'accepted' or 'declined'");
   }
 
   const adminClient = createAdminClient();
@@ -45,18 +42,15 @@ export async function PATCH(req: Request, context: RouteContext) {
     .single();
 
   if (fetchError || !assignment) {
-    return NextResponse.json({ error: "Assignment not found" }, { status: 404 });
+    return apiError("Assignment not found", 404);
   }
 
   if (assignment.agent_user_id !== user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return apiError("Forbidden", 403);
   }
 
   if (assignment.status !== "assigned") {
-    return NextResponse.json(
-      { error: "Assignment already responded to" },
-      { status: 400 }
-    );
+    return apiError("Assignment already responded to");
   }
 
   // Update assignment status
@@ -67,10 +61,7 @@ export async function PATCH(req: Request, context: RouteContext) {
 
   if (updateError) {
     console.error("Assignment update error:", updateError);
-    return NextResponse.json(
-      { error: "Failed to update assignment" },
-      { status: 500 }
-    );
+    return apiError("Failed to update assignment", 500);
   }
 
   // Log the event

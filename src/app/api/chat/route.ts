@@ -3,6 +3,7 @@ import { createXAIClient, AI_TOOLS, SYSTEM_PROMPT } from "@/lib/xai/client";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { chatRequestSchema } from "@/lib/validations";
 import { executeTool } from "@/lib/xai/tool-executor";
+import { apiError } from "@/lib/api-helpers";
 import type OpenAI from "openai";
 
 export async function POST(req: Request) {
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     const parsed = chatRequestSchema.safeParse(rawBody);
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message || "Invalid request";
-      return NextResponse.json({ error: firstError }, { status: 400 });
+      return apiError(firstError);
     }
 
     const body = parsed.data;
@@ -124,9 +125,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Chat error:", error);
-    return NextResponse.json(
-      { error: "Failed to process chat message" },
-      { status: 500 }
-    );
+    return apiError("Failed to process chat message", 500);
   }
 }

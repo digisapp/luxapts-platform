@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { apiError } from "@/lib/api-helpers";
+import { getFirstRelation } from "@/lib/db-helpers";
 
 export async function GET(req: Request) {
   const auth = await checkAdminAuth();
   if (!auth.isAdmin) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
+    return apiError(auth.error || "Unauthorized", auth.status);
   }
 
   try {
@@ -76,11 +78,8 @@ export async function GET(req: Request) {
     buildingViews.data?.forEach((bv) => {
       const id = bv.building_id;
       if (!buildingViewCounts[id]) {
-        // Handle both array and object return types from Supabase
-        const buildingsData = bv.buildings;
-        const building = Array.isArray(buildingsData) ? buildingsData[0] : buildingsData;
-        const neighborhoods = building?.neighborhoods;
-        const neighborhood = Array.isArray(neighborhoods) ? neighborhoods[0] : neighborhoods;
+        const building = getFirstRelation(bv.buildings);
+        const neighborhood = getFirstRelation(building?.neighborhoods);
         buildingViewCounts[id] = {
           name: building?.name || "Unknown",
           neighborhood: neighborhood?.name || null,
@@ -191,6 +190,6 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("Analytics API error:", error);
-    return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });
+    return apiError("Failed to fetch analytics", 500);
   }
 }

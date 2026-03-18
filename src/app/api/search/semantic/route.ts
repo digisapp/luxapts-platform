@@ -3,6 +3,7 @@ import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { semanticSearchSchema } from "@/lib/validations";
 import { searchDocuments } from "@/lib/xai/collections";
 import { createAdminClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/api-helpers";
 
 export async function POST(req: Request) {
   try {
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
     const parsed = semanticSearchSchema.safeParse(rawBody);
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message || "Invalid request";
-      return NextResponse.json({ error: firstError }, { status: 400 });
+      return apiError(firstError);
     }
 
     const { query, city_slug, limit = 10 } = parsed.data;
@@ -71,10 +72,7 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Semantic search DB error:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch building details" },
-        { status: 500 }
-      );
+      return apiError("Failed to fetch building details", 500);
     }
 
     // Attach relevance scores from search results
@@ -101,9 +99,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Semantic search error:", error);
-    return NextResponse.json(
-      { error: "Failed to perform semantic search" },
-      { status: 500 }
-    );
+    return apiError("Failed to perform semantic search", 500);
   }
 }

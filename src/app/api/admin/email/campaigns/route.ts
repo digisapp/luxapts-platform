@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { apiError } from "@/lib/api-helpers";
 
 export async function GET() {
   try {
     const auth = await checkAdminAuth();
     if (!auth.isAdmin) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
+      return apiError(auth.error || "Unauthorized", auth.status);
     }
 
     const supabase = createAdminClient();
@@ -19,7 +20,7 @@ export async function GET() {
 
     if (error) {
       console.error("List campaigns error:", error);
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      return apiError("Internal server error", 500);
     }
 
     return NextResponse.json({ campaigns: data || [] });

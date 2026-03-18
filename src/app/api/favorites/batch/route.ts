@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { batchFavoritesSchema } from "@/lib/validations";
+import { apiError } from "@/lib/api-helpers";
 
 // POST - Batch sync favorites (reduces N+1 API calls to 1)
 export async function POST(req: Request) {
@@ -11,14 +12,14 @@ export async function POST(req: Request) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("Unauthorized", 401);
     }
 
     const rawBody = await req.json();
     const parsed = batchFavoritesSchema.safeParse(rawBody);
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message || "Invalid request";
-      return NextResponse.json({ error: firstError }, { status: 400 });
+      return apiError(firstError);
     }
 
     const { favorites } = parsed.data;
@@ -56,15 +57,12 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Batch favorites insert error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error.message, 500);
     }
 
     return NextResponse.json({ added: newFavorites.length }, { status: 201 });
   } catch (error) {
     console.error("Batch favorites error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }

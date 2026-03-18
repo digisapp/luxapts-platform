@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/api-helpers";
 
 export async function GET(
   req: Request,
@@ -17,7 +18,7 @@ export async function GET(
       .single();
 
     if (cityRes.error || !cityRes.data) {
-      return NextResponse.json({ error: "City not found" }, { status: 404 });
+      return apiError("City not found", 404);
     }
 
     // Then get neighborhoods
@@ -28,7 +29,7 @@ export async function GET(
       .order("name");
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error.message, 500);
     }
 
     return NextResponse.json({
@@ -37,9 +38,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("List neighborhoods error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }

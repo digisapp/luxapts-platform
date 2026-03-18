@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/api-helpers";
+import { getFirstRelation } from "@/lib/db-helpers";
 
 interface UnitInfo {
   beds: number;
@@ -22,12 +24,11 @@ interface PriceSnapshot {
 }
 
 function normalizeSnapshot(raw: RawPriceSnapshot): PriceSnapshot {
-  const unit = Array.isArray(raw.units) ? raw.units[0] : raw.units;
   return {
     unit_id: raw.unit_id,
     rent: raw.rent,
     captured_at: raw.captured_at,
-    unit: unit || undefined,
+    unit: getFirstRelation(raw.units) || undefined,
   };
 }
 
@@ -51,7 +52,7 @@ export async function GET(
       .single();
 
     if (buildingError || !building) {
-      return NextResponse.json({ error: "Building not found" }, { status: 404 });
+      return apiError("Building not found", 404);
     }
 
     // Get units for this building
@@ -94,7 +95,7 @@ export async function GET(
       .order("captured_at", { ascending: true });
 
     if (snapshotsError) {
-      return NextResponse.json({ error: snapshotsError.message }, { status: 500 });
+      return apiError(snapshotsError.message, 500);
     }
 
     // Normalize snapshots to handle Supabase array/object differences
@@ -174,9 +175,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Price history error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }

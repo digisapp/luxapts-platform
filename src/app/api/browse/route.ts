@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/api-helpers";
 
 interface BrowseBody {
   city_slug?: string;
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     const { data: buildings, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error.message, 500);
     }
 
     // Get building facts for all buildings (rent ranges, images)
@@ -87,10 +88,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Browse error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }
 

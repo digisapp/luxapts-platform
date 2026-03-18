@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
+import { apiError } from "@/lib/api-helpers";
 
 export async function POST(req: Request) {
   try {
     const auth = await checkAdminAuth();
     if (!auth.isAdmin) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
+      return apiError(auth.error || "Unauthorized", auth.status);
     }
 
     const body = await req.json();
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
     };
 
     if (!subject || !body_html) {
-      return NextResponse.json({ error: "subject and body_html required" }, { status: 400 });
+      return apiError("subject and body_html required");
     }
 
     const supabase = createAdminClient();
@@ -43,12 +44,12 @@ export async function POST(req: Request) {
 
     if (leadsError) {
       console.error("Query leads error:", leadsError);
-      return NextResponse.json({ error: "Failed to query leads" }, { status: 500 });
+      return apiError("Failed to query leads", 500);
     }
 
     const recipients = (leads || []).filter((l) => l.user_email);
     if (recipients.length === 0) {
-      return NextResponse.json({ error: "No recipients match the filter" }, { status: 400 });
+      return apiError("No recipients match the filter");
     }
 
     // Send via Resend batch (chunks of 100)
@@ -103,6 +104,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Send campaign error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return apiError("Internal server error", 500);
   }
 }

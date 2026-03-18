@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { apiError } from "@/lib/api-helpers";
 
 // Use anon key for public tracking (RLS allows inserts)
 const supabase = createClient(
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
     const deviceType = getDeviceType(userAgent);
 
     if (!body.session_id || !body.type) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return apiError("Missing required fields");
     }
 
     switch (body.type) {
@@ -185,6 +186,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Analytics tracking error:", error);
-    return NextResponse.json({ error: "Failed to track" }, { status: 500 });
+    return apiError("Failed to track", 500);
   }
 }

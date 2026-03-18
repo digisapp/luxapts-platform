@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isValidUUID } from "@/lib/utils";
+import { apiError } from "@/lib/api-helpers";
 
 export async function GET(
   req: Request,
@@ -11,7 +12,7 @@ export async function GET(
 
     // Validate UUID to prevent invalid queries
     if (!isValidUUID(id)) {
-      return NextResponse.json({ error: "Invalid building ID" }, { status: 400 });
+      return apiError("Invalid building ID");
     }
 
     const supabase = createAdminClient();
@@ -28,7 +29,7 @@ export async function GET(
       .single();
 
     if (buildingRes.error || !buildingRes.data) {
-      return NextResponse.json({ error: "Building not found" }, { status: 404 });
+      return apiError("Building not found", 404);
     }
 
     // Fetch amenities, floorplans, units, and facts in parallel
@@ -94,9 +95,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Get building error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }
