@@ -52,8 +52,8 @@ export function ShareButton({ title, text, url, className }: ShareButtonProps) {
           text: shareText,
           url: shareUrl,
         });
-      } catch (err) {
-        console.log("Share cancelled");
+      } catch {
+        // Share cancelled by user
       }
     }
   };

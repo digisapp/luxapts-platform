@@ -41,6 +41,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Supabase
+supabase/.temp/
+
 # Python (voice-agent)
 voice-agent/venv/
 voice-agent/__pycache__/

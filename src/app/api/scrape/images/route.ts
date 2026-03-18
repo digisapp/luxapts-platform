@@ -123,8 +123,6 @@ export async function POST(req: Request) {
 
     for (const building of toScrape) {
       try {
-        console.log(`[Image Scrape] Processing: ${building.name} (${building.website_url})`);
-
         const imageResult = await scrapeImagesOnly(building.website_url!);
 
         if (!imageResult.success || !imageResult.data) {
@@ -176,7 +174,6 @@ export async function POST(req: Request) {
         });
 
         totalSuccess++;
-        console.log(`[Image Scrape] ${building.name}: ${imagesSaved} images saved`);
       } catch (error) {
         const errMsg = error instanceof Error ? error.message : "Unknown error";
         results.push({

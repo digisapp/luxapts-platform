@@ -116,9 +116,6 @@ export function ChatWidget() {
               }
             } catch (parseError) {
               // Skip invalid JSON lines
-              if (line.slice(6).trim()) {
-                console.debug("Skipping non-JSON chunk:", line.slice(6));
-              }
             }
           }
         }
