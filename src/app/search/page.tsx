@@ -18,6 +18,7 @@ import { formatPrice, cn } from "@/lib/utils";
 import { SearchMap } from "@/components/map/SearchMap";
 import { CompareButton } from "@/components/compare/CompareButton";
 import { FavoriteButton } from "@/components/listings/FavoriteButton";
+import { AMENITY_OPTIONS } from "@/lib/constants/amenities";
 
 interface Neighborhood {
   slug: string;
@@ -85,91 +86,7 @@ interface ParsedFilters {
   summary?: string;
 }
 
-// Available amenities for filtering - organized by category
-const AMENITY_OPTIONS = [
-  // Most Popular (top of list)
-  { name: "Pool", icon: "waves", category: "popular" },
-  { name: "Gym", icon: "dumbbell", category: "popular" },
-  { name: "Washer Dryer", icon: "shirt", category: "popular" },
-  { name: "Doorman", icon: "shield", category: "popular" },
-  { name: "Rooftop", icon: "sun", category: "popular" },
-  { name: "Concierge", icon: "user", category: "popular" },
-
-  // In-Unit Features
-  { name: "Balcony", icon: "door-open", category: "in-unit" },
-  { name: "Walk-in Closet", icon: "box", category: "in-unit" },
-  { name: "Hardwood Floors", icon: "grid", category: "in-unit" },
-  { name: "High Ceilings", icon: "maximize", category: "in-unit" },
-  { name: "Stainless Steel", icon: "utensils", category: "in-unit" },
-  { name: "Smart Home", icon: "smartphone", category: "in-unit" },
-  { name: "Fireplace", icon: "flame", category: "in-unit" },
-  { name: "Den", icon: "briefcase", category: "in-unit" },
-
-  // Wellness & Fitness
-  { name: "Hot Tub", icon: "droplet", category: "wellness" },
-  { name: "Cold Plunge", icon: "snowflake", category: "wellness" },
-  { name: "Sauna", icon: "thermometer", category: "wellness" },
-  { name: "Steam Room", icon: "cloud", category: "wellness" },
-  { name: "Spa", icon: "sparkles", category: "wellness" },
-  { name: "Yoga", icon: "flower", category: "wellness" },
-
-  // Sports & Recreation
-  { name: "Basketball", icon: "circle", category: "sports" },
-  { name: "Tennis", icon: "target", category: "sports" },
-  { name: "Golf", icon: "flag", category: "sports" },
-  { name: "Spin", icon: "bike", category: "sports" },
-  { name: "Running Track", icon: "footprints", category: "sports" },
-  { name: "Boxing", icon: "target", category: "sports" },
-  { name: "Rock Climbing", icon: "mountain", category: "sports" },
-
-  // Pet
-  { name: "Pet Spa", icon: "paw-print", category: "pet" },
-  { name: "Dog Park", icon: "paw-print", category: "pet" },
-
-  // Social & Entertainment
-  { name: "Coworking", icon: "briefcase", category: "social" },
-  { name: "Game Room", icon: "gamepad", category: "social" },
-  { name: "Movie Theater", icon: "film", category: "social" },
-  { name: "Lounge", icon: "sofa", category: "social" },
-  { name: "Library", icon: "book", category: "social" },
-  { name: "Wine Room", icon: "wine", category: "social" },
-  { name: "Private Dining", icon: "utensils", category: "social" },
-  { name: "Podcast", icon: "mic", category: "social" },
-  { name: "Karaoke", icon: "mic", category: "social" },
-
-  // Outdoor
-  { name: "BBQ", icon: "flame", category: "outdoor" },
-  { name: "Garden", icon: "tree", category: "outdoor" },
-  { name: "Cabana", icon: "umbrella", category: "outdoor" },
-  { name: "Fire Pit", icon: "flame", category: "outdoor" },
-  { name: "Pool Deck", icon: "sun", category: "outdoor" },
-
-  // Services
-  { name: "Valet", icon: "car", category: "services" },
-  { name: "Package Room", icon: "package", category: "services" },
-  { name: "Dry Cleaning", icon: "shirt", category: "services" },
-
-  // Parking & Transportation
-  { name: "Parking", icon: "car", category: "parking" },
-  { name: "EV Charging", icon: "zap", category: "parking" },
-  { name: "Bike Storage", icon: "bike", category: "parking" },
-
-  // Family
-  { name: "Playroom", icon: "smile", category: "family" },
-  { name: "Daycare", icon: "baby", category: "family" },
-
-  // Views
-  { name: "City View", icon: "building", category: "views" },
-  { name: "Water View", icon: "waves", category: "views" },
-  { name: "Park View", icon: "tree", category: "views" },
-
-  // Additional In-Unit
-  { name: "Floor To Ceiling Windows", icon: "maximize", category: "in-unit" },
-  { name: "Granite", icon: "square", category: "in-unit" },
-  { name: "Central Air", icon: "wind", category: "in-unit" },
-  { name: "Soaking Tub", icon: "droplet", category: "in-unit" },
-  { name: "Double Vanity", icon: "square", category: "in-unit" },
-];
+// AMENITY_OPTIONS imported from @/lib/constants/amenities
 
 function SearchContent() {
   const searchParams = useSearchParams();

@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { fetchDashboardAnalytics } from "@/lib/admin/analytics";
+import { getFirstRelation } from "@/lib/db-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, TrendingUp, Calendar, Mail, MessageCircle, Target } from "lucide-react";
 import { LeadFunnelChart } from "@/components/admin/analytics/LeadFunnelChart";
@@ -128,8 +129,7 @@ async function fetchActivityFeed(supabase: ReturnType<typeof createAdminClient>)
   });
 
   (assignmentsRes.data || []).forEach((a) => {
-    const profiles = a.profiles as { full_name: string | null } | { full_name: string | null }[] | null;
-    const profile = Array.isArray(profiles) ? profiles[0] : profiles;
+    const profile = getFirstRelation(a.profiles as { full_name: string | null } | { full_name: string | null }[] | null);
     const agentName = profile?.full_name || "Unknown agent";
     events.push({
       id: `aa-${a.id}`,
@@ -398,10 +398,7 @@ export default async function AdminDashboardPage() {
                     <p className="font-medium">{lead.name || "Unnamed Lead"}</p>
                     <p className="text-sm text-muted-foreground">
                       {lead.user_email || "No email"} •{" "}
-                      {(() => {
-                        const city = lead.cities as { name: string } | { name: string }[] | null;
-                        return Array.isArray(city) ? city[0]?.name : city?.name;
-                      })() || "Unknown city"}
+                      {getFirstRelation(lead.cities as { name: string } | { name: string }[] | null)?.name || "Unknown city"}
                     </p>
                   </div>
                   <div className="text-right">

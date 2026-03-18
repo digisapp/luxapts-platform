@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, X, Send, Loader2, Sparkles, Building2, Minus } from "lucide-react";
+import { parseSSEStream } from "@/lib/chat/stream-parser";
 
 interface Message {
   role: "user" | "assistant";
@@ -72,56 +73,31 @@ export function ChatWidget() {
 
       if (!res.ok) throw new Error("Failed to get response");
 
-      // Handle streaming response
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No response body");
 
-      const decoder = new TextDecoder();
       let assistantContent = "";
       let hasStartedResponse = false;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
-
-              if (data.type === "status") {
-                setStatusText(data.content);
-              } else if (data.type === "content") {
-                if (!hasStartedResponse) {
-                  // Add empty assistant message to start
-                  setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
-                  hasStartedResponse = true;
-                  setLoading(false);
-                }
-                assistantContent += data.content;
-                // Update the last message with accumulated content
-                setMessages((prev) => {
-                  const updated = [...prev];
-                  updated[updated.length - 1] = {
-                    role: "assistant",
-                    content: assistantContent,
-                  };
-                  return updated;
-                });
-              } else if (data.type === "error") {
-                throw new Error(data.content);
-              }
-            } catch (parseError) {
-              // Skip invalid JSON lines
-            }
+      await parseSSEStream(reader, {
+        onStatus: (text) => setStatusText(text),
+        onContent: (text) => {
+          if (!hasStartedResponse) {
+            setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+            hasStartedResponse = true;
+            setLoading(false);
           }
-        }
-      }
+          assistantContent += text;
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: "assistant", content: assistantContent };
+            return updated;
+          });
+        },
+        onError: (msg) => { throw new Error(msg); },
+        onDone: () => {},
+      });
 
-      // If we never got content, add error message
       if (!hasStartedResponse) {
         setMessages((prev) => [
           ...prev,

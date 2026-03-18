@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { searchRequestSchema } from "@/lib/validations";
+import { AMENITY_KEYWORDS } from "@/lib/constants/amenities";
+import { apiError } from "@/lib/api-helpers";
 
 export async function POST(req: Request) {
   try {
@@ -9,8 +11,7 @@ export async function POST(req: Request) {
     // Validate with Zod schema
     const parsed = searchRequestSchema.safeParse(rawBody);
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0]?.message || "Invalid request";
-      return NextResponse.json({ error: firstError }, { status: 400 });
+      return apiError(parsed.error.issues[0]?.message || "Invalid request");
     }
 
     const body = parsed.data;
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
       .single();
 
     if (cityRes.error || !cityRes.data) {
-      return NextResponse.json({ error: "City not found" }, { status: 404 });
+      return apiError("City not found", 404);
     }
 
     const cityId = cityRes.data.id;
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
 
     const buildingsRes = await buildingsQuery;
     if (buildingsRes.error) {
-      return NextResponse.json({ error: buildingsRes.error.message }, { status: 500 });
+      return apiError(buildingsRes.error.message, 500);
     }
 
     let buildingIds = buildingsRes.data?.map((b) => b.id) || [];
@@ -78,88 +79,6 @@ export async function POST(req: Request) {
 
     // Filter by amenities if specified (using keyword matching)
     if (body.amenities_any?.length || body.amenities_all?.length) {
-      // Keyword mapping: search term -> keywords to look for in amenity names
-      const AMENITY_KEYWORDS: Record<string, string[]> = {
-        // Pools & Water Features
-        "pool": ["pool", "swimming", "lap pool", "infinity pool"],
-        "hot tub": ["hot tub", "jacuzzi", "whirlpool", "spa tub"],
-        "cold plunge": ["cold plunge", "plunge pool", "ice bath"],
-        "sauna": ["sauna", "infrared sauna"],
-        "steam room": ["steam room", "steam"],
-        "spa": ["spa", "sauna", "steam", "hot tub", "jacuzzi", "plunge", "wellness"],
-
-        // Fitness & Sports
-        "gym": ["gym", "fitness", "workout", "exercise", "weight room", "cardio"],
-        "yoga": ["yoga", "pilates", "meditation"],
-        "basketball": ["basketball", "sport court", "half court"],
-        "tennis": ["tennis", "pickleball", "racquet"],
-        "golf": ["golf simulator", "golf"],
-        "running track": ["running track", "jogging", "track"],
-        "boxing": ["boxing", "mma", "martial arts"],
-        "spin": ["spin", "cycling", "peloton"],
-        "rock climbing": ["climbing wall", "rock climbing", "bouldering"],
-
-        // Outdoor & Recreation
-        "rooftop": ["rooftop", "roof deck", "sky deck", "sky lounge", "terrace"],
-        "pool deck": ["pool deck", "sundeck", "sun deck"],
-        "cabana": ["cabana", "poolside"],
-        "bbq": ["bbq", "grill", "barbecue", "outdoor kitchen"],
-        "garden": ["garden", "courtyard", "green space"],
-        "fire pit": ["fire pit", "firepit", "outdoor fireplace"],
-
-        // Pet Amenities
-        "pet spa": ["pet spa", "dog grooming", "pet grooming", "dog wash", "pet wash", "grooming station"],
-        "dog park": ["dog run", "dog park", "bark park", "pet park"],
-
-        // Social & Entertainment
-        "lounge": ["lounge", "club room", "resident lounge", "sky lounge"],
-        "game room": ["game room", "billiard", "pool table", "gaming"],
-        "movie theater": ["movie", "theater", "screening", "cinema"],
-        "library": ["library", "reading room", "book"],
-        "coworking": ["coworking", "co-working", "work space", "business center", "conference room"],
-        "podcast": ["podcast", "recording studio", "music room"],
-        "wine room": ["wine room", "wine cellar", "wine lounge", "wine storage", "wine locker"],
-        "private dining": ["private dining", "chef", "demonstration kitchen", "catering"],
-        "karaoke": ["karaoke"],
-
-        // Services & Security
-        "concierge": ["concierge", "24-hour", "24 hour", "front desk"],
-        "doorman": ["doorman", "door attendant", "attended lobby"],
-        "valet": ["valet", "valet parking"],
-        "package room": ["package room", "package locker", "amazon locker", "cold storage"],
-        "dry cleaning": ["dry cleaning", "laundry service"],
-
-        // Parking & Transportation
-        "parking": ["parking", "garage", "covered parking"],
-        "ev charging": ["ev charging", "electric vehicle", "tesla", "charging station"],
-        "bike storage": ["bike storage", "bicycle", "bike room", "bike repair"],
-
-        // Children & Family
-        "playroom": ["playroom", "children", "kids room", "play area", "tot lot"],
-        "daycare": ["daycare", "childcare"],
-
-        // In-Unit Features
-        "washer dryer": ["washer", "dryer", "laundry", "w/d", "in-unit laundry"],
-        "balcony": ["balcony", "patio", "terrace", "private outdoor", "juliet balcony"],
-        "floor to ceiling windows": ["floor-to-ceiling", "floor to ceiling", "large windows", "panoramic"],
-        "high ceilings": ["high ceiling", "tall ceiling", "10 foot", "11 foot", "12 foot", "loft"],
-        "walk-in closet": ["walk-in closet", "walk in closet", "custom closet", "california closet"],
-        "hardwood floors": ["hardwood", "wood floor", "oak floor"],
-        "stainless steel": ["stainless steel", "stainless appliances", "chef kitchen", "gourmet kitchen"],
-        "granite": ["granite", "marble", "quartz", "stone countertop"],
-        "smart home": ["smart home", "smart lock", "nest", "smart thermostat", "keyless"],
-        "central air": ["central air", "central ac", "hvac", "climate control"],
-        "fireplace": ["fireplace", "gas fireplace"],
-        "den": ["den", "office", "home office", "study"],
-        "soaking tub": ["soaking tub", "spa tub", "freestanding tub", "jacuzzi tub"],
-        "double vanity": ["double vanity", "dual sink", "his and hers"],
-
-        // Views & Location
-        "city view": ["city view", "skyline view", "manhattan view"],
-        "water view": ["water view", "ocean view", "bay view", "river view", "waterfront"],
-        "park view": ["park view", "central park", "garden view"],
-      };
-
       // Get all amenities and their IDs
       const amenitiesRes = await supabase
         .from("amenities")
@@ -192,7 +111,11 @@ export async function POST(req: Request) {
           // Uses word-boundary matching to prevent false positives (e.g. "pool" matching "carpool")
           const buildingHasAmenity = (buildingId: string, searchTerm: string): boolean => {
             const buildingAmenities = buildingToAmenityNames.get(buildingId) || [];
-            const keywords = AMENITY_KEYWORDS[searchTerm.toLowerCase()] || [searchTerm.toLowerCase()];
+            // AMENITY_KEYWORDS uses title-case keys; do case-insensitive lookup
+            const lowerTerm = searchTerm.toLowerCase();
+            const keywords = Object.entries(AMENITY_KEYWORDS).find(
+              ([k]) => k.toLowerCase() === lowerTerm
+            )?.[1] || [lowerTerm];
 
             return buildingAmenities.some(amenityName =>
               keywords.some(keyword => {
@@ -263,7 +186,7 @@ export async function POST(req: Request) {
     const unitsRes = await unitsQuery.limit(limit * 2); // Fetch extra for price filtering
 
     if (unitsRes.error) {
-      return NextResponse.json({ error: unitsRes.error.message }, { status: 500 });
+      return apiError(unitsRes.error.message, 500);
     }
 
     const unitIds = unitsRes.data?.map((u) => u.id) || [];
@@ -283,7 +206,7 @@ export async function POST(req: Request) {
       .order("captured_at", { ascending: false });
 
     if (snapsRes.error) {
-      return NextResponse.json({ error: snapsRes.error.message }, { status: 500 });
+      return apiError(snapsRes.error.message, 500);
     }
 
     // Map latest snapshot per unit
@@ -445,9 +368,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Search error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }

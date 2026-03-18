@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/server";
+import { getFirstRelation, aggregateByProperty } from "@/lib/db-helpers";
 import type {
   AnalyticsDashboardData,
   LeadFunnelMetrics,
@@ -110,163 +111,59 @@ export async function getLeadsOverTime(
   }));
 }
 
-// Get top buildings by lead interest (lead_targets count)
-export async function getTopBuildingsByLeads(
-  limit: number = 10
+// Shared helper: fetch items from a table, aggregate by building_id, enrich with building details
+async function getTopBuildingsByMetric(
+  table: string,
+  metricField: "leadCount" | "favoritesCount" | "availableUnits",
+  limit: number = 10,
+  filter?: { column: string; value: unknown },
 ): Promise<BuildingPerformance[]> {
   const supabase = createAdminClient();
 
-  // Get lead_targets grouped by building
-  const { data: targets } = await supabase
-    .from("lead_targets")
-    .select("building_id");
-
-  const buildingCounts: Record<string, number> = {};
-  targets?.forEach((t) => {
-    if (t.building_id) {
-      buildingCounts[t.building_id] = (buildingCounts[t.building_id] || 0) + 1;
-    }
-  });
-
-  // Get top building IDs
-  const topBuildingIds = Object.entries(buildingCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([id]) => id);
-
-  if (topBuildingIds.length === 0) {
-    return [];
+  let query = supabase.from(table).select("building_id");
+  if (filter) {
+    query = query.eq(filter.column, filter.value);
   }
+  const { data: items } = await query;
 
-  // Fetch building details
+  const { counts, topIds } = aggregateByProperty(
+    items || [],
+    (item) => (item as { building_id: string | null }).building_id,
+    limit,
+  );
+
+  if (topIds.length === 0) return [];
+
   const { data: buildings } = await supabase
     .from("buildings")
     .select("id, name, neighborhoods(name)")
-    .in("id", topBuildingIds);
+    .in("id", topIds);
 
   return (
-    buildings?.map((b) => {
-      const neighborhoods = b.neighborhoods as { name: string } | { name: string }[] | null;
-      const neighborhoodName = Array.isArray(neighborhoods)
-        ? neighborhoods[0]?.name
-        : neighborhoods?.name;
-      return {
-        id: b.id,
-        name: b.name,
-        neighborhood: neighborhoodName || null,
-        leadCount: buildingCounts[b.id] || 0,
-        favoritesCount: 0,
-        availableUnits: 0,
-      };
-    }) || []
-  ).sort((a, b) => b.leadCount - a.leadCount);
+    buildings?.map((b) => ({
+      id: b.id,
+      name: b.name,
+      neighborhood: getFirstRelation(b.neighborhoods as { name: string } | { name: string }[] | null)?.name || null,
+      leadCount: metricField === "leadCount" ? counts[b.id] || 0 : 0,
+      favoritesCount: metricField === "favoritesCount" ? counts[b.id] || 0 : 0,
+      availableUnits: metricField === "availableUnits" ? counts[b.id] || 0 : 0,
+    })) || []
+  ).sort((a, b) => (b[metricField] as number) - (a[metricField] as number));
+}
+
+// Get top buildings by lead interest (lead_targets count)
+export function getTopBuildingsByLeads(limit: number = 10): Promise<BuildingPerformance[]> {
+  return getTopBuildingsByMetric("lead_targets", "leadCount", limit);
 }
 
 // Get most favorited buildings
-export async function getMostFavoritedBuildings(
-  limit: number = 10
-): Promise<BuildingPerformance[]> {
-  const supabase = createAdminClient();
-
-  // Get favorites grouped by building
-  const { data: favorites } = await supabase
-    .from("user_favorites")
-    .select("building_id");
-
-  const buildingCounts: Record<string, number> = {};
-  favorites?.forEach((f) => {
-    if (f.building_id) {
-      buildingCounts[f.building_id] =
-        (buildingCounts[f.building_id] || 0) + 1;
-    }
-  });
-
-  // Get top building IDs
-  const topBuildingIds = Object.entries(buildingCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([id]) => id);
-
-  if (topBuildingIds.length === 0) {
-    return [];
-  }
-
-  // Fetch building details
-  const { data: buildings } = await supabase
-    .from("buildings")
-    .select("id, name, neighborhoods(name)")
-    .in("id", topBuildingIds);
-
-  return (
-    buildings?.map((b) => {
-      const neighborhoods = b.neighborhoods as { name: string } | { name: string }[] | null;
-      const neighborhoodName = Array.isArray(neighborhoods)
-        ? neighborhoods[0]?.name
-        : neighborhoods?.name;
-      return {
-        id: b.id,
-        name: b.name,
-        neighborhood: neighborhoodName || null,
-        leadCount: 0,
-        favoritesCount: buildingCounts[b.id] || 0,
-        availableUnits: 0,
-      };
-    }) || []
-  ).sort((a, b) => b.favoritesCount - a.favoritesCount);
+export function getMostFavoritedBuildings(limit: number = 10): Promise<BuildingPerformance[]> {
+  return getTopBuildingsByMetric("user_favorites", "favoritesCount", limit);
 }
 
 // Get buildings with most available units
-export async function getBuildingsWithMostAvailable(
-  limit: number = 10
-): Promise<BuildingPerformance[]> {
-  const supabase = createAdminClient();
-
-  // Get available units grouped by building
-  const { data: units } = await supabase
-    .from("units")
-    .select("building_id")
-    .eq("is_available", true);
-
-  const buildingCounts: Record<string, number> = {};
-  units?.forEach((u) => {
-    if (u.building_id) {
-      buildingCounts[u.building_id] =
-        (buildingCounts[u.building_id] || 0) + 1;
-    }
-  });
-
-  // Get top building IDs
-  const topBuildingIds = Object.entries(buildingCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([id]) => id);
-
-  if (topBuildingIds.length === 0) {
-    return [];
-  }
-
-  // Fetch building details
-  const { data: buildings } = await supabase
-    .from("buildings")
-    .select("id, name, neighborhoods(name)")
-    .in("id", topBuildingIds);
-
-  return (
-    buildings?.map((b) => {
-      const neighborhoods = b.neighborhoods as { name: string } | { name: string }[] | null;
-      const neighborhoodName = Array.isArray(neighborhoods)
-        ? neighborhoods[0]?.name
-        : neighborhoods?.name;
-      return {
-        id: b.id,
-        name: b.name,
-        neighborhood: neighborhoodName || null,
-        leadCount: 0,
-        favoritesCount: 0,
-        availableUnits: buildingCounts[b.id] || 0,
-      };
-    }) || []
-  ).sort((a, b) => b.availableUnits - a.availableUnits);
+export function getBuildingsWithMostAvailable(limit: number = 10): Promise<BuildingPerformance[]> {
+  return getTopBuildingsByMetric("units", "availableUnits", limit, { column: "is_available", value: true });
 }
 
 // Get leads grouped by city
@@ -281,8 +178,7 @@ export async function getLeadsByCity(): Promise<CityLeadMetrics[]> {
 
   leads?.forEach((lead) => {
     if (lead.city_id && lead.cities) {
-      const cities = lead.cities as { id: string; name: string } | { id: string; name: string }[];
-      const city = Array.isArray(cities) ? cities[0] : cities;
+      const city = getFirstRelation(lead.cities as { id: string; name: string } | { id: string; name: string }[] | null);
       if (city && !cityCounts[city.id]) {
         cityCounts[city.id] = { name: city.name, count: 0 };
       }
@@ -322,15 +218,12 @@ export async function getTopNeighborhoods(
       neighborhood_id: string | null;
       neighborhoods: { id: string; name: string; cities: { name: string } | { name: string }[] | null } | { id: string; name: string; cities: { name: string } | { name: string }[] | null }[] | null;
     };
-    const buildings = t.buildings as BuildingType | BuildingType[] | null;
-    const building = Array.isArray(buildings) ? buildings[0] : buildings;
+    const building = getFirstRelation(t.buildings as BuildingType | BuildingType[] | null);
 
     if (building?.neighborhoods) {
-      const neighborhoods = building.neighborhoods;
-      const n = Array.isArray(neighborhoods) ? neighborhoods[0] : neighborhoods;
+      const n = getFirstRelation(building.neighborhoods);
       if (n && !neighborhoodCounts[n.id]) {
-        const cities = n.cities;
-        const city = Array.isArray(cities) ? cities[0] : cities;
+        const city = getFirstRelation(n.cities);
         neighborhoodCounts[n.id] = {
           name: n.name,
           cityName: city?.name || "Unknown",
