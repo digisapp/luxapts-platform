@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/api-helpers";
+import { getFirstRelation } from "@/lib/db-helpers";
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,10 +13,7 @@ export async function GET(req: NextRequest) {
     const maxPrice = searchParams.get("maxPrice");
 
     if (!buildingId || !citySlug) {
-      return NextResponse.json(
-        { error: "buildingId and citySlug are required" },
-        { status: 400 }
-      );
+      return apiError("buildingId and citySlug are required");
     }
 
     const supabase = createAdminClient();
@@ -90,10 +89,7 @@ export async function GET(req: NextRequest) {
     return await processBuildings(supabase, buildings, minPrice, maxPrice);
   } catch (error) {
     console.error("Similar listings error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }
 
@@ -188,9 +184,7 @@ async function processBuildings(
     .filter((b) => buildingData[b.id] && imageByBuilding[b.id])
     .map((b) => {
       const data = buildingData[b.id];
-      const neighborhood = Array.isArray(b.neighborhoods)
-        ? b.neighborhoods[0]
-        : b.neighborhoods;
+      const neighborhood = getFirstRelation(b.neighborhoods);
 
       return {
         id: b.id,

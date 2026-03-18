@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/api-helpers";
 
 // GET - Fetch user's favorites
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("Unauthorized", 401);
     }
 
     const adminClient = createAdminClient();
@@ -39,16 +39,13 @@ export async function GET() {
         return NextResponse.json({ favorites: [] });
       }
       console.error("Error fetching favorites:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error.message, 500);
     }
 
     return NextResponse.json({ favorites: favorites || [] });
   } catch (error) {
     console.error("Get favorites error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }
 
@@ -59,17 +56,14 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("Unauthorized", 401);
     }
 
     const body = await req.json();
     const { building_id, unit_id } = body;
 
     if (!building_id && !unit_id) {
-      return NextResponse.json(
-        { error: "building_id or unit_id is required" },
-        { status: 400 }
-      );
+      return apiError("building_id or unit_id is required");
     }
 
     const adminClient = createAdminClient();
@@ -106,16 +100,13 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Error adding favorite:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error.message, 500);
     }
 
     return NextResponse.json({ favorite }, { status: 201 });
   } catch (error) {
     console.error("Add favorite error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }
 
@@ -126,7 +117,7 @@ export async function DELETE(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("Unauthorized", 401);
     }
 
     const { searchParams } = new URL(req.url);
@@ -134,10 +125,7 @@ export async function DELETE(req: Request) {
     const unit_id = searchParams.get("unit_id");
 
     if (!building_id && !unit_id) {
-      return NextResponse.json(
-        { error: "building_id or unit_id is required" },
-        { status: 400 }
-      );
+      return apiError("building_id or unit_id is required");
     }
 
     const adminClient = createAdminClient();
@@ -158,15 +146,12 @@ export async function DELETE(req: Request) {
 
     if (error) {
       console.error("Error removing favorite:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error.message, 500);
     }
 
     return NextResponse.json({ message: "Favorite removed" });
   } catch (error) {
     console.error("Remove favorite error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }

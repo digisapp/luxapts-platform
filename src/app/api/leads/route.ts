@@ -4,6 +4,7 @@ import { checkAdminAuth } from "@/lib/admin/auth";
 import { escapeHtml } from "@/lib/utils";
 import { Resend } from "resend";
 import { createLeadSchema } from "@/lib/validations";
+import { apiError } from "@/lib/api-helpers";
 import type { CreateLeadResponse } from "@/types/database";
 
 export async function POST(req: Request) {
@@ -13,8 +14,7 @@ export async function POST(req: Request) {
     // Validate with Zod schema (email, phone, budget, dates, etc.)
     const parsed = createLeadSchema.safeParse(rawBody);
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0]?.message || "Invalid request";
-      return NextResponse.json({ error: firstError }, { status: 400 });
+      return apiError(parsed.error.issues[0]?.message || "Invalid request");
     }
 
     const body = parsed.data;
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       .single();
 
     if (cityRes.error || !cityRes.data) {
-      return NextResponse.json({ error: "City not found" }, { status: 404 });
+      return apiError("City not found", 404);
     }
 
     // Create lead
@@ -53,10 +53,7 @@ export async function POST(req: Request) {
 
     if (leadInsert.error) {
       console.error("Lead insert error:", leadInsert.error);
-      return NextResponse.json(
-        { error: "Failed to create lead" },
-        { status: 500 }
-      );
+      return apiError("Failed to create lead", 500);
     }
 
     const leadId = leadInsert.data.id;
@@ -141,10 +138,7 @@ export async function POST(req: Request) {
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
     console.error("Create lead error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }
 
@@ -153,7 +147,7 @@ export async function GET(req: Request) {
   try {
     const auth = await checkAdminAuth();
     if (!auth.isAdmin) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
+      return apiError(auth.error || "Unauthorized", auth.status);
     }
 
     const { searchParams } = new URL(req.url);
@@ -199,7 +193,7 @@ export async function GET(req: Request) {
 
     if (leadsResult.error) {
       console.error("List leads query error:", leadsResult.error);
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      return apiError("Internal server error", 500);
     }
 
     // Aggregate status counts
@@ -227,9 +221,6 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("List leads error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }

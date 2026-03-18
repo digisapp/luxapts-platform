@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { fetchDashboardAnalytics } from "@/lib/admin/analytics";
+import { fetchQuickActionCounts, fetchActivityFeed } from "@/lib/admin/dashboard";
 import { getFirstRelation } from "@/lib/db-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, TrendingUp, Calendar, Mail, MessageCircle, Target } from "lucide-react";
@@ -10,144 +11,9 @@ import { BuildingPerformanceTable } from "@/components/admin/analytics/BuildingP
 import { GeographicInsights } from "@/components/admin/analytics/GeographicInsights";
 import { VisitorAnalytics } from "@/components/admin/analytics/VisitorAnalytics";
 import { QuickActions } from "@/components/admin/dashboard/QuickActions";
-import { ActivityFeed, type ActivityEvent } from "@/components/admin/dashboard/ActivityFeed";
+import { ActivityFeed } from "@/components/admin/dashboard/ActivityFeed";
 
 export const dynamic = "force-dynamic";
-
-async function fetchQuickActionCounts(supabase: ReturnType<typeof createAdminClient>) {
-  try {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const [newLeadsRes, allBuildingsRes, buildingImagesRes, scrapeStatusRes, leadsRes, assignmentsRes] =
-    await Promise.all([
-      // New leads count
-      supabase
-        .from("leads")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "new"),
-      // All active building IDs
-      supabase
-        .from("buildings")
-        .select("id")
-        .eq("status", "active"),
-      // Building images (to find buildings with 0)
-      supabase
-        .from("building_images")
-        .select("building_id"),
-      // Scrape status for stale check
-      supabase
-        .from("building_scrape_status")
-        .select("building_id, units_scraped_at"),
-      // All lead IDs for unassigned check
-      supabase
-        .from("leads")
-        .select("id")
-        .neq("status", "lost")
-        .neq("status", "leased"),
-      // All assignments to find unassigned leads
-      supabase
-        .from("agent_assignments")
-        .select("lead_id"),
-    ]);
-
-  const newLeadsCount = newLeadsRes.count || 0;
-
-  // Buildings with 0 images
-  const buildingIdsWithImages = new Set(
-    (buildingImagesRes.data || []).map((img) => img.building_id)
-  );
-  const buildingsNeedImages = (allBuildingsRes.data || []).filter(
-    (b) => !buildingIdsWithImages.has(b.id)
-  ).length;
-
-  // Stale scrapes: buildings where units_scraped_at is null or > 7 days old
-  const scrapedMap = new Map(
-    (scrapeStatusRes.data || []).map((s) => [s.building_id, s.units_scraped_at])
-  );
-  const staleScrapes = (allBuildingsRes.data || []).filter((b) => {
-    const scrapedAt = scrapedMap.get(b.id);
-    if (!scrapedAt) return true;
-    return new Date(scrapedAt).getTime() < sevenDaysAgo.getTime();
-  }).length;
-
-  // Unassigned leads
-  const assignedLeadIds = new Set(
-    (assignmentsRes.data || []).map((a) => a.lead_id)
-  );
-  const unassignedLeads = (leadsRes.data || []).filter(
-    (l) => !assignedLeadIds.has(l.id)
-  ).length;
-
-  return { newLeadsCount, buildingsNeedImages, staleScrapes, unassignedLeads };
-  } catch (error) {
-    console.error("fetchQuickActionCounts error:", error);
-    return { newLeadsCount: 0, buildingsNeedImages: 0, staleScrapes: 0, unassignedLeads: 0 };
-  }
-}
-
-async function fetchActivityFeed(supabase: ReturnType<typeof createAdminClient>): Promise<ActivityEvent[]> {
-  try {
-  const [leadEventsRes, scrapeJobsRes, assignmentsRes] = await Promise.all([
-    supabase
-      .from("lead_events")
-      .select("id, lead_id, type, payload, created_at")
-      .order("created_at", { ascending: false })
-      .limit(10),
-    supabase
-      .from("scrape_jobs")
-      .select("id, job_type, status, buildings_processed, created_at")
-      .order("created_at", { ascending: false })
-      .limit(10),
-    supabase
-      .from("agent_assignments")
-      .select("id, lead_id, agent_user_id, assigned_at, status, profiles:agent_user_id(full_name)")
-      .order("assigned_at", { ascending: false })
-      .limit(10),
-  ]);
-
-  const events: ActivityEvent[] = [];
-
-  (leadEventsRes.data || []).forEach((e) => {
-    events.push({
-      id: `le-${e.id}`,
-      type: "lead_event",
-      description: `Lead event: ${e.type}`,
-      timestamp: e.created_at,
-      link: `/admin/leads/${e.lead_id}`,
-    });
-  });
-
-  (scrapeJobsRes.data || []).forEach((j) => {
-    events.push({
-      id: `sj-${j.id}`,
-      type: "scrape_job",
-      description: `Scrape ${j.job_type}: ${j.status} (${j.buildings_processed || 0} buildings)`,
-      timestamp: j.created_at,
-      link: "/admin/scraping",
-    });
-  });
-
-  (assignmentsRes.data || []).forEach((a) => {
-    const profile = getFirstRelation(a.profiles as { full_name: string | null } | { full_name: string | null }[] | null);
-    const agentName = profile?.full_name || "Unknown agent";
-    events.push({
-      id: `aa-${a.id}`,
-      type: "assignment",
-      description: `Lead ${a.status} to ${agentName}`,
-      timestamp: a.assigned_at,
-      link: `/admin/leads/${a.lead_id}`,
-    });
-  });
-
-  // Sort by timestamp descending, take top 10
-  events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  return events.slice(0, 10);
-  } catch (error) {
-    console.error("fetchActivityFeed error:", error);
-    return [];
-  }
-}
 
 export default async function AdminDashboardPage() {
   const supabase = createAdminClient();
@@ -155,7 +21,6 @@ export default async function AdminDashboardPage() {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  // Fetch all data in parallel
   const [analytics, buildingsRes, citiesRes, recentLeads, quickActions, activityFeed, campaignsRes, chatSessionsRes, chatTodayRes, pipelineRes] =
     await Promise.all([
       fetchDashboardAnalytics(),
@@ -201,7 +66,6 @@ export default async function AdminDashboardPage() {
         <p className="text-muted-foreground">Command center for LuxApts</p>
       </div>
 
-      {/* Quick Actions */}
       <QuickActions
         newLeadsCount={quickActions.newLeadsCount}
         buildingsNeedImages={quickActions.buildingsNeedImages}
@@ -209,7 +73,6 @@ export default async function AdminDashboardPage() {
         unassignedLeads={quickActions.unassignedLeads}
       />
 
-      {/* Activity Feed */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
@@ -219,7 +82,6 @@ export default async function AdminDashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -276,7 +138,6 @@ export default async function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Additional Stats */}
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -320,7 +181,6 @@ export default async function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Lead Metrics */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -341,7 +201,6 @@ export default async function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Leads Over Time */}
       <Card>
         <CardHeader>
           <CardTitle>Leads Over Time (Last 30 Days)</CardTitle>
@@ -351,7 +210,6 @@ export default async function AdminDashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Building Performance */}
       <Card>
         <CardHeader>
           <CardTitle>Building Performance</CardTitle>
@@ -365,7 +223,6 @@ export default async function AdminDashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Visitor Analytics */}
       <Card>
         <CardHeader>
           <CardTitle>Visitor Analytics</CardTitle>
@@ -375,13 +232,11 @@ export default async function AdminDashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Geographic Insights */}
       <GeographicInsights
         leadsByCity={analytics.leadsByCity}
         topNeighborhoods={analytics.topNeighborhoods}
       />
 
-      {/* Recent Leads */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Leads</CardTitle>

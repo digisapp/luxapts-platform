@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/api-helpers";
+import { getFirstRelation } from "@/lib/db-helpers";
 
 interface CompareBody {
   building_a_id: string;
@@ -12,10 +14,7 @@ export async function POST(req: Request) {
     const body = (await req.json()) as CompareBody;
 
     if (!body.building_a_id || !body.building_b_id) {
-      return NextResponse.json(
-        { error: "building_a_id and building_b_id are required" },
-        { status: 400 }
-      );
+      return apiError("building_a_id and building_b_id are required");
     }
 
     const supabase = createAdminClient();
@@ -35,7 +34,7 @@ export async function POST(req: Request) {
     ]);
 
     if (aRes.error || bRes.error) {
-      return NextResponse.json({ error: "Building not found" }, { status: 404 });
+      return apiError("Building not found", 404);
     }
 
     // Fetch amenities for both buildings
@@ -52,9 +51,7 @@ export async function POST(req: Request) {
 
     const extractAmenityName = (x: unknown): string | undefined => {
       const item = x as { amenities: { name: string } | { name: string }[] | null };
-      if (!item.amenities) return undefined;
-      if (Array.isArray(item.amenities)) return item.amenities[0]?.name;
-      return item.amenities.name;
+      return getFirstRelation(item.amenities)?.name;
     };
 
     const aAmenities = new Set(
@@ -167,9 +164,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Compare error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }

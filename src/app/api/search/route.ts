@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { searchRequestSchema } from "@/lib/validations";
-import { AMENITY_KEYWORDS } from "@/lib/constants/amenities";
 import { apiError } from "@/lib/api-helpers";
+import { filterBuildingsByAmenities } from "@/lib/search/amenity-filter";
+import { fetchPriceSnapshots, fetchUnitImages, fetchBuildingImages, fetchFloorplans } from "@/lib/search/fetch-enrichments";
 
 export async function POST(req: Request) {
   try {
     const rawBody = await req.json();
 
-    // Validate with Zod schema
     const parsed = searchRequestSchema.safeParse(rawBody);
     if (!parsed.success) {
       return apiError(parsed.error.issues[0]?.message || "Invalid request");
@@ -16,8 +16,8 @@ export async function POST(req: Request) {
 
     const body = parsed.data;
     const limit = body.limit ?? 50;
-
     const supabase = createAdminClient();
+    const emptyResponse = () => NextResponse.json({ city: body.city_slug, captured_at_max: null, results: [] });
 
     // 1. Resolve city
     const cityRes = await supabase
@@ -26,33 +26,27 @@ export async function POST(req: Request) {
       .eq("slug", body.city_slug)
       .single();
 
-    if (cityRes.error || !cityRes.data) {
-      return apiError("City not found", 404);
-    }
+    if (cityRes.error || !cityRes.data) return apiError("City not found", 404);
 
-    const cityId = cityRes.data.id;
-
-    // 2. Get building IDs in city (with optional neighborhood filter)
+    // 2. Get building IDs in city (with optional neighborhood/policy filters)
     let buildingsQuery = supabase
       .from("buildings")
       .select("id")
-      .eq("city_id", cityId)
+      .eq("city_id", cityRes.data.id)
       .eq("status", "active");
 
     if (body.neighborhood_slugs?.length) {
       const neighborhoodRes = await supabase
         .from("neighborhoods")
         .select("id")
-        .eq("city_id", cityId)
+        .eq("city_id", cityRes.data.id)
         .in("slug", body.neighborhood_slugs);
 
       if (neighborhoodRes.data?.length) {
-        const neighborhoodIds = neighborhoodRes.data.map((n) => n.id);
-        buildingsQuery = buildingsQuery.in("neighborhood_id", neighborhoodIds);
+        buildingsQuery = buildingsQuery.in("neighborhood_id", neighborhoodRes.data.map(n => n.id));
       }
     }
 
-    // Filter by pet/parking policies if needed
     if (body.pet_friendly) {
       buildingsQuery = buildingsQuery.not("pet_policy", "is", null)
         .not("pet_policy", "ilike", "%no pet%")
@@ -64,96 +58,18 @@ export async function POST(req: Request) {
     }
 
     const buildingsRes = await buildingsQuery;
-    if (buildingsRes.error) {
-      return apiError(buildingsRes.error.message, 500);
-    }
+    if (buildingsRes.error) return apiError(buildingsRes.error.message, 500);
 
-    let buildingIds = buildingsRes.data?.map((b) => b.id) || [];
-    if (!buildingIds.length) {
-      return NextResponse.json({
-        city: body.city_slug,
-        captured_at_max: null,
-        results: [],
-      });
-    }
+    let buildingIds = buildingsRes.data?.map(b => b.id) || [];
+    if (!buildingIds.length) return emptyResponse();
 
-    // Filter by amenities if specified (using keyword matching)
-    if (body.amenities_any?.length || body.amenities_all?.length) {
-      // Get all amenities and their IDs
-      const amenitiesRes = await supabase
-        .from("amenities")
-        .select("id, name");
+    // 3. Filter by amenities
+    buildingIds = await filterBuildingsByAmenities(
+      supabase, buildingIds, body.amenities_any, body.amenities_all,
+    );
+    if (!buildingIds.length) return emptyResponse();
 
-      if (amenitiesRes.data?.length) {
-        // Build a map of amenity ID to its lowercase name
-        const amenityIdToName = new Map(amenitiesRes.data.map(a => [a.id, a.name.toLowerCase()]));
-
-        // Get building_amenities for the current buildings
-        const buildingAmenitiesRes = await supabase
-          .from("building_amenities")
-          .select("building_id, amenity_id")
-          .in("building_id", buildingIds);
-
-        if (buildingAmenitiesRes.data) {
-          // Build a map of building -> amenity names (lowercase)
-          const buildingToAmenityNames = new Map<string, string[]>();
-          for (const ba of buildingAmenitiesRes.data) {
-            if (!buildingToAmenityNames.has(ba.building_id)) {
-              buildingToAmenityNames.set(ba.building_id, []);
-            }
-            const amenityName = amenityIdToName.get(ba.amenity_id);
-            if (amenityName) {
-              buildingToAmenityNames.get(ba.building_id)!.push(amenityName);
-            }
-          }
-
-          // Helper function to check if building has amenity by keyword
-          // Uses word-boundary matching to prevent false positives (e.g. "pool" matching "carpool")
-          const buildingHasAmenity = (buildingId: string, searchTerm: string): boolean => {
-            const buildingAmenities = buildingToAmenityNames.get(buildingId) || [];
-            // AMENITY_KEYWORDS uses title-case keys; do case-insensitive lookup
-            const lowerTerm = searchTerm.toLowerCase();
-            const keywords = Object.entries(AMENITY_KEYWORDS).find(
-              ([k]) => k.toLowerCase() === lowerTerm
-            )?.[1] || [lowerTerm];
-
-            return buildingAmenities.some(amenityName =>
-              keywords.some(keyword => {
-                const pattern = new RegExp(`(^|\\W)${keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\W|$)`, "i");
-                return pattern.test(amenityName);
-              })
-            );
-          };
-
-          // Filter buildings based on amenity requirements
-          buildingIds = buildingIds.filter(buildingId => {
-            // Check amenities_any: building must have at least one of these
-            if (body.amenities_any?.length) {
-              const hasAny = body.amenities_any.some(term => buildingHasAmenity(buildingId, term));
-              if (!hasAny) return false;
-            }
-
-            // Check amenities_all: building must have all of these
-            if (body.amenities_all?.length) {
-              const hasAll = body.amenities_all.every(term => buildingHasAmenity(buildingId, term));
-              if (!hasAll) return false;
-            }
-
-            return true;
-          });
-
-          if (!buildingIds.length) {
-            return NextResponse.json({
-              city: body.city_slug,
-              captured_at_max: null,
-              results: [],
-            });
-          }
-        }
-      }
-    }
-
-    // 3. Get available units in these buildings
+    // 4. Get available units in these buildings
     let unitsQuery = supabase
       .from("units")
       .select(`
@@ -167,149 +83,36 @@ export async function POST(req: Request) {
       .eq("is_available", true)
       .in("building_id", buildingIds);
 
-    // Apply bed/bath filters
-    if (typeof body.beds_min === "number") {
-      unitsQuery = unitsQuery.gte("beds", body.beds_min);
-    }
-    if (typeof body.beds_max === "number") {
-      unitsQuery = unitsQuery.lte("beds", body.beds_max);
-    }
-    if (typeof body.baths_min === "number") {
-      unitsQuery = unitsQuery.gte("baths", body.baths_min);
-    }
+    if (typeof body.beds_min === "number") unitsQuery = unitsQuery.gte("beds", body.beds_min);
+    if (typeof body.beds_max === "number") unitsQuery = unitsQuery.lte("beds", body.beds_max);
+    if (typeof body.baths_min === "number") unitsQuery = unitsQuery.gte("baths", body.baths_min);
+    if (body.move_in_date) unitsQuery = unitsQuery.lte("available_on", body.move_in_date);
 
-    // Apply move-in date filter
-    if (body.move_in_date) {
-      unitsQuery = unitsQuery.lte("available_on", body.move_in_date);
-    }
+    const unitsRes = await unitsQuery.limit(limit * 2);
+    if (unitsRes.error) return apiError(unitsRes.error.message, 500);
 
-    const unitsRes = await unitsQuery.limit(limit * 2); // Fetch extra for price filtering
+    const unitIds = unitsRes.data?.map(u => u.id) || [];
+    if (!unitIds.length) return emptyResponse();
 
-    if (unitsRes.error) {
-      return apiError(unitsRes.error.message, 500);
-    }
+    // 5. Fetch enrichments in parallel
+    const [{ snapByUnit, capturedAtMax }, imagesByUnit, imagesByBuilding, floorplansByUnit] =
+      await Promise.all([
+        fetchPriceSnapshots(supabase, unitIds),
+        fetchUnitImages(supabase, unitIds),
+        fetchBuildingImages(supabase, buildingIds),
+        fetchFloorplans(supabase, unitsRes.data || []),
+      ]);
 
-    const unitIds = unitsRes.data?.map((u) => u.id) || [];
-    if (!unitIds.length) {
-      return NextResponse.json({
-        city: body.city_slug,
-        captured_at_max: null,
-        results: [],
-      });
-    }
-
-    // 4. Get latest price snapshots
-    const snapsRes = await supabase
-      .from("unit_price_snapshots")
-      .select("unit_id, rent, net_effective_rent, lease_term_months, captured_at")
-      .in("unit_id", unitIds)
-      .order("captured_at", { ascending: false });
-
-    if (snapsRes.error) {
-      return apiError(snapsRes.error.message, 500);
-    }
-
-    // Map latest snapshot per unit
-    const snapByUnit = new Map<string, {
-      rent: number;
-      net_effective_rent: number | null;
-      lease_term_months: number | null;
-      captured_at: string;
-    }>();
-
-    for (const s of snapsRes.data || []) {
-      if (!snapByUnit.has(s.unit_id)) {
-        snapByUnit.set(s.unit_id, s);
-      }
-    }
-
-    // 5. Get unit images (primary image for each unit)
-    const unitImagesRes = await supabase
-      .from("unit_images")
-      .select("id, unit_id, url, alt_text, category, is_primary, sort_order")
-      .in("unit_id", unitIds)
-      .order("is_primary", { ascending: false })
-      .order("sort_order", { ascending: true });
-
-    // Map images by unit (get primary or first available)
-    const imagesByUnit = new Map<string, {
-      id: string;
-      url: string;
-      alt_text: string | null;
-      category: string | null;
-    }[]>();
-
-    for (const img of unitImagesRes.data || []) {
-      if (!imagesByUnit.has(img.unit_id)) {
-        imagesByUnit.set(img.unit_id, []);
-      }
-      imagesByUnit.get(img.unit_id)!.push(img);
-    }
-
-    // 6. Get building images (as fallback when unit has no images)
-    const buildingImagesRes = await supabase
-      .from("building_images")
-      .select("id, building_id, url, alt_text, category, is_primary, sort_order")
-      .in("building_id", buildingIds)
-      .order("is_primary", { ascending: false })
-      .order("sort_order", { ascending: true });
-
-    // Map images by building
-    const imagesByBuilding = new Map<string, {
-      id: string;
-      url: string;
-      alt_text: string | null;
-      category: string | null;
-    }[]>();
-
-    for (const img of buildingImagesRes.data || []) {
-      if (!imagesByBuilding.has(img.building_id)) {
-        imagesByBuilding.set(img.building_id, []);
-      }
-      imagesByBuilding.get(img.building_id)!.push(img);
-    }
-
-    // 7. Get floorplans for units that have them
-    const floorplanIds = [...new Set(
-      (unitsRes.data || [])
-        .map(u => u.floorplan_id)
-        .filter((id): id is string => id !== null)
-    )];
-
-    let floorplansByUnit = new Map<string, {
-      id: string;
-      name: string;
-      layout_image_url: string | null;
-    }>();
-
-    if (floorplanIds.length > 0) {
-      const floorplansRes = await supabase
-        .from("floorplans")
-        .select("id, name, layout_image_url")
-        .in("id", floorplanIds);
-
-      const floorplansById = new Map(
-        (floorplansRes.data || []).map(fp => [fp.id, fp])
-      );
-
-      for (const unit of unitsRes.data || []) {
-        if (unit.floorplan_id && floorplansById.has(unit.floorplan_id)) {
-          floorplansByUnit.set(unit.id, floorplansById.get(unit.floorplan_id)!);
-        }
-      }
-    }
-
-    // 8. Combine and filter by budget + require real images
+    // 6. Combine, filter by budget + require real images
     let results = (unitsRes.data || [])
-      .map((u) => {
-        const pricing = snapByUnit.get(u.id) || null;
-        const unitImages = imagesByUnit.get(u.id) || [];
-        const buildingImages = imagesByBuilding.get(u.building_id) || [];
-        const floorplan = floorplansByUnit.get(u.id) || null;
-        return { unit: u, pricing, unitImages, buildingImages, floorplan };
-      })
-      .filter((row) => {
-        // Must have real images (unit or building level) — hide listings with no images
+      .map(u => ({
+        unit: u,
+        pricing: snapByUnit.get(u.id) || null,
+        unitImages: imagesByUnit.get(u.id) || [],
+        buildingImages: imagesByBuilding.get(u.building_id) || [],
+        floorplan: floorplansByUnit.get(u.id) || null,
+      }))
+      .filter(row => {
         if (row.unitImages.length === 0 && row.buildingImages.length === 0) return false;
         const rent = row.pricing?.rent;
         if (!rent) return false;
@@ -318,53 +121,39 @@ export async function POST(req: Request) {
         return true;
       });
 
-    // 9. Sort results
+    // 7. Sort
     const sort = body.sort || "best_match";
     results.sort((a, b) => {
       switch (sort) {
-        case "price_low":
-          return (a.pricing?.rent || 0) - (b.pricing?.rent || 0);
-        case "price_high":
-          return (b.pricing?.rent || 0) - (a.pricing?.rent || 0);
-        case "sqft_high":
-          return (b.unit.sqft || 0) - (a.unit.sqft || 0);
-        case "newest":
-          return new Date(b.pricing?.captured_at || 0).getTime() -
-                 new Date(a.pricing?.captured_at || 0).getTime();
-        default: // best_match - could add scoring here
-          return 0;
+        case "price_low": return (a.pricing?.rent || 0) - (b.pricing?.rent || 0);
+        case "price_high": return (b.pricing?.rent || 0) - (a.pricing?.rent || 0);
+        case "sqft_high": return (b.unit.sqft || 0) - (a.unit.sqft || 0);
+        case "newest": return new Date(b.pricing?.captured_at || 0).getTime() - new Date(a.pricing?.captured_at || 0).getTime();
+        default: return 0;
       }
     });
 
-    // Apply limit
     results = results.slice(0, limit);
 
-    // 10. Format response
-    const captured_at_max = snapsRes.data?.[0]?.captured_at || null;
-
-    const formattedResults = results.map((row) => ({
-      building: row.unit.buildings,
-      unit: {
-        id: row.unit.id,
-        unit_number: row.unit.unit_number,
-        beds: row.unit.beds,
-        baths: row.unit.baths,
-        sqft: row.unit.sqft,
-        available_on: row.unit.available_on,
-        floorplan_id: row.unit.floorplan_id,
-      },
-      pricing: row.pricing,
-      // Use unit images if available, then building images
-      images: row.unitImages.length > 0
-        ? row.unitImages
-        : row.buildingImages,
-      floorplan: row.floorplan,
-    }));
-
+    // 8. Format response
     return NextResponse.json({
       city: body.city_slug,
-      captured_at_max,
-      results: formattedResults,
+      captured_at_max: capturedAtMax,
+      results: results.map(row => ({
+        building: row.unit.buildings,
+        unit: {
+          id: row.unit.id,
+          unit_number: row.unit.unit_number,
+          beds: row.unit.beds,
+          baths: row.unit.baths,
+          sqft: row.unit.sqft,
+          available_on: row.unit.available_on,
+          floorplan_id: row.unit.floorplan_id,
+        },
+        pricing: row.pricing,
+        images: row.unitImages.length > 0 ? row.unitImages : row.buildingImages,
+        floorplan: row.floorplan,
+      })),
     });
   } catch (error) {
     console.error("Search error:", error);
