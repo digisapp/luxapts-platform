@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isValidUUID } from "@/lib/utils";
+import { apiError } from "@/lib/api-helpers";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -10,26 +11,23 @@ interface RouteContext {
 export async function PATCH(req: Request, context: RouteContext) {
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status }
-    );
+    return apiError(authResult.error || "Unauthorized", authResult.status);
   }
 
   const { id } = await context.params;
   if (!isValidUUID(id)) {
-    return NextResponse.json({ error: "Invalid building ID" }, { status: 400 });
+    return apiError("Invalid building ID");
   }
 
   const body = await req.json();
   const { unitId, is_available } = body;
 
   if (!unitId || !isValidUUID(unitId)) {
-    return NextResponse.json({ error: "Valid unitId required" }, { status: 400 });
+    return apiError("Valid unitId required");
   }
 
   if (typeof is_available !== "boolean") {
-    return NextResponse.json({ error: "is_available must be a boolean" }, { status: 400 });
+    return apiError("is_available must be a boolean");
   }
 
   const supabase = createAdminClient();
@@ -43,7 +41,7 @@ export async function PATCH(req: Request, context: RouteContext) {
     .single();
 
   if (unitError || !unit) {
-    return NextResponse.json({ error: "Unit not found in this building" }, { status: 404 });
+    return apiError("Unit not found in this building", 404);
   }
 
   const { data, error } = await supabase
@@ -54,7 +52,7 @@ export async function PATCH(req: Request, context: RouteContext) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "Failed to update unit" }, { status: 500 });
+    return apiError("Failed to update unit", 500);
   }
 
   return NextResponse.json({ unit: data });

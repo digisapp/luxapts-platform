@@ -121,12 +121,19 @@ async function processBuildings(
 
   const unitIds = units.map((u) => u.id);
 
-  // Get latest prices
-  const { data: prices } = await supabase
-    .from("unit_price_snapshots")
-    .select("unit_id, rent")
-    .in("unit_id", unitIds)
-    .order("captured_at", { ascending: false });
+  // Fetch prices and images in parallel
+  const [{ data: prices }, { data: images }] = await Promise.all([
+    supabase
+      .from("unit_price_snapshots")
+      .select("unit_id, rent")
+      .in("unit_id", unitIds)
+      .order("captured_at", { ascending: false }),
+    supabase
+      .from("building_images")
+      .select("building_id, url")
+      .in("building_id", buildingIds)
+      .eq("is_primary", true),
+  ]);
 
   const priceByUnit: Record<string, number> = {};
   for (const p of prices || []) {
@@ -134,13 +141,6 @@ async function processBuildings(
       priceByUnit[p.unit_id] = p.rent;
     }
   }
-
-  // Get building images
-  const { data: images } = await supabase
-    .from("building_images")
-    .select("building_id, url")
-    .in("building_id", buildingIds)
-    .eq("is_primary", true);
 
   const imageByBuilding: Record<string, string> = {};
   for (const img of images || []) {

@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { isValidUUID } from "@/lib/utils";
+import { apiError } from "@/lib/api-helpers";
 
 export async function POST(req: Request) {
   try {
     const auth = await checkAdminAuth();
     if (!auth.isAdmin) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
+      return apiError(auth.error || "Unauthorized", auth.status);
     }
 
     const body = await req.json();
@@ -18,20 +19,20 @@ export async function POST(req: Request) {
     };
 
     if (!Array.isArray(lead_ids) || lead_ids.length === 0) {
-      return NextResponse.json({ error: "lead_ids required" }, { status: 400 });
+      return apiError("lead_ids required");
     }
 
     if (!["status", "assign"].includes(action)) {
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+      return apiError("Invalid action");
     }
 
     if (!value) {
-      return NextResponse.json({ error: "value required" }, { status: 400 });
+      return apiError("value required");
     }
 
     // Validate all UUIDs
     if (!lead_ids.every(isValidUUID)) {
-      return NextResponse.json({ error: "Invalid lead_id format" }, { status: 400 });
+      return apiError("Invalid lead_id format");
     }
 
     const supabase = createAdminClient();
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
     if (action === "status") {
       const validStatuses = ["new", "contacted", "touring", "applied", "leased", "lost"];
       if (!validStatuses.includes(value)) {
-        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+        return apiError("Invalid status");
       }
 
       // Bulk update status
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
 
       if (error) {
         console.error("Bulk status update error:", error);
-        return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+        return apiError("Failed to update", 500);
       }
 
       // Insert lead events for each
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
 
     if (action === "assign") {
       if (!isValidUUID(value)) {
-        return NextResponse.json({ error: "Invalid agent UUID" }, { status: 400 });
+        return apiError("Invalid agent UUID");
       }
 
       // Create agent assignments
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
 
       if (error) {
         console.error("Bulk assign error:", error);
-        return NextResponse.json({ error: "Failed to assign" }, { status: 500 });
+        return apiError("Failed to assign", 500);
       }
 
       // Insert lead events
@@ -94,9 +95,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ assigned: lead_ids.length });
     }
 
-    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+    return apiError("Unknown action");
   } catch (error) {
     console.error("Bulk action error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return apiError("Internal server error", 500);
   }
 }

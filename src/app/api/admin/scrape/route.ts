@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { apiError } from "@/lib/api-helpers";
+import { getFirstRelation } from "@/lib/db-helpers";
 
 // Admin endpoint for viewing and managing scraping status
 
 export async function GET(req: Request) {
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
-    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    return apiError(authResult.error || "Unauthorized", authResult.status);
   }
 
   try {
@@ -64,14 +66,14 @@ export async function GET(req: Request) {
 
     if (error) {
       console.error("Admin scrape query error:", error);
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      return apiError("Internal server error", 500);
     }
 
     // Process and filter buildings
     const processed = (buildings || []).map((b) => {
       const scrapeStatus = b.building_scrape_status?.[0];
-      const city = Array.isArray(b.cities) ? b.cities[0] : b.cities;
-      const neighborhood = Array.isArray(b.neighborhoods) ? b.neighborhoods[0] : b.neighborhoods;
+      const city = getFirstRelation(b.cities);
+      const neighborhood = getFirstRelation(b.neighborhoods);
 
       let scrapeState = "never_scraped";
       if (scrapeStatus?.units_scraped_at) {
@@ -149,10 +151,7 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("Admin scrape GET error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }
 
@@ -160,7 +159,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
-    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    return apiError(authResult.error || "Unauthorized", authResult.status);
   }
 
   try {
@@ -172,7 +171,7 @@ export async function POST(req: Request) {
     if (action === "enable" || action === "disable") {
       // Enable/disable scraping for buildings
       if (!building_ids?.length) {
-        return NextResponse.json({ error: "building_ids required" }, { status: 400 });
+        return apiError("building_ids required");
       }
 
       const { error } = await supabase
@@ -187,7 +186,7 @@ export async function POST(req: Request) {
 
       if (error) {
         console.error("Admin scrape upsert error:", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        return apiError("Internal server error", 500);
       }
 
       return NextResponse.json({
@@ -225,15 +224,12 @@ export async function POST(req: Request) {
         });
       }
 
-      return NextResponse.json({ error: "Specify building_ids or city_slug" }, { status: 400 });
+      return apiError("Specify building_ids or city_slug");
     }
 
-    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    return apiError("Invalid action");
   } catch (error) {
     console.error("Admin scrape POST error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isValidUUID } from "@/lib/utils";
+import { apiError } from "@/lib/api-helpers";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -10,15 +11,12 @@ interface RouteContext {
 export async function GET(_req: Request, context: RouteContext) {
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status }
-    );
+    return apiError(authResult.error || "Unauthorized", authResult.status);
   }
 
   const { id } = await context.params;
   if (!isValidUUID(id)) {
-    return NextResponse.json({ error: "Invalid building ID" }, { status: 400 });
+    return apiError("Invalid building ID");
   }
 
   const supabase = createAdminClient();
@@ -34,7 +32,7 @@ export async function GET(_req: Request, context: RouteContext) {
     .single();
 
   if (buildingError || !building) {
-    return NextResponse.json({ error: "Building not found" }, { status: 404 });
+    return apiError("Building not found", 404);
   }
 
   // Fetch related data in parallel
@@ -72,15 +70,12 @@ export async function GET(_req: Request, context: RouteContext) {
 export async function PATCH(req: Request, context: RouteContext) {
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status }
-    );
+    return apiError(authResult.error || "Unauthorized", authResult.status);
   }
 
   const { id } = await context.params;
   if (!isValidUUID(id)) {
-    return NextResponse.json({ error: "Invalid building ID" }, { status: 400 });
+    return apiError("Invalid building ID");
   }
 
   const body = await req.json();
@@ -105,12 +100,12 @@ export async function PATCH(req: Request, context: RouteContext) {
   }
 
   if (Object.keys(updates).length === 0) {
-    return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+    return apiError("No valid fields to update");
   }
 
   // Validate status if provided
   if (updates.status && !["active", "inactive", "coming_soon"].includes(updates.status as string)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    return apiError("Invalid status");
   }
 
   const supabase = createAdminClient();
@@ -122,7 +117,7 @@ export async function PATCH(req: Request, context: RouteContext) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "Failed to update building" }, { status: 500 });
+    return apiError("Failed to update building", 500);
   }
 
   return NextResponse.json({ building: data });
@@ -131,27 +126,24 @@ export async function PATCH(req: Request, context: RouteContext) {
 export async function POST(req: Request, context: RouteContext) {
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status }
-    );
+    return apiError(authResult.error || "Unauthorized", authResult.status);
   }
 
   const { id } = await context.params;
   if (!isValidUUID(id)) {
-    return NextResponse.json({ error: "Invalid building ID" }, { status: 400 });
+    return apiError("Invalid building ID");
   }
 
   const body = await req.json();
   const { url, category, alt_text } = body;
 
   if (!url || typeof url !== "string") {
-    return NextResponse.json({ error: "URL is required" }, { status: 400 });
+    return apiError("URL is required");
   }
 
   const validCategories = ["exterior", "lobby", "amenity", "pool", "gym", "rooftop", "common", "other"];
   if (category && !validCategories.includes(category)) {
-    return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+    return apiError("Invalid category");
   }
 
   const supabase = createAdminClient();
@@ -180,7 +172,7 @@ export async function POST(req: Request, context: RouteContext) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "Failed to add image" }, { status: 500 });
+    return apiError("Failed to add image", 500);
   }
 
   return NextResponse.json({ image: data }, { status: 201 });
@@ -189,22 +181,19 @@ export async function POST(req: Request, context: RouteContext) {
 export async function DELETE(req: Request, context: RouteContext) {
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status }
-    );
+    return apiError(authResult.error || "Unauthorized", authResult.status);
   }
 
   const { id } = await context.params;
   if (!isValidUUID(id)) {
-    return NextResponse.json({ error: "Invalid building ID" }, { status: 400 });
+    return apiError("Invalid building ID");
   }
 
   const { searchParams } = new URL(req.url);
   const imageId = searchParams.get("imageId");
 
   if (!imageId || !isValidUUID(imageId)) {
-    return NextResponse.json({ error: "Valid imageId query param required" }, { status: 400 });
+    return apiError("Valid imageId query param required");
   }
 
   const supabase = createAdminClient();
@@ -215,7 +204,7 @@ export async function DELETE(req: Request, context: RouteContext) {
     .eq("building_id", id);
 
   if (error) {
-    return NextResponse.json({ error: "Failed to delete image" }, { status: 500 });
+    return apiError("Failed to delete image", 500);
   }
 
   return NextResponse.json({ success: true });

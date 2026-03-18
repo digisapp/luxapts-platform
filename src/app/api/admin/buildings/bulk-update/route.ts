@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isValidUUID } from "@/lib/utils";
+import { apiError } from "@/lib/api-helpers";
 
 interface BulkUpdateItem {
   id: string;
@@ -18,27 +19,18 @@ interface BulkUpdateItem {
 export async function POST(req: Request) {
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status }
-    );
+    return apiError(authResult.error || "Unauthorized", authResult.status);
   }
 
   const body = await req.json();
   const { updates } = body as { updates: BulkUpdateItem[] };
 
   if (!Array.isArray(updates) || updates.length === 0) {
-    return NextResponse.json(
-      { error: "updates array is required" },
-      { status: 400 }
-    );
+    return apiError("updates array is required");
   }
 
   if (updates.length > 100) {
-    return NextResponse.json(
-      { error: "Maximum 100 updates at a time" },
-      { status: 400 }
-    );
+    return apiError("Maximum 100 updates at a time");
   }
 
   const allowedFields = [

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
 import { isValidUUID, escapeHtml } from "@/lib/utils";
+import { apiError } from "@/lib/api-helpers";
 
 export async function POST(
   req: Request,
@@ -11,19 +12,19 @@ export async function POST(
   try {
     const auth = await checkAdminAuth();
     if (!auth.isAdmin) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
+      return apiError(auth.error || "Unauthorized", auth.status);
     }
 
     const { id } = await params;
     if (!isValidUUID(id)) {
-      return NextResponse.json({ error: "Invalid lead ID" }, { status: 400 });
+      return apiError("Invalid lead ID");
     }
 
     const body = await req.json();
     const { subject, body: emailBody } = body as { subject: string; body: string };
 
     if (!subject || !emailBody) {
-      return NextResponse.json({ error: "subject and body required" }, { status: 400 });
+      return apiError("subject and body required");
     }
 
     const supabase = createAdminClient();
@@ -36,11 +37,11 @@ export async function POST(
       .single();
 
     if (leadError || !lead) {
-      return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+      return apiError("Lead not found", 404);
     }
 
     if (!lead.user_email) {
-      return NextResponse.json({ error: "Lead has no email address" }, { status: 400 });
+      return apiError("Lead has no email address");
     }
 
     // Send email via Resend
@@ -62,7 +63,7 @@ export async function POST(
 
     if (sendError) {
       console.error("Send email error:", sendError);
-      return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
+      return apiError("Failed to send email", 500);
     }
 
     // Log lead event
@@ -75,6 +76,6 @@ export async function POST(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Lead email error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return apiError("Internal server error", 500);
   }
 }

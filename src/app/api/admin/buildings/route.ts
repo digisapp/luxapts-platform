@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/api-helpers";
 
 export async function GET() {
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status }
-    );
+    return apiError(authResult.error || "Unauthorized", authResult.status);
   }
 
   const supabase = createAdminClient();
@@ -20,10 +18,7 @@ export async function GET() {
     .order("name");
 
   if (citiesError) {
-    return NextResponse.json(
-      { error: "Failed to fetch cities" },
-      { status: 500 }
-    );
+    return apiError("Failed to fetch cities", 500);
   }
 
   // Fetch all buildings with city info
@@ -37,10 +32,7 @@ export async function GET() {
     .order("name");
 
   if (buildingsError) {
-    return NextResponse.json(
-      { error: "Failed to fetch buildings" },
-      { status: 500 }
-    );
+    return apiError("Failed to fetch buildings", 500);
   }
 
   // Fetch image counts per building
@@ -54,10 +46,7 @@ export async function GET() {
     .select("building_id, is_available");
 
   if (imageError || unitsError) {
-    return NextResponse.json(
-      { error: "Failed to fetch counts" },
-      { status: 500 }
-    );
+    return apiError("Failed to fetch counts", 500);
   }
 
   // Aggregate counts

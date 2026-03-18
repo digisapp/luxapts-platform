@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/api-helpers";
+import { getFirstRelation } from "@/lib/db-helpers";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status }
-    );
+    return apiError(authResult.error || "Unauthorized", authResult.status);
   }
 
   const supabase = createAdminClient();
@@ -50,10 +49,7 @@ export async function GET() {
   ]);
 
   if (buildingsRes.error) {
-    return NextResponse.json(
-      { error: "Failed to fetch buildings" },
-      { status: 500 }
-    );
+    return apiError("Failed to fetch buildings", 500);
   }
 
   // Aggregate counts
@@ -74,8 +70,7 @@ export async function GET() {
   // Buildings with at least one price snapshot
   const buildingsWithPrices = new Set<string>();
   for (const price of pricesRes.data || []) {
-    const units = price.units as { building_id: string } | { building_id: string }[] | null;
-    const unit = Array.isArray(units) ? units[0] : units;
+    const unit = getFirstRelation(price.units as { building_id: string } | { building_id: string }[] | null);
     if (unit?.building_id) buildingsWithPrices.add(unit.building_id);
   }
 
@@ -154,8 +149,7 @@ export async function GET() {
       issues.push("no_website");
     }
 
-    const city = b.cities as { name: string; slug: string } | { name: string; slug: string }[] | null;
-    const cityData = Array.isArray(city) ? city[0] : city;
+    const cityData = getFirstRelation(b.cities as { name: string; slug: string } | { name: string; slug: string }[] | null);
 
     return {
       id: b.id,
