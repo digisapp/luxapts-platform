@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
         .select("id")
         .eq("user_email", to)
         .limit(1)
-        .single();
+        .maybeSingle();
       if (lead) resolvedLeadId = lead.id;
     }
 
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
       .insert({
         thread_id: finalThreadId,
         direction: "outbound",
-        status: "received",
+        status: "read",
         delivery_status: "sent",
         from_email: fromAddr,
         from_name: fromName,
@@ -180,6 +180,7 @@ export async function POST(req: NextRequest) {
 
     if (insertError) {
       console.error("Store sent email error:", insertError);
+      return apiError("Email sent but failed to save record", 500);
     }
 
     return NextResponse.json({ success: true, email, thread_id: finalThreadId });

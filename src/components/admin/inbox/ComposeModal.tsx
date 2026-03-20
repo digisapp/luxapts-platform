@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import DOMPurify from "isomorphic-dompurify";
 import {
   Dialog,
   DialogContent,
@@ -144,7 +145,7 @@ export function ComposeModal({ open, onClose, onSent, replyTo }: ComposeModalPro
               <p className="text-xs text-muted-foreground mb-1 font-medium">Quoted original:</p>
               <div
                 className="text-xs text-muted-foreground prose prose-sm prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: replyTo.quotedHtml }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(replyTo.quotedHtml) }}
               />
             </div>
           )}

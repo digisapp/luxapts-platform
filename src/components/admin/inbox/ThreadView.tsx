@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import DOMPurify from "isomorphic-dompurify";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -279,7 +280,7 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
 
             <div
               className="prose prose-sm prose-invert max-w-none text-sm leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: msg.body_html }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.body_html) }}
             />
           </div>
         ))}

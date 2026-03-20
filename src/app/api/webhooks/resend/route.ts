@@ -65,22 +65,42 @@ export async function POST(req: Request) {
       const inReplyTo = headers["in-reply-to"] || "";
       const references = headers["references"] || "";
 
-      // Try to match to existing thread
       let threadId: string | null = null;
       let leadId: string | null = null;
 
-      const { data: priorEmail } = await supabase
-        .from("emails")
-        .select("thread_id, lead_id")
-        .or(`from_email.eq.${fromEmail},to_email.eq.${fromEmail}`)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+      // 1. Try to match thread using In-Reply-To / References headers (most reliable)
+      if (inReplyTo) {
+        const { data: referencedEmail } = await supabase
+          .from("emails")
+          .select("thread_id, lead_id")
+          .eq("headers->message-id", inReplyTo)
+          .limit(1)
+          .maybeSingle();
 
-      if (priorEmail) {
-        threadId = priorEmail.thread_id;
-        leadId = priorEmail.lead_id;
-      } else {
+        if (referencedEmail) {
+          threadId = referencedEmail.thread_id;
+          leadId = referencedEmail.lead_id;
+        }
+      }
+
+      // 2. Fallback: match by sender email address
+      if (!threadId) {
+        const { data: priorEmail } = await supabase
+          .from("emails")
+          .select("thread_id, lead_id")
+          .or(`from_email.eq."${fromEmail}",to_email.eq."${fromEmail}"`)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (priorEmail) {
+          threadId = priorEmail.thread_id;
+          leadId = priorEmail.lead_id;
+        }
+      }
+
+      // 3. No match — new thread
+      if (!threadId) {
         threadId = crypto.randomUUID();
       }
 
@@ -91,12 +111,12 @@ export async function POST(req: Request) {
           .select("id")
           .eq("user_email", fromEmail)
           .limit(1)
-          .single();
+          .maybeSingle();
         if (lead) leadId = lead.id;
       }
 
-      // Mark the last outbound email in this thread as "replied"
-      if (threadId && priorEmail) {
+      // Mark outbound emails in this thread as "replied"
+      if (threadId) {
         await supabase
           .from("emails")
           .update({ status: "replied", updated_at: new Date().toISOString() })
@@ -119,9 +139,9 @@ export async function POST(req: Request) {
         lead_id: leadId,
         is_read: false,
         headers: {
-          "message-id": headers["message-id"],
-          "in-reply-to": inReplyTo,
-          references,
+          "message-id": headers["message-id"] || null,
+          "in-reply-to": inReplyTo || null,
+          references: references || null,
         },
       });
 
