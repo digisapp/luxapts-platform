@@ -54,9 +54,9 @@ export async function POST(req: Request) {
     // ── Inbound email ──
     if (eventType === "email.received") {
       const data = body.data;
-      const fromEmail = data.from?.email || data.from || "";
+      const fromEmail = (data.from?.email || data.from || "").toLowerCase().trim();
       const fromName = data.from?.name || "";
-      const toEmail = Array.isArray(data.to) ? data.to[0] : data.to || "";
+      const toEmail = (Array.isArray(data.to) ? data.to[0] : data.to || "").toLowerCase().trim();
       const subject = data.subject || "(No Subject)";
       const bodyHtml = data.html || data.body || "";
       const bodyText = data.text || "";
@@ -64,6 +64,12 @@ export async function POST(req: Request) {
 
       const inReplyTo = headers["in-reply-to"] || "";
       const references = headers["references"] || "";
+
+      // ── Spam filtering ──
+      if (isSpam(fromEmail, subject, bodyText || bodyHtml)) {
+        console.log(`Spam filtered: from=${fromEmail} subject="${subject}"`);
+        return NextResponse.json({ success: true, filtered: "spam" });
+      }
 
       let threadId: string | null = null;
       let leadId: string | null = null;
@@ -83,7 +89,27 @@ export async function POST(req: Request) {
         }
       }
 
-      // 2. Fallback: match by sender email address
+      // 2. Fallback: match by normalized subject line (strip Re:/Fwd: prefixes)
+      if (!threadId) {
+        const normalizedSubject = normalizeSubject(subject);
+        if (normalizedSubject) {
+          const { data: subjectMatch } = await supabase
+            .from("emails")
+            .select("thread_id, lead_id")
+            .or(`from_email.eq."${fromEmail}",to_email.eq."${fromEmail}"`)
+            .ilike("subject", `%${normalizedSubject}%`)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (subjectMatch) {
+            threadId = subjectMatch.thread_id;
+            leadId = subjectMatch.lead_id;
+          }
+        }
+      }
+
+      // 3. Fallback: match by sender email address alone
       if (!threadId) {
         const { data: priorEmail } = await supabase
           .from("emails")
@@ -99,7 +125,7 @@ export async function POST(req: Request) {
         }
       }
 
-      // 3. No match — new thread
+      // 4. No match — new thread
       if (!threadId) {
         threadId = crypto.randomUUID();
       }
@@ -183,4 +209,47 @@ export async function POST(req: Request) {
     console.error("Resend webhook error:", error);
     return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
+}
+
+// ── Helpers ──
+
+/** Strip Re:/Fwd:/FW: prefixes and normalize whitespace for subject matching */
+function normalizeSubject(subject: string): string {
+  return subject
+    .replace(/^(re|fwd|fw)\s*:\s*/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Basic spam filtering — returns true if the email looks like spam */
+function isSpam(fromEmail: string, subject: string, body: string): boolean {
+  // Block known spam TLDs
+  const spamTlds = [".xyz", ".top", ".buzz", ".click", ".gdn", ".icu"];
+  if (spamTlds.some((tld) => fromEmail.endsWith(tld))) return true;
+
+  // Block noreply / mailer-daemon
+  const blockedPrefixes = ["noreply@", "no-reply@", "mailer-daemon@", "postmaster@"];
+  if (blockedPrefixes.some((p) => fromEmail.startsWith(p))) return true;
+
+  // Spam keyword patterns in subject or body
+  const spamPatterns = [
+    /\bcrypto\s*(investment|trading|profit)\b/i,
+    /\bunsubscribe\b.*\bclick\s*here\b/i,
+    /\b(viagra|cialis|pharmacy)\b/i,
+    /\bwin\s+(a\s+)?\$?\d/i,
+    /\bcongratulations.*you('ve| have)\s+won\b/i,
+    /\bact\s+now\b.*\blimited\s+time\b/i,
+    /\bnigerian?\s+prince\b/i,
+    /\b(bitcoin|btc|ethereum)\s*(giveaway|doubl)/i,
+  ];
+
+  const textToCheck = `${subject} ${body}`.toLowerCase();
+  if (spamPatterns.some((p) => p.test(textToCheck))) return true;
+
+  // Reject if body contains excessive links (>10 links in a short email)
+  const linkCount = (body.match(/https?:\/\//gi) || []).length;
+  const wordCount = body.split(/\s+/).length;
+  if (linkCount > 10 && wordCount < 200) return true;
+
+  return false;
 }

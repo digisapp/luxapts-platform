@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import DOMPurify from "isomorphic-dompurify";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2 } from "lucide-react";
+import { SandboxedEmail } from "./SandboxedEmail";
 
 interface ComposeModalProps {
   open: boolean;
@@ -141,12 +141,9 @@ export function ComposeModal({ open, onClose, onSent, replyTo }: ComposeModalPro
 
           {/* Quoted original preview */}
           {replyTo?.quotedHtml && (
-            <div className="rounded border border-border/50 bg-muted/30 p-3 max-h-32 overflow-y-auto">
+            <div className="rounded border border-border/50 bg-muted/30 p-3 max-h-32 overflow-hidden">
               <p className="text-xs text-muted-foreground mb-1 font-medium">Quoted original:</p>
-              <div
-                className="text-xs text-muted-foreground prose prose-sm prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(replyTo.quotedHtml) }}
-              />
+              <SandboxedEmail html={replyTo.quotedHtml} className="opacity-60" />
             </div>
           )}
 

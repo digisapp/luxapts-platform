@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import DOMPurify from "isomorphic-dompurify";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +18,7 @@ import {
   Clock,
 } from "lucide-react";
 import { ComposeModal } from "./ComposeModal";
+import { SandboxedEmail } from "./SandboxedEmail";
 
 interface Email {
   id: string;
@@ -278,10 +278,7 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
               </div>
             </div>
 
-            <div
-              className="prose prose-sm prose-invert max-w-none text-sm leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.body_html) }}
-            />
+            <SandboxedEmail html={msg.body_html} />
           </div>
         ))}
       </div>
