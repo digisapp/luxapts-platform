@@ -25,9 +25,10 @@ interface ComposeModalProps {
     leadId?: string;
     quotedHtml?: string;
   };
+  defaultBody?: string;
 }
 
-export function ComposeModal({ open, onClose, onSent, replyTo }: ComposeModalProps) {
+export function ComposeModal({ open, onClose, onSent, replyTo, defaultBody }: ComposeModalProps) {
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -45,10 +46,10 @@ export function ComposeModal({ open, onClose, onSent, replyTo }: ComposeModalPro
             : `Re: ${replyTo.subject}`
           : ""
       );
-      setBody("");
+      setBody(defaultBody || "");
       setError(null);
     }
-  }, [open, replyTo]);
+  }, [open, replyTo, defaultBody]);
 
   async function handleSend() {
     if (!to || !subject || !body) {

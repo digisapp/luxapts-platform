@@ -1,69 +1,88 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { Webhook } from "svix";
+import { classifyAndDraftReply, sendAutoReply } from "@/lib/ai-email";
 import crypto from "crypto";
 
 /**
- * Resend Webhook — handles both inbound emails and delivery status updates.
- * Configure in Resend dashboard: https://yourdomain.com/api/webhooks/resend
+ * Resend Webhook — handles inbound emails and delivery status updates.
+ * Uses Svix for signature verification, fetches full body from Resend API,
+ * runs AI classification via xAI Grok, and triggers auto-reply when safe.
  */
 export async function POST(req: Request) {
   try {
     const rawBody = await req.text();
-    const body = JSON.parse(rawBody);
 
-    // Verify webhook signature if configured
+    // ── Verify webhook signature with Svix ──
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
     if (webhookSecret) {
-      const signature = req.headers.get("svix-signature");
-      const timestamp = req.headers.get("svix-timestamp");
       const svixId = req.headers.get("svix-id");
+      const svixTimestamp = req.headers.get("svix-timestamp");
+      const svixSignature = req.headers.get("svix-signature");
 
-      if (!signature || !timestamp || !svixId) {
+      if (!svixId || !svixTimestamp || !svixSignature) {
         return NextResponse.json({ error: "Missing signature headers" }, { status: 401 });
       }
 
-      const toSign = `${svixId}.${timestamp}.${rawBody}`;
-      const secret = webhookSecret.startsWith("whsec_")
-        ? Buffer.from(webhookSecret.slice(6), "base64")
-        : Buffer.from(webhookSecret);
-      const expectedSignature = crypto
-        .createHmac("sha256", secret)
-        .update(toSign)
-        .digest("base64");
-
-      const signatures = signature.split(" ").map((s) => s.replace("v1,", ""));
-      const isValid = signatures.some((s) => {
-        try {
-          return crypto.timingSafeEqual(
-            Buffer.from(s, "base64"),
-            Buffer.from(expectedSignature, "base64")
-          );
-        } catch {
-          return false;
-        }
-      });
-
-      if (!isValid) {
+      const wh = new Webhook(webhookSecret);
+      try {
+        wh.verify(rawBody, {
+          "svix-id": svixId,
+          "svix-timestamp": svixTimestamp,
+          "svix-signature": svixSignature,
+        });
+      } catch {
         return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
       }
     }
 
+    const body = JSON.parse(rawBody);
     const eventType = body.type as string;
     const supabase = createAdminClient();
 
     // ── Inbound email ──
     if (eventType === "email.received") {
       const data = body.data;
+      const resendEmailId = data.email_id || data.id;
       const fromEmail = (data.from?.email || data.from || "").toLowerCase().trim();
       const fromName = data.from?.name || "";
       const toEmail = (Array.isArray(data.to) ? data.to[0] : data.to || "").toLowerCase().trim();
       const subject = data.subject || "(No Subject)";
-      const bodyHtml = data.html || data.body || "";
-      const bodyText = data.text || "";
-      const headers = data.headers || {};
 
-      const inReplyTo = headers["in-reply-to"] || "";
-      const references = headers["references"] || "";
+      if (!fromEmail || !toEmail) {
+        console.log("Missing from/to email in webhook payload");
+        return NextResponse.json({ error: "Missing from or to email" }, { status: 400 });
+      }
+      const cc = data.cc || null;
+      const replyTo = data.reply_to || null;
+      const incomingHeaders = data.headers || {};
+
+      // ── Fetch full email body from Resend API ──
+      let bodyHtml = data.html || data.body || "";
+      let bodyText = data.text || "";
+
+      if (resendEmailId && (!bodyHtml || bodyHtml.length < 10)) {
+        try {
+          const resendRes = await fetch(
+            `https://api.resend.com/emails/receiving/${resendEmailId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+              },
+            }
+          );
+          if (resendRes.ok) {
+            const fullEmail = await resendRes.json();
+            bodyHtml = fullEmail.html || fullEmail.body || bodyHtml;
+            bodyText = fullEmail.text || bodyText;
+          }
+        } catch (err) {
+          console.error("Failed to fetch full email body from Resend:", err);
+        }
+      }
+
+      const inReplyTo = incomingHeaders["in-reply-to"] || "";
+      const references = incomingHeaders["references"] || "";
 
       // ── Spam filtering ──
       if (isSpam(fromEmail, subject, bodyText || bodyHtml)) {
@@ -74,7 +93,7 @@ export async function POST(req: Request) {
       let threadId: string | null = null;
       let leadId: string | null = null;
 
-      // 1. Try to match thread using In-Reply-To / References headers (most reliable)
+      // 1. Match thread via In-Reply-To header (most reliable)
       if (inReplyTo) {
         const { data: referencedEmail } = await supabase
           .from("emails")
@@ -89,14 +108,14 @@ export async function POST(req: Request) {
         }
       }
 
-      // 2. Fallback: match by normalized subject line (strip Re:/Fwd: prefixes)
+      // 2. Fallback: match by normalized subject + sender
       if (!threadId) {
         const normalizedSubject = normalizeSubject(subject);
         if (normalizedSubject) {
           const { data: subjectMatch } = await supabase
             .from("emails")
             .select("thread_id, lead_id")
-            .or(`from_email.eq."${fromEmail}",to_email.eq."${fromEmail}"`)
+            .or(`from_email.eq.${fromEmail},to_email.eq.${fromEmail}`)
             .ilike("subject", `%${normalizedSubject}%`)
             .order("created_at", { ascending: false })
             .limit(1)
@@ -109,12 +128,12 @@ export async function POST(req: Request) {
         }
       }
 
-      // 3. Fallback: match by sender email address alone
+      // 3. Fallback: match by sender email alone
       if (!threadId) {
         const { data: priorEmail } = await supabase
           .from("emails")
           .select("thread_id, lead_id")
-          .or(`from_email.eq."${fromEmail}",to_email.eq."${fromEmail}"`)
+          .or(`from_email.eq.${fromEmail},to_email.eq.${fromEmail}`)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -125,7 +144,7 @@ export async function POST(req: Request) {
         }
       }
 
-      // 4. No match — new thread
+      // 4. New thread
       if (!threadId) {
         threadId = crypto.randomUUID();
       }
@@ -141,42 +160,46 @@ export async function POST(req: Request) {
         if (lead) leadId = lead.id;
       }
 
-      // Mark outbound emails in this thread as "replied"
-      if (threadId) {
-        await supabase
-          .from("emails")
-          .update({ status: "replied", updated_at: new Date().toISOString() })
-          .eq("thread_id", threadId)
-          .eq("direction", "outbound")
-          .neq("status", "replied");
-      }
-
-      const { error: insertError } = await supabase.from("emails").insert({
-        thread_id: threadId,
-        direction: "inbound",
-        status: "received",
-        delivery_status: null,
-        from_email: fromEmail,
-        from_name: fromName,
-        to_email: toEmail,
-        subject,
-        body_html: bodyHtml,
-        body_text: bodyText,
-        lead_id: leadId,
-        is_read: false,
-        headers: {
-          "message-id": headers["message-id"] || null,
-          "in-reply-to": inReplyTo || null,
-          references: references || null,
-        },
-      });
+      // Insert the inbound email
+      const { data: inserted, error: insertError } = await supabase
+        .from("emails")
+        .insert({
+          thread_id: threadId,
+          direction: "inbound",
+          status: "received",
+          resend_message_id: resendEmailId || null,
+          from_email: fromEmail,
+          from_name: fromName,
+          to_email: toEmail,
+          subject,
+          body_html: bodyHtml,
+          body_text: bodyText,
+          reply_to: replyTo,
+          cc,
+          lead_id: leadId,
+          is_starred: false,
+          headers: {
+            "message-id": incomingHeaders["message-id"] || null,
+            "in-reply-to": inReplyTo || null,
+            references: references || null,
+          },
+        })
+        .select("id")
+        .single();
 
       if (insertError) {
         console.error("Failed to store inbound email:", insertError);
         return NextResponse.json({ error: "Failed to store email" }, { status: 500 });
       }
 
-      return NextResponse.json({ success: true, thread_id: threadId });
+      const emailId = inserted.id;
+
+      // ── Async AI classification + auto-reply (non-blocking) ──
+      processAIClassification(emailId, fromName, fromEmail, subject, bodyText || bodyHtml, threadId).catch(
+        (err) => console.error("AI classification pipeline error:", err)
+      );
+
+      return NextResponse.json({ success: true, thread_id: threadId, email_id: emailId });
     }
 
     // ── Delivery status events ──
@@ -190,15 +213,12 @@ export async function POST(req: Request) {
         const statusMap: Record<string, string> = {
           "email.delivered": "delivered",
           "email.bounced": "bounced",
-          "email.complained": "complained",
+          "email.complained": "failed",
         };
         await supabase
           .from("emails")
-          .update({
-            delivery_status: statusMap[eventType],
-            updated_at: new Date().toISOString(),
-          })
-          .eq("resend_id", resendId);
+          .update({ status: statusMap[eventType] })
+          .eq("resend_message_id", resendId);
       }
       return NextResponse.json({ success: true, type: eventType });
     }
@@ -211,9 +231,50 @@ export async function POST(req: Request) {
   }
 }
 
+// ── AI classification pipeline ──
+
+async function processAIClassification(
+  emailId: string,
+  fromName: string,
+  fromEmail: string,
+  subject: string,
+  bodyText: string,
+  threadId: string
+) {
+  const supabase = createAdminClient();
+
+  const result = await classifyAndDraftReply(fromName, fromEmail, subject, bodyText);
+
+  // Store AI results on the email
+  await supabase
+    .from("emails")
+    .update({
+      ai_category: result.category,
+      ai_confidence: result.confidence,
+      ai_summary: result.summary,
+      ai_draft_html: result.draftHtml,
+      ai_draft_text: result.draftText,
+      ai_processed_at: new Date().toISOString(),
+    })
+    .eq("id", emailId);
+
+  // Auto-reply if safe
+  if (result.autoSendable) {
+    const toName = fromName || fromEmail.split("@")[0];
+    await sendAutoReply(
+      emailId,
+      fromEmail,
+      toName,
+      subject,
+      result.draftHtml,
+      result.draftText,
+      threadId
+    );
+  }
+}
+
 // ── Helpers ──
 
-/** Strip Re:/Fwd:/FW: prefixes and normalize whitespace for subject matching */
 function normalizeSubject(subject: string): string {
   return subject
     .replace(/^(re|fwd|fw)\s*:\s*/gi, "")
@@ -221,17 +282,13 @@ function normalizeSubject(subject: string): string {
     .trim();
 }
 
-/** Basic spam filtering — returns true if the email looks like spam */
 function isSpam(fromEmail: string, subject: string, body: string): boolean {
-  // Block known spam TLDs
   const spamTlds = [".xyz", ".top", ".buzz", ".click", ".gdn", ".icu"];
   if (spamTlds.some((tld) => fromEmail.endsWith(tld))) return true;
 
-  // Block noreply / mailer-daemon
   const blockedPrefixes = ["noreply@", "no-reply@", "mailer-daemon@", "postmaster@"];
   if (blockedPrefixes.some((p) => fromEmail.startsWith(p))) return true;
 
-  // Spam keyword patterns in subject or body
   const spamPatterns = [
     /\bcrypto\s*(investment|trading|profit)\b/i,
     /\bunsubscribe\b.*\bclick\s*here\b/i,
@@ -246,7 +303,6 @@ function isSpam(fromEmail: string, subject: string, body: string): boolean {
   const textToCheck = `${subject} ${body}`.toLowerCase();
   if (spamPatterns.some((p) => p.test(textToCheck))) return true;
 
-  // Reject if body contains excessive links (>10 links in a short email)
   const linkCount = (body.match(/https?:\/\//gi) || []).length;
   const wordCount = body.split(/\s+/).length;
   if (linkCount > 10 && wordCount < 200) return true;

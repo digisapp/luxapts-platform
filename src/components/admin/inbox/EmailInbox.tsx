@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Inbox,
   Send,
@@ -20,6 +22,12 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  Trash2,
+  CheckSquare,
+  Square,
+  Bot,
+  ShieldAlert,
+  Zap,
 } from "lucide-react";
 import { ComposeModal } from "./ComposeModal";
 import { ThreadView } from "./ThreadView";
@@ -28,12 +36,29 @@ type View = "inbox" | "sent" | "starred";
 
 const PAGE_SIZE = 30;
 
+const CATEGORY_COLORS: Record<string, string> = {
+  tour_request: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  lease_inquiry: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  pricing_inquiry: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  application_status: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  move_in_question: "bg-teal-500/10 text-teal-400 border-teal-500/20",
+  maintenance_request: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  amenity_question: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+  scheduling: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+  general_inquiry: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  feedback: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  partnership: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  support: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  personal: "bg-pink-500/10 text-pink-400 border-pink-500/20",
+  spam: "bg-red-500/10 text-red-400 border-red-500/20",
+  other: "bg-gray-500/10 text-gray-400 border-gray-500/20",
+};
+
 interface Email {
   id: string;
   thread_id: string;
   direction: "inbound" | "outbound";
-  status: "received" | "read" | "replied";
-  delivery_status: "sent" | "delivered" | "bounced" | "complained" | null;
+  status: string;
   from_email: string;
   from_name: string | null;
   to_email: string;
@@ -41,34 +66,38 @@ interface Email {
   subject: string;
   body_html: string;
   lead_id: string | null;
-  is_read: boolean;
   is_starred: boolean;
   created_at: string;
-}
-
-function DeliveryIcon({ status }: { status: string | null }) {
-  if (!status || status === "sent") return <Clock className="h-3.5 w-3.5 text-muted-foreground" />;
-  if (status === "delivered") return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />;
-  return <XCircle className="h-3.5 w-3.5 text-destructive" />;
+  read_at: string | null;
+  replied_at: string | null;
+  ai_category: string | null;
+  ai_confidence: number | null;
+  ai_summary: string | null;
+  ai_draft_html: string | null;
+  metadata: Record<string, unknown> | null;
 }
 
 function StatusBadge({ email }: { email: Email }) {
   if (email.direction === "outbound") {
-    const s = email.delivery_status || "sent";
     const colors: Record<string, string> = {
       sent: "bg-muted text-muted-foreground",
       delivered: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
       bounced: "bg-destructive/10 text-destructive border-destructive/20",
-      complained: "bg-destructive/10 text-destructive border-destructive/20",
+      failed: "bg-destructive/10 text-destructive border-destructive/20",
+    };
+    const icons: Record<string, React.ReactNode> = {
+      sent: <Clock className="h-3 w-3" />,
+      delivered: <CheckCircle2 className="h-3 w-3" />,
+      bounced: <XCircle className="h-3 w-3" />,
+      failed: <XCircle className="h-3 w-3" />,
     };
     return (
-      <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${colors[s] || colors.sent}`}>
-        <DeliveryIcon status={s} />
-        {s.charAt(0).toUpperCase() + s.slice(1)}
+      <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${colors[email.status] || colors.sent}`}>
+        {icons[email.status] || icons.sent}
+        {email.status.charAt(0).toUpperCase() + email.status.slice(1)}
       </span>
     );
   }
-  // Inbound status
   const colors: Record<string, string> = {
     received: "bg-blue-500/10 text-blue-400 border-blue-500/20",
     read: "bg-muted text-muted-foreground",
@@ -77,6 +106,17 @@ function StatusBadge({ email }: { email: Email }) {
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize ${colors[email.status] || ""}`}>
       {email.status}
+    </span>
+  );
+}
+
+function CategoryBadge({ category }: { category: string | null }) {
+  if (!category) return null;
+  const label = category.replace(/_/g, " ");
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize ${CATEGORY_COLORS[category] || CATEGORY_COLORS.other}`}>
+      {category === "spam" && <ShieldAlert className="h-3 w-3" />}
+      {label}
     </span>
   );
 }
@@ -91,6 +131,50 @@ export function EmailInbox() {
   const [page, setPage] = useState(1);
   const [composeOpen, setComposeOpen] = useState(false);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  // Auto-reply toggle
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
+  const [autoReplyLoading, setAutoReplyLoading] = useState(false);
+
+  // Fetch settings on mount
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  async function fetchSettings() {
+    try {
+      const res = await fetch("/api/admin/settings");
+      if (res.ok) {
+        const data = await res.json();
+        setAutoReplyEnabled(data.settings?.ai_auto_reply_enabled === true);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  async function toggleAutoReply() {
+    setAutoReplyLoading(true);
+    try {
+      const newValue = !autoReplyEnabled;
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "ai_auto_reply_enabled", value: newValue }),
+      });
+      if (res.ok) {
+        setAutoReplyEnabled(newValue);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setAutoReplyLoading(false);
+    }
+  }
 
   const fetchEmails = useCallback(async () => {
     setLoading(true);
@@ -110,6 +194,7 @@ export function EmailInbox() {
       setEmails(data.emails);
       setTotal(data.total);
       setUnreadCount(data.unread);
+      setSelectedIds(new Set());
     } catch (err) {
       console.error("Fetch emails error:", err);
     } finally {
@@ -125,20 +210,40 @@ export function EmailInbox() {
     setPage(1);
   }, [view, search]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Only when not in an input/textarea
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+
+      if (e.key === "c" && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setComposeOpen(true);
+      }
+      if (e.key === "r" && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        fetchEmails();
+      }
+      if (e.key === "Escape" && selectedEmailId) {
+        setSelectedEmailId(null);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [fetchEmails, selectedEmailId]);
+
   function formatDate(dateStr: string) {
     const date = new Date(dateStr);
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
     if (isToday) {
-      return date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      });
+      return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     }
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
 
   function getDisplayName(email: Email) {
@@ -146,6 +251,10 @@ export function EmailInbox() {
       return email.from_name || email.from_email;
     }
     return `To: ${email.to_email}`;
+  }
+
+  function isRead(email: Email) {
+    return email.status !== "received";
   }
 
   async function toggleStar(e: React.MouseEvent, emailItem: Email) {
@@ -164,19 +273,40 @@ export function EmailInbox() {
     }
   }
 
-  async function markRead(emailItem: Email) {
-    if (emailItem.is_read) return;
-    await fetch(`/api/admin/emails/${emailItem.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_read: true }),
+  function toggleSelect(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
-    setEmails((prev) =>
-      prev.map((em) =>
-        em.id === emailItem.id ? { ...em, is_read: true, status: em.status === "received" ? "read" : em.status } : em
-      )
-    );
-    setUnreadCount((c) => Math.max(0, c - 1));
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === emails.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(emails.map((e) => e.id)));
+    }
+  }
+
+  async function bulkAction(action: "mark_read" | "mark_unread" | "star" | "unstar" | "delete") {
+    if (selectedIds.size === 0) return;
+    if (action === "delete" && !confirm(`Delete ${selectedIds.size} email(s)?`)) return;
+    setBulkLoading(true);
+    try {
+      await fetch("/api/admin/emails", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds), action }),
+      });
+      fetchEmails();
+    } catch (err) {
+      console.error("Bulk action error:", err);
+    } finally {
+      setBulkLoading(false);
+    }
   }
 
   // Thread view
@@ -191,6 +321,7 @@ export function EmailInbox() {
   }
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const allSelected = emails.length > 0 && selectedIds.size === emails.length;
 
   return (
     <div className="space-y-4">
@@ -229,6 +360,20 @@ export function EmailInbox() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Auto-reply toggle */}
+          <div className="flex items-center gap-2 mr-2 border-r pr-3 border-border/50">
+            <Bot className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="auto-reply" className="text-xs text-muted-foreground cursor-pointer">
+              Auto-reply
+            </Label>
+            <Switch
+              id="auto-reply"
+              checked={autoReplyEnabled}
+              onCheckedChange={toggleAutoReply}
+              disabled={autoReplyLoading}
+            />
+          </div>
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -238,15 +383,62 @@ export function EmailInbox() {
               className="pl-9 w-64"
             />
           </div>
-          <Button variant="outline" size="icon" onClick={fetchEmails}>
+          <Button variant="outline" size="icon" onClick={fetchEmails} title="Refresh (R)">
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button onClick={() => setComposeOpen(true)}>
+          <Button onClick={() => setComposeOpen(true)} title="Compose (C)">
             <Plus className="mr-2 h-4 w-4" />
             Compose
           </Button>
         </div>
       </div>
+
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-4 py-2">
+          <span className="text-sm font-medium mr-2">
+            {selectedIds.size} selected
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => bulkAction("mark_read")}
+            disabled={bulkLoading}
+          >
+            <MailOpen className="mr-1 h-3.5 w-3.5" />
+            Mark Read
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => bulkAction("mark_unread")}
+            disabled={bulkLoading}
+          >
+            <Mail className="mr-1 h-3.5 w-3.5" />
+            Unread
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => bulkAction("star")}
+            disabled={bulkLoading}
+          >
+            <Star className="mr-1 h-3.5 w-3.5" />
+            Star
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => bulkAction("delete")}
+            disabled={bulkLoading}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="mr-1 h-3.5 w-3.5" />
+            Delete
+          </Button>
+          {bulkLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+        </div>
+      )}
 
       {/* Email list */}
       <Card>
@@ -269,17 +461,57 @@ export function EmailInbox() {
             </div>
           ) : (
             <div className="divide-y">
+              {/* Select all header */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-muted/20 border-b">
+                <button onClick={toggleSelectAll} className="shrink-0">
+                  {allSelected ? (
+                    <CheckSquare className="h-4 w-4 text-primary" />
+                  ) : (
+                    <Square className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  {allSelected ? "Deselect all" : "Select all"}
+                </span>
+              </div>
+
               {emails.map((emailItem) => (
-                <button
+                <div
                   key={emailItem.id}
-                  onClick={() => {
-                    markRead(emailItem);
-                    setSelectedEmailId(emailItem.id);
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedEmailId(emailItem.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedEmailId(emailItem.id);
+                    }
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 ${
-                    !emailItem.is_read ? "bg-muted/20" : ""
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 cursor-pointer ${
+                    !isRead(emailItem) ? "bg-muted/20" : ""
+                  } ${selectedIds.has(emailItem.id) ? "bg-primary/5" : ""}`}
                 >
+                  {/* Checkbox */}
+                  <div
+                    role="checkbox"
+                    aria-checked={selectedIds.has(emailItem.id)}
+                    tabIndex={0}
+                    onClick={(e) => toggleSelect(e, emailItem.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleSelect(e as unknown as React.MouseEvent, emailItem.id);
+                      }
+                    }}
+                    className="shrink-0 cursor-pointer"
+                  >
+                    {selectedIds.has(emailItem.id) ? (
+                      <CheckSquare className="h-4 w-4 text-primary" />
+                    ) : (
+                      <Square className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+
                   {/* Direction icon */}
                   <div className="shrink-0">
                     {emailItem.direction === "inbound" ? (
@@ -291,7 +523,7 @@ export function EmailInbox() {
 
                   {/* Read indicator */}
                   <div className="shrink-0">
-                    {emailItem.is_read ? (
+                    {isRead(emailItem) ? (
                       <MailOpen className="h-4 w-4 text-muted-foreground" />
                     ) : (
                       <Mail className="h-4 w-4 text-primary" />
@@ -299,9 +531,17 @@ export function EmailInbox() {
                   </div>
 
                   {/* Star */}
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={(e) => toggleStar(e, emailItem)}
-                    className="shrink-0 hover:scale-110 transition-transform"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleStar(e as unknown as React.MouseEvent, emailItem);
+                      }
+                    }}
+                    className="shrink-0 hover:scale-110 transition-transform cursor-pointer"
                   >
                     <Star
                       className={`h-4 w-4 ${
@@ -310,26 +550,41 @@ export function EmailInbox() {
                           : "text-muted-foreground"
                       }`}
                     />
-                  </button>
+                  </div>
 
                   {/* Sender / recipient */}
                   <span
-                    className={`w-44 truncate text-sm shrink-0 ${
-                      !emailItem.is_read ? "font-semibold" : ""
+                    className={`w-40 truncate text-sm shrink-0 ${
+                      !isRead(emailItem) ? "font-semibold" : ""
                     }`}
                   >
                     {getDisplayName(emailItem)}
                   </span>
 
-                  {/* Subject */}
-                  <span className="flex-1 truncate text-sm">
-                    <span className={!emailItem.is_read ? "font-semibold" : ""}>
+                  {/* Subject + AI summary */}
+                  <div className="flex-1 min-w-0">
+                    <span className={`truncate text-sm block ${!isRead(emailItem) ? "font-semibold" : ""}`}>
                       {emailItem.subject || "(No Subject)"}
                     </span>
-                  </span>
+                    {emailItem.ai_summary && (
+                      <span className="truncate text-xs text-muted-foreground block">
+                        {emailItem.ai_summary}
+                      </span>
+                    )}
+                  </div>
 
-                  {/* Status badge */}
-                  <div className="shrink-0">
+                  {/* Badges */}
+                  <div className="shrink-0 flex items-center gap-1.5">
+                    {/* Auto-sent badge */}
+                    {emailItem.metadata && (emailItem.metadata as Record<string, unknown>).auto_sent ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium bg-violet-500/10 text-violet-400 border-violet-500/20">
+                        <Zap className="h-3 w-3" />
+                        Auto
+                      </span>
+                    ) : null}
+                    {/* AI category badge */}
+                    <CategoryBadge category={emailItem.ai_category} />
+                    {/* Status badge */}
                     <StatusBadge email={emailItem} />
                   </div>
 
@@ -337,7 +592,7 @@ export function EmailInbox() {
                   <span className="shrink-0 text-xs text-muted-foreground whitespace-nowrap">
                     {formatDate(emailItem.created_at)}
                   </span>
-                </button>
+                </div>
               ))}
             </div>
           )}

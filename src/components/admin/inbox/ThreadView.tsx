@@ -16,16 +16,38 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  Bot,
+  Zap,
+  Pencil,
+  X,
+  ShieldAlert,
 } from "lucide-react";
 import { ComposeModal } from "./ComposeModal";
 import { SandboxedEmail } from "./SandboxedEmail";
+
+const CATEGORY_COLORS: Record<string, string> = {
+  tour_request: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  lease_inquiry: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  pricing_inquiry: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  application_status: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  move_in_question: "bg-teal-500/10 text-teal-400 border-teal-500/20",
+  maintenance_request: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  amenity_question: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+  scheduling: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+  general_inquiry: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  feedback: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  partnership: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  support: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  personal: "bg-pink-500/10 text-pink-400 border-pink-500/20",
+  spam: "bg-red-500/10 text-red-400 border-red-500/20",
+  other: "bg-gray-500/10 text-gray-400 border-gray-500/20",
+};
 
 interface Email {
   id: string;
   thread_id: string;
   direction: "inbound" | "outbound";
-  status: "received" | "read" | "replied";
-  delivery_status: "sent" | "delivered" | "bounced" | "complained" | null;
+  status: string;
   from_email: string;
   from_name: string | null;
   to_email: string;
@@ -34,24 +56,24 @@ interface Email {
   body_html: string;
   body_text: string | null;
   lead_id: string | null;
-  is_read: boolean;
   is_starred: boolean;
   created_at: string;
+  read_at: string | null;
+  replied_at: string | null;
+  ai_category: string | null;
+  ai_confidence: number | null;
+  ai_summary: string | null;
+  ai_draft_html: string | null;
+  ai_draft_text: string | null;
+  metadata: Record<string, unknown> | null;
 }
 
-interface ThreadViewProps {
-  emailId: string;
-  onBack: () => void;
-  onRefresh: () => void;
-}
-
-function DeliveryBadge({ status }: { status: string | null }) {
-  if (!status) return null;
+function DeliveryBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; icon: React.ReactNode; variant: "default" | "secondary" | "destructive" | "outline" }> = {
     sent: { label: "Sent", icon: <Clock className="h-3 w-3" />, variant: "secondary" },
     delivered: { label: "Delivered", icon: <CheckCircle2 className="h-3 w-3" />, variant: "default" },
     bounced: { label: "Bounced", icon: <XCircle className="h-3 w-3" />, variant: "destructive" },
-    complained: { label: "Complained", icon: <XCircle className="h-3 w-3" />, variant: "destructive" },
+    failed: { label: "Failed", icon: <XCircle className="h-3 w-3" />, variant: "destructive" },
   };
   const c = config[status] || config.sent;
   return (
@@ -62,7 +84,11 @@ function DeliveryBadge({ status }: { status: string | null }) {
   );
 }
 
-export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
+export function ThreadView({ emailId, onBack, onRefresh }: {
+  emailId: string;
+  onBack: () => void;
+  onRefresh: () => void;
+}) {
   const [thread, setThread] = useState<Email[]>([]);
   const [email, setEmail] = useState<Email | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,6 +98,9 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
   const [inlineReply, setInlineReply] = useState("");
   const [inlineSending, setInlineSending] = useState(false);
   const replyRef = useRef<HTMLTextAreaElement>(null);
+  // AI draft state
+  const [draftDismissed, setDraftDismissed] = useState(false);
+  const [composeDraftBody, setComposeDraftBody] = useState("");
 
   useEffect(() => {
     fetchThread();
@@ -80,6 +109,7 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
 
   async function fetchThread() {
     setLoading(true);
+    setDraftDismissed(false);
     try {
       const res = await fetch(`/api/admin/emails/${emailId}`);
       if (!res.ok) throw new Error("Failed to load");
@@ -124,7 +154,6 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
     const replyAddress =
       email.direction === "inbound" ? email.from_email : email.to_email;
 
-    // Get the last message in thread for quoting
     const lastMsg = thread[thread.length - 1];
     const quotedHtml = lastMsg?.body_html || "";
 
@@ -164,6 +193,20 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
     }
   }
 
+  function useAiDraft() {
+    if (!email?.ai_draft_text) return;
+    setInlineReply(email.ai_draft_text);
+    setDraftDismissed(true);
+    replyRef.current?.focus();
+  }
+
+  function editAiDraft() {
+    if (!email?.ai_draft_text) return;
+    setComposeDraftBody(email.ai_draft_text);
+    setReplyOpen(true);
+    setDraftDismissed(true);
+  }
+
   function formatDate(dateStr: string) {
     return new Date(dateStr).toLocaleString("en-US", {
       month: "short",
@@ -193,6 +236,7 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
   const replyAddress =
     email.direction === "inbound" ? email.from_email : email.to_email;
   const lastMsg = thread[thread.length - 1];
+  const hasAiDraft = email.ai_draft_html && !draftDismissed && email.status !== "replied";
 
   return (
     <div className="space-y-4">
@@ -208,18 +252,24 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
           </Badge>
         </div>
         <div className="flex items-center gap-2">
+          {/* AI category + confidence */}
+          {email.ai_category && (
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize ${CATEGORY_COLORS[email.ai_category] || CATEGORY_COLORS.other}`}>
+              {email.ai_category === "spam" && <ShieldAlert className="h-3 w-3" />}
+              {email.ai_category.replace(/_/g, " ")}
+              {email.ai_confidence != null && (
+                <span className="opacity-60 ml-0.5">
+                  {Math.round(email.ai_confidence * 100)}%
+                </span>
+              )}
+            </span>
+          )}
           <Button variant="ghost" size="icon" onClick={toggleStar}>
             <Star
               className={`h-4 w-4 ${email.is_starred ? "fill-yellow-400 text-yellow-400" : ""}`}
             />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setReplyOpen(true);
-            }}
-          >
+          <Button variant="ghost" size="icon" onClick={() => setReplyOpen(true)}>
             <Reply className="h-4 w-4" />
           </Button>
           <Button
@@ -232,6 +282,62 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
           </Button>
         </div>
       </div>
+
+      {/* AI Summary */}
+      {email.ai_summary && (
+        <div className="flex items-start gap-2 rounded-lg border bg-muted/20 px-4 py-3">
+          <Bot className="h-4 w-4 text-violet-400 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-xs font-medium text-violet-400 mb-0.5">AI Summary</p>
+            <p className="text-sm text-muted-foreground">{email.ai_summary}</p>
+          </div>
+        </div>
+      )}
+
+      {/* AI Draft suggestion */}
+      {hasAiDraft && (
+        <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bot className="h-4 w-4 text-violet-400" />
+              <span className="text-sm font-medium text-violet-400">AI Draft Reply</span>
+              {email.ai_confidence != null && (
+                <span className="text-xs text-muted-foreground">
+                  ({Math.round(email.ai_confidence * 100)}% confidence)
+                </span>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setDraftDismissed(true)}
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+          <div className="rounded border border-border/50 bg-background/50 p-3 max-h-48 overflow-auto">
+            <SandboxedEmail html={email.ai_draft_html!} />
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={useAiDraft}>
+              <Zap className="mr-1 h-3.5 w-3.5" />
+              Use Draft
+            </Button>
+            <Button size="sm" variant="outline" onClick={editAiDraft}>
+              <Pencil className="mr-1 h-3.5 w-3.5" />
+              Edit in Composer
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setDraftDismissed(true)}
+            >
+              Ignore
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Thread messages */}
       <div className="space-y-3">
@@ -261,11 +367,18 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {/* Auto-sent badge */}
+                {msg.metadata && (msg.metadata as Record<string, unknown>).auto_sent ? (
+                  <Badge variant="outline" className="gap-1 text-xs bg-violet-500/10 text-violet-400 border-violet-500/20">
+                    <Zap className="h-3 w-3" />
+                    Auto-sent
+                  </Badge>
+                ) : null}
                 <Badge variant={msg.direction === "inbound" ? "default" : "secondary"}>
                   {msg.direction === "inbound" ? "Received" : "Sent"}
                 </Badge>
                 {msg.direction === "outbound" && (
-                  <DeliveryBadge status={msg.delivery_status} />
+                  <DeliveryBadge status={msg.status} />
                 )}
                 {msg.direction === "inbound" && (
                   <Badge variant="outline" className="text-xs capitalize">
@@ -330,13 +443,17 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
         </div>
       </div>
 
-      {/* Full reply modal (with quoted original) */}
+      {/* Full reply modal */}
       <ComposeModal
         open={replyOpen}
-        onClose={() => setReplyOpen(false)}
+        onClose={() => {
+          setReplyOpen(false);
+          setComposeDraftBody("");
+        }}
         onSent={() => {
           fetchThread();
           onRefresh();
+          setComposeDraftBody("");
         }}
         replyTo={{
           threadId: email.thread_id,
@@ -345,6 +462,7 @@ export function ThreadView({ emailId, onBack, onRefresh }: ThreadViewProps) {
           leadId: email.lead_id || undefined,
           quotedHtml: lastMsg?.body_html || "",
         }}
+        defaultBody={composeDraftBody}
       />
     </div>
   );

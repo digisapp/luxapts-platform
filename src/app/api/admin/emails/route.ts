@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
+import { buildBrandedTemplate } from "@/lib/ai-email";
 import { apiError } from "@/lib/api-helpers";
 import crypto from "crypto";
 
@@ -9,7 +10,7 @@ const PAGE_SIZE = 30;
 
 /**
  * GET /api/admin/emails
- * List emails with filtering by direction (inbox/sent), read status, search
+ * List emails with filtering by direction, search, starred, AI category, pagination
  */
 export async function GET(req: NextRequest) {
   try {
@@ -21,8 +22,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const view = searchParams.get("view") || "inbox";
     const search = searchParams.get("search") || "";
-    const unreadOnly = searchParams.get("unread") === "true";
     const starred = searchParams.get("starred") === "true";
+    const category = searchParams.get("category") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = PAGE_SIZE;
     const offset = (page - 1) * limit;
@@ -41,12 +42,12 @@ export async function GET(req: NextRequest) {
       query = query.eq("direction", "outbound");
     }
 
-    if (unreadOnly) {
-      query = query.eq("is_read", false);
-    }
-
     if (starred) {
       query = query.eq("is_starred", true);
+    }
+
+    if (category) {
+      query = query.eq("ai_category", category);
     }
 
     if (search) {
@@ -62,12 +63,12 @@ export async function GET(req: NextRequest) {
       return apiError("Failed to fetch emails", 500);
     }
 
-    // Get unread count for badge
+    // Unread count = inbound emails with status 'received' (no read_at)
     const { count: unreadCount } = await supabase
       .from("emails")
       .select("*", { count: "exact", head: true })
       .eq("direction", "inbound")
-      .eq("is_read", false);
+      .eq("status", "received");
 
     return NextResponse.json({
       emails: emails || [],
@@ -84,7 +85,7 @@ export async function GET(req: NextRequest) {
 
 /**
  * POST /api/admin/emails
- * Send a new email (compose) or reply to a thread
+ * Send a new email or reply to a thread. Uses branded LuxApts template.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -106,22 +107,17 @@ export async function POST(req: NextRequest) {
       return apiError("to, subject, and bodyHtml are required");
     }
 
-    // Send via Resend
+    // Send via Resend with branded template
     const resend = getResendClient();
     const fromEmail = getFromEmail();
+    const brandedHtml = buildBrandedTemplate(bodyHtml);
 
     const { data: sendResult, error: sendError } = await resend.emails.send({
       from: fromEmail,
       to: [to],
       subject,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          ${bodyHtml}
-          <p style="margin-top: 24px; color: #666; font-size: 12px;">
-            — The LuxApts Team
-          </p>
-        </div>
-      `,
+      html: brandedHtml,
+      text: bodyHtml.replace(/<[^>]*>/g, ""),
     });
 
     if (sendError) {
@@ -149,14 +145,17 @@ export async function POST(req: NextRequest) {
       if (lead) resolvedLeadId = lead.id;
     }
 
-    // If this is a reply, mark the inbound email(s) in this thread as "replied"
+    // If reply, mark inbound emails in thread as "replied"
     if (threadId) {
       await supabase
         .from("emails")
-        .update({ status: "replied", updated_at: new Date().toISOString() })
+        .update({
+          status: "replied",
+          replied_at: new Date().toISOString(),
+        })
         .eq("thread_id", threadId)
         .eq("direction", "inbound")
-        .neq("status", "replied");
+        .in("status", ["received", "read"]);
     }
 
     const { data: email, error: insertError } = await supabase
@@ -164,16 +163,17 @@ export async function POST(req: NextRequest) {
       .insert({
         thread_id: finalThreadId,
         direction: "outbound",
-        status: "read",
-        delivery_status: "sent",
+        status: "sent",
+        resend_message_id: sendResult?.id || null,
         from_email: fromAddr,
         from_name: fromName,
         to_email: to,
         subject,
         body_html: bodyHtml,
-        resend_id: sendResult?.id || null,
+        body_text: bodyHtml.replace(/<[^>]*>/g, ""),
         lead_id: resolvedLeadId,
-        is_read: true,
+        is_starred: false,
+        sent_by: auth.userId || null,
       })
       .select()
       .single();
@@ -186,6 +186,71 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, email, thread_id: finalThreadId });
   } catch (error) {
     console.error("Send email error:", error);
+    return apiError("Internal server error", 500);
+  }
+}
+
+/**
+ * PATCH /api/admin/emails (bulk actions)
+ * Body: { ids: string[], action: "mark_read" | "mark_unread" | "star" | "unstar" | "delete" }
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const auth = await checkAdminAuth();
+    if (!auth.isAdmin) {
+      return apiError(auth.error, auth.status);
+    }
+
+    const { ids, action } = (await req.json()) as {
+      ids: string[];
+      action: "mark_read" | "mark_unread" | "star" | "unstar" | "delete";
+    };
+
+    if (!ids?.length || !action) {
+      return apiError("ids and action are required");
+    }
+
+    const supabase = createAdminClient();
+
+    if (action === "delete") {
+      await supabase.from("emails").delete().in("id", ids);
+      return NextResponse.json({ success: true, deleted: ids.length });
+    }
+
+    if (action === "mark_read") {
+      // Only mark inbound emails with status 'received' as read
+      await supabase
+        .from("emails")
+        .update({ status: "read", read_at: new Date().toISOString() })
+        .in("id", ids)
+        .eq("direction", "inbound")
+        .eq("status", "received");
+      return NextResponse.json({ success: true, updated: ids.length });
+    }
+
+    if (action === "mark_unread") {
+      // Only revert inbound emails to 'received'
+      await supabase
+        .from("emails")
+        .update({ status: "received", read_at: null })
+        .in("id", ids)
+        .eq("direction", "inbound")
+        .in("status", ["read", "replied"]);
+      return NextResponse.json({ success: true, updated: ids.length });
+    }
+
+    const updates: Record<string, unknown> = {};
+    if (action === "star") {
+      updates.is_starred = true;
+    } else if (action === "unstar") {
+      updates.is_starred = false;
+    }
+
+    await supabase.from("emails").update(updates).in("id", ids);
+
+    return NextResponse.json({ success: true, updated: ids.length });
+  } catch (error) {
+    console.error("Bulk action error:", error);
     return apiError("Internal server error", 500);
   }
 }

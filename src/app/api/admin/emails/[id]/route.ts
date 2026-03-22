@@ -5,7 +5,7 @@ import { apiError } from "@/lib/api-helpers";
 
 /**
  * GET /api/admin/emails/[id]
- * Get a single email + full thread
+ * Fetch a single email + full thread. Marks as read on open.
  */
 export async function GET(
   req: NextRequest,
@@ -37,14 +37,13 @@ export async function GET(
       .eq("thread_id", email.thread_id)
       .order("created_at", { ascending: true });
 
-    // Mark as read + update status
-    if (!email.is_read) {
+    // Mark as read if inbound + status is 'received'
+    if (email.direction === "inbound" && email.status === "received") {
       await supabase
         .from("emails")
         .update({
-          is_read: true,
-          status: email.status === "received" ? "read" : email.status,
-          updated_at: new Date().toISOString(),
+          status: "read",
+          read_at: new Date().toISOString(),
         })
         .eq("id", id);
     }
@@ -58,7 +57,7 @@ export async function GET(
 
 /**
  * PATCH /api/admin/emails/[id]
- * Update email (mark read/unread, star/unstar)
+ * Update email: toggle starred, mark read/unread
  */
 export async function PATCH(
   req: NextRequest,
@@ -72,14 +71,16 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
-    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const supabase = createAdminClient();
+    const updates: Record<string, unknown> = {};
+
+    if (typeof body.is_starred === "boolean") {
+      updates.is_starred = body.is_starred;
+    }
 
     if (typeof body.is_read === "boolean") {
-      updates.is_read = body.is_read;
-      // Update status: received → read when marking as read
       if (body.is_read) {
-        // Fetch current status to only advance forward
-        const supabase = createAdminClient();
+        // Mark as read — only advance status forward
         const { data: current } = await supabase
           .from("emails")
           .select("status")
@@ -87,14 +88,18 @@ export async function PATCH(
           .single();
         if (current?.status === "received") {
           updates.status = "read";
+          updates.read_at = new Date().toISOString();
         }
+      } else {
+        // Mark as unread
+        updates.status = "received";
+        updates.read_at = null;
       }
     }
-    if (typeof body.is_starred === "boolean") {
-      updates.is_starred = body.is_starred;
-    }
 
-    const supabase = createAdminClient();
+    if (Object.keys(updates).length === 0) {
+      return apiError("No valid updates provided");
+    }
     const { data: email, error } = await supabase
       .from("emails")
       .update(updates)
@@ -115,7 +120,6 @@ export async function PATCH(
 
 /**
  * DELETE /api/admin/emails/[id]
- * Delete an email
  */
 export async function DELETE(
   req: NextRequest,
