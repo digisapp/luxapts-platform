@@ -10,6 +10,7 @@ import type { BuildingSummary } from "./BuildingsManager";
 
 interface BuildingRowProps {
   building: BuildingSummary;
+  cities?: Array<{ id: string; name: string; slug: string }>;
 }
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" | "success" }> = {
@@ -18,7 +19,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   coming_soon: { label: "Coming Soon", variant: "outline" },
 };
 
-export function BuildingRow({ building }: BuildingRowProps) {
+export function BuildingRow({ building, cities = [] }: BuildingRowProps) {
   const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState(building.status);
   const [updating, setUpdating] = useState(false);
@@ -149,6 +150,7 @@ export function BuildingRow({ building }: BuildingRowProps) {
             </div>
           ) : detail ? (
             <BuildingDetails
+              cities={cities}
               data={detail as {
                 building: Record<string, unknown>;
                 amenities: Array<{ amenity_id: string; details: string | null; amenities: { id: string; name: string; category: string | null } | null }>;

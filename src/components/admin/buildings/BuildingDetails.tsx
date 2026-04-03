@@ -15,9 +15,11 @@ import {
   Layers,
   Plus,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { UnitsSection } from "./UnitsSection";
 import { ImageUploadDialog } from "./ImageUploadDialog";
+import { BuildingFormDialog } from "./BuildingFormDialog";
 
 interface BuildingDetailData {
   building: Record<string, unknown>;
@@ -55,12 +57,15 @@ interface BuildingDetailData {
 interface BuildingDetailsProps {
   data: BuildingDetailData;
   buildingId: string;
+  cities?: Array<{ id: string; name: string; slug: string }>;
 }
 
-export function BuildingDetails({ data, buildingId }: BuildingDetailsProps) {
-  const { building, amenities, units } = data;
+export function BuildingDetails({ data, buildingId, cities = [] }: BuildingDetailsProps) {
+  const [building, setBuilding] = useState(data.building);
+  const { amenities, units } = data;
   const [images, setImages] = useState(data.images);
   const [showUpload, setShowUpload] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const infoItems = [
@@ -105,6 +110,25 @@ export function BuildingDetails({ data, buildingId }: BuildingDetailsProps) {
     amenitiesByCategory[cat].push({ name: a.amenities.name, details: a.details });
   }
 
+  // Build initial form data from current building for edit dialog
+  const editInitialData = {
+    name: building.name as string || "",
+    address_1: building.address_1 as string || "",
+    address_2: building.address_2 as string || "",
+    city_id: building.city_id as string || "",
+    zip: building.zip as string || "",
+    status: building.status as string || "active",
+    description: building.description as string || "",
+    website_url: building.website_url as string || "",
+    leasing_phone: building.leasing_phone as string || "",
+    leasing_email: building.leasing_email as string || "",
+    year_built: building.year_built ? String(building.year_built) : "",
+    stories: building.stories ? String(building.stories) : "",
+    pet_policy: building.pet_policy as string || "",
+    parking_policy: building.parking_policy as string || "",
+    deposit_policy: building.deposit_policy as string || "",
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-2">
@@ -113,7 +137,18 @@ export function BuildingDetails({ data, buildingId }: BuildingDetailsProps) {
           {/* Building Info */}
           <Card>
             <CardContent className="p-4 space-y-2">
-              <h4 className="font-semibold text-sm">Building Info</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm">Building Info</h4>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => setShowEdit(true)}
+                >
+                  <Pencil className="mr-1.5 h-3 w-3" />
+                  Edit
+                </Button>
+              </div>
               {typeof building.description === "string" && building.description && (
                 <p className="text-sm text-muted-foreground">
                   {building.description}
@@ -240,6 +275,16 @@ export function BuildingDetails({ data, buildingId }: BuildingDetailsProps) {
         onOpenChange={setShowUpload}
         buildingId={buildingId}
         onImageAdded={handleImageAdded}
+      />
+
+      {/* Edit Building Dialog */}
+      <BuildingFormDialog
+        open={showEdit}
+        onOpenChange={setShowEdit}
+        cities={cities}
+        buildingId={buildingId}
+        initialData={editInitialData}
+        onSaved={(updated) => setBuilding(updated)}
       />
     </div>
   );

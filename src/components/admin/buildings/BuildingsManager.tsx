@@ -4,9 +4,10 @@ import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Plus } from "lucide-react";
 import { BuildingStatsBar } from "./BuildingStatsBar";
 import { BuildingRow } from "./BuildingRow";
+import { BuildingFormDialog } from "./BuildingFormDialog";
 
 interface City {
   id: string;
@@ -37,10 +38,12 @@ interface BuildingsManagerProps {
   buildings: BuildingSummary[];
 }
 
-export function BuildingsManager({ cities, buildings }: BuildingsManagerProps) {
+export function BuildingsManager({ cities, buildings: initialBuildings }: BuildingsManagerProps) {
+  const [buildings, setBuildings] = useState<BuildingSummary[]>(initialBuildings);
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterMode>("all");
+  const [showCreate, setShowCreate] = useState(false);
 
   // Compute city counts
   const cityCounts = useMemo(() => {
@@ -94,16 +97,42 @@ export function BuildingsManager({ cities, buildings }: BuildingsManagerProps) {
     { value: "missing_images", label: "Missing Images" },
   ];
 
+  function handleBuildingCreated(building: Record<string, unknown>) {
+    const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
+    const newBuilding: BuildingSummary = {
+      id: building.id as string,
+      name: building.name as string,
+      address_1: building.address_1 as string,
+      zip: building.zip as string | null,
+      status: building.status as string,
+      website_url: building.website_url as string | null,
+      year_built: building.year_built as number | null,
+      stories: building.stories as number | null,
+      city_id: building.city_id as string,
+      cities: city as BuildingSummary["cities"],
+      image_count: 0,
+      unit_count: 0,
+      available_unit_count: 0,
+    };
+    setBuildings((prev) => [newBuilding, ...prev]);
+  }
+
   return (
     <div className="space-y-6">
-      <BuildingStatsBar
-        totalBuildings={statsSource.length}
-        activeCount={activeCount}
-        inactiveCount={inactiveCount}
-        missingImagesCount={missingImagesCount}
-        totalUnits={totalUnits}
-        availableUnits={availableUnits}
-      />
+      <div className="flex items-center justify-between">
+          <BuildingStatsBar
+          totalBuildings={statsSource.length}
+          activeCount={activeCount}
+          inactiveCount={inactiveCount}
+          missingImagesCount={missingImagesCount}
+          totalUnits={totalUnits}
+          availableUnits={availableUnits}
+        />
+        <Button onClick={() => setShowCreate(true)} className="shrink-0">
+          <Plus className="mr-2 h-4 w-4" />
+          Add Building
+        </Button>
+      </div>
 
       {/* City Tabs */}
       <div className="flex flex-wrap items-center gap-2">
@@ -172,7 +201,7 @@ export function BuildingsManager({ cities, buildings }: BuildingsManagerProps) {
           </div>
         ) : (
           filtered.map((building) => (
-            <BuildingRow key={building.id} building={building} />
+            <BuildingRow key={building.id} building={building} cities={cities} />
           ))
         )}
       </div>
@@ -180,6 +209,13 @@ export function BuildingsManager({ cities, buildings }: BuildingsManagerProps) {
       <p className="text-sm text-muted-foreground">
         Showing {filtered.length} of {buildings.length} buildings
       </p>
+
+      <BuildingFormDialog
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        cities={cities}
+        onSaved={handleBuildingCreated}
+      />
     </div>
   );
 }

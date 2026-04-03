@@ -3,43 +3,26 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Building2,
-  Users,
   LayoutDashboard,
-  Settings,
-  FileText,
-  Upload,
-  RefreshCw,
-  LogOut,
-  Mail,
-  MessageCircle,
-  BarChart3,
-  UserCheck,
   MapPin,
   Award,
-  SlidersHorizontal,
+  DollarSign,
+  User,
+  LogOut,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/leads", label: "Leads", icon: Users, exact: false },
-  { href: "/admin/buildings", label: "Buildings", icon: Building2, exact: false },
-  { href: "/admin/data-quality", label: "Data Quality", icon: BarChart3, exact: false },
-  { href: "/admin/agents", label: "Agents", icon: FileText, exact: false },
-  { href: "/admin/showers", label: "Showers", icon: UserCheck, exact: false },
-  { href: "/admin/showing-leads", label: "Showing Leads", icon: MapPin, exact: false },
-  { href: "/admin/certifications", label: "Certifications", icon: Award, exact: false },
-  { href: "/admin/shower-settings", label: "Program Settings", icon: SlidersHorizontal, exact: false },
-  { href: "/admin/email", label: "Email", icon: Mail, exact: false },
-  { href: "/admin/conversations", label: "Chat Log", icon: MessageCircle, exact: false },
-  { href: "/admin/import", label: "Import", icon: Upload, exact: false },
-  { href: "/admin/scraping", label: "Scraping", icon: RefreshCw, exact: false },
-  { href: "/admin/settings", label: "Settings", icon: Settings, exact: false },
+  { href: "/shower", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/shower/leads", label: "Lead Feed", icon: MapPin, exact: false },
+  { href: "/shower/certifications", label: "Certifications", icon: Award, exact: false },
+  { href: "/shower/earnings", label: "Earnings", icon: DollarSign, exact: false },
+  { href: "/shower/profile", label: "My Profile", icon: User, exact: false },
 ];
 
-export function AdminNav() {
+export function ShowerNav() {
   const pathname = usePathname();
 
   function isActive(href: string, exact: boolean) {
@@ -49,15 +32,13 @@ export function AdminNav() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
-        <Link href="/admin" className="flex items-center gap-2">
+        <Link href="/shower" className="flex items-center gap-2">
           <Building2 className="h-6 w-6" />
-          <span className="text-lg font-bold">LuxApts Admin</span>
+          <span className="text-lg font-bold">LuxApts Shower</span>
         </Link>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
         {navLinks.map((link) => {
           const active = isActive(link.href, link.exact);
@@ -80,12 +61,11 @@ export function AdminNav() {
         })}
       </nav>
 
-      {/* Footer */}
       <div className="border-t p-4">
         <Button variant="ghost" className="w-full justify-start gap-3" asChild>
           <Link href="/">
             <LogOut className="h-4 w-4" />
-            Exit Admin
+            Exit Portal
           </Link>
         </Button>
       </div>
