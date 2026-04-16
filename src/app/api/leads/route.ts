@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
-import { escapeHtml } from "@/lib/utils";
 import { Resend } from "resend";
 import { createLeadSchema } from "@/lib/validations";
 import { apiError } from "@/lib/api-helpers";
 import { autoAssignAgent } from "@/lib/leads/routing";
+import { newLeadEmail } from "@/lib/email/templates";
 import type { CreateLeadResponse } from "@/types/database";
 
 export async function POST(req: Request) {
@@ -102,26 +102,20 @@ export async function POST(req: Request) {
         await resend.emails.send({
           from: fromEmail,
           to: [toEmail],
-          subject: `New LuxApts Lead (${cityRes.data.name})`,
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #1a1a1a;">New Lead Received</h2>
-              <div style="background: #f5f5f5; padding: 20px; border-radius: 8px;">
-                <p><strong>City:</strong> ${escapeHtml(cityRes.data.name)}</p>
-                <p><strong>Source:</strong> ${escapeHtml(body.source)}</p>
-                <p><strong>Name:</strong> ${escapeHtml(body.name) || "Not provided"}</p>
-                <p><strong>Email:</strong> ${escapeHtml(body.email) || "Not provided"}</p>
-                <p><strong>Phone:</strong> ${escapeHtml(body.phone) || "Not provided"}</p>
-                <p><strong>Budget:</strong> $${body.budget_min || "?"} - $${body.budget_max || "?"}</p>
-                <p><strong>Beds:</strong> ${body.beds || "Not specified"}</p>
-                <p><strong>Move-in:</strong> ${escapeHtml(body.move_in_date) || "Not specified"}</p>
-                ${body.notes ? `<p><strong>Notes:</strong> ${escapeHtml(body.notes)}</p>` : ""}
-              </div>
-              <p style="margin-top: 20px; color: #666;">
-                <strong>Lead ID:</strong> ${leadId}
-              </p>
-            </div>
-          `,
+          subject: `New Lead: ${body.name || "Anonymous"} · ${cityRes.data.name}`,
+          html: newLeadEmail({
+            leadId,
+            city: cityRes.data.name,
+            source: body.source,
+            name: body.name,
+            email: body.email,
+            phone: body.phone,
+            budgetMin: body.budget_min,
+            budgetMax: body.budget_max,
+            beds: body.beds,
+            moveInDate: body.move_in_date,
+            notes: body.notes,
+          }),
         });
       } catch (emailError) {
         console.error("Email notification failed:", emailError);
