@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CSVUploader } from "@/components/admin/import/CSVUploader";
+import { CityImporter } from "@/components/admin/import/CityImporter";
 import { generateCSVTemplate } from "@/lib/admin/csv-parser";
 
 export default function ImportPage() {
@@ -11,9 +12,22 @@ export default function ImportPage() {
       <div>
         <h1 className="text-3xl font-bold">Bulk Import</h1>
         <p className="text-muted-foreground">
-          Import buildings from CSV files
+          Seed cities from pre-loaded data or upload a custom CSV
         </p>
       </div>
+
+      {/* City seed importer */}
+      <Card>
+        <CardHeader>
+          <CardTitle>City Data Import</CardTitle>
+          <CardDescription>
+            Import pre-loaded building data for each city. Each import is idempotent — safe to re-run.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CityImporter />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
