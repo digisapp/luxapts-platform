@@ -561,7 +561,9 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                                       Floor Plan
                                     </Button>
                                   )}
-                                  <Button size="sm">View</Button>
+                                  <Link href={`/buildings/${building.id}/units/${unit.id}`}>
+                                    <Button size="sm">View</Button>
+                                  </Link>
                                 </div>
                               </div>
                             </div>

@@ -15,6 +15,12 @@ import { Building2, MapPin, Search, ArrowRight, Star, TrendingUp } from "lucide-
 
 export const revalidate = 3600;
 
+export async function generateStaticParams() {
+  const supabase = createAdminClient();
+  const { data } = await supabase.from("cities").select("slug");
+  return (data || []).map((c) => ({ slug: c.slug }));
+}
+
 // Per-city hero images (curated Unsplash, landscape/skyline)
 const CITY_HERO_IMAGES: Record<string, string> = {
   miami:
