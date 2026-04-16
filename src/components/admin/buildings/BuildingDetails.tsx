@@ -20,6 +20,7 @@ import {
 import { UnitsSection } from "./UnitsSection";
 import { ImageUploadDialog } from "./ImageUploadDialog";
 import { BuildingFormDialog } from "./BuildingFormDialog";
+import { BuildingFactsCard } from "./BuildingFactsCard";
 
 interface BuildingDetailData {
   building: Record<string, unknown>;
@@ -209,6 +210,9 @@ export function BuildingDetails({ data, buildingId, cities = [] }: BuildingDetai
               </CardContent>
             </Card>
           )}
+
+          {/* Building Facts */}
+          <BuildingFactsCard buildingId={buildingId} />
         </div>
 
         {/* Right: Images */}

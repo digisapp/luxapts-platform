@@ -437,6 +437,29 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 </Card>
               )}
 
+              {/* 3D Tour */}
+              {building.tour_3d_url && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Layout className="h-5 w-5" />
+                      Virtual 3D Tour
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0 overflow-hidden rounded-b-xl">
+                    <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                      <iframe
+                        src={building.tour_3d_url}
+                        allow="xr-spatial-tracking; gyroscope; accelerometer; fullscreen"
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full border-0"
+                        title={`3D Tour of ${building.name}`}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Available Units */}
               <Card>
                 <CardHeader>
