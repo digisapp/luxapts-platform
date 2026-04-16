@@ -30,16 +30,26 @@ export async function POST(req: Request) {
       const contextLines: string[] = [];
 
       if (context.building_id) {
-        const { data: building } = await supabase
-          .from("buildings")
-          .select(`
-            name, address_1, description, pet_policy, parking_policy,
-            leasing_phone, leasing_email, website_url,
-            cities:city_id (name),
-            neighborhoods:neighborhood_id (name)
-          `)
-          .eq("id", context.building_id)
-          .single();
+        const [buildingRes, factsRes] = await Promise.all([
+          supabase
+            .from("buildings")
+            .select(`
+              name, address_1, description, pet_policy, parking_policy,
+              deposit_policy, leasing_phone, leasing_email, website_url,
+              year_built, stories,
+              cities:city_id (name),
+              neighborhoods:neighborhood_id (name)
+            `)
+            .eq("id", context.building_id)
+            .single(),
+          supabase
+            .from("building_facts")
+            .select("key, value")
+            .eq("building_id", context.building_id),
+        ]);
+
+        const building = buildingRes.data;
+        const facts = factsRes.data || [];
 
         if (building) {
           const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
@@ -51,10 +61,24 @@ export async function POST(req: Request) {
             building.address_1 ? `Address: ${building.address_1}${city ? `, ${(city as { name: string }).name}` : ""}` : "",
             hood ? `Neighborhood: ${(hood as { name: string }).name}` : "",
             building.description ? `Description: ${building.description}` : "",
+            building.year_built ? `Year built: ${building.year_built}` : "",
+            building.stories ? `Stories: ${building.stories}` : "",
             building.pet_policy ? `Pet policy: ${building.pet_policy}` : "",
             building.parking_policy ? `Parking: ${building.parking_policy}` : "",
+            building.deposit_policy ? `Deposit: ${building.deposit_policy}` : "",
             building.leasing_phone ? `Leasing phone: ${building.leasing_phone}` : "",
             building.leasing_email ? `Leasing email: ${building.leasing_email}` : "",
+          );
+
+          // Inject building facts (admin-curated data for grounding)
+          if (facts.length > 0) {
+            contextLines.push(`\n### Building Facts (verified data)`);
+            for (const f of facts) {
+              contextLines.push(`- ${f.key}: ${f.value}`);
+            }
+          }
+
+          contextLines.push(
             `\nWhen the conversation starts, acknowledge you can see they're looking at ${building.name} and offer to help them learn more about it or find similar options.`
           );
 

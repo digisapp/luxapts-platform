@@ -107,7 +107,7 @@ export default async function CitiesPage() {
                 >
                   <CardContent className="p-0">
                     {/* City Header */}
-                    <Link href={`/search?city=${city.slug}`}>
+                    <Link href={`/cities/${city.slug}`}>
                       <div className="p-6 bg-gradient-to-br from-zinc-900 to-zinc-800 group-hover:from-primary/10 group-hover:to-zinc-900 transition-colors">
                         <div className="flex items-start justify-between">
                           <div>
