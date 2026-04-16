@@ -259,7 +259,350 @@ export interface LeadWithRelations extends Lead {
   assignments?: AgentAssignment[];
 }
 
+// =========================
+// User tables (005_user_tables.sql)
+// =========================
+
+export interface UserFavorite {
+  id: string;
+  user_id: string;
+  building_id: string | null;
+  unit_id: string | null;
+  created_at: string;
+}
+
+export interface UserSavedSearch {
+  id: string;
+  user_id: string;
+  name: string;
+  query_params: Record<string, unknown>;
+  email_alerts: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// =========================
+// Analytics tables (007_analytics.sql)
+// =========================
+
+export type DeviceType = "desktop" | "tablet" | "mobile";
+
+export interface PageView {
+  id: string;
+  session_id: string;
+  user_id: string | null;
+  path: string;
+  referrer: string | null;
+  user_agent: string | null;
+  device_type: DeviceType | null;
+  city_slug: string | null;
+  duration_ms: number | null;
+  created_at: string;
+}
+
+export interface BuildingView {
+  id: string;
+  session_id: string;
+  user_id: string | null;
+  building_id: string;
+  source: string | null;
+  time_on_page_ms: number | null;
+  scrolled_to_bottom: boolean;
+  viewed_gallery: boolean;
+  clicked_contact: boolean;
+  clicked_schedule_tour: boolean;
+  created_at: string;
+}
+
+export interface AnalyticsEvent {
+  id: string;
+  session_id: string;
+  user_id: string | null;
+  event_name: string;
+  event_category: string | null;
+  properties: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface UserSession {
+  id: string;
+  session_id: string;
+  user_id: string | null;
+  first_seen_at: string;
+  last_seen_at: string;
+  page_views_count: number;
+  device_type: string | null;
+  browser: string | null;
+  os: string | null;
+  country: string | null;
+  city: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  landing_page: string | null;
+  is_bounce: boolean;
+}
+
+// =========================
+// Email tables (009/010 migrations)
+// =========================
+
+export interface EmailCampaign {
+  id: string;
+  subject: string;
+  body_html: string;
+  recipient_filter: Record<string, unknown>;
+  recipients_count: number;
+  sent_count: number;
+  failed_count: number;
+  status: "pending" | "sending" | "completed" | "partial_failure";
+  sent_at: string;
+  created_by: string | null;
+  created_at: string;
+}
+
+export type EmailDirection = "inbound" | "outbound";
+export type EmailStatus =
+  | "received"
+  | "read"
+  | "replied"
+  | "sent"
+  | "delivered"
+  | "bounced"
+  | "failed";
+
+export interface Email {
+  id: string;
+  direction: EmailDirection;
+  thread_id: string | null;
+  resend_message_id: string | null;
+  from_email: string;
+  from_name: string | null;
+  to_email: string;
+  to_name: string | null;
+  reply_to: string | null;
+  cc: string | null;
+  bcc: string | null;
+  subject: string;
+  body_html: string | null;
+  body_text: string | null;
+  status: EmailStatus;
+  sent_by: string | null;
+  lead_id: string | null;
+  is_starred: boolean;
+  metadata: Record<string, unknown>;
+  headers: Record<string, unknown>;
+  created_at: string;
+  read_at: string | null;
+  replied_at: string | null;
+  ai_draft_html: string | null;
+  ai_draft_text: string | null;
+  ai_category: string | null;
+  ai_confidence: number | null;
+  ai_processed_at: string | null;
+  ai_summary: string | null;
+}
+
+// =========================
+// Platform settings (011_platform_settings.sql)
+// =========================
+
+export interface PlatformSetting {
+  key: string;
+  value: unknown;
+  updated_at: string;
+}
+
+// =========================
+// Shower program tables (012_showers.sql)
+// =========================
+
+export type ShowerStatus = "pending" | "approved" | "suspended" | "terminated";
+export type ShowerTier = "rookie" | "premier" | "elite";
+export type ShowerCertificationStatus =
+  | "in_progress"
+  | "shadow_pending"
+  | "certified"
+  | "expired";
+export type ShowingLeadStatus =
+  | "open"
+  | "claimed"
+  | "in_progress"
+  | "completed"
+  | "cancelled"
+  | "no_show";
+export type ShowingClaimStatus = "active" | "cancelled" | "completed" | "no_show";
+export type ApplicationLikelihood = "high" | "medium" | "low" | "already_interested";
+export type ShowerEarningType =
+  | "showing_fee"
+  | "placement_bonus"
+  | "mentorship_bonus"
+  | "adjustment";
+export type ShowerEarningStatus = "pending" | "approved" | "paid" | "cancelled";
+export type ShowerStrikeType = "no_show" | "late_cancel" | "poor_conduct" | "low_rating";
+
+export interface Shower {
+  id: string;
+  user_id: string;
+  display_name: string;
+  phone: string | null;
+  photo_url: string | null;
+  bio: string | null;
+  status: ShowerStatus;
+  tier: ShowerTier;
+  total_showings: number;
+  avg_rating: number;
+  strike_count: number;
+  agreement_accepted: boolean;
+  agreement_accepted_at: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
+  suspension_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BuildingCertificationContent {
+  id: string;
+  building_id: string;
+  quiz_questions: unknown[];
+  key_selling_points: string | null;
+  amenity_notes: string | null;
+  pet_policy_notes: string | null;
+  parking_notes: string | null;
+  pricing_notes: string | null;
+  shadows_required: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShowerCertification {
+  id: string;
+  shower_id: string;
+  building_id: string;
+  knowledge_attempts: number;
+  knowledge_best_score: number | null;
+  knowledge_passed_at: string | null;
+  shadow_count: number;
+  shadow_completed_at: string | null;
+  certified_at: string | null;
+  expires_at: string | null;
+  status: ShowerCertificationStatus;
+}
+
+export interface ShadowSession {
+  id: string;
+  building_id: string;
+  lead_shower_id: string;
+  observer_shower_id: string;
+  showing_lead_id: string | null;
+  confirmed_at: string | null;
+  confirmed_by: string | null;
+  mentorship_bonus_paid: boolean;
+  created_at: string;
+}
+
+export interface ShowingLead {
+  id: string;
+  building_id: string;
+  client_name: string;
+  client_email: string | null;
+  client_phone: string | null;
+  preferred_date: string;
+  preferred_time: string;
+  unit_type: string | null;
+  notes: string | null;
+  special_instructions: string | null;
+  status: ShowingLeadStatus;
+  lease_signed: boolean;
+  lease_signed_at: string | null;
+  monthly_rent: number | null;
+  posted_by: string;
+  created_at: string;
+  expires_at: string | null;
+}
+
+export interface ShowingClaim {
+  id: string;
+  showing_lead_id: string;
+  shower_id: string;
+  claimed_at: string;
+  status: ShowingClaimStatus;
+  cancelled_at: string | null;
+  cancel_notice_hours: number | null;
+  cancel_reason: string | null;
+}
+
+export interface ShowingDebrief {
+  id: string;
+  showing_lead_id: string;
+  shower_id: string;
+  client_showed_up: boolean;
+  interest_level: number | null;
+  application_likelihood: ApplicationLikelihood | null;
+  units_of_interest: string | null;
+  client_objections: string | null;
+  broker_notes: string | null;
+  photo_urls: string[];
+  client_rating: number | null;
+  client_rating_received_at: string | null;
+  submitted_at: string;
+  admin_approved_at: string | null;
+  admin_approved_by: string | null;
+  admin_notes: string | null;
+}
+
+export interface ShowerEarning {
+  id: string;
+  shower_id: string;
+  showing_lead_id: string | null;
+  type: ShowerEarningType;
+  amount: number;
+  status: ShowerEarningStatus;
+  description: string | null;
+  approved_at: string | null;
+  paid_at: string | null;
+  monthly_rent: number | null;
+  brokerage_commission: number | null;
+  estimated_pay_date: string | null;
+  created_at: string;
+}
+
+export interface CommissionRecord {
+  id: string;
+  showing_lead_id: string;
+  monthly_rent: number;
+  commission_amount: number;
+  attribution: Record<string, number>;
+  received_at: string;
+  recorded_by: string;
+  notes: string | null;
+}
+
+export interface ShowerStrike {
+  id: string;
+  shower_id: string;
+  showing_lead_id: string | null;
+  type: ShowerStrikeType;
+  description: string | null;
+  created_at: string;
+  created_by: string;
+}
+
+// Extended shower types with relations
+export interface ShowerWithProfile extends Shower {
+  profile?: Pick<Profile, "full_name">;
+}
+
+export interface ShowingLeadWithRelations extends ShowingLead {
+  building?: Pick<Building, "id" | "name" | "address_1">;
+  showing_claims?: ShowingClaim[];
+  showing_debriefs?: Pick<ShowingDebrief, "id" | "submitted_at" | "admin_approved_at" | "client_rating">[];
+}
+
+// =========================
 // API Response types
+// =========================
 export interface SearchResult {
   building: BuildingWithRelations;
   unit: Pick<Unit, "id" | "unit_number" | "beds" | "baths" | "sqft" | "available_on" | "floorplan_id">;

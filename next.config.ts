@@ -25,6 +25,31 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      // CORS for public-facing APIs (search, chat, listings, leads)
+      // Allows mobile apps and third-party integrations to consume these endpoints.
+      // Admin routes intentionally excluded.
+      {
+        source:
+          "/api/(search|chat|leads|buildings|compare|favorites|similar-listings|cities|browse|neighborhoods)(.*)",
+        headers: [
+          {
+            key: "Access-Control-Allow-Origin",
+            value: "*",
+          },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, POST, OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization",
+          },
+          {
+            key: "Access-Control-Max-Age",
+            value: "86400",
+          },
+        ],
+      },
       {
         source: "/(.*)",
         headers: [

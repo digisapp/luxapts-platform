@@ -52,10 +52,33 @@ export async function POST(req: Request) {
       return apiError("No recipients match the filter");
     }
 
-    // Send via Resend batch (chunks of 100)
+    // Create the campaign record upfront so we can update delivery counts on it
+    const { data: campaign, error: insertError } = await supabase
+      .from("email_campaigns")
+      .insert({
+        subject,
+        body_html,
+        recipient_filter: filter || {},
+        recipients_count: recipients.length,
+        sent_count: 0,
+        failed_count: 0,
+        status: "sending",
+        created_by: auth.userId,
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !campaign) {
+      console.error("Insert campaign error:", insertError);
+      return apiError("Failed to create campaign record", 500);
+    }
+
+    // Send via Resend batch (chunks of 100), tracking delivery counts
     const resend = getResendClient();
     const fromEmail = getFromEmail();
     const CHUNK_SIZE = 100;
+    let sentCount = 0;
+    let failedCount = 0;
 
     for (let i = 0; i < recipients.length; i += CHUNK_SIZE) {
       const chunk = recipients.slice(i, i + CHUNK_SIZE);
@@ -76,31 +99,32 @@ export async function POST(req: Request) {
 
       try {
         await resend.batch.send(emails);
+        sentCount += chunk.length;
       } catch (batchError) {
         console.error(`Batch send error (chunk ${i}):`, batchError);
+        failedCount += chunk.length;
       }
     }
 
-    // Record campaign
-    const { data: campaign, error: insertError } = await supabase
-      .from("email_campaigns")
-      .insert({
-        subject,
-        body_html,
-        recipient_filter: filter || {},
-        recipients_count: recipients.length,
-        created_by: auth.userId,
-      })
-      .select("id")
-      .single();
+    // Update campaign with final delivery counts
+    const finalStatus =
+      failedCount === 0
+        ? "completed"
+        : sentCount === 0
+          ? "partial_failure"
+          : "partial_failure";
 
-    if (insertError) {
-      console.error("Insert campaign error:", insertError);
-    }
+    await supabase
+      .from("email_campaigns")
+      .update({ sent_count: sentCount, failed_count: failedCount, status: finalStatus })
+      .eq("id", campaign.id);
 
     return NextResponse.json({
-      campaign_id: campaign?.id || null,
+      campaign_id: campaign.id,
       recipients_count: recipients.length,
+      sent_count: sentCount,
+      failed_count: failedCount,
+      status: finalStatus,
     });
   } catch (error) {
     console.error("Send campaign error:", error);
