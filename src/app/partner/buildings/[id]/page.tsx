@@ -8,8 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Building2, ArrowLeft, CheckCircle, XCircle,
-  DollarSign, Save, Loader2
+  DollarSign, Save, Loader2, ImageIcon, Plus,
+  Trash2, Star, X,
 } from "lucide-react";
+
+interface BuildingImage {
+  id: string;
+  url: string;
+  alt_text: string | null;
+  category: string | null;
+  is_primary: boolean;
+  sort_order: number;
+}
 
 interface Unit {
   id: string;
@@ -44,6 +54,17 @@ interface UnitEdit {
   saving: boolean;
 }
 
+const CATEGORIES = [
+  { value: "exterior", label: "Exterior" },
+  { value: "lobby", label: "Lobby" },
+  { value: "amenity", label: "Amenity" },
+  { value: "pool", label: "Pool" },
+  { value: "gym", label: "Gym" },
+  { value: "rooftop", label: "Rooftop" },
+  { value: "common", label: "Common Area" },
+  { value: "other", label: "Other" },
+];
+
 export default function PartnerBuildingPage() {
   const params = useParams();
   const router = useRouter();
@@ -51,6 +72,7 @@ export default function PartnerBuildingPage() {
 
   const [building, setBuilding] = useState<Building | null>(null);
   const [units, setUnits] = useState<Unit[]>([]);
+  const [images, setImages] = useState<BuildingImage[]>([]);
   const [unitEdits, setUnitEdits] = useState<Record<string, UnitEdit>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -63,12 +85,22 @@ export default function PartnerBuildingPage() {
     parking_policy: "",
   });
 
+  // Image add form state
+  const [showAddImage, setShowAddImage] = useState(false);
+  const [imageForm, setImageForm] = useState({ url: "", category: "exterior", alt_text: "" });
+  const [imagePreviewOk, setImagePreviewOk] = useState(false);
+  const [addingImage, setAddingImage] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+  const [settingPrimaryId, setSettingPrimaryId] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     const res = await fetch(`/api/partner/buildings/${buildingId}`);
     if (!res.ok) { router.push("/partner/buildings"); return; }
     const data = await res.json();
     setBuilding(data.building);
     setUnits(data.units || []);
+    setImages(data.images || []);
     setForm({
       description: data.building.description || "",
       leasing_phone: data.building.leasing_phone || "",
@@ -135,6 +167,68 @@ export default function PartnerBuildingPage() {
       ...prev,
       [unitId]: { ...prev[unitId], ...updates, dirty: true },
     }));
+  };
+
+  const addImage = async () => {
+    if (!imageForm.url.trim()) { setImageError("Image URL is required"); return; }
+    try { new URL(imageForm.url); } catch { setImageError("Enter a valid URL"); return; }
+
+    setAddingImage(true);
+    setImageError("");
+    const res = await fetch(`/api/partner/buildings/${buildingId}/images`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: imageForm.url.trim(),
+        category: imageForm.category,
+        alt_text: imageForm.alt_text.trim() || null,
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setImages((prev) => [...prev, data.image]);
+      setImageForm({ url: "", category: "exterior", alt_text: "" });
+      setImagePreviewOk(false);
+      setShowAddImage(false);
+    } else {
+      const data = await res.json();
+      setImageError(data.error || "Failed to add image");
+    }
+    setAddingImage(false);
+  };
+
+  const deleteImage = async (imageId: string) => {
+    setDeletingImageId(imageId);
+    const res = await fetch(
+      `/api/partner/buildings/${buildingId}/images?imageId=${imageId}`,
+      { method: "DELETE" }
+    );
+    if (res.ok) {
+      setImages((prev) => {
+        const filtered = prev.filter((img) => img.id !== imageId);
+        // If we removed the primary, promote the first remaining
+        const wasPrimary = prev.find((img) => img.id === imageId)?.is_primary;
+        if (wasPrimary && filtered.length > 0) {
+          return filtered.map((img, i) => i === 0 ? { ...img, is_primary: true } : img);
+        }
+        return filtered;
+      });
+    }
+    setDeletingImageId(null);
+  };
+
+  const setPrimary = async (imageId: string) => {
+    setSettingPrimaryId(imageId);
+    const res = await fetch(
+      `/api/partner/buildings/${buildingId}/images?imageId=${imageId}`,
+      { method: "PATCH" }
+    );
+    if (res.ok) {
+      setImages((prev) =>
+        prev.map((img) => ({ ...img, is_primary: img.id === imageId }))
+      );
+    }
+    setSettingPrimaryId(null);
   };
 
   if (loading) {
@@ -280,6 +374,165 @@ export default function PartnerBuildingPage() {
                   No details added yet. Click Edit to add building information.
                 </p>
               )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Photos */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <ImageIcon className="h-4 w-4" /> Photos
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {images.length} photo{images.length !== 1 ? "s" : ""}
+              {images.length === 0 && (
+                <span className="ml-2 text-amber-600 font-medium">· Add photos to attract more inquiries</span>
+              )}
+            </p>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => { setShowAddImage(true); setImageError(""); }}>
+            <Plus className="h-4 w-4 mr-1" /> Add Photo
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {/* Add image form */}
+          {showAddImage && (
+            <div className="mb-4 rounded-lg border bg-muted/20 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Add Photo by URL</p>
+                <button onClick={() => { setShowAddImage(false); setImageError(""); }} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Image URL</label>
+                <input
+                  className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                  placeholder="https://..."
+                  value={imageForm.url}
+                  onChange={(e) => {
+                    setImageForm((f) => ({ ...f, url: e.target.value }));
+                    setImagePreviewOk(false);
+                    setImageError("");
+                  }}
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Category</label>
+                  <select
+                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm bg-background"
+                    value={imageForm.category}
+                    onChange={(e) => setImageForm((f) => ({ ...f, category: e.target.value }))}
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Alt Text (optional)</label>
+                  <input
+                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                    placeholder="Describe the image..."
+                    value={imageForm.alt_text}
+                    onChange={(e) => setImageForm((f) => ({ ...f, alt_text: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Preview */}
+              {imageForm.url && (
+                <div className="rounded-lg border overflow-hidden h-40">
+                  <img
+                    src={imageForm.url}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                    onLoad={() => setImagePreviewOk(true)}
+                    onError={() => setImagePreviewOk(false)}
+                  />
+                </div>
+              )}
+
+              {imageError && <p className="text-sm text-red-500">{imageError}</p>}
+
+              <div className="flex gap-2">
+                <Button size="sm" onClick={addImage} disabled={addingImage}>
+                  {addingImage ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+                  Add Photo
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setShowAddImage(false); setImageError(""); }}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Image grid */}
+          {images.length === 0 && !showAddImage ? (
+            <div className="flex flex-col items-center py-10 text-center">
+              <ImageIcon className="h-10 w-10 text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground">No photos yet.</p>
+              <p className="text-xs text-muted-foreground mt-1">Buildings with photos get significantly more inquiries.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {images.map((img) => (
+                <div key={img.id} className="group relative rounded-lg overflow-hidden border aspect-video bg-muted">
+                  <img
+                    src={img.url}
+                    alt={img.alt_text || img.category || "Building photo"}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Overlays */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
+
+                  {/* Primary badge */}
+                  {img.is_primary && (
+                    <div className="absolute top-1.5 left-1.5 flex items-center gap-1 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-medium text-amber-900">
+                      <Star className="h-2.5 w-2.5 fill-current" /> Cover
+                    </div>
+                  )}
+
+                  {/* Category badge */}
+                  {img.category && (
+                    <div className="absolute bottom-1.5 left-1.5 rounded-full bg-black/50 px-2 py-0.5 text-xs text-white capitalize">
+                      {img.category}
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!img.is_primary && (
+                      <button
+                        onClick={() => setPrimary(img.id)}
+                        disabled={settingPrimaryId === img.id}
+                        className="rounded-full bg-white/90 p-1.5 text-amber-600 hover:bg-white"
+                        title="Set as cover photo"
+                      >
+                        {settingPrimaryId === img.id
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <Star className="h-3 w-3" />
+                        }
+                      </button>
+                    )}
+                    <button
+                      onClick={() => deleteImage(img.id)}
+                      disabled={deletingImageId === img.id}
+                      className="rounded-full bg-white/90 p-1.5 text-red-500 hover:bg-white"
+                      title="Delete photo"
+                    >
+                      {deletingImageId === img.id
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <Trash2 className="h-3 w-3" />
+                      }
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
