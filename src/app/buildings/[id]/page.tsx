@@ -76,6 +76,7 @@ import { BuildingContactButtons } from "./BuildingContactButtons";
 import { StickyMobileCTA } from "@/components/ui/StickyMobileCTA";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { ApartmentComplexJsonLd } from "@/components/seo/JsonLd";
+import { BuildingVoiceButton } from "@/components/simli";
 
 interface BuildingPageProps {
   params: Promise<{ id: string }>;
@@ -361,6 +362,11 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   buildingName={building.name}
                   citySlug={building.cities?.slug || ""}
                   leasingEmail={building.leasing_email}
+                />
+
+                <BuildingVoiceButton
+                  buildingId={building.id}
+                  buildingName={building.name}
                 />
 
                 {/* Contact Info */}
