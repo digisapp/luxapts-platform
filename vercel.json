@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/email-alerts",
+      "path": "/api/cron/saved-search-alerts",
       "schedule": "0 9 * * *"
     },
     {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { logAuditEvent, AuditAction } from "@/lib/admin/audit";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
 import { apiError } from "@/lib/api-helpers";
 
@@ -118,6 +119,15 @@ export async function POST(req: Request) {
       .from("email_campaigns")
       .update({ sent_count: sentCount, failed_count: failedCount, status: finalStatus })
       .eq("id", campaign.id);
+
+    await logAuditEvent(auth.userId, AuditAction.EMAIL_CAMPAIGN_SEND, "email_campaign", campaign.id, {
+      subject,
+      recipients_count: recipients.length,
+      sent_count: sentCount,
+      failed_count: failedCount,
+      status: finalStatus,
+      filter: filter || {},
+    });
 
     return NextResponse.json({
       campaign_id: campaign.id,

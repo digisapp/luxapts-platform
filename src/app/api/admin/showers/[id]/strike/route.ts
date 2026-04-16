@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess } from "@/lib/api-helpers";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { logAuditEvent, AuditAction } from "@/lib/admin/audit";
 import { createAdminClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
@@ -51,6 +52,15 @@ export async function POST(
       .select("strike_count, status")
       .eq("id", showerId)
       .single();
+
+    await logAuditEvent(auth.userId, AuditAction.SHOWER_STRIKE_ADD, "shower", showerId, {
+      strike_id: strike.id,
+      strike_type: strike.type,
+      description: parsed.data.description,
+      showing_lead_id: parsed.data.showing_lead_id || null,
+      new_strike_count: shower?.strike_count,
+      shower_status: shower?.status,
+    });
 
     return apiSuccess({
       strike,

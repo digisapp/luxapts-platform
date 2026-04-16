@@ -2,7 +2,31 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Webhook } from "svix";
 import { classifyAndDraftReply, sendAutoReply } from "@/lib/ai-email";
+import DOMPurify from "isomorphic-dompurify";
 import crypto from "crypto";
+
+// Sanitize inbound email HTML to prevent stored XSS when admins view emails in the inbox.
+// Strips scripts, event handlers, and dangerous tags while preserving layout/formatting.
+function sanitizeEmailHtml(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      "a", "b", "blockquote", "br", "caption", "cite", "code", "col", "colgroup",
+      "dd", "del", "details", "dfn", "div", "dl", "dt", "em", "figcaption", "figure",
+      "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hr", "i", "img",
+      "ins", "kbd", "li", "main", "mark", "menu", "nav", "ol", "p", "pre", "q",
+      "rp", "rt", "ruby", "s", "samp", "section", "small", "span", "strong", "sub",
+      "summary", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "time", "tr",
+      "u", "ul", "var",
+    ],
+    ALLOWED_ATTR: [
+      "href", "src", "alt", "title", "width", "height", "style",
+      "align", "valign", "colspan", "rowspan", "cellpadding", "cellspacing", "border",
+      "bgcolor", "color", "target", "rel",
+    ],
+    ALLOW_DATA_ATTR: false,
+    FORCE_BODY: true,
+  });
+}
 
 /**
  * Resend Webhook — handles inbound emails and delivery status updates.
@@ -160,6 +184,9 @@ export async function POST(req: Request) {
         if (lead) leadId = lead.id;
       }
 
+      // Sanitize HTML before storing to prevent stored XSS in the admin inbox
+      const safeBodyHtml = bodyHtml ? sanitizeEmailHtml(bodyHtml) : "";
+
       // Insert the inbound email
       const { data: inserted, error: insertError } = await supabase
         .from("emails")
@@ -172,7 +199,7 @@ export async function POST(req: Request) {
           from_name: fromName,
           to_email: toEmail,
           subject,
-          body_html: bodyHtml,
+          body_html: safeBodyHtml,
           body_text: bodyText,
           reply_to: replyTo,
           cc,

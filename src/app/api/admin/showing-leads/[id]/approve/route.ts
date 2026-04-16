@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess } from "@/lib/api-helpers";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { logAuditEvent, AuditAction } from "@/lib/admin/audit";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getShowerSettings } from "@/lib/shower/settings";
 import { z } from "zod";
@@ -74,6 +75,14 @@ export async function POST(
       console.error("Create earning error:", earningError);
       return apiError("Debrief approved but failed to create earnings record", 500);
     }
+
+    await logAuditEvent(auth.userId, AuditAction.DEBRIEF_APPROVE, "showing_lead", leadId, {
+      debrief_id: debrief.id,
+      shower_id: debrief.shower_id,
+      earning_id: earning.id,
+      showing_fee: SHOWING_FEE,
+      admin_notes: adminNotes || null,
+    });
 
     return apiSuccess({
       approved: true,

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess } from "@/lib/api-helpers";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { logAuditEvent, AuditAction } from "@/lib/admin/audit";
 import { createAdminClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
@@ -58,6 +59,17 @@ export async function POST(
       console.error("Approve shower error:", error);
       return apiError("Failed to update shower", 500);
     }
+
+    const auditActionMap: Record<string, string> = {
+      approve: AuditAction.SHOWER_APPROVE,
+      suspend: AuditAction.SHOWER_SUSPEND,
+      terminate: AuditAction.SHOWER_TERMINATE,
+    };
+    await logAuditEvent(auth.userId, auditActionMap[action], "shower", showerId, {
+      new_status: statusMap[action],
+      reason: reason || null,
+      display_name: data.display_name,
+    });
 
     return apiSuccess({ shower: data });
   } catch (error) {

@@ -54,6 +54,12 @@ export async function GET(
         .eq("building_id", id),
     ]);
 
+    // Log non-fatal parallel query errors (don't fail the response — fallbacks are used below)
+    if (amenitiesRes.error) console.error("Amenities query error:", amenitiesRes.error.message);
+    if (floorplansRes.error) console.error("Floorplans query error:", floorplansRes.error.message);
+    if (unitsRes.error) console.error("Units query error:", unitsRes.error.message);
+    if (factsRes.error) console.error("Facts query error:", factsRes.error.message);
+
     // Get latest prices for units (depends on unitsRes)
     const unitPrices: Record<string, { rent: number; captured_at: string }> = {};
     if (unitsRes.data?.length) {
