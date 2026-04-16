@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { getFirstRelation } from "@/lib/db-helpers";
 
 export async function GET(
   req: NextRequest,
@@ -84,9 +85,7 @@ export async function GET(
     }
 
     // Generate neighborhood description if not exists
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cityData = neighborhood.cities as any;
-    const cityName = Array.isArray(cityData) ? cityData[0]?.name : cityData?.name;
+    const cityName = getFirstRelation(neighborhood.cities)?.name ?? "";
     const description = neighborhood.description || generateDescription(
       neighborhood.name,
       cityName || "",

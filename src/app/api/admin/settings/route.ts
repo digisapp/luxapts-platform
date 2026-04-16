@@ -40,7 +40,7 @@ export async function GET() {
 /**
  * PUT /api/admin/settings
  * Update a platform setting
- * Body: { key: string, value: any }
+ * Body: { key: string, value: unknown }
  */
 export async function PUT(req: NextRequest) {
   try {

@@ -136,27 +136,30 @@ export function SearchMap({
       const el = document.createElement("div");
       el.className = "map-marker";
 
+      const priceLabel = minRent >= 10000
+        ? `$${(minRent / 1000).toFixed(0)}k`
+        : minRent >= 1000
+          ? `$${(minRent / 1000).toFixed(1)}k`
+          : `$${minRent}`;
+
       if (count > 1) {
-        // Cluster marker
+        // Multi-unit building: show starting price with unit count badge
         el.innerHTML = `
           <div class="cluster-marker">
-            <span class="cluster-count">${count}</span>
+            <span class="marker-price">From ${priceLabel}</span>
+            <span class="cluster-badge">${count}</span>
           </div>
         `;
-        el.style.cssText = `
-          cursor: pointer;
-        `;
+        el.style.cssText = "cursor: pointer;";
       } else {
-        // Single marker
+        // Single unit: show price pill
         const isHighlighted = highlightedListingId === firstListing.id;
         el.innerHTML = `
           <div class="single-marker ${isHighlighted ? "highlighted" : ""}">
-            <span class="marker-price">$${(minRent / 1000).toFixed(1)}k</span>
+            <span class="marker-price">${priceLabel}</span>
           </div>
         `;
-        el.style.cssText = `
-          cursor: pointer;
-        `;
+        el.style.cssText = "cursor: pointer;";
       }
 
       // Create popup content (escaped to prevent XSS)
@@ -248,26 +251,38 @@ export function SearchMap({
   return (
     <>
       <style jsx global>{`
+        /* ── Cluster pin (multiple units per building) ── */
         .cluster-marker {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-          border: 3px solid white;
+          position: relative;
           display: flex;
           align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-          transition: transform 0.2s;
+          padding: 6px 10px;
+          border-radius: 20px;
+          background: #18181b;
+          border: 2px solid #6366f1;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+          transition: all 0.2s;
+          gap: 4px;
         }
         .cluster-marker:hover {
-          transform: scale(1.1);
+          background: #6366f1;
+          transform: scale(1.05);
         }
-        .cluster-count {
+        .cluster-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 18px;
+          height: 18px;
+          padding: 0 4px;
+          border-radius: 9px;
+          background: rgba(255,255,255,0.2);
           color: white;
           font-weight: 700;
-          font-size: 14px;
+          font-size: 10px;
+          white-space: nowrap;
         }
+        /* ── Single-unit pin ── */
         .single-marker {
           padding: 6px 10px;
           border-radius: 20px;
@@ -276,14 +291,14 @@ export function SearchMap({
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
           transition: all 0.2s;
         }
-        .single-marker:hover,
-        .single-marker.highlighted {
+        .single-marker:hover {
           background: #3b82f6;
           transform: scale(1.05);
         }
         .single-marker.highlighted {
-          border-color: #22c55e;
-          background: #22c55e;
+          border-color: #f59e0b;
+          background: #f59e0b;
+          transform: scale(1.1);
         }
         .marker-price {
           color: white;

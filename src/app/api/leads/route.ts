@@ -5,6 +5,7 @@ import { escapeHtml } from "@/lib/utils";
 import { Resend } from "resend";
 import { createLeadSchema } from "@/lib/validations";
 import { apiError } from "@/lib/api-helpers";
+import { autoAssignAgent } from "@/lib/leads/routing";
 import type { CreateLeadResponse } from "@/types/database";
 
 export async function POST(req: Request) {
@@ -128,11 +129,24 @@ export async function POST(req: Request) {
       }
     }
 
+    // Auto-assign an agent via load-balanced round-robin
+    const assignedAgentId = await autoAssignAgent(supabase, leadId, cityRes.data.id);
+
+    if (assignedAgentId) {
+      await supabase.from("lead_events").insert({
+        lead_id: leadId,
+        type: "agent_assigned",
+        payload: { agent_user_id: assignedAgentId, method: "auto_routed" },
+      });
+    }
+
     const response: CreateLeadResponse = {
       lead_id: leadId,
       status: leadInsert.data.status,
-      assigned_agent_user_id: null, // Auto-routing can be added later
-      next_steps: ["agent_outreach", "schedule_tour"],
+      assigned_agent_user_id: assignedAgentId,
+      next_steps: assignedAgentId
+        ? ["agent_outreach", "schedule_tour"]
+        : ["pending_agent_assignment", "schedule_tour"],
     };
 
     return NextResponse.json(response, { status: 201 });
