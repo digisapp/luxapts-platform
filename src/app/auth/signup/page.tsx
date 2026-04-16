@@ -39,6 +39,13 @@ export default function SignUpPage() {
 
     setSuccess(true);
     setLoading(false);
+
+    // Fire welcome email (best-effort)
+    fetch("/api/auth/welcome", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, name: name.trim() || null }),
+    }).catch(() => {});
   };
 
   if (success) {

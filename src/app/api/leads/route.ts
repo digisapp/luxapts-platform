@@ -5,7 +5,7 @@ import { Resend } from "resend";
 import { createLeadSchema } from "@/lib/validations";
 import { apiError } from "@/lib/api-helpers";
 import { autoAssignAgent } from "@/lib/leads/routing";
-import { newLeadEmail } from "@/lib/email/templates";
+import { newLeadEmail, tourConfirmationEmail } from "@/lib/email/templates";
 import type { CreateLeadResponse } from "@/types/database";
 
 export async function POST(req: Request) {
@@ -120,6 +120,44 @@ export async function POST(req: Request) {
       } catch (emailError) {
         console.error("Email notification failed:", emailError);
         // Don't fail the request if email fails
+      }
+    }
+
+    // Send tour confirmation to the renter (web_form only, requires email + building target)
+    if (
+      process.env.RESEND_API_KEY &&
+      body.source === "web_form" &&
+      body.email &&
+      body.targets?.[0]?.building_id
+    ) {
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const fromEmail = process.env.FROM_EMAIL || "LuxApts <hello@luxapts.co>";
+
+        // Fetch building name/address for the email
+        const { data: bld } = await supabase
+          .from("buildings")
+          .select("id, name, address_1, zip, leasing_phone")
+          .eq("id", body.targets[0].building_id)
+          .single();
+
+        if (bld && body.name) {
+          await resend.emails.send({
+            from: fromEmail,
+            to: [body.email],
+            subject: `Tour request received — ${bld.name}`,
+            html: tourConfirmationEmail({
+              name: body.name,
+              buildingName: bld.name,
+              buildingAddress: `${bld.address_1}${bld.zip ? ` ${bld.zip}` : ""}`,
+              preferredDate: body.move_in_date ?? null,
+              leasingPhone: bld.leasing_phone ?? null,
+              buildingId: bld.id,
+            }),
+          });
+        }
+      } catch (confirmErr) {
+        console.error("Tour confirmation email failed:", confirmErr);
       }
     }
 
