@@ -32,6 +32,15 @@ import { UnitPriceHistory } from "./UnitPriceHistory";
 
 export const revalidate = 3600;
 
+export async function generateStaticParams() {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("units")
+    .select("id, building_id")
+    .eq("is_available", true);
+  return (data || []).map((u) => ({ id: u.building_id, unitId: u.id }));
+}
+
 const getUnit = cache(async (unitId: string) => {
   const supabase = createAdminClient();
   return supabase

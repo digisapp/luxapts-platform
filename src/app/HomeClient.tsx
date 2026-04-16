@@ -191,7 +191,7 @@ export default function HomeClient() {
               {FEATURED_CITIES.map((city, index) => (
                 <Link
                   key={city.slug}
-                  href={`/search?city=${city.slug}`}
+                  href={`/cities/${city.slug}`}
                   className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] text-white/50 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-300 text-xs sm:text-sm"
                   style={{ animationDelay: `${400 + index * 50}ms` }}
                 >
