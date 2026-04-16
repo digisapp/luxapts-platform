@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check } from "lucide-react";
+import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check, Brain, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -86,6 +86,18 @@ interface ParsedFilters {
   summary?: string;
 }
 
+interface SemanticBuilding {
+  id: string;
+  name: string;
+  slug: string;
+  address_1: string;
+  description: string;
+  hero_image_url: string | null;
+  cities: { name: string; slug: string; state: string } | null;
+  neighborhoods: { name: string; slug: string } | null;
+  relevance_score: number;
+}
+
 // AMENITY_OPTIONS imported from @/lib/constants/amenities
 
 function SearchContent() {
@@ -128,6 +140,11 @@ function SearchContent() {
   // AI search state
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiParsing, setAiParsing] = useState(false);
+
+  // Smart (semantic) search state
+  const [smartSearch, setSmartSearch] = useState(false);
+  const [semanticResults, setSemanticResults] = useState<SemanticBuilding[]>([]);
+  const [semanticQuery, setSemanticQuery] = useState<string | null>(null);
 
   // Load saved filters from localStorage on mount
   useEffect(() => {
@@ -255,6 +272,29 @@ function SearchContent() {
     }
   }, [city, sort, bedsMin, bedsMax, budgetMin, budgetMax, selectedNeighborhoods, bathsMin, petFriendly, parkingRequired, moveInDate, selectedAmenities]);
 
+  // Semantic / Smart Search — natural language query against xAI vector index
+  const handleSemanticSearch = useCallback(async (query: string) => {
+    if (!query.trim()) { handleSearch(); return; }
+    setLoading(true);
+    setSemanticResults([]);
+    setSemanticQuery(query.trim());
+    try {
+      const res = await fetch("/api/search/semantic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query.trim(), city_slug: city || undefined, limit: 20 }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSemanticResults(data.buildings || []);
+      }
+    } catch (error) {
+      console.error("Semantic search error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [city, handleSearch]);
+
   // Parse AI query and apply filters
   const parseAndSearch = useCallback(async (query: string) => {
     setAiParsing(true);
@@ -295,15 +335,24 @@ function SearchContent() {
     }
   }, [handleSearch]);
 
-  // Handle AI search from input
+  // Handle search from input — routes to semantic or parse-and-search depending on mode
   const handleAiSearch = () => {
-    if (searchInput.trim()) {
-      // Update URL with query
-      router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
-      parseAndSearch(searchInput.trim());
+    if (smartSearch) {
+      if (searchInput.trim()) {
+        router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
+        handleSemanticSearch(searchInput.trim());
+      } else {
+        setSemanticResults([]);
+        setSemanticQuery(null);
+      }
     } else {
-      setAiSummary(null);
-      handleSearch();
+      if (searchInput.trim()) {
+        router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
+        parseAndSearch(searchInput.trim());
+      } else {
+        setAiSummary(null);
+        handleSearch();
+      }
     }
   };
 
@@ -349,30 +398,48 @@ function SearchContent() {
           {/* AI Search Bar */}
           <div className="mb-6 md:mb-8">
             {/* Mobile: Search input with AI button */}
-            <div className="flex gap-2 mb-3 md:hidden">
+            <div className="flex gap-2 mb-2 md:hidden">
               <div className="relative flex-1 group">
-                <Sparkles className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
+                {smartSearch
+                  ? <Brain className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-400" />
+                  : <Sparkles className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
+                }
                 <Input
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Try: '2BR in Miami under $3,500'"
-                  className="h-10 pl-9 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20"
+                  placeholder={smartSearch ? "Describe your ideal apartment…" : "Try: '2BR in Miami under $3,500'"}
+                  className={`h-10 pl-9 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-violet-500/30" : ""}`}
                 />
               </div>
               <Button
                 size="icon"
-                className="h-10 w-10 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-lg shadow-cyan-500/20"
+                className={`h-10 w-10 shadow-lg ${smartSearch ? "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 shadow-violet-500/20" : "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-cyan-500/20"}`}
                 onClick={handleAiSearch}
-                disabled={aiParsing}
+                disabled={aiParsing || loading}
               >
-                {aiParsing ? (
+                {(aiParsing || (smartSearch && loading)) ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
+                ) : smartSearch ? (
+                  <Brain className="h-4 w-4" />
                 ) : (
                   <Sparkles className="h-4 w-4" />
                 )}
               </Button>
+            </div>
+            {/* Mobile: Smart Search toggle */}
+            <div className="flex items-center gap-2 mb-3 md:hidden">
+              <button
+                onClick={() => { setSmartSearch(!smartSearch); setSemanticResults([]); setSemanticQuery(null); }}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${smartSearch ? "bg-violet-500/20 text-violet-300 border border-violet-500/30" : "bg-white/[0.05] text-white/40 border border-white/[0.08] hover:text-white/60"}`}
+              >
+                <Brain className="h-3 w-3" />
+                Smart Search {smartSearch ? "ON" : "OFF"}
+              </button>
+              {smartSearch && (
+                <span className="text-xs text-white/30">Natural language · AI-powered</span>
+              )}
             </div>
 
             {/* Mobile: Compact filter row */}
@@ -420,25 +487,37 @@ function SearchContent() {
             </div>
 
             {/* Desktop: Full search bar */}
-            <div className="hidden md:flex flex-row items-center gap-4">
+            <div className="hidden md:flex flex-row items-center gap-3">
+              {/* Smart Search toggle pill */}
+              <button
+                onClick={() => { setSmartSearch(!smartSearch); setSemanticResults([]); setSemanticQuery(null); }}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 h-12 text-sm font-medium transition-all border ${smartSearch ? "bg-violet-500/15 text-violet-300 border-violet-500/40 shadow-sm shadow-violet-500/20" : "bg-white/[0.03] text-white/40 border-white/[0.08] hover:text-white/60 hover:bg-white/[0.06]"}`}
+                title={smartSearch ? "Smart Search active — natural language mode" : "Enable Smart Search for natural language queries"}
+              >
+                <Brain className="h-4 w-4" />
+                <span className="hidden lg:inline">Smart</span>
+              </button>
+
               <div className="relative flex-1 group">
-                {/* Glow effect on focus */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                <div className={`absolute -inset-1 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 ${smartSearch ? "bg-gradient-to-r from-violet-500/20 via-purple-500/20 to-pink-500/20" : "bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20"}`} />
                 <div className="relative">
-                  <Sparkles className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" />
+                  {smartSearch
+                    ? <Brain className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-violet-400" />
+                    : <Sparkles className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" />
+                  }
                   <Input
                     type="text"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Try: '2 bedroom in Miami under $3,500' or 'pet-friendly studio'"
-                    className="h-12 pl-10 bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20"
+                    placeholder={smartSearch ? "Describe your ideal apartment in plain English…" : "Try: '2 bedroom in Miami under $3,500' or 'pet-friendly studio'"}
+                    className={`h-12 pl-10 bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-violet-500/20" : ""}`}
                   />
                 </div>
               </div>
 
               <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); }}>
-                <SelectTrigger className="h-12 w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                <SelectTrigger className="h-12 w-[160px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="Select city" />
                 </SelectTrigger>
                 <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
@@ -455,19 +534,21 @@ function SearchContent() {
                 </SelectContent>
               </Select>
 
-              <Button
-                variant={activeFilterCount > 0 ? "default" : "glass"}
-                className="h-12"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-white/20">
-                    {activeFilterCount}
-                  </Badge>
-                )}
-              </Button>
+              {!smartSearch && (
+                <Button
+                  variant={activeFilterCount > 0 ? "default" : "glass"}
+                  className="h-12"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-white/20">
+                      {activeFilterCount}
+                    </Badge>
+                  )}
+                </Button>
+              )}
 
               <Button
                 variant={showMap ? "default" : "glass"}
@@ -478,13 +559,19 @@ function SearchContent() {
                 {showMap ? "List" : "Map"}
               </Button>
 
-              <Button className="h-12 gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-lg shadow-cyan-500/20" onClick={handleAiSearch} disabled={aiParsing}>
-                {aiParsing ? (
+              <Button
+                className={`h-12 gap-2 shadow-lg ${smartSearch ? "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 shadow-violet-500/20" : "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-cyan-500/20"}`}
+                onClick={handleAiSearch}
+                disabled={aiParsing || (smartSearch && loading)}
+              >
+                {(aiParsing || (smartSearch && loading)) ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
+                ) : smartSearch ? (
+                  <Brain className="h-4 w-4" />
                 ) : (
                   <Sparkles className="h-4 w-4" />
                 )}
-                AI Search
+                {smartSearch ? "Find Matches" : "AI Search"}
               </Button>
             </div>
 
@@ -795,33 +882,150 @@ function SearchContent() {
           {/* Results Header */}
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-white">
-                {loading ? "Searching..." : `${results.length} ${results.length === 1 ? "Apartment" : "Apartments"} Available`}
-              </h1>
-              {capturedAt && (
-                <p className="text-sm text-white/40">
-                  Prices updated {new Date(capturedAt).toLocaleDateString()}
-                </p>
+              {smartSearch && semanticQuery ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-violet-400" />
+                    <h1 className="text-2xl font-bold text-white">
+                      {loading ? "Finding matches…" : `${semanticResults.length} Building${semanticResults.length !== 1 ? "s" : ""} Matched`}
+                    </h1>
+                  </div>
+                  <p className="text-sm text-white/40 mt-0.5">
+                    Smart Search: &ldquo;{semanticQuery}&rdquo;
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-2xl font-bold text-white">
+                    {loading ? "Searching..." : `${results.length} ${results.length === 1 ? "Apartment" : "Apartments"} Available`}
+                  </h1>
+                  {capturedAt && (
+                    <p className="text-sm text-white/40">
+                      Prices updated {new Date(capturedAt).toLocaleDateString()}
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
-                <SelectItem value="price_low">Price: Low to High</SelectItem>
-                <SelectItem value="price_high">Price: High to Low</SelectItem>
-                <SelectItem value="sqft_high">Largest First</SelectItem>
-                <SelectItem value="newest">Newest</SelectItem>
-              </SelectContent>
-            </Select>
+            {!smartSearch && (
+              <Select value={sort} onValueChange={setSort}>
+                <SelectTrigger className="w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
+                  <SelectItem value="price_low">Price: Low to High</SelectItem>
+                  <SelectItem value="price_high">Price: High to Low</SelectItem>
+                  <SelectItem value="sqft_high">Largest First</SelectItem>
+                  <SelectItem value="newest">Newest</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Split Layout - Listings + Map */}
-          <div className={`flex gap-6 ${showMap ? "flex-col lg:flex-row" : ""}`}>
+          <div className={`flex gap-6 ${showMap && !smartSearch ? "flex-col lg:flex-row" : ""}`}>
             {/* Results Grid */}
-            <div className={`${showMap ? "lg:w-1/2 xl:w-3/5" : "w-full"} ${showMap ? "lg:h-[calc(100vh-300px)] lg:overflow-y-auto lg:pr-4" : ""}`}>
+            <div className={`${showMap && !smartSearch ? "lg:w-1/2 xl:w-3/5" : "w-full"} ${showMap && !smartSearch ? "lg:h-[calc(100vh-300px)] lg:overflow-y-auto lg:pr-4" : ""}`}>
+
+              {/* Semantic results */}
+              {smartSearch && (
+                <div className={`grid gap-5 stagger-children md:grid-cols-2 lg:grid-cols-3`}>
+                  {loading ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i} className="overflow-hidden">
+                        <CardContent className="p-0">
+                          <div className="h-48 w-full rounded-t-xl bg-muted shimmer" />
+                          <div className="p-4 space-y-3">
+                            <div className="h-6 w-3/4 bg-muted rounded shimmer" />
+                            <div className="h-4 w-1/2 bg-muted rounded shimmer" />
+                            <div className="h-10 w-full bg-muted rounded shimmer" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : semanticResults.length === 0 && semanticQuery ? (
+                    <div className="col-span-full py-12 text-center">
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] mb-4">
+                        <Brain className="h-8 w-8 text-white/30" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-white">No matches found</h3>
+                      <p className="mt-2 text-white/50">Try rephrasing your search or be more specific about location</p>
+                    </div>
+                  ) : semanticResults.length === 0 ? (
+                    <div className="col-span-full py-10 text-center">
+                      <p className="text-white/40 text-sm">Describe what you&apos;re looking for and click Find Matches</p>
+                    </div>
+                  ) : (
+                    semanticResults.map((building) => {
+                      const score = Math.round(building.relevance_score * 100);
+                      return (
+                        <Link key={building.id} href={`/buildings/${building.id}`}>
+                          <Card className="group h-full cursor-pointer overflow-hidden bg-white/[0.02] backdrop-blur-xl border-white/[0.06] hover:bg-white/[0.04] hover:border-violet-500/30 transition-all duration-500">
+                            <CardContent className="p-0">
+                              {/* Image */}
+                              <div className="relative h-44 bg-gradient-to-br from-white/[0.03] to-black/20 overflow-hidden">
+                                {building.hero_image_url ? (
+                                  <Image
+                                    src={building.hero_image_url}
+                                    alt={building.name}
+                                    fill
+                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                    sizes="(max-width: 768px) 100vw, 33vw"
+                                  />
+                                ) : (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <Building2 className="h-14 w-14 text-muted-foreground/30" />
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                                {building.neighborhoods && (
+                                  <Badge className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm" variant="secondary">
+                                    {building.neighborhoods.name}
+                                  </Badge>
+                                )}
+                                {/* Relevance score */}
+                                <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-violet-500/90 backdrop-blur-sm px-2 py-0.5">
+                                  <Star className="h-3 w-3 text-white fill-white" />
+                                  <span className="text-xs font-medium text-white">{score}% match</span>
+                                </div>
+                              </div>
+
+                              <div className="p-4">
+                                <h3 className="font-semibold text-white group-hover:text-violet-400 transition-colors">
+                                  {building.name}
+                                </h3>
+                                <p className="mt-1 flex items-center gap-1 text-sm text-white/50">
+                                  <MapPin className="h-3 w-3" />
+                                  {building.address_1}
+                                  {building.cities ? `, ${building.cities.name}` : ""}
+                                </p>
+                                {building.description && (
+                                  <p className="mt-2 text-xs text-white/40 line-clamp-2">
+                                    {building.description}
+                                  </p>
+                                )}
+                                {/* Relevance bar */}
+                                <div className="mt-3">
+                                  <div className="h-1 w-full rounded-full bg-white/[0.06]">
+                                    <div
+                                      className="h-1 rounded-full bg-gradient-to-r from-violet-500 to-purple-400 transition-all"
+                                      style={{ width: `${score}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {/* Standard unit results */}
+              {!smartSearch && (
               <div className={`grid gap-6 stagger-children ${showMap ? "grid-cols-1 xl:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
@@ -1008,10 +1212,11 @@ function SearchContent() {
                   })
                 )}
               </div>
+              )} {/* end !smartSearch */}
             </div>
 
-            {/* Map View */}
-            {showMap && (
+            {/* Map View — only for standard search */}
+            {showMap && !smartSearch && (
               <div className="lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100vh-300px)] rounded-xl overflow-hidden border border-white/[0.08] sticky top-4">
                 <SearchMap
                   listings={results
