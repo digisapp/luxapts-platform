@@ -238,6 +238,7 @@ export function BuildingDetails({ data, buildingId, cities = [] }: BuildingDetai
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {images.map((img) => (
                     <div key={img.id} className="group relative rounded-lg overflow-hidden border">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- remote domains not allowlisted for next/image */}
                       <img
                         src={img.url}
                         alt={img.alt_text || "Building photo"}

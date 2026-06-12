@@ -101,6 +101,7 @@ export function SearchMap({
       map.current?.remove();
       map.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- init-once effect: center/zoom changes are handled by the flyTo effect below; re-running would destroy and recreate the map
   }, []);
 
   // Update center when it changes
@@ -253,7 +254,7 @@ export function SearchMap({
     if (mapLoaded && listings.length > 0) {
       fitBounds();
     }
-  }, [mapLoaded, fitBounds]);
+  }, [mapLoaded, fitBounds, listings.length]);
 
   if (!MAPBOX_TOKEN) {
     return (

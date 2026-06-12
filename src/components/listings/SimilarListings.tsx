@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, MapPin, Bed, Bath, Sparkles, PawPrint, Car } from "lucide-react";
+import { Building2, Sparkles, PawPrint, Car } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
 interface SimilarListing {

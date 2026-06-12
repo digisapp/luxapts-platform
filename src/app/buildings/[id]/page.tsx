@@ -64,11 +64,8 @@ import {
   Calendar,
   PawPrint,
   Car,
-  ArrowLeft,
   Layout,
   ImageIcon,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { ImageGallery } from "./ImageGallery";
 import { BuildingPageClient } from "./BuildingPageClient";
@@ -85,16 +82,6 @@ interface BuildingPageProps {
 interface UnitImage {
   id: string;
   unit_id: string;
-  url: string;
-  alt_text: string | null;
-  category: string | null;
-  is_primary: boolean;
-  sort_order: number;
-}
-
-interface BuildingImage {
-  id: string;
-  building_id: string;
   url: string;
   alt_text: string | null;
   category: string | null;

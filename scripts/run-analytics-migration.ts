@@ -1,6 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import * as fs from "fs";
-import * as path from "path";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -13,56 +11,6 @@ if (!supabaseUrl || !serviceRoleKey) {
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false },
 });
-
-async function runMigration() {
-  console.log("Running analytics migration...\n");
-
-  // Read the migration file
-  const migrationPath = path.join(__dirname, "../supabase/migrations/007_analytics.sql");
-  const sql = fs.readFileSync(migrationPath, "utf-8");
-
-  // Split into individual statements
-  const statements = sql
-    .split(/;(?=\s*(?:--|create|alter|drop|insert|update|delete|$))/i)
-    .map(s => s.trim())
-    .filter(s => s && !s.startsWith("--"));
-
-  let successCount = 0;
-  let errorCount = 0;
-
-  for (const statement of statements) {
-    if (!statement) continue;
-
-    // Skip comments-only statements
-    if (statement.split("\n").every(line => line.trim().startsWith("--") || line.trim() === "")) {
-      continue;
-    }
-
-    const preview = statement.substring(0, 60).replace(/\n/g, " ");
-
-    try {
-      const { error } = await supabase.rpc("exec_sql", { sql: statement + ";" });
-
-      if (error) {
-        // Try direct query for DDL statements
-        const { error: directError } = await supabase.from("_exec").select().limit(0);
-
-        // If RPC doesn't work, we'll use REST API approach
-        console.log(`⚠️  ${preview}... (using alternative method)`);
-      } else {
-        console.log(`✅ ${preview}...`);
-        successCount++;
-      }
-    } catch (err) {
-      console.log(`⚠️  ${preview}... (will try in SQL editor)`);
-      errorCount++;
-    }
-  }
-
-  console.log(`\n✅ Migration statements processed`);
-  console.log(`\nNote: Some DDL statements may need to be run directly in Supabase SQL Editor.`);
-  console.log(`Open: https://supabase.com/dashboard/project/csgesvqzvqfhepksbory/sql/new`);
-}
 
 // Alternative: Just verify tables can be created by testing inserts
 async function verifyAndCreateTables() {

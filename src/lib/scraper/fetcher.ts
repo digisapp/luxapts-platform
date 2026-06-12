@@ -22,7 +22,8 @@ const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // 5 MB cap on fetched HTML
 
 // SSRF guard: only allow public http(s) URLs — block localhost, private and
 // link-local ranges (cloud metadata endpoints live at 169.254.169.254).
-function isSafeUrl(url: string): boolean {
+// Exported for tests.
+export function isSafeUrl(url: string): boolean {
   let parsed: URL;
   try {
     parsed = new URL(url);

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, X, Heart, User, LogOut, Settings } from "lucide-react";
+import { Menu, X, Heart, LogOut, Settings } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";

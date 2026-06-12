@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronDown, ChevronRight, Image, Home, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight, Image as ImageIcon, Home, ExternalLink } from "lucide-react";
 import { BuildingDetails } from "./BuildingDetails";
 import type { BuildingSummary } from "./BuildingsManager";
 
@@ -104,7 +104,7 @@ export function BuildingRow({ building, cities = [] }: BuildingRowProps) {
 
         <div className="hidden sm:flex items-center gap-4 text-sm">
           <span className={`flex items-center gap-1 ${imageColor}`}>
-            <Image className="h-3.5 w-3.5" />
+            <ImageIcon className="h-3.5 w-3.5" />
             {building.image_count}
           </span>
           <span className="flex items-center gap-1 text-muted-foreground">

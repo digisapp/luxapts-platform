@@ -91,7 +91,7 @@ export default function PartnerBuildingPage() {
   // Image add form state
   const [showAddImage, setShowAddImage] = useState(false);
   const [imageForm, setImageForm] = useState({ url: "", category: "exterior", alt_text: "" });
-  const [imagePreviewOk, setImagePreviewOk] = useState(false);
+  const [, setImagePreviewOk] = useState(false);
   const [addingImage, setAddingImage] = useState(false);
   const [imageError, setImageError] = useState("");
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
@@ -493,6 +493,7 @@ export default function PartnerBuildingPage() {
               {/* Preview */}
               {imageForm.url && (
                 <div className="rounded-lg border overflow-hidden h-40">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- remote domains not allowlisted for next/image */}
                   <img
                     src={imageForm.url}
                     alt="Preview"
@@ -528,6 +529,7 @@ export default function PartnerBuildingPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {images.map((img) => (
                 <div key={img.id} className="group relative rounded-lg overflow-hidden border aspect-video bg-muted">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- remote domains not allowlisted for next/image */}
                   <img
                     src={img.url}
                     alt={img.alt_text || img.category || "Building photo"}

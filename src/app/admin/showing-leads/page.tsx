@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getUserRole } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PostLeadDialog } from "./PostLeadDialog";
 import { LeadPipelineActions } from "./LeadPipelineActions";

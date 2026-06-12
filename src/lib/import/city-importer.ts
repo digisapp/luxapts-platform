@@ -63,8 +63,17 @@ interface ImportResults {
 export async function importCityBuildings(
   supabase: SupabaseClient,
   cityConfig: CityConfig,
-  buildings: BuildingData[]
+  buildings: BuildingData[],
+  options: {
+    /**
+     * Generate 2-4 synthetic units per floorplan with randomized rents and
+     * availability. These are INDISTINGUISHABLE from real listings to users,
+     * so this is off by default — only enable for demo/dev seeding.
+     */
+    generateSampleUnits?: boolean;
+  } = {}
 ): Promise<ImportResults> {
+  const { generateSampleUnits = false } = options;
   const results: ImportResults = {
     cities_created: 0,
     neighborhoods_created: 0,
@@ -354,8 +363,10 @@ export async function importCityBuildings(
               results.units_created++;
             }
           }
-          // Otherwise, auto-generate sample units from floor plan (2-4 per type)
-          else if (floorplan && fp.rent) {
+          // Otherwise, optionally auto-generate sample units (2-4 per type).
+          // Gated behind generateSampleUnits: the generated rents/availability
+          // are fabricated and must never silently enter production data.
+          else if (generateSampleUnits && floorplan && fp.rent) {
             const numUnits = Math.floor(Math.random() * 3) + 2; // 2-4 units
             const bedsLabel = fp.beds === 0 ? "Studio" : `${fp.beds}BR`;
 

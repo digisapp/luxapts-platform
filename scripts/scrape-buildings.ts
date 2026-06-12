@@ -86,26 +86,6 @@ async function fetchPage(url: string, retries = 3): Promise<string | null> {
   return null;
 }
 
-// Extract numbers from text
-function extractNumbers(text: string): number[] {
-  const matches = text.match(/[\d,]+/g);
-  return matches ? matches.map(m => parseInt(m.replace(/,/g, ""))) : [];
-}
-
-// Parse rent from text like "$2,500" or "$2,500 - $4,000"
-function parseRent(text: string): { min: number; max: number } | null {
-  const amounts = text.match(/\$[\d,]+/g);
-  if (!amounts) return null;
-
-  const nums = amounts.map(a => parseInt(a.replace(/[$,]/g, "")));
-  if (nums.length === 0) return null;
-
-  return {
-    min: Math.min(...nums),
-    max: Math.max(...nums),
-  };
-}
-
 // Parse bedroom count from text
 function parseBeds(text: string): number | null {
   const lower = text.toLowerCase();
@@ -137,14 +117,6 @@ function parseSqft(text: string): number | null {
 // Extract floor plans from HTML
 function extractFloorPlans(html: string): ScrapedBuilding["floor_plans"] {
   const plans: ScrapedBuilding["floor_plans"] = [];
-
-  // Common patterns for floor plan sections
-  const patterns = [
-    // Pattern 1: Cards with data attributes
-    /data-beds="(\d+)"[^>]*data-baths="([\d.]+)"[^>]*data-sqft="(\d+)"[^>]*data-rent="(\d+)"/gi,
-    // Pattern 2: JSON-LD structured data
-    /"numberOfBedrooms":\s*"?(\d+)"?,\s*"numberOfBathroomsTotal":\s*"?([\d.]+)"?/gi,
-  ];
 
   // Try to find floor plan cards/sections
   const floorPlanSections = html.match(/<div[^>]*class="[^"]*(?:floor-?plan|unit-?type|pricing)[^"]*"[^>]*>[\s\S]*?<\/div>/gi) || [];

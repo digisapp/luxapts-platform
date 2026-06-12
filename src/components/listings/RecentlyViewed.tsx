@@ -4,9 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, MapPin, X, Clock, Bed, Bath } from "lucide-react";
+import { Building2, X, Clock, Bed } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
 interface RecentlyViewedProps {

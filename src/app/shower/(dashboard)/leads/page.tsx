@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   MapPin, Clock, Building2, Phone, Mail,
-  CheckCircle, AlertCircle, Star, FileText,
+  CheckCircle, AlertCircle, FileText,
 } from "lucide-react";
 
 type Building = { id: string; name: string; address?: string };

@@ -152,6 +152,7 @@ export function ImageUploadDialog({
           {/* Preview */}
           {url && (
             <div className="rounded-lg border overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element -- remote domains not allowlisted for next/image */}
               <img
                 src={url}
                 alt={altText || "Preview"}

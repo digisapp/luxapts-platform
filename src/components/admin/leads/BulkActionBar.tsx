@@ -17,7 +17,7 @@ interface BulkActionBarProps {
   onClear: () => void;
 }
 
-export function BulkActionBar({ selectedCount, selectedIds, agents, onApply, onClear }: BulkActionBarProps) {
+export function BulkActionBar({ selectedCount, agents, onApply, onClear }: BulkActionBarProps) {
   const [bulkStatus, setBulkStatus] = useState("contacted");
   const [bulkAgent, setBulkAgent] = useState(agents[0]?.user_id || "");
 

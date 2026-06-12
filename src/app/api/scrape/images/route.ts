@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+// Batch image scrape across buildings (default serverless timeout kills it mid-run, stranding jobs in "running")
+export const maxDuration = 300;
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import {

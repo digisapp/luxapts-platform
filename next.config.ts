@@ -25,12 +25,13 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      // CORS for public-facing APIs (search, chat, listings, leads)
-      // Allows mobile apps and third-party integrations to consume these endpoints.
-      // Admin routes intentionally excluded.
+      // CORS for public READ-ONLY catalog APIs only.
+      // chat (AI spend), leads (sends emails), and favorites (cookie-authed,
+      // so "*" never worked anyway) are intentionally NOT cross-origin —
+      // any third-party page could otherwise drive costs from its visitors.
       {
         source:
-          "/api/(search|chat|leads|buildings|compare|favorites|similar-listings|cities|browse|neighborhoods)(.*)",
+          "/api/(search|buildings|compare|similar-listings|cities|browse|neighborhoods)(.*)",
         headers: [
           {
             key: "Access-Control-Allow-Origin",
@@ -67,7 +68,10 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(self), geolocation=()",
+            // Simli avatar rooms (Daily-hosted iframes) need mic/camera —
+            // microphone=(self) alone would deny the cross-origin iframe.
+            value:
+              'camera=(self "https://*.daily.co" "https://*.simli.ai" "https://*.simli.com"), microphone=(self "https://*.daily.co" "https://*.simli.ai" "https://*.simli.com"), geolocation=()',
           },
           {
             key: "X-DNS-Prefetch-Control",
@@ -83,11 +87,12 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' https://api.mapbox.com",
               "style-src 'self' 'unsafe-inline' https://api.mapbox.com",
-              "img-src 'self' data: blob: https: http:",
+              "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.x.ai https://api.mapbox.com https://*.mapbox.com https://events.mapbox.com",
               "media-src 'self' blob: https://*.supabase.co",
-              "frame-src 'self'",
+              // Simli avatar conversation rooms are served from Daily/Simli
+              "frame-src 'self' https://*.daily.co https://*.simli.ai https://*.simli.com",
               "worker-src 'self' blob:",
             ].join("; "),
           },

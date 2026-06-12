@@ -19,12 +19,8 @@ import {
   Bed,
   Bath,
   Square,
-  Calendar,
   Building2,
   TrendingUp,
-  ChevronLeft,
-  ChevronRight,
-  ImageIcon,
   Layout,
 } from "lucide-react";
 import { UnitGallery } from "./UnitGallery";

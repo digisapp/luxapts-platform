@@ -3,7 +3,6 @@ import { getUserRole } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ShowerActions } from "./ShowerActions";
 import { Users, CheckCircle, Clock, AlertTriangle, Star } from "lucide-react";
 

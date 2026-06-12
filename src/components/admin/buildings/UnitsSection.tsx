@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ChevronDown, ChevronRight, Image } from "lucide-react";
+import { ChevronDown, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 interface UnitData {
@@ -27,13 +27,6 @@ interface UnitData {
 interface UnitsSectionProps {
   units: UnitData[];
   buildingId: string;
-}
-
-function bedLabel(beds: number | null): string {
-  if (beds === null) return "Unknown";
-  if (beds === 0) return "Studio";
-  if (beds >= 4) return "4+ Bed";
-  return `${beds} Bed`;
 }
 
 function bedGroup(beds: number | null): string {
@@ -177,7 +170,7 @@ export function UnitsSection({ units, buildingId }: UnitsSectionProps) {
                               : "text-green-500"
                           }`}
                         >
-                          <Image className="h-3 w-3" />
+                          <ImageIcon className="h-3 w-3" />
                           {unit.unit_images.length}
                         </span>
                       </div>

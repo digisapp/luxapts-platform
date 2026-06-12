@@ -1,10 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { getAgentUserId } from "@/lib/agent/auth";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
-import { Calendar, Clock, MapPin, User } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";

@@ -43,7 +43,7 @@ interface MiamiBuilding {
   };
 }
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const auth = await checkAdminAuth();
     if (!auth.isAdmin) {
@@ -297,7 +297,7 @@ export async function POST(req: Request) {
 
             // Create unit if we have unit number
             if (fp.unit && floorplan) {
-              const { data: unit, error: unitError } = await supabase
+              const { data: unit } = await supabase
                 .from("units")
                 .upsert({
                   building_id: buildingId,

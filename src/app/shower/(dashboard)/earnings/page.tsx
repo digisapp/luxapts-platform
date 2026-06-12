@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getShower } from "@/lib/shower/auth";
 import { createAdminClient } from "@/lib/supabase/server";

@@ -21,7 +21,7 @@ export default async function AdminSettingsPage() {
   // Fetch all stats in parallel
   const [
     { data: { user } },
-    profileRes,
+    , // placeholder profiles query result (unused)
     citiesRes,
     buildingsRes,
     leadsRes,

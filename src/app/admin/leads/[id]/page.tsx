@@ -12,7 +12,6 @@ import {
   ArrowLeft, Mail, Phone, Calendar, DollarSign, Bed, Building2,
   UserPlus, ArrowRight, UserCheck, Send, MessageSquare, MessageCircle,
 } from "lucide-react";
-import { SendEmailDialog } from "@/components/admin/leads/SendEmailDialog";
 import { LeadEmailButton } from "./LeadEmailButton";
 
 interface LeadDetailPageProps {

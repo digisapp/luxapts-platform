@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+// Iterates all alert-enabled searches and sends emails (default serverless timeout kills it mid-run, stranding jobs in "running")
+export const maxDuration = 300;
 import { createAdminClient } from "@/lib/supabase/server";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
 

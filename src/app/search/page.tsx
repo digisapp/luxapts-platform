@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check, Brain, Star } from "lucide-react";
+import { SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check, Brain, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/layout/Header";
@@ -157,11 +156,10 @@ function SearchContent() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
-  const [searchError, setSearchError] = useState<string | null>(null);
+  const [, setSearchError] = useState<string | null>(null);
 
   // Race protection: only the most recent request may apply its results
   const requestIdRef = useRef(0);
-  const aiParseIdRef = useRef(0);
 
   // Track listings whose images failed to load in the browser
   const [brokenImageIds, setBrokenImageIds] = useState<Set<string>>(new Set());

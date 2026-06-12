@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+// Serial multi-building scrape with AI extraction — needs the full window (default serverless timeout kills it mid-run, stranding jobs in "running")
+export const maxDuration = 300;
 import { createAdminClient } from "@/lib/supabase/server";
 import {
   scrapeUnitsOnly,
