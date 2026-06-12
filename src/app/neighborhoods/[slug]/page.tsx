@@ -22,14 +22,18 @@ export const revalidate = 3600;
 
 interface NeighborhoodPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ city?: string }>;
 }
 
-export default async function NeighborhoodPage({ params }: NeighborhoodPageProps) {
+export default async function NeighborhoodPage({ params, searchParams }: NeighborhoodPageProps) {
   const { slug } = await params;
+  const { city: citySlugParam } = await searchParams;
   const supabase = createAdminClient();
 
-  // Get neighborhood with city info
-  const { data: neighborhood, error } = await supabase
+  // Neighborhood slugs are NOT globally unique ("midtown" exists in NYC,
+  // Miami, and Atlanta) — .single() errored on shared slugs and 404'd the
+  // page. Fetch all matches and disambiguate via ?city=, else first match.
+  const { data: matches, error } = await supabase
     .from("neighborhoods")
     .select(`
       id,
@@ -39,14 +43,21 @@ export default async function NeighborhoodPage({ params }: NeighborhoodPageProps
       cities:city_id (id, name, slug, state)
     `)
     .eq("slug", slug)
-    .single();
+    .order("name");
 
-  if (error || !neighborhood) {
+  if (error || !matches || matches.length === 0) {
     notFound();
   }
 
-  const citiesData = neighborhood.cities as { id: string; name: string; slug: string; state: string } | { id: string; name: string; slug: string; state: string }[] | null;
-  const city = Array.isArray(citiesData) ? citiesData[0] : citiesData;
+  type CityInfo = { id: string; name: string; slug: string; state: string };
+  const cityOf = (n: (typeof matches)[number]): CityInfo | null => {
+    const c = n.cities as CityInfo | CityInfo[] | null;
+    return Array.isArray(c) ? c[0] ?? null : c;
+  };
+
+  const neighborhood =
+    (citySlugParam && matches.find((n) => cityOf(n)?.slug === citySlugParam)) || matches[0];
+  const city = cityOf(neighborhood);
 
   // Get buildings in this neighborhood
   const { data: buildings } = await supabase

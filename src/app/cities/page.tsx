@@ -144,7 +144,7 @@ export default async function CitiesPage() {
                           {cityNeighborhoods.slice(0, 5).map((n) => (
                             <Link
                               key={n.id}
-                              href={`/neighborhoods/${n.slug}`}
+                              href={`/neighborhoods/${n.slug}?city=${city.slug}`}
                             >
                               <Badge
                                 variant="outline"

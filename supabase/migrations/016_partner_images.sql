@@ -2,6 +2,7 @@
 -- Partners can insert/delete images for buildings where partner_user_id = their user ID
 
 -- Insert: partner can add images to buildings they own
+DROP POLICY IF EXISTS "building_images_partner_insert" ON building_images;
 CREATE POLICY "building_images_partner_insert"
   ON building_images
   FOR INSERT
@@ -15,6 +16,7 @@ CREATE POLICY "building_images_partner_insert"
   );
 
 -- Update: partner can update images (e.g. set primary) for buildings they own
+DROP POLICY IF EXISTS "building_images_partner_update" ON building_images;
 CREATE POLICY "building_images_partner_update"
   ON building_images
   FOR UPDATE
@@ -35,6 +37,7 @@ CREATE POLICY "building_images_partner_update"
   );
 
 -- Delete: partner can remove images from buildings they own
+DROP POLICY IF EXISTS "building_images_partner_delete" ON building_images;
 CREATE POLICY "building_images_partner_delete"
   ON building_images
   FOR DELETE

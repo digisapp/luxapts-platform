@@ -283,7 +283,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
               items={[
                 { label: "Search", href: "/search" },
                 ...(building.cities ? [{ label: building.cities.name, href: `/search?city=${building.cities.slug}` }] : []),
-                ...(building.neighborhoods ? [{ label: building.neighborhoods.name, href: `/neighborhoods/${building.neighborhoods.slug}` }] : []),
+                ...(building.neighborhoods ? [{ label: building.neighborhoods.name, href: `/neighborhoods/${building.neighborhoods.slug}${building.cities ? `?city=${building.cities.slug}` : ""}` }] : []),
                 { label: building.name },
               ]}
               className="mb-6"
