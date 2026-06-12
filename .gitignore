@@ -48,3 +48,7 @@ supabase/.temp/
 voice-agent/venv/
 voice-agent/__pycache__/
 *.pyc
+
+# playwright
+/test-results/
+/playwright-report/
