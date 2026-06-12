@@ -51,9 +51,13 @@ export async function GET(req: NextRequest) {
     }
 
     if (search) {
-      query = query.or(
-        `subject.ilike.%${search}%,from_email.ilike.%${search}%,from_name.ilike.%${search}%,to_email.ilike.%${search}%`
-      );
+      // Sanitize search input to prevent wildcard/filter injection
+      const sanitized = search.replace(/[%_\\,()]/g, "");
+      if (sanitized.length > 0) {
+        query = query.or(
+          `subject.ilike.%${sanitized}%,from_email.ilike.%${sanitized}%,from_name.ilike.%${sanitized}%,to_email.ilike.%${sanitized}%`
+        );
+      }
     }
 
     const { data: emails, count, error } = await query;

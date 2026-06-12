@@ -42,6 +42,8 @@ export default async function PartnerDashboardPage() {
           .from("building_views")
           .select("building_id")
           .in("building_id", buildingIds)
+          // Server component — per-request Date.now() is intentional here
+          // eslint-disable-next-line react-hooks/purity
           .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
       : Promise.resolve({ data: [] }),
   ]);

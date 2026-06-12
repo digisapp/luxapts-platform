@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 
 type ToastType = "success" | "error" | "info" | "warning";
@@ -27,8 +27,14 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const removeToast = useCallback((id: string) => {
+    const timeout = timeoutsRef.current.get(id);
+    if (timeout) {
+      clearTimeout(timeout);
+      timeoutsRef.current.delete(id);
+    }
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
@@ -42,13 +48,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       // Auto remove after duration (default 4 seconds)
       const duration = toast.duration ?? 4000;
       if (duration > 0) {
-        setTimeout(() => {
-          removeToast(id);
-        }, duration);
+        timeoutsRef.current.set(
+          id,
+          setTimeout(() => {
+            timeoutsRef.current.delete(id);
+            setToasts((prev) => prev.filter((t) => t.id !== id));
+          }, duration)
+        );
       }
     },
-    [removeToast]
+    []
   );
+
+  // Clear all pending auto-dismiss timers on unmount
+  useEffect(() => {
+    const timeouts = timeoutsRef.current;
+    return () => {
+      timeouts.forEach((t) => clearTimeout(t));
+      timeouts.clear();
+    };
+  }, []);
 
   const success = useCallback(
     (title: string, description?: string) => {

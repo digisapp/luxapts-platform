@@ -6,10 +6,26 @@ import { createLeadSchema } from "@/lib/validations";
 import { apiError } from "@/lib/api-helpers";
 import { autoAssignAgent } from "@/lib/leads/routing";
 import { newLeadEmail, tourConfirmationEmail } from "@/lib/email/templates";
+import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import type { CreateLeadResponse } from "@/types/database";
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+    const rateLimitResult = rateLimit(`leads:${clientIp}`, RATE_LIMITS.leads);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment." },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+          },
+        }
+      );
+    }
+
     const rawBody = await req.json();
 
     // Validate with Zod schema (email, phone, budget, dates, etc.)

@@ -179,7 +179,7 @@ async function importCity(
       const zip = zipMatch ? zipMatch[0] : defaultZip;
 
       // Check if building exists
-      let { data: existingBuilding } = await supabase
+      const { data: existingBuilding } = await supabase
         .from("buildings")
         .select("id")
         .eq("name", building.name)

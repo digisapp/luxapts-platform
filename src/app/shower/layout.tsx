@@ -1,21 +1,14 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Building2 } from "lucide-react";
-import { getShower } from "@/lib/shower/auth";
 import { ShowerNav } from "@/components/shower/layout/ShowerNav";
 
-export default async function ShowerLayout({
+// The registration guard lives in (dashboard)/layout.tsx. Keeping it here
+// would redirect /shower/profile (the registration page) to itself forever.
+export default function ShowerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const shower = await getShower();
-
-  if (!shower) {
-    // Not registered — send to registration page (which is public)
-    redirect("/shower/profile");
-  }
-
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}

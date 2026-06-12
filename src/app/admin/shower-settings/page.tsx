@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,8 @@ function NumberField({
   suffix?: string;
 }) {
   const [local, setLocal] = useState(String(value));
+  // Re-sync the draft input when the canonical value changes (e.g. after load)
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setLocal(String(value)), [value]);
 
   return (
@@ -83,14 +85,20 @@ function NumberField({
 export default function ShowerSettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch("/api/admin/shower-settings");
       const data = await res.json();
       if (res.ok) setSettings(data.settings);
+      else setLoadError(data.error || "Failed to load settings");
+    } catch {
+      setLoadError("Failed to load settings — please try again");
     } finally {
       setLoading(false);
     }
@@ -98,9 +106,16 @@ export default function ShowerSettingsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, []);
+
   async function handleSave() {
     if (!settings) return;
     setSaveState("saving");
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     try {
       const res = await fetch("/api/admin/shower-settings", {
         method: "PUT",
@@ -111,15 +126,15 @@ export default function ShowerSettingsPage() {
       if (res.ok) {
         setSettings(data.settings);
         setSaveState("saved");
-        setTimeout(() => setSaveState("idle"), 3000);
+        saveTimeoutRef.current = setTimeout(() => setSaveState("idle"), 3000);
       } else {
         console.error(data.error);
         setSaveState("error");
-        setTimeout(() => setSaveState("idle"), 4000);
+        saveTimeoutRef.current = setTimeout(() => setSaveState("idle"), 4000);
       }
     } catch {
       setSaveState("error");
-      setTimeout(() => setSaveState("idle"), 4000);
+      saveTimeoutRef.current = setTimeout(() => setSaveState("idle"), 4000);
     }
   }
 
@@ -141,10 +156,23 @@ export default function ShowerSettingsPage() {
   // Live preview calculations
   const exampleRents = [2500, 3000, 4000, 5000, 6000];
 
-  if (loading || !settings) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
         <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (loadError || !settings) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
+        <span className="flex items-center gap-1.5 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4" /> {loadError || "Failed to load settings"}
+        </span>
+        <Button variant="outline" onClick={load}>
+          <RefreshCw className="h-4 w-4 mr-2" /> Retry
+        </Button>
       </div>
     );
   }

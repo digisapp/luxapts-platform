@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,24 +61,34 @@ function InquiriesContent() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const status = searchParams.get("status") || "";
   const page = Math.max(0, parseInt(searchParams.get("page") || "0"));
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const params = new URLSearchParams({ limit: String(LIMIT), offset: String(page * LIMIT) });
-    if (status) params.set("status", status);
-    const res = await fetch(`/api/partner/leads?${params}`);
-    if (res.ok) {
-      const data = await res.json();
-      setLeads(data.leads || []);
-      setTotal(data.total || 0);
-    }
-    setLoading(false);
+  useEffect(() => {
+    let ignore = false;
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const params = new URLSearchParams({ limit: String(LIMIT), offset: String(page * LIMIT) });
+        if (status) params.set("status", status);
+        const res = await fetch(`/api/partner/leads?${params}`);
+        if (!res.ok) throw new Error("Request failed");
+        const data = await res.json();
+        if (ignore) return;
+        setLeads(data.leads || []);
+        setTotal(data.total || 0);
+      } catch {
+        if (!ignore) setError("Failed to load inquiries — please try again.");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    load();
+    return () => { ignore = true; };
   }, [status, page]);
-
-  useEffect(() => { load(); }, [load]);
 
   const setFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -120,6 +130,12 @@ function InquiriesContent() {
         <div className="flex items-center justify-center py-16">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
+      ) : error ? (
+        <Card>
+          <CardContent className="flex flex-col items-center py-16 text-center">
+            <p className="text-sm text-red-500">{error}</p>
+          </CardContent>
+        </Card>
       ) : leads.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center py-16 text-center">

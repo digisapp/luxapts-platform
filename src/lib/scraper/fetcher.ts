@@ -17,8 +17,49 @@ const BROWSER_HEADERS = {
 // Rate limiting: track requests per domain
 const domainLastRequest = new Map<string, number>();
 const MIN_REQUEST_INTERVAL = 2000; // 2 seconds between requests to same domain
+const FETCH_TIMEOUT_MS = 15000;
+const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // 5 MB cap on fetched HTML
+
+// SSRF guard: only allow public http(s) URLs — block localhost, private and
+// link-local ranges (cloud metadata endpoints live at 169.254.169.254).
+function isSafeUrl(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+
+  const host = parsed.hostname.toLowerCase();
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal")) {
+    return false;
+  }
+  // IPv6 literals (loopback, link-local, unique-local, mapped) — reject outright
+  if (host === "::1" || host.includes(":")) return false;
+  // IPv4 private/reserved ranges
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+    if (
+      a === 0 || a === 10 || a === 127 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a >= 224
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
 
 async function rateLimitedFetch(url: string): Promise<Response> {
+  if (!isSafeUrl(url)) {
+    throw new Error(`Blocked unsafe URL: ${url}`);
+  }
+
   const domain = new URL(url).hostname;
   const lastRequest = domainLastRequest.get(domain) || 0;
   const timeSinceLastRequest = Date.now() - lastRequest;
@@ -29,10 +70,18 @@ async function rateLimitedFetch(url: string): Promise<Response> {
 
   domainLastRequest.set(domain, Date.now());
 
-  return fetch(url, {
+  const response = await fetch(url, {
     headers: BROWSER_HEADERS,
     redirect: "follow",
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
+
+  // Re-check the final URL in case a redirect landed somewhere unsafe
+  if (response.url && !isSafeUrl(response.url)) {
+    throw new Error(`Blocked unsafe redirect target: ${response.url}`);
+  }
+
+  return response;
 }
 
 export async function fetchBuildingHTML(websiteUrl: string): Promise<{ html: string; finalUrl: string } | null> {
@@ -44,7 +93,18 @@ export async function fetchBuildingHTML(websiteUrl: string): Promise<{ html: str
       return null;
     }
 
+    const contentLength = Number(response.headers.get("content-length") || 0);
+    if (contentLength > MAX_RESPONSE_BYTES) {
+      console.error(`Response too large for ${websiteUrl}: ${contentLength} bytes`);
+      return null;
+    }
+
     const html = await response.text();
+    if (html.length > MAX_RESPONSE_BYTES) {
+      console.error(`Response body too large for ${websiteUrl}`);
+      return null;
+    }
+
     return {
       html,
       finalUrl: response.url, // In case of redirects
@@ -66,7 +126,7 @@ export async function findAmenitiesPage(websiteUrl: string, mainHtml: string): P
   for (const pattern of patterns) {
     const matches = mainHtml.matchAll(pattern);
     for (const match of matches) {
-      let amenitiesPath = match[1];
+      const amenitiesPath = match[1];
 
       // Skip if it's an anchor link
       if (amenitiesPath.startsWith("#")) continue;
@@ -100,7 +160,7 @@ export async function findUnitsPage(websiteUrl: string, mainHtml: string): Promi
   for (const pattern of patterns) {
     const matches = mainHtml.matchAll(pattern);
     for (const match of matches) {
-      let unitsPath = match[1];
+      const unitsPath = match[1];
 
       // Skip if it's an anchor link
       if (unitsPath.startsWith("#")) continue;

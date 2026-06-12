@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { createLocalStore, useLocalStore } from "@/lib/local-store";
 
 export interface FavoriteItem {
   id: string;
@@ -19,30 +20,28 @@ export interface FavoriteItem {
 
 const STORAGE_KEY = "luxapts_favorites";
 
+// Shared store: all FavoriteButtons, the Header badge, and the favorites
+// page see the same list and never clobber each other's writes.
+const favoritesStore = createLocalStore<FavoriteItem[]>(STORAGE_KEY, []);
+
+// DB sync must run once per logged-in user across ALL hook instances —
+// previously every FavoriteButton on a results page fired its own sync.
+let syncedUserId: string | null = null;
+let syncInFlight = false;
+
 export function useFavorites() {
   const { user } = useAuth();
-  const [items, setItems] = useState<FavoriteItem[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { value: items, isLoaded } = useLocalStore(favoritesStore);
   const [isSyncing, setIsSyncing] = useState(false);
-  const syncedRef = useRef(false);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as FavoriteItem[];
-        setItems(parsed);
-      }
-    } catch (e) {
-      console.error("Error loading favorites:", e);
-    }
-    setIsLoaded(true);
-  }, []);
 
   // Sync with database when user logs in
   useEffect(() => {
-    if (!user || syncedRef.current) return;
+    if (!user) {
+      syncedUserId = null;
+      return;
+    }
+    if (syncedUserId === user.id || syncInFlight) return;
+    syncInFlight = true;
 
     const syncFavorites = async () => {
       setIsSyncing(true);
@@ -53,7 +52,7 @@ export function useFavorites() {
           const { favorites } = await response.json();
 
           // Batch sync local favorites to database (single request instead of N)
-          const localItems = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as FavoriteItem[];
+          const localItems = favoritesStore.get();
           const newItems = localItems.filter(
             (item) =>
               !favorites.some((f: { building_id?: string; unit_id?: string }) =>
@@ -103,19 +102,21 @@ export function useFavorites() {
           });
 
           // Merge: keep all from DB, add local items not in DB
-          const mergedItems = [...dbItems];
-          for (const localItem of localItems) {
-            if (!dbItems.some((db) => db.id === localItem.id)) {
-              mergedItems.push(localItem);
+          favoritesStore.set((current) => {
+            const merged = [...dbItems];
+            for (const localItem of current) {
+              if (!dbItems.some((db) => db.id === localItem.id)) {
+                merged.push(localItem);
+              }
             }
-          }
-
-          setItems(mergedItems);
-          syncedRef.current = true;
+            return merged;
+          });
+          syncedUserId = user.id;
         }
       } catch (e) {
         console.error("Error syncing favorites:", e);
       } finally {
+        syncInFlight = false;
         setIsSyncing(false);
       }
     };
@@ -123,31 +124,13 @@ export function useFavorites() {
     syncFavorites();
   }, [user]);
 
-  // Reset sync flag when user logs out
-  useEffect(() => {
-    if (!user) {
-      syncedRef.current = false;
-    }
-  }, [user]);
-
-  // Save to localStorage when items change
-  useEffect(() => {
-    if (isLoaded) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-      } catch (e) {
-        console.error("Error saving favorites:", e);
-      }
-    }
-  }, [items, isLoaded]);
-
   const addItem = useCallback(async (item: Omit<FavoriteItem, "addedAt">) => {
-    // Check if already exists
-    const exists = items.some((i) => i.id === item.id);
-    if (exists) return;
+    if (favoritesStore.get().some((i) => i.id === item.id)) return;
 
     const newItem = { ...item, addedAt: Date.now() };
-    setItems((prev) => [newItem, ...prev]);
+    favoritesStore.set((prev) =>
+      prev.some((i) => i.id === item.id) ? prev : [newItem, ...prev]
+    );
 
     // Sync to database if logged in
     if (user) {
@@ -164,11 +147,11 @@ export function useFavorites() {
         console.error("Error adding favorite to DB:", e);
       }
     }
-  }, [items, user]);
+  }, [user]);
 
   const removeItem = useCallback(async (id: string) => {
-    const item = items.find((i) => i.id === id);
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    const item = favoritesStore.get().find((i) => i.id === id);
+    favoritesStore.set((prev) => prev.filter((i) => i.id !== id));
 
     // Sync to database if logged in
     if (user && item) {
@@ -179,16 +162,16 @@ export function useFavorites() {
         console.error("Error removing favorite from DB:", e);
       }
     }
-  }, [items, user]);
+  }, [user]);
 
   const toggleItem = useCallback(async (item: Omit<FavoriteItem, "addedAt">) => {
-    const exists = items.some((i) => i.id === item.id);
+    const exists = favoritesStore.get().some((i) => i.id === item.id);
     if (exists) {
       await removeItem(item.id);
     } else {
       await addItem(item);
     }
-  }, [items, addItem, removeItem]);
+  }, [addItem, removeItem]);
 
   const isFavorite = useCallback(
     (id: string) => items.some((item) => item.id === id),
@@ -196,7 +179,7 @@ export function useFavorites() {
   );
 
   const clearAll = useCallback(() => {
-    setItems([]);
+    favoritesStore.set(() => []);
   }, []);
 
   return {

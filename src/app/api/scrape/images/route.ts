@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
 import {
   scrapeImagesOnly,
   updateScrapeStatus,
@@ -27,7 +28,10 @@ export async function POST(req: Request) {
     const isAuthorized = cronSecret && authHeader === `Bearer ${cronSecret}`;
 
     if (!isAuthorized) {
-      // For now allow (add admin auth check as needed)
+      const authResult = await checkAdminAuth();
+      if (!authResult.isAdmin) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      }
     }
 
     const supabase = createAdminClient();
@@ -220,6 +224,16 @@ export async function POST(req: Request) {
 // GET: Check image scraping status across buildings
 export async function GET(req: Request) {
   try {
+    const authHeader = req.headers.get("authorization");
+    const cronSecret = process.env.CRON_SECRET;
+    const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+    if (!isCron) {
+      const authResult = await checkAdminAuth();
+      if (!authResult.isAdmin) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      }
+    }
+
     const url = new URL(req.url);
     const citySlug = url.searchParams.get("city");
 

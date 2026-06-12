@@ -11,7 +11,8 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Load environment variables
-require("dotenv").config({ path: ".env.local" });
+import { config as loadEnv } from "dotenv";
+loadEnv({ path: ".env.local" });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -158,7 +159,7 @@ async function importMiamiBuildings() {
       const zip = zipMatch ? zipMatch[0] : null;
 
       // Check if building exists
-      let { data: existingBuilding } = await supabase
+      const { data: existingBuilding } = await supabase
         .from("buildings")
         .select("id")
         .eq("name", building.name)

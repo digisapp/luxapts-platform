@@ -25,7 +25,7 @@ export const emailTemplates = {
     buildingName: string;
     date?: string;
   }) => ({
-    subject: `Tour Request Confirmation - ${escapeHtml(data.buildingName)}`,
+    subject: `Tour Request Confirmation - ${data.buildingName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #1a1a1a;">Tour Request Received</h2>
@@ -44,7 +44,7 @@ export const emailTemplates = {
     agentPhone?: string;
     agentEmail?: string;
   }) => ({
-    subject: `Meet Your LuxApts Agent: ${escapeHtml(data.agentName)}`,
+    subject: `Meet Your LuxApts Agent: ${data.agentName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #1a1a1a;">Your Personal Agent</h2>
@@ -66,7 +66,7 @@ export const emailTemplates = {
     source: string;
     leadId: string;
   }) => ({
-    subject: `New Lead: ${escapeHtml(data.leadName) || "Anonymous"} (${escapeHtml(data.city)})`,
+    subject: `New Lead: ${data.leadName || "Anonymous"} (${data.city})`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #1a1a1a;">New Lead Received</h2>

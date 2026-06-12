@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -86,6 +86,20 @@ interface ParsedFilters {
   summary?: string;
 }
 
+interface SavedFilters {
+  city?: string;
+  bedsMin?: string;
+  bedsMax?: string;
+  budgetMin?: string;
+  budgetMax?: string;
+  bathsMin?: string;
+  petFriendly?: boolean;
+  parkingRequired?: boolean;
+  moveInDate?: string;
+  selectedAmenities?: string[];
+  sort?: string;
+}
+
 interface SemanticBuilding {
   id: string;
   name: string;
@@ -106,29 +120,48 @@ function SearchContent() {
   const queryParam = searchParams.get("q");
   const cityParam = searchParams.get("city");
 
-  const [city, setCity] = useState(cityParam || "miami");
-  const [bedsMin, setBedsMin] = useState("");
-  const [bedsMax, setBedsMax] = useState("");
-  const [budgetMin, setBudgetMin] = useState("");
-  const [budgetMax, setBudgetMax] = useState("");
-  const [sort, setSort] = useState("price_low");
+  // Restore saved filters synchronously (lazy initializer) so the initial
+  // search uses them instead of racing the async restore
+  const [savedFilters] = useState<SavedFilters | null>(() => {
+    if (typeof window === "undefined") return null;
+    if (queryParam || cityParam) return null;
+    try {
+      const saved = localStorage.getItem("luxapts-search-filters");
+      return saved ? (JSON.parse(saved) as SavedFilters) : null;
+    } catch (e) {
+      console.error("Error loading saved filters:", e);
+      return null;
+    }
+  });
+
+  const [city, setCity] = useState(cityParam || savedFilters?.city || "miami");
+  const [bedsMin, setBedsMin] = useState(savedFilters?.bedsMin || "");
+  const [bedsMax, setBedsMax] = useState(savedFilters?.bedsMax || "");
+  const [budgetMin, setBudgetMin] = useState(savedFilters?.budgetMin || "");
+  const [budgetMax, setBudgetMax] = useState(savedFilters?.budgetMax || "");
+  const [sort, setSort] = useState(savedFilters?.sort || "price_low");
   const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState(queryParam || "");
 
   // Advanced filter states
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
-  const [bathsMin, setBathsMin] = useState("");
-  const [petFriendly, setPetFriendly] = useState(false);
-  const [parkingRequired, setParkingRequired] = useState(false);
-  const [moveInDate, setMoveInDate] = useState("");
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [bathsMin, setBathsMin] = useState(savedFilters?.bathsMin || "");
+  const [petFriendly, setPetFriendly] = useState(savedFilters?.petFriendly || false);
+  const [parkingRequired, setParkingRequired] = useState(savedFilters?.parkingRequired || false);
+  const [moveInDate, setMoveInDate] = useState(savedFilters?.moveInDate || "");
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(savedFilters?.selectedAmenities || []);
   const [showNeighborhoodDropdown, setShowNeighborhoodDropdown] = useState(false);
   const [showAmenityDropdown, setShowAmenityDropdown] = useState(false);
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  // Race protection: only the most recent request may apply its results
+  const requestIdRef = useRef(0);
+  const aiParseIdRef = useRef(0);
 
   // Track listings whose images failed to load in the browser
   const [brokenImageIds, setBrokenImageIds] = useState<Set<string>>(new Set());
@@ -145,30 +178,6 @@ function SearchContent() {
   const [smartSearch, setSmartSearch] = useState(false);
   const [semanticResults, setSemanticResults] = useState<SemanticBuilding[]>([]);
   const [semanticQuery, setSemanticQuery] = useState<string | null>(null);
-
-  // Load saved filters from localStorage on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const saved = localStorage.getItem("luxapts-search-filters");
-    if (saved && !queryParam && !cityParam) {
-      try {
-        const filters = JSON.parse(saved);
-        if (filters.city) setCity(filters.city);
-        if (filters.bedsMin) setBedsMin(filters.bedsMin);
-        if (filters.bedsMax) setBedsMax(filters.bedsMax);
-        if (filters.budgetMin) setBudgetMin(filters.budgetMin);
-        if (filters.budgetMax) setBudgetMax(filters.budgetMax);
-        if (filters.bathsMin) setBathsMin(filters.bathsMin);
-        if (filters.petFriendly) setPetFriendly(filters.petFriendly);
-        if (filters.parkingRequired) setParkingRequired(filters.parkingRequired);
-        if (filters.moveInDate) setMoveInDate(filters.moveInDate);
-        if (filters.selectedAmenities) setSelectedAmenities(filters.selectedAmenities);
-        if (filters.sort) setSort(filters.sort);
-      } catch (e) {
-        console.error("Error loading saved filters:", e);
-      }
-    }
-  }, [queryParam, cityParam]);
 
   // Save filters to localStorage when they change
   useEffect(() => {
@@ -222,7 +231,9 @@ function SearchContent() {
   ].filter(Boolean).length;
 
   const handleSearch = useCallback(async (filters?: ParsedFilters) => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
+    setSearchError(null);
     try {
       const body: Record<string, unknown> = {
         city_slug: filters?.city_slug || city,
@@ -259,23 +270,32 @@ function SearchContent() {
         body: JSON.stringify(body),
       });
 
+      if (requestId !== requestIdRef.current) return;
+
       if (res.ok) {
         const data: SearchResponse = await res.json();
+        if (requestId !== requestIdRef.current) return;
         setResults(data.results);
         setCapturedAt(data.captured_at_max);
         setBrokenImageIds(new Set());
+      } else {
+        setSearchError("Search failed. Please try again.");
       }
     } catch (error) {
+      if (requestId !== requestIdRef.current) return;
       console.error("Search error:", error);
+      setSearchError("Search failed. Please try again.");
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, [city, sort, bedsMin, bedsMax, budgetMin, budgetMax, selectedNeighborhoods, bathsMin, petFriendly, parkingRequired, moveInDate, selectedAmenities]);
 
   // Semantic / Smart Search — natural language query against xAI vector index
   const handleSemanticSearch = useCallback(async (query: string) => {
     if (!query.trim()) { handleSearch(); return; }
+    const requestId = ++requestIdRef.current;
     setLoading(true);
+    setSearchError(null);
     setSemanticResults([]);
     setSemanticQuery(query.trim());
     try {
@@ -284,14 +304,21 @@ function SearchContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: query.trim(), city_slug: city || undefined, limit: 20 }),
       });
+      if (requestId !== requestIdRef.current) return;
+
       if (res.ok) {
         const data = await res.json();
+        if (requestId !== requestIdRef.current) return;
         setSemanticResults(data.buildings || []);
+      } else {
+        setSearchError("Smart search failed. Please try again.");
       }
     } catch (error) {
+      if (requestId !== requestIdRef.current) return;
       console.error("Semantic search error:", error);
+      setSearchError("Smart search failed. Please try again.");
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, [city, handleSearch]);
 

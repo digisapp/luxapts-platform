@@ -33,21 +33,23 @@ export function UnitGallery({ images, unitLabel }: UnitGalleryProps) {
   const prev = () => setCurrent((i) => (i === 0 ? images.length - 1 : i - 1));
   const next = () => setCurrent((i) => (i === images.length - 1 ? 0 : i + 1));
 
+  const safeIndex = Math.min(current, images.length - 1);
+
   return (
     <div className="space-y-2">
       {/* Main image */}
       <div className="relative h-64 md:h-[420px] rounded-xl overflow-hidden bg-muted group">
         <Image
-          src={images[current].url}
-          alt={images[current].alt_text || unitLabel}
+          src={images[safeIndex].url}
+          alt={images[safeIndex].alt_text || unitLabel}
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 66vw"
-          priority={current === 0}
+          priority={safeIndex === 0}
         />
-        {images[current].category && (
+        {images[safeIndex].category && (
           <Badge className="absolute top-3 left-3 bg-black/50 text-white border-0 capitalize">
-            {images[current].category}
+            {images[safeIndex].category}
           </Badge>
         )}
         {images.length > 1 && (
@@ -65,7 +67,7 @@ export function UnitGallery({ images, unitLabel }: UnitGalleryProps) {
               <ChevronRight className="h-5 w-5" />
             </button>
             <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full">
-              {current + 1} / {images.length}
+              {safeIndex + 1} / {images.length}
             </div>
           </>
         )}
@@ -79,7 +81,7 @@ export function UnitGallery({ images, unitLabel }: UnitGalleryProps) {
               key={img.id}
               onClick={() => setCurrent(i)}
               className={`relative h-16 w-24 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
-                i === current ? "border-primary" : "border-transparent"
+                i === safeIndex ? "border-primary" : "border-transparent"
               }`}
             >
               <Image

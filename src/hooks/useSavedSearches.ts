@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { createLocalStore, useLocalStore } from "@/lib/local-store";
 
 export interface SavedSearch {
   id: string;
@@ -24,30 +25,25 @@ export interface SavedSearch {
 const STORAGE_KEY = "luxapts_saved_searches";
 const MAX_SEARCHES = 10;
 
+const savedSearchesStore = createLocalStore<SavedSearch[]>(STORAGE_KEY, []);
+
+// DB sync must run once per logged-in user across all hook instances
+let syncedUserId: string | null = null;
+let syncInFlight = false;
+
 export function useSavedSearches() {
   const { user } = useAuth();
-  const [searches, setSearches] = useState<SavedSearch[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { value: searches, isLoaded } = useLocalStore(savedSearchesStore);
   const [isSyncing, setIsSyncing] = useState(false);
-  const syncedRef = useRef(false);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as SavedSearch[];
-        setSearches(parsed);
-      }
-    } catch (e) {
-      console.error("Error loading saved searches:", e);
-    }
-    setIsLoaded(true);
-  }, []);
 
   // Sync with database when user logs in
   useEffect(() => {
-    if (!user || syncedRef.current) return;
+    if (!user) {
+      syncedUserId = null;
+      return;
+    }
+    if (syncedUserId === user.id || syncInFlight) return;
+    syncInFlight = true;
 
     const syncSearches = async () => {
       setIsSyncing(true);
@@ -57,7 +53,7 @@ export function useSavedSearches() {
           const { searches: dbSearches } = await response.json();
 
           // Merge local searches to database
-          const localSearches = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as SavedSearch[];
+          const localSearches = savedSearchesStore.get();
           for (const search of localSearches) {
             const exists = dbSearches.some((s: { name: string }) => s.name === search.name);
             if (!exists) {
@@ -92,43 +88,27 @@ export function useSavedSearches() {
           }));
 
           // Merge: prioritize DB items, add local items not in DB
-          const mergedSearches = [...dbItems];
-          for (const localSearch of localSearches) {
-            if (!dbItems.some((db) => db.name === localSearch.name)) {
-              mergedSearches.push(localSearch);
+          savedSearchesStore.set((current) => {
+            const merged = [...dbItems];
+            for (const localSearch of current) {
+              if (!dbItems.some((db) => db.name === localSearch.name)) {
+                merged.push(localSearch);
+              }
             }
-          }
-
-          setSearches(mergedSearches.slice(0, MAX_SEARCHES));
-          syncedRef.current = true;
+            return merged.slice(0, MAX_SEARCHES);
+          });
+          syncedUserId = user.id;
         }
       } catch (e) {
         console.error("Error syncing saved searches:", e);
       } finally {
+        syncInFlight = false;
         setIsSyncing(false);
       }
     };
 
     syncSearches();
   }, [user]);
-
-  // Reset sync flag when user logs out
-  useEffect(() => {
-    if (!user) {
-      syncedRef.current = false;
-    }
-  }, [user]);
-
-  // Save to localStorage when searches change
-  useEffect(() => {
-    if (isLoaded) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(searches));
-      } catch (e) {
-        console.error("Error saving searches:", e);
-      }
-    }
-  }, [searches, isLoaded]);
 
   const saveSearch = useCallback(
     async (name: string, filters: SavedSearch["filters"], resultCount?: number, emailAlerts?: boolean) => {
@@ -143,10 +123,7 @@ export function useSavedSearches() {
         lastUsedAt: Date.now(),
       };
 
-      setSearches((prev) => {
-        const updated = [newSearch, ...prev].slice(0, MAX_SEARCHES);
-        return updated;
-      });
+      savedSearchesStore.set((prev) => [newSearch, ...prev].slice(0, MAX_SEARCHES));
 
       // Sync to database if logged in
       if (user) {
@@ -163,7 +140,7 @@ export function useSavedSearches() {
           if (response.ok) {
             const { search } = await response.json();
             // Update local ID with database ID
-            setSearches((prev) =>
+            savedSearchesStore.set((prev) =>
               prev.map((s) => (s.id === id ? { ...s, id: search.id } : s))
             );
             return search.id;
@@ -179,7 +156,7 @@ export function useSavedSearches() {
   );
 
   const removeSearch = useCallback(async (id: string) => {
-    setSearches((prev) => prev.filter((s) => s.id !== id));
+    savedSearchesStore.set((prev) => prev.filter((s) => s.id !== id));
 
     // Sync to database if logged in
     if (user && !id.startsWith("search_")) {
@@ -192,7 +169,7 @@ export function useSavedSearches() {
   }, [user]);
 
   const updateLastUsed = useCallback((id: string) => {
-    setSearches((prev) =>
+    savedSearchesStore.set((prev) =>
       prev.map((s) =>
         s.id === id ? { ...s, lastUsedAt: Date.now() } : s
       )
@@ -200,7 +177,7 @@ export function useSavedSearches() {
   }, []);
 
   const toggleEmailAlerts = useCallback(async (id: string, enabled: boolean) => {
-    setSearches((prev) =>
+    savedSearchesStore.set((prev) =>
       prev.map((s) =>
         s.id === id ? { ...s, emailAlerts: enabled } : s
       )
@@ -221,7 +198,7 @@ export function useSavedSearches() {
   }, [user]);
 
   const clearAll = useCallback(() => {
-    setSearches([]);
+    savedSearchesStore.set(() => []);
   }, []);
 
   return {

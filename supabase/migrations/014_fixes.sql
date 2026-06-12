@@ -7,21 +7,25 @@
 -- =========================
 
 -- Fix: shower_strikes — admins need to update/delete strikes (e.g. to correct errors)
+drop policy if exists "shower_strikes_admin_update" on public.shower_strikes;
 create policy "shower_strikes_admin_update"
   on public.shower_strikes for update
   using (public.is_admin())
   with check (public.is_admin());
 
+drop policy if exists "shower_strikes_admin_delete" on public.shower_strikes;
 create policy "shower_strikes_admin_delete"
   on public.shower_strikes for delete
   using (public.is_admin());
 
 -- Fix: building_certification_content — admins need to delete stale quiz content
+drop policy if exists "cert_content_admin_delete" on public.building_certification_content;
 create policy "cert_content_admin_delete"
   on public.building_certification_content for delete
   using (public.is_admin());
 
 -- Fix: user_saved_searches — admins need to read all for analytics/compliance
+drop policy if exists "user_saved_searches_admin_read" on user_saved_searches;
 create policy "user_saved_searches_admin_read"
   on user_saved_searches for select
   using (
@@ -34,6 +38,9 @@ create policy "user_saved_searches_admin_read"
 
 -- Fix: leads — agents assigned to a lead can update notes + status (not financials)
 -- This complements the existing select policy for agents.
+-- Drops the 002 version first (same name, weaker `with check (true)`) —
+-- without this drop, CREATE POLICY errors and rolls back the whole migration.
+drop policy if exists "leads_agent_update_assigned" on public.leads;
 create policy "leads_agent_update_assigned"
   on public.leads for update
   using (
@@ -93,7 +100,7 @@ alter table public.email_campaigns
   add column if not exists sent_count integer not null default 0,
   add column if not exists failed_count integer not null default 0,
   add column if not exists status text not null default 'completed'
-    check (status in ('pending', 'sending', 'completed', 'partial_failure'));
+    check (status in ('pending', 'sending', 'completed', 'partial_failure', 'failed'));
 
 -- Backfill existing rows: assume all existing campaigns completed fully
 update public.email_campaigns

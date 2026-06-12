@@ -137,7 +137,7 @@ export default async function ShowerDashboardPage() {
           ? activeClaim.showing_leads[0]
           : activeClaim.showing_leads;
         const building = lead && !Array.isArray((lead as { buildings?: unknown }).buildings)
-          ? (lead as { buildings?: { name: string } }).buildings
+          ? (lead as unknown as { buildings?: { name: string } }).buildings
           : null;
         return (
           <Card className="border-blue-200 bg-blue-50/50">

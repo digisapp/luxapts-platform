@@ -79,7 +79,7 @@ export default async function CertificationsPage() {
     .eq("shower_id", shower.id)
     .order("certified_at", { ascending: false, nullsFirst: false });
 
-  const certifications = (certs || []) as CertRow[];
+  const certifications = (certs || []) as unknown as CertRow[];
 
   return (
     <div className="space-y-8">

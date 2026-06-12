@@ -6,7 +6,12 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Supabase connection (using transaction pooler)
-const connectionString = "postgresql://postgres.csgesvqzvqfhepksbory:Porkchop1!@aws-0-us-east-1.pooler.supabase.com:5432/postgres";
+// Set DATABASE_URL in your environment — never commit credentials.
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  console.error("DATABASE_URL environment variable is required");
+  process.exit(1);
+}
 
 async function runMigration() {
   const client = new pg.Client({ connectionString });

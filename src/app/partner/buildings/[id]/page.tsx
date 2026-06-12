@@ -75,7 +75,10 @@ export default function PartnerBuildingPage() {
   const [images, setImages] = useState<BuildingImage[]>([]);
   const [unitEdits, setUnitEdits] = useState<Record<string, UnitEdit>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [unitError, setUnitError] = useState("");
   const [editDesc, setEditDesc] = useState(false);
   const [form, setForm] = useState({
     description: "",
@@ -95,50 +98,66 @@ export default function PartnerBuildingPage() {
   const [settingPrimaryId, setSettingPrimaryId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch(`/api/partner/buildings/${buildingId}`);
-    if (!res.ok) { router.push("/partner/buildings"); return; }
-    const data = await res.json();
-    setBuilding(data.building);
-    setUnits(data.units || []);
-    setImages(data.images || []);
-    setForm({
-      description: data.building.description || "",
-      leasing_phone: data.building.leasing_phone || "",
-      leasing_email: data.building.leasing_email || "",
-      pet_policy: data.building.pet_policy || "",
-      parking_policy: data.building.parking_policy || "",
-    });
-    const edits: Record<string, UnitEdit> = {};
-    for (const u of data.units || []) {
-      edits[u.id] = {
-        is_available: u.is_available,
-        available_on: u.available_on || "",
-        rent: u.current_rent != null ? String(u.current_rent) : "",
-        dirty: false,
-        saving: false,
-      };
+    try {
+      const res = await fetch(`/api/partner/buildings/${buildingId}`);
+      if (!res.ok) { router.push("/partner/buildings"); return; }
+      const data = await res.json();
+      setBuilding(data.building);
+      setUnits(data.units || []);
+      setImages(data.images || []);
+      setForm({
+        description: data.building.description || "",
+        leasing_phone: data.building.leasing_phone || "",
+        leasing_email: data.building.leasing_email || "",
+        pet_policy: data.building.pet_policy || "",
+        parking_policy: data.building.parking_policy || "",
+      });
+      const edits: Record<string, UnitEdit> = {};
+      for (const u of data.units || []) {
+        edits[u.id] = {
+          is_available: u.is_available,
+          available_on: u.available_on || "",
+          rent: u.current_rent != null ? String(u.current_rent) : "",
+          dirty: false,
+          saving: false,
+        };
+      }
+      setUnitEdits(edits);
+    } catch {
+      setLoadError("Failed to load building — please refresh the page.");
+    } finally {
+      setLoading(false);
     }
-    setUnitEdits(edits);
-    setLoading(false);
   }, [buildingId, router]);
 
   useEffect(() => { load(); }, [load]);
 
   const saveBuilding = async () => {
     setSaving(true);
-    await fetch(`/api/partner/buildings/${buildingId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        description: form.description || null,
-        leasing_phone: form.leasing_phone || null,
-        leasing_email: form.leasing_email || null,
-        pet_policy: form.pet_policy || null,
-        parking_policy: form.parking_policy || null,
-      }),
-    });
-    setSaving(false);
-    setEditDesc(false);
+    setSaveError("");
+    try {
+      const res = await fetch(`/api/partner/buildings/${buildingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: form.description || null,
+          leasing_phone: form.leasing_phone || null,
+          leasing_email: form.leasing_email || null,
+          pet_policy: form.pet_policy || null,
+          parking_policy: form.parking_policy || null,
+        }),
+      });
+      if (res.ok) {
+        setEditDesc(false);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setSaveError(data.error || "Failed to save changes — please try again.");
+      }
+    } catch {
+      setSaveError("Network error — please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const saveUnit = async (unitId: string) => {
@@ -150,16 +169,29 @@ export default function PartnerBuildingPage() {
     if (edit.available_on) body.available_on = edit.available_on;
     if (edit.rent && !isNaN(Number(edit.rent))) body.rent = Number(edit.rent);
 
-    await fetch(`/api/partner/buildings/${buildingId}/units?unit_id=${unitId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    setUnitEdits((prev) => ({
-      ...prev,
-      [unitId]: { ...prev[unitId], saving: false, dirty: false },
-    }));
+    setUnitError("");
+    try {
+      const res = await fetch(`/api/partner/buildings/${buildingId}/units?unit_id=${unitId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setUnitEdits((prev) => ({
+          ...prev,
+          [unitId]: { ...prev[unitId], dirty: false },
+        }));
+      } else {
+        setUnitError("Failed to save unit changes — please try again.");
+      }
+    } catch {
+      setUnitError("Network error — please try again.");
+    } finally {
+      setUnitEdits((prev) => ({
+        ...prev,
+        [unitId]: { ...prev[unitId], saving: false },
+      }));
+    }
   };
 
   const updateUnitEdit = (unitId: string, updates: Partial<UnitEdit>) => {
@@ -175,26 +207,31 @@ export default function PartnerBuildingPage() {
 
     setAddingImage(true);
     setImageError("");
-    const res = await fetch(`/api/partner/buildings/${buildingId}/images`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        url: imageForm.url.trim(),
-        category: imageForm.category,
-        alt_text: imageForm.alt_text.trim() || null,
-      }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setImages((prev) => [...prev, data.image]);
-      setImageForm({ url: "", category: "exterior", alt_text: "" });
-      setImagePreviewOk(false);
-      setShowAddImage(false);
-    } else {
-      const data = await res.json();
-      setImageError(data.error || "Failed to add image");
+    try {
+      const res = await fetch(`/api/partner/buildings/${buildingId}/images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: imageForm.url.trim(),
+          category: imageForm.category,
+          alt_text: imageForm.alt_text.trim() || null,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setImages((prev) => [...prev, data.image]);
+        setImageForm({ url: "", category: "exterior", alt_text: "" });
+        setImagePreviewOk(false);
+        setShowAddImage(false);
+      } else {
+        const data = await res.json();
+        setImageError(data.error || "Failed to add image");
+      }
+    } catch {
+      setImageError("Network error — please try again.");
+    } finally {
+      setAddingImage(false);
     }
-    setAddingImage(false);
   };
 
   const deleteImage = async (imageId: string) => {
@@ -235,6 +272,14 @@ export default function PartnerBuildingPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-sm text-red-500">{loadError}</p>
       </div>
     );
   }
@@ -286,6 +331,7 @@ export default function PartnerBuildingPage() {
         <CardContent className="space-y-4">
           {editDesc ? (
             <div className="space-y-3">
+              {saveError && <p className="text-sm text-red-500">{saveError}</p>}
               <div>
                 <label className="text-sm font-medium">Description</label>
                 <textarea
@@ -560,6 +606,7 @@ export default function PartnerBuildingPage() {
           )}
         </CardHeader>
         <CardContent>
+          {unitError && <p className="text-sm text-red-500 mb-3">{unitError}</p>}
           {units.length === 0 ? (
             <p className="text-muted-foreground text-sm py-4 text-center">
               No units found. Contact your account manager to import unit data.

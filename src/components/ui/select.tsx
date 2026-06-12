@@ -9,6 +9,8 @@ interface SelectContextValue {
   onValueChange: (value: string) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
+  labels: Record<string, React.ReactNode>;
+  registerLabel: (value: string, label: React.ReactNode) => void;
 }
 
 const SelectContext = React.createContext<SelectContextValue | undefined>(undefined);
@@ -23,6 +25,16 @@ interface SelectProps {
 function Select({ value, defaultValue, onValueChange, children }: SelectProps) {
   const [internalValue, setInternalValue] = React.useState(defaultValue || "");
   const [open, setOpen] = React.useState(false);
+  const [labels, setLabels] = React.useState<Record<string, React.ReactNode>>({});
+
+  const registerLabel = React.useCallback((itemValue: string, label: React.ReactNode) => {
+    setLabels((prev) => {
+      if (prev[itemValue] === label) return prev;
+      // Avoid re-render loops for non-primitive labels whose identity changes each render
+      if (itemValue in prev && typeof label === "object" && label !== null) return prev;
+      return { ...prev, [itemValue]: label };
+    });
+  }, []);
 
   const actualValue = value !== undefined ? value : internalValue;
   const handleValueChange = (newValue: string) => {
@@ -34,19 +46,22 @@ function Select({ value, defaultValue, onValueChange, children }: SelectProps) {
   };
 
   return (
-    <SelectContext.Provider value={{ value: actualValue, onValueChange: handleValueChange, open, setOpen }}>
+    <SelectContext.Provider
+      value={{ value: actualValue, onValueChange: handleValueChange, open, setOpen, labels, registerLabel }}
+    >
       <div className="relative">{children}</div>
     </SelectContext.Provider>
   );
 }
 
-function SelectTrigger({ className, children }: { className?: string; children: React.ReactNode }) {
+function SelectTrigger({ className, children, id }: { className?: string; children: React.ReactNode; id?: string }) {
   const context = React.useContext(SelectContext);
   if (!context) throw new Error("SelectTrigger must be used within Select");
 
   return (
     <button
       type="button"
+      id={id}
       onClick={() => context.setOpen(!context.open)}
       className={cn(
         "flex h-9 w-full items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
@@ -63,14 +78,18 @@ function SelectValue({ placeholder }: { placeholder?: string }) {
   const context = React.useContext(SelectContext);
   if (!context) throw new Error("SelectValue must be used within Select");
 
-  return <span>{context.value || placeholder}</span>;
+  return <span>{context.labels[context.value] ?? (context.value || placeholder)}</span>;
 }
 
 function SelectContent({ children, className }: { children: React.ReactNode; className?: string }) {
   const context = React.useContext(SelectContext);
   if (!context) throw new Error("SelectContent must be used within Select");
 
-  if (!context.open) return null;
+  if (!context.open) {
+    // Keep items mounted (hidden) so they register their labels with the
+    // context — otherwise SelectValue shows the raw value until first open.
+    return <div hidden>{children}</div>;
+  }
 
   return (
     <>
@@ -90,6 +109,11 @@ function SelectContent({ children, className }: { children: React.ReactNode; cla
 function SelectItem({ value, children, className }: { value: string; children: React.ReactNode; className?: string }) {
   const context = React.useContext(SelectContext);
   if (!context) throw new Error("SelectItem must be used within Select");
+
+  const { registerLabel } = context;
+  React.useEffect(() => {
+    registerLabel(value, children);
+  }, [value, children, registerLabel]);
 
   const isSelected = context.value === value;
 

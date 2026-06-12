@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,13 +24,17 @@ export default function PartnerSettingsPage() {
     contact_phone: "",
   });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetch("/api/partner/settings")
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        if (!r.ok) throw new Error("Failed to load settings");
+        const data = await r.json();
         setSettings(data);
         setForm({
           company_name: data.company_name || "",
@@ -38,34 +42,58 @@ export default function PartnerSettingsPage() {
           contact_email: data.contact_email || "",
           contact_phone: data.contact_phone || "",
         });
-        setLoading(false);
-      });
+      })
+      .catch(() => setLoadError("Failed to load settings — please refresh the page to try again."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+    };
   }, []);
 
   const save = async () => {
     setSaving(true);
     setSaved(false);
-    const res = await fetch("/api/partner/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        company_name: form.company_name || null,
-        contact_name: form.contact_name || null,
-        contact_email: form.contact_email || null,
-        contact_phone: form.contact_phone || null,
-      }),
-    });
-    if (res.ok) {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+    setSaveError("");
+    try {
+      const res = await fetch("/api/partner/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_name: form.company_name || null,
+          contact_name: form.contact_name || null,
+          contact_email: form.contact_email || null,
+          contact_phone: form.contact_phone || null,
+        }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+        savedTimeoutRef.current = setTimeout(() => setSaved(false), 3000);
+      } else {
+        setSaveError("Failed to save changes — please try again.");
+      }
+    } catch {
+      setSaveError("Network error — please try again.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-sm text-red-500">{loadError}</p>
       </div>
     );
   }
@@ -166,6 +194,7 @@ export default function PartnerSettingsPage() {
                 <CheckCircle className="h-4 w-4" /> Saved
               </span>
             )}
+            {saveError && <span className="text-sm text-red-500">{saveError}</span>}
           </div>
         </CardContent>
       </Card>

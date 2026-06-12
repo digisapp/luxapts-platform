@@ -17,17 +17,10 @@ from livekit.agents import (
 )
 from livekit.agents.multimodal import MultimodalAgent
 from livekit.plugins import xai
-from supabase import create_client, Client
 
 load_dotenv()
 
 logger = logging.getLogger("luxapts-voice-agent")
-
-# Initialize Supabase client
-supabase: Client = create_client(
-    os.getenv("SUPABASE_URL", ""),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-)
 
 # System prompt for the AI assistant
 LUXAPTS_SYSTEM_PROMPT = """You are Aria, an AI assistant for LuxApts, a luxury apartment rental platform.

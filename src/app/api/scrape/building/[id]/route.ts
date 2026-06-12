@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
 import {
   scrapeUnitsOnly,
   scrapeAmenitiesOnly,
@@ -33,10 +34,10 @@ export async function POST(req: Request, context: RouteContext) {
     const isAuthorized = cronSecret && authHeader === `Bearer ${cronSecret}`;
 
     if (!isAuthorized) {
-      // Check if user is admin
-      // For now, allow all requests (you can add auth check here)
-      // const { data: { user } } = await supabase.auth.getUser();
-      // if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const authResult = await checkAdminAuth();
+      if (!authResult.isAdmin) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      }
     }
 
     // Get building info
@@ -214,6 +215,17 @@ export async function POST(req: Request, context: RouteContext) {
 export async function GET(req: Request, context: RouteContext) {
   try {
     const { id: buildingId } = await context.params;
+
+    const authHeader = req.headers.get("authorization");
+    const cronSecret = process.env.CRON_SECRET;
+    const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+    if (!isCron) {
+      const authResult = await checkAdminAuth();
+      if (!authResult.isAdmin) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      }
+    }
+
     const supabase = createAdminClient();
 
     const { data, error } = await supabase

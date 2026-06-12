@@ -58,6 +58,8 @@ export function LeadPipelineActions({ lead }: { lead: LeadInfo }) {
       }
       setDialog(null);
       router.refresh();
+    } catch {
+      setError("Network error — please try again");
     } finally {
       setLoading(false);
     }
@@ -90,6 +92,8 @@ export function LeadPipelineActions({ lead }: { lead: LeadInfo }) {
       }
       setDialog(null);
       router.refresh();
+    } catch {
+      setError("Network error — please try again");
     } finally {
       setLoading(false);
     }

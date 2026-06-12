@@ -39,6 +39,9 @@ export default function HomeClient() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      // Browser-capability detection must happen post-hydration so server and
+      // first client render match.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSpeechSupported(!!SpeechRecognition);
     }
     return () => {
@@ -232,7 +235,6 @@ export default function HomeClient() {
             <div className="max-w-md mx-auto">
               <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-8 hover:border-violet-500/30 transition-all duration-500">
                 <SimliAvatar
-                  showControls={true}
                   autoStart={false}
                   className="mb-6"
                 />

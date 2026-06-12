@@ -59,6 +59,12 @@ export function ShowerActions({
 
   return (
     <>
+      {error && !dialogAction && (
+        <span className="flex items-center gap-1 text-xs text-destructive" title={error}>
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          {error}
+        </span>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
@@ -80,7 +86,7 @@ export function ShowerActions({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-amber-600"
-                onClick={() => setDialogAction("suspend")}
+                onClick={() => { setError(null); setDialogAction("suspend"); }}
               >
                 <PauseCircle className="mr-2 h-4 w-4" />
                 Suspend
@@ -92,7 +98,7 @@ export function ShowerActions({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-red-600"
-                onClick={() => setDialogAction("terminate")}
+                onClick={() => { setError(null); setDialogAction("terminate"); }}
               >
                 <XCircle className="mr-2 h-4 w-4" />
                 Terminate

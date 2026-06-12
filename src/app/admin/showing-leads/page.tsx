@@ -79,7 +79,7 @@ export default async function AdminShowingLeadsPage() {
       .order("name"),
   ]);
 
-  const leads = (leadsRes.data || []) as ShowingLead[];
+  const leads = (leadsRes.data || []) as unknown as ShowingLead[];
   const buildings = (buildingsRes.data || []) as Array<{ id: string; name: string }>;
 
   // Status counts for pipeline

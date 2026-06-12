@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { X, Mic, Sparkles } from "lucide-react";
 import { SimliAvatar } from "./SimliAvatar";
@@ -9,12 +9,27 @@ export function SimliWidget() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isActive, setIsActive] = useState(false);
+  const prevPathnameRef = useRef(pathname);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Close on route change
+  // Close on route change only — previously this also fired when isActive
+  // flipped false (session end), instantly closing and racing the 1.5s
+  // grace-period timeout below.
   useEffect(() => {
+    if (prevPathnameRef.current === pathname) return;
+    prevPathnameRef.current = pathname;
     if (isActive) return; // Don't close mid-session
+    // Closing on navigation is an intentional external-event response
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsOpen(false);
   }, [pathname, isActive]);
+
+  // Clear the pending auto-close timer on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    };
+  }, []);
 
   // Hide on admin and partner pages
   if (pathname.startsWith("/admin") || pathname.startsWith("/partner")) {
@@ -91,7 +106,8 @@ export function SimliWidget() {
                 onSessionEnd={() => {
                   setIsActive(false);
                   // Auto-close 1.5s after session ends
-                  setTimeout(() => setIsOpen(false), 1500);
+                  if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+                  closeTimeoutRef.current = setTimeout(() => setIsOpen(false), 1500);
                 }}
               />
             </div>

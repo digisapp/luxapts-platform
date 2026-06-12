@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -17,6 +17,14 @@ function ResetPasswordForm() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear redirect timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
+    };
+  }, []);
 
   // Supabase sends the token as a hash fragment: #access_token=...&type=recovery
   // The Supabase client automatically exchanges it on load.
@@ -62,7 +70,7 @@ function ResetPasswordForm() {
       setError(error.message);
     } else {
       setSuccess(true);
-      setTimeout(() => router.push("/"), 2500);
+      redirectTimeoutRef.current = setTimeout(() => router.push("/"), 2500);
     }
   };
 

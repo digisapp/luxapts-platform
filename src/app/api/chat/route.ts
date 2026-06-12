@@ -75,6 +75,7 @@ export async function POST(req: Request) {
       messages,
       tools: AI_TOOLS,
       tool_choice: "auto",
+      max_tokens: 2048,
     });
 
     let assistantMessage = response.choices[0].message;
@@ -113,6 +114,7 @@ export async function POST(req: Request) {
         messages,
         tools: AI_TOOLS,
         tool_choice: "auto",
+        max_tokens: 2048,
       });
 
       assistantMessage = response.choices[0].message;

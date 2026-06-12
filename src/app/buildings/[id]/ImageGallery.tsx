@@ -29,7 +29,8 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
-  const currentImage = images[currentIndex];
+  const safeIndex = Math.min(currentIndex, images.length - 1);
+  const currentImage = images[safeIndex];
 
   return (
     <>
@@ -79,7 +80,7 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
         {/* Image Counter */}
         {images.length > 1 && (
           <div className="absolute bottom-3 left-3 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
-            {currentIndex + 1} / {images.length}
+            {safeIndex + 1} / {images.length}
           </div>
         )}
 
@@ -100,7 +101,7 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
               onClick={() => setCurrentIndex(index)}
               className={cn(
                 "relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all",
-                index === currentIndex
+                index === safeIndex
                   ? "border-primary ring-2 ring-primary/20"
                   : "border-transparent hover:border-muted-foreground/30"
               )}
@@ -163,7 +164,7 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
 
           {/* Fullscreen Counter */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full">
-            {currentIndex + 1} / {images.length}
+            {safeIndex + 1} / {images.length}
           </div>
 
           {/* Fullscreen Thumbnails */}
@@ -174,7 +175,7 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
                 onClick={() => setCurrentIndex(index)}
                 className={cn(
                   "relative flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all",
-                  index === currentIndex
+                  index === safeIndex
                     ? "border-white"
                     : "border-transparent opacity-50 hover:opacity-100"
                 )}

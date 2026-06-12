@@ -54,10 +54,11 @@ async function sendTracking(payload: TrackingPayload): Promise<void> {
 export function useAnalytics() {
   const { user } = useAuth();
   const sessionId = useRef<string>("");
-  const pageLoadTime = useRef<number>(Date.now());
+  const pageLoadTime = useRef<number>(0);
 
   // Initialize session ID on mount
   useEffect(() => {
+    if (!pageLoadTime.current) pageLoadTime.current = Date.now();
     sessionId.current = getSessionId();
 
     // Track session start (only once per session)
@@ -218,13 +219,16 @@ export function useAnalytics() {
       trackEvent("error", "error", { error_type: errorType, message, ...context }),
   };
 
+  // Reading a ref during render is unsafe — expose a getter instead.
+  const getSessionIdValue = useCallback(() => sessionId.current, []);
+
   return {
     trackPageView,
     trackPageDuration,
     trackBuildingView,
     trackEvent,
     track,
-    sessionId: sessionId.current,
+    getSessionId: getSessionIdValue,
   };
 }
 
@@ -232,12 +236,23 @@ export function useAnalytics() {
 export function usePageTracking(path: string, citySlug?: string) {
   const { trackPageView, trackPageDuration } = useAnalytics();
 
+  // Keep the callbacks in refs so the tracking effect only re-runs on real
+  // navigation. Their identities change whenever auth state hydrates
+  // (user?.id dep), which previously fired a duplicate page_view + spurious
+  // duration event.
+  const trackPageViewRef = useRef(trackPageView);
+  const trackPageDurationRef = useRef(trackPageDuration);
   useEffect(() => {
-    trackPageView(path, citySlug);
+    trackPageViewRef.current = trackPageView;
+    trackPageDurationRef.current = trackPageDuration;
+  }, [trackPageView, trackPageDuration]);
+
+  useEffect(() => {
+    trackPageViewRef.current(path, citySlug);
 
     // Track duration on unmount
     return () => {
-      trackPageDuration(path);
+      trackPageDurationRef.current(path);
     };
-  }, [path, citySlug, trackPageView, trackPageDuration]);
+  }, [path, citySlug]);
 }

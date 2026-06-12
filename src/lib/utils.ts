@@ -18,10 +18,14 @@ export function formatDate(date: string | Date): string {
   try {
     const d = new Date(date);
     if (isNaN(d.getTime())) return "Invalid date";
+    // Date-only strings (e.g. "2026-05-01") are parsed as UTC midnight,
+    // so format them in UTC to avoid shifting a day in western timezones.
+    const isDateOnly = typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date);
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
+      ...(isDateOnly && { timeZone: "UTC" }),
     }).format(d);
   } catch {
     return "Invalid date";

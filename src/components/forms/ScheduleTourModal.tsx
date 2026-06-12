@@ -91,7 +91,13 @@ export function ScheduleTourModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) setTimeout(() => setSuccess(false), 300);
+      }}
+    >
       <DialogTrigger asChild>
         {trigger || (
           <Button size="lg" className="w-full gap-2">
@@ -161,7 +167,7 @@ export function ScheduleTourModal({
                     type="date"
                     value={formData.preferredDate}
                     onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-                    min={new Date().toISOString().split("T")[0]}
+                    min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
                   />
                 </div>
                 <div className="space-y-2">

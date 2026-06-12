@@ -112,7 +112,7 @@ export async function POST(req: Request) {
       failedCount === 0
         ? "completed"
         : sentCount === 0
-          ? "partial_failure"
+          ? "failed"
           : "partial_failure";
 
     await supabase

@@ -29,9 +29,11 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [statusText, setStatusText] = useState("Thinking...");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const streamingIndexRef = useRef<number | null>(null);
 
   // Extract context from URL
   const getBuildingId = () => {
@@ -51,7 +53,7 @@ export function ChatWidget() {
 
   const handleSend = async (messageContent?: string) => {
     const content = messageContent || input;
-    if (!content.trim() || loading) return;
+    if (!content.trim() || loading || isStreaming) return;
 
     const userMessage: Message = { role: "user", content: content.trim() };
     setMessages((prev) => [...prev, userMessage]);
@@ -83,14 +85,19 @@ export function ChatWidget() {
         onStatus: (text) => setStatusText(text),
         onContent: (text) => {
           if (!hasStartedResponse) {
-            setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+            setMessages((prev) => {
+              streamingIndexRef.current = prev.length;
+              return [...prev, { role: "assistant", content: "" }];
+            });
             hasStartedResponse = true;
             setLoading(false);
+            setIsStreaming(true);
           }
           assistantContent += text;
           setMessages((prev) => {
             const updated = [...prev];
-            updated[updated.length - 1] = { role: "assistant", content: assistantContent };
+            const idx = streamingIndexRef.current ?? updated.length - 1;
+            updated[idx] = { role: "assistant", content: assistantContent };
             return updated;
           });
         },
@@ -114,6 +121,8 @@ export function ChatWidget() {
       ]);
     } finally {
       setLoading(false);
+      setIsStreaming(false);
+      streamingIndexRef.current = null;
     }
   };
 

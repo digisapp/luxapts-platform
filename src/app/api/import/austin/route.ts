@@ -126,7 +126,7 @@ export async function POST() {
         const zip = zipMatch ? zipMatch[0] : "78701"; // Default Austin zip
 
         // Check if building exists
-        let { data: existingBuilding } = await supabase
+        const { data: existingBuilding } = await supabase
           .from("buildings")
           .select("id")
           .eq("name", building.name)

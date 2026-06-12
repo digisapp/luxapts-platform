@@ -125,6 +125,17 @@ export async function updateScrapeStatus(
   }
 }
 
+// Sanity bounds on AI-extracted data — the model output is untrusted and
+// hallucinated values would otherwise flow straight into search results.
+function isSaneUnit(unit: ScrapedUnit): boolean {
+  if (unit.rent != null && (!Number.isFinite(unit.rent) || unit.rent < 100 || unit.rent > 100000)) return false;
+  if (unit.beds != null && (!Number.isFinite(unit.beds) || unit.beds < 0 || unit.beds > 10)) return false;
+  if (unit.baths != null && (!Number.isFinite(unit.baths) || unit.baths < 0 || unit.baths > 10)) return false;
+  if (unit.sqft != null && (!Number.isFinite(unit.sqft) || unit.sqft < 50 || unit.sqft > 50000)) return false;
+  if (unit.unit_number != null && String(unit.unit_number).length > 20) return false;
+  return true;
+}
+
 export async function saveScrapedUnits(
   supabase: SupabaseClient,
   buildingId: string,
@@ -134,7 +145,13 @@ export async function saveScrapedUnits(
   let unitsCreated = 0;
   let unitsUpdated = 0;
 
-  for (const unit of units) {
+  const saneUnits = units.filter((u) => {
+    const ok = isSaneUnit(u);
+    if (!ok) console.warn(`Skipping out-of-bounds scraped unit for building ${buildingId}:`, u);
+    return ok;
+  });
+
+  for (const unit of saneUnits) {
     // Try to find existing unit by unit number
     if (unit.unit_number) {
       const { data: existing } = await supabase
@@ -304,7 +321,10 @@ export async function saveScrapedBuildingImages(
   const buildingCategories = new Set(['exterior', 'lobby', 'amenity', 'pool', 'gym', 'rooftop', 'common', 'other']);
 
   const buildingImages = images.filter(
-    (img) => buildingCategories.has(img.category) || !img.category
+    (img) =>
+      // Only https URLs — image URLs come from untrusted scraped HTML
+      typeof img.url === "string" && img.url.startsWith("https://") &&
+      (buildingCategories.has(img.category) || !img.category)
   );
 
   if (buildingImages.length === 0) return 0;
@@ -387,7 +407,9 @@ export async function saveScrapedUnitImages(
   const unitCategories = new Set(['interior', 'kitchen', 'bathroom', 'bedroom', 'living', 'view', 'other']);
 
   const unitImages = images.filter(
-    (img) => unitCategories.has(img.category)
+    (img) =>
+      typeof img.url === "string" && img.url.startsWith("https://") &&
+      unitCategories.has(img.category)
   );
 
   if (unitImages.length === 0) return 0;

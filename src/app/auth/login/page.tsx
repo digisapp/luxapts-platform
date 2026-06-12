@@ -11,7 +11,8 @@ import { Loader2, Sparkles } from "lucide-react";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/";
+  const raw = searchParams.get("redirect") || "/";
+  const redirectTo = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
   const errorParam = searchParams.get("error");
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");

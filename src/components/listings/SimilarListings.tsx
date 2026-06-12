@@ -41,7 +41,10 @@ export function SimilarListings({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let ignore = false;
+
     async function fetchSimilar() {
+      setLoading(true);
       try {
         const params = new URLSearchParams({
           buildingId,
@@ -54,16 +57,23 @@ export function SimilarListings({
         const res = await fetch(`/api/similar-listings?${params}`);
         if (res.ok) {
           const data = await res.json();
-          setListings(data.listings || []);
+          if (!ignore) setListings(data.listings || []);
+        } else if (!ignore) {
+          setListings([]);
         }
       } catch (error) {
         console.error("Error fetching similar listings:", error);
+        if (!ignore) setListings([]);
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     }
 
     fetchSimilar();
+
+    return () => {
+      ignore = true;
+    };
   }, [buildingId, citySlug, neighborhoodSlug, priceRange]);
 
   if (loading) {

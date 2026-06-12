@@ -60,7 +60,7 @@ export default async function EarningsPage() {
     .eq("shower_id", shower.id)
     .order("created_at", { ascending: false });
 
-  const rows = (earnings || []) as EarningRow[];
+  const rows = (earnings || []) as unknown as EarningRow[];
 
   const availableBalance = rows
     .filter((e) => e.status === "approved")
@@ -248,7 +248,7 @@ function EarningRow({
   const lead = earning.showing_leads;
   const building = lead
     ? (Array.isArray((lead as { buildings?: unknown }).buildings)
-        ? (lead as { buildings: Array<{ name: string }> }).buildings[0]
+        ? (lead as unknown as { buildings: Array<{ name: string }> }).buildings[0]
         : (lead as { buildings: { name: string } }).buildings)
     : null;
 

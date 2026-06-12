@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites, type FavoriteItem } from "@/hooks/useFavorites";
@@ -42,7 +42,7 @@ interface Profile {
 }
 
 export default function AccountPage() {
-  const { user, signOut, resetPassword } = useAuth();
+  const { user, loading, signOut, resetPassword } = useAuth();
   const router = useRouter();
 
   const { items: favorites, removeItem: removeFavorite } = useFavorites();
@@ -57,6 +57,7 @@ export default function AccountPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState("");
+  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Password reset state
   const [resetSent, setResetSent] = useState(false);
@@ -64,10 +65,10 @@ export default function AccountPage() {
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!user && !loadingProfile) {
+    if (!loading && !user) {
       router.push("/");
     }
-  }, [user, loadingProfile, router]);
+  }, [user, loading, router]);
 
   // Load profile
   useEffect(() => {
@@ -83,22 +84,35 @@ export default function AccountPage() {
       .catch(() => setLoadingProfile(false));
   }, [user]);
 
+  // Clear "Saved" timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+    };
+  }, []);
+
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     setProfileError("");
-    const res = await fetch("/api/account", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ full_name: fullName.trim() || undefined, phone: phone.trim() || null }),
-    });
-    setSavingProfile(false);
-    if (res.ok) {
-      setProfile((p) => p ? { ...p, full_name: fullName.trim() || null, phone: phone.trim() || null } : p);
-      setProfileSaved(true);
-      setTimeout(() => setProfileSaved(false), 2500);
-    } else {
-      const data = await res.json();
-      setProfileError(data.error || "Failed to save");
+    try {
+      const res = await fetch("/api/account", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ full_name: fullName.trim() || undefined, phone: phone.trim() || null }),
+      });
+      if (res.ok) {
+        setProfile((p) => p ? { ...p, full_name: fullName.trim() || null, phone: phone.trim() || null } : p);
+        setProfileSaved(true);
+        if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+        savedTimeoutRef.current = setTimeout(() => setProfileSaved(false), 2500);
+      } else {
+        const data = await res.json().catch(() => null);
+        setProfileError(data?.error || "Failed to save");
+      }
+    } catch {
+      setProfileError("Failed to save");
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -303,7 +317,7 @@ export default function AccountPage() {
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <button
-                            onClick={() => toggleEmailAlerts(search.id)}
+                            onClick={() => toggleEmailAlerts(search.id, !search.emailAlerts)}
                             title={search.emailAlerts ? "Disable email alerts" : "Enable email alerts"}
                             className={`p-1.5 rounded-md transition-colors ${search.emailAlerts ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
                           >

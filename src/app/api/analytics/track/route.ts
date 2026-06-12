@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { apiError } from "@/lib/api-helpers";
+import { createAdminClient } from "@/lib/supabase/server";
+import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
-// Use anon key for public tracking (RLS allows inserts)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Analytics tables no longer have public RLS insert policies (they were
+// spoofable/spammable via direct PostgREST calls) — all writes go through
+// this route with the service-role client.
 
 interface TrackingPayload {
   type: "page_view" | "building_view" | "event" | "session";
@@ -43,6 +42,13 @@ function parseUserAgent(userAgent: string): { browser: string; os: string } {
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+    const rateLimitResult = rateLimit(`analytics:${clientIp}`, RATE_LIMITS.api);
+    if (!rateLimitResult.success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
+    const supabase = createAdminClient();
     const body = (await req.json()) as TrackingPayload;
     const userAgent = req.headers.get("user-agent") || "";
     const deviceType = getDeviceType(userAgent);

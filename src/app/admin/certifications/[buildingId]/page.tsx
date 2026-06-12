@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,9 +46,11 @@ export default function BuildingCertificationPage() {
 
   const [building, setBuilding] = useState<Building | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [form, setForm] = useState<CertContent>({
     key_selling_points: "",
@@ -62,10 +64,13 @@ export default function BuildingCertificationPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch(`/api/admin/certifications/${buildingId}`);
       const data = await res.json();
-      if (res.ok) {
+      if (!res.ok) {
+        setLoadError(data.error || "Failed to load certification content");
+      } else {
         setBuilding(data.building);
         if (data.content) {
           setForm({
@@ -82,12 +87,20 @@ export default function BuildingCertificationPage() {
           });
         }
       }
+    } catch {
+      setLoadError("Failed to load certification content — please try again");
     } finally {
       setLoading(false);
     }
   }, [buildingId]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    return () => {
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+    };
+  }, []);
 
   async function handleSave() {
     setSaving(true);
@@ -140,7 +153,10 @@ export default function BuildingCertificationPage() {
         return;
       }
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+      savedTimeoutRef.current = setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setError("Network error — please try again");
     } finally {
       setSaving(false);
     }
@@ -191,6 +207,21 @@ export default function BuildingCertificationPage() {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
         <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="space-y-4 max-w-3xl">
+        <Button variant="ghost" size="sm" onClick={() => router.push("/admin/certifications")} className="-ml-2">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Certifications
+        </Button>
+        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {loadError}
+        </div>
       </div>
     );
   }

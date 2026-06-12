@@ -39,7 +39,11 @@ export async function POST(req: Request) {
 
     // ── Verify webhook signature with Svix ──
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
-    if (webhookSecret) {
+    if (!webhookSecret) {
+      console.error("RESEND_WEBHOOK_SECRET is not configured — rejecting webhook");
+      return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+    }
+    {
       const svixId = req.headers.get("svix-id");
       const svixTimestamp = req.headers.get("svix-timestamp");
       const svixSignature = req.headers.get("svix-signature");
@@ -85,7 +89,7 @@ export async function POST(req: Request) {
       let bodyHtml = data.html || data.body || "";
       let bodyText = data.text || "";
 
-      if (resendEmailId && (!bodyHtml || bodyHtml.length < 10)) {
+      if (resendEmailId && (!bodyHtml || bodyHtml.length < 10) && process.env.RESEND_API_KEY) {
         try {
           const resendRes = await fetch(
             `https://api.resend.com/emails/receiving/${resendEmailId}`,

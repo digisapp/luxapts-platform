@@ -1,13 +1,8 @@
 import { createXAIClient, AI_TOOLS, SYSTEM_PROMPT } from "@/lib/xai/client";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { executeTool } from "@/lib/xai/tool-executor";
+import { chatRequestSchema } from "@/lib/validations";
 import type OpenAI from "openai";
-
-interface ChatBody {
-  messages: { role: "user" | "assistant"; content: string }[];
-  city_slug?: string;
-  building_id?: string;
-}
 
 export async function POST(req: Request) {
   try {
@@ -29,22 +24,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = (await req.json()) as ChatBody;
+    const rawBody = await req.json();
 
-    if (!body.messages?.length) {
+    // Validate with the same schema as /api/chat — city_slug and building_id
+    // are interpolated into the system prompt, so they must be constrained.
+    const parsedBody = chatRequestSchema.safeParse(rawBody);
+    if (!parsedBody.success) {
       return new Response(
-        JSON.stringify({ error: "messages array is required" }),
+        JSON.stringify({ error: parsedBody.error.issues[0]?.message || "Invalid request" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
+    const body = parsedBody.data;
 
-    // Validate message limits
-    if (body.messages.length > 50) {
-      return new Response(
-        JSON.stringify({ error: "Too many messages. Maximum 50 allowed." }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
     const totalLength = body.messages.reduce((sum, m) => sum + (m.content?.length || 0), 0);
     if (totalLength > 50000) {
       return new Response(
@@ -94,6 +86,7 @@ export async function POST(req: Request) {
             messages,
             tools: AI_TOOLS,
             tool_choice: "auto",
+            max_tokens: 2048,
           });
 
           let assistantMessage = response.choices[0].message;
@@ -131,6 +124,7 @@ export async function POST(req: Request) {
               messages,
               tools: AI_TOOLS,
               tool_choice: "auto",
+              max_tokens: 2048,
             });
 
             assistantMessage = response.choices[0].message;
@@ -153,6 +147,7 @@ export async function POST(req: Request) {
               model: "grok-3",
               messages,
               stream: true,
+              max_tokens: 2048,
             });
 
             for await (const chunk of streamResponse) {

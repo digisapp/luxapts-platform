@@ -70,8 +70,8 @@ export default async function PartnerBuildingsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {(buildings || []).map((b) => {
-            const city = getFirstRelation(b.cities as { name: string; slug: string } | null);
-            const neighborhood = getFirstRelation(b.neighborhoods as { name: string } | null);
+            const city = getFirstRelation(b.cities as { name: string; slug: string }[] | null);
+            const neighborhood = getFirstRelation(b.neighborhoods as { name: string }[] | null);
             const units = unitMap[b.id] || { total: 0, available: 0 };
             const images = imageMap[b.id] || 0;
 

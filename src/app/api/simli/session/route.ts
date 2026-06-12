@@ -2,9 +2,20 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { startSimliSession, getSimliTranscript } from "@/lib/simli/client";
 import { LUXAPTS_ASSISTANT_CONFIG } from "@/lib/simli/types";
+import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    // Avatar sessions are expensive (Simli + ElevenLabs + Grok) — rate limit hard
+    const clientIp = getClientIp(req);
+    const rateLimitResult = rateLimit(`simli:${clientIp}`, { limit: 5, windowMs: 60 * 1000 });
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment." },
+        { status: 429 }
+      );
+    }
+
     if (!process.env.SIMLI_API_KEY) {
       return NextResponse.json({ error: "Simli is not configured" }, { status: 503 });
     }
@@ -117,13 +128,19 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Simli session error:", error);
     return NextResponse.json(
-      { error: "Failed to start avatar session", details: String(error) },
+      { error: "Failed to start avatar session" },
       { status: 500 }
     );
   }
 }
 
 export async function GET(req: Request) {
+  const clientIp = getClientIp(req);
+  const rateLimitResult = rateLimit(`simli-transcript:${clientIp}`, RATE_LIMITS.api);
+  if (!rateLimitResult.success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const url = new URL(req.url);
   const sessionId = url.searchParams.get("sessionId");
 

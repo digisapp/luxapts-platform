@@ -22,7 +22,7 @@ interface UnitPriceHistoryProps {
 
 function formatAxisDate(dateStr: string) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric" });
 }
 
 export function UnitPriceHistory({ data }: UnitPriceHistoryProps) {
@@ -53,7 +53,7 @@ export function UnitPriceHistory({ data }: UnitPriceHistoryProps) {
           <div>
             <p className="text-muted-foreground">Change</p>
             <p className={`font-semibold ${trend > 0 ? "text-red-500" : trend < 0 ? "text-green-600" : ""}`}>
-              {trend > 0 ? "+" : ""}{formatPrice(Math.abs(trend))}
+              {trend > 0 ? "+" : trend < 0 ? "-" : ""}{formatPrice(Math.abs(trend))}
             </p>
           </div>
         )}

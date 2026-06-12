@@ -15,7 +15,9 @@ interface ShareButtonProps {
 export function ShareButton({ title, text, url, className }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [canNativeShare, setCanNativeShare] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const shareUrl = url || (typeof window !== "undefined" ? window.location.href : "");
   const shareText = text || `Check out ${title} on LuxApts`;
@@ -31,11 +33,25 @@ export function ShareButton({ title, text, url, className }: ShareButtonProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Detect native share support after mount to avoid hydration mismatch
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCanNativeShare(typeof navigator !== "undefined" && "share" in navigator);
+  }, []);
+
+  // Clear copy feedback timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      setTimeout(() => {
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+      copiedTimeoutRef.current = setTimeout(() => {
         setCopied(false);
         setShowMenu(false);
       }, 1500);
@@ -65,8 +81,6 @@ export function ShareButton({ title, text, url, className }: ShareButtonProps) {
   };
 
   // Use native share on mobile if available
-  const canNativeShare = typeof navigator !== "undefined" && "share" in navigator;
-
   if (canNativeShare) {
     return (
       <Button

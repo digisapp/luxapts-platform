@@ -41,6 +41,9 @@ export function SimliAvatar({
       });
       const data = await res.json();
 
+      // Component unmounted or session ended while the request was in flight
+      if (endedRef.current) return;
+
       if (!res.ok || !data.session?.roomUrl) {
         setError(data.error || "Failed to start session");
         setState("error");
@@ -52,6 +55,7 @@ export function SimliAvatar({
       setState("active");
       onSessionStart?.(data.session.sessionId);
     } catch {
+      if (endedRef.current) return;
       setError("Could not connect. Check your internet connection.");
       setState("error");
     }

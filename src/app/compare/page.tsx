@@ -51,43 +51,49 @@ export default function ComparePage() {
   const [compareData, setCompareData] = useState<CompareData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    if (buildings.length >= 2) {
-      fetchComparison();
-    } else {
+    if (buildings.length < 2) {
       setCompareData(null);
+      return;
     }
-  }, [buildings]);
 
-  const fetchComparison = async () => {
-    if (buildings.length < 2) return;
+    const controller = new AbortController();
 
-    setLoading(true);
-    setError(null);
+    const fetchComparison = async () => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const response = await fetch("/api/compare", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          building_a_id: buildings[0].id,
-          building_b_id: buildings[1].id,
-        }),
-      });
+      try {
+        const response = await fetch("/api/compare", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            building_a_id: buildings[0].id,
+            building_b_id: buildings[1].id,
+          }),
+          signal: controller.signal,
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to compare buildings");
+        if (!response.ok) {
+          throw new Error("Failed to compare buildings");
+        }
+
+        const data = await response.json();
+        setCompareData(data);
+        setLoading(false);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(err instanceof Error ? err.message : "Something went wrong");
+        setLoading(false);
       }
+    };
 
-      const data = await response.json();
-      setCompareData(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchComparison();
+
+    return () => controller.abort();
+  }, [buildings, retryCount]);
 
   const allAmenities = compareData
     ? [
@@ -206,7 +212,7 @@ export default function ComparePage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-red-500 mb-4">{error}</p>
-                <Button onClick={fetchComparison}>Try Again</Button>
+                <Button onClick={() => setRetryCount((c) => c + 1)}>Try Again</Button>
               </CardContent>
             </Card>
           ) : compareData ? (

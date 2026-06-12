@@ -1,4 +1,5 @@
 import { searchDocuments } from "@/lib/xai/collections";
+import { isValidUUID } from "@/lib/utils";
 
 // Shared tool executor for AI chat endpoints
 export async function executeTool(
@@ -27,6 +28,9 @@ export async function executeTool(
         break;
 
       case "get_building_details":
+        if (typeof args.building_id !== "string" || !isValidUUID(args.building_id)) {
+          return { error: "Invalid building_id" };
+        }
         response = await fetch(`${baseUrl}/api/buildings/${args.building_id}`, {
           method: "GET",
         });

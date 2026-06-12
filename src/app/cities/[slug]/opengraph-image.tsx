@@ -48,7 +48,7 @@ export default async function CityOgImage({
       }}
     >
       {heroImage && (
-        // eslint-disable-next-line @next/next/no-img-element
+         
         <img
           src={heroImage}
           alt=""

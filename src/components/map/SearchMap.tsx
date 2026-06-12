@@ -7,6 +7,9 @@ import "mapbox-gl/dist/mapbox-gl.css";
 // Mapbox access token - using public token for client-side
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
+// Default to NYC — module-level constant so the default param keeps a stable identity
+const DEFAULT_CENTER: [number, number] = [-73.99, 40.73];
+
 // HTML escape for safe popup rendering
 function esc(str: string | null | undefined): string {
   if (!str) return "";
@@ -44,7 +47,7 @@ interface SearchMapProps {
 
 export function SearchMap({
   listings,
-  center = [-73.99, 40.73], // Default to NYC
+  center = DEFAULT_CENTER,
   zoom = 12,
   onListingClick,
   onListingHover,
@@ -54,6 +57,7 @@ export function SearchMap({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const markerElsRef = useRef<Map<string, HTMLElement>>(new Map());
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // Initialize map
@@ -113,6 +117,7 @@ export function SearchMap({
     // Clear existing markers
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
+    markerElsRef.current.clear();
 
     // Group listings by building for clustering
     const buildingGroups = new Map<string, MapListing[]>();
@@ -152,14 +157,14 @@ export function SearchMap({
         `;
         el.style.cssText = "cursor: pointer;";
       } else {
-        // Single unit: show price pill
-        const isHighlighted = highlightedListingId === firstListing.id;
+        // Single unit: show price pill (highlighting applied in a separate effect)
         el.innerHTML = `
-          <div class="single-marker ${isHighlighted ? "highlighted" : ""}">
+          <div class="single-marker">
             <span class="marker-price">${priceLabel}</span>
           </div>
         `;
         el.style.cssText = "cursor: pointer;";
+        markerElsRef.current.set(firstListing.id, el);
       }
 
       // Create popup content (escaped to prevent XSS)
@@ -216,7 +221,17 @@ export function SearchMap({
 
       markersRef.current.push(marker);
     });
-  }, [listings, mapLoaded, highlightedListingId, onListingClick, onListingHover]);
+  }, [listings, mapLoaded, onListingClick, onListingHover]);
+
+  // Toggle highlight class on existing marker elements without recreating markers
+  useEffect(() => {
+    markerElsRef.current.forEach((el, listingId) => {
+      const inner = el.querySelector(".single-marker");
+      if (inner) {
+        inner.classList.toggle("highlighted", listingId === highlightedListingId);
+      }
+    });
+  }, [highlightedListingId, listings, mapLoaded]);
 
   // Fit bounds to show all markers
   const fitBounds = useCallback(() => {

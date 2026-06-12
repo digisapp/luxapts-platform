@@ -38,6 +38,10 @@ export function PostLeadDialog({ buildings }: { buildings: Building[] }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.building_id) {
+      setError("Please select a building");
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -74,6 +78,8 @@ export function PostLeadDialog({ buildings }: { buildings: Building[] }) {
         notes: "", special_instructions: "", expires_hours: "24",
       });
       router.refresh();
+    } catch {
+      setError("Network error — please try again");
     } finally {
       setLoading(false);
     }
@@ -102,7 +108,6 @@ export function PostLeadDialog({ buildings }: { buildings: Building[] }) {
             <Select
               value={form.building_id}
               onValueChange={(v) => setForm({ ...form, building_id: v })}
-              required
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a building..." />

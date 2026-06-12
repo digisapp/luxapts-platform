@@ -1,6 +1,22 @@
 import OpenAI from "openai";
+import DOMPurify from "isomorphic-dompurify";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
 import { createAdminClient } from "@/lib/supabase/server";
+import { escapeHtml } from "@/lib/utils";
+
+/**
+ * Sanitize AI-drafted reply HTML before sending. The draft is influenced by
+ * attacker-controlled inbound email content (prompt injection), so only a
+ * minimal formatting allowlist is permitted — no scripts, styles, images,
+ * or non-https/mailto links.
+ */
+function sanitizeDraftHtml(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ["p", "br", "strong", "em", "b", "i", "ul", "ol", "li", "a"],
+    ALLOWED_ATTR: ["href"],
+    ALLOWED_URI_REGEXP: /^(?:https:|mailto:)/i,
+  });
+}
 
 const CATEGORIES = [
   "tour_request",
@@ -181,7 +197,12 @@ export async function sendAutoReply(
     ? originalSubject
     : `Re: ${originalSubject}`;
 
-  const brandedHtml = buildBrandedTemplate(draftHtml, toName);
+  const safeDraftHtml = sanitizeDraftHtml(draftHtml);
+  if (!safeDraftHtml.trim()) {
+    // Nothing left after sanitization — don't send an empty branded shell
+    return false;
+  }
+  const brandedHtml = buildBrandedTemplate(safeDraftHtml, toName);
 
   try {
     const { data: sendResult, error: sendError } = await resend.emails.send({
@@ -212,7 +233,7 @@ export async function sendAutoReply(
       to_email: toEmail,
       to_name: toName,
       subject: replySubject,
-      body_html: draftHtml,
+      body_html: safeDraftHtml,
       body_text: draftText,
       status: "sent",
       metadata: { auto_sent: true },
@@ -237,7 +258,7 @@ export async function sendAutoReply(
 /** Build the branded LuxApts email template */
 function buildBrandedTemplate(bodyHtml: string, recipientName?: string): string {
   const greeting = recipientName
-    ? `<p style="margin: 0 0 16px 0;">Hi ${recipientName},</p>`
+    ? `<p style="margin: 0 0 16px 0;">Hi ${escapeHtml(recipientName)},</p>`
     : "";
 
   return `

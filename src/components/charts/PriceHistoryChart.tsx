@@ -42,6 +42,7 @@ export function PriceHistoryChart({
 
     const chartData = sorted.map((d) => ({
       date: new Date(d.date).toLocaleDateString("en-US", {
+        timeZone: "UTC",
         month: "short",
         day: "numeric",
       }),
@@ -130,6 +131,7 @@ export function PriceHistoryChart({
                       <div className="rounded-lg border bg-background p-2 shadow-md">
                         <p className="text-xs text-muted-foreground">
                           {new Date(data.fullDate).toLocaleDateString("en-US", {
+                            timeZone: "UTC",
                             month: "long",
                             day: "numeric",
                             year: "numeric",
