@@ -4,22 +4,15 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   images: {
+    // The scraper stores image URLs from arbitrary building websites; a URL
+    // outside this list makes next/image THROW AT RENDER, taking the whole
+    // page down (search crashed to its error boundary on a scraped domain).
+    // Until scraped images are rehosted into Supabase Storage, allow any
+    // https host. TODO: rehost scraped images, then tighten this again.
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-      },
-      {
-        protocol: "https",
-        hostname: "*.supabase.in",
-      },
-      {
-        protocol: "https",
-        hostname: "source.unsplash.com",
+        hostname: "**",
       },
     ],
   },
