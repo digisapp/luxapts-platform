@@ -56,14 +56,17 @@ export async function POST(
       return apiError("You already have an active showing. Complete or cancel it before claiming another.", 409);
     }
 
-    // Claim atomically — update lead status + insert claim in a transaction
-    const { error: updateError } = await adminClient
+    // Claim atomically — flip lead status open -> claimed as an optimistic
+    // lock. A Supabase update matching zero rows returns error: null, so we
+    // must inspect the returned rows: exactly one means we won the race.
+    const { data: claimedRows, error: updateError } = await adminClient
       .from("showing_leads")
       .update({ status: "claimed" })
       .eq("id", leadId)
-      .eq("status", "open"); // optimistic lock
+      .eq("status", "open") // optimistic lock
+      .select("id");
 
-    if (updateError) {
+    if (updateError || !claimedRows || claimedRows.length !== 1) {
       return apiError("Lead was just claimed by another Shower", 409);
     }
 

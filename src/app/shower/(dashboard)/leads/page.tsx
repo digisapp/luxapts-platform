@@ -105,6 +105,9 @@ export default function LeadFeedPage() {
       }
       setSuccessMsg(`Lead claimed! Client: ${data.lead.client_name} — ${data.lead.preferred_date} at ${data.lead.preferred_time?.slice(0, 5)}`);
       await loadLeads();
+    } catch (err) {
+      console.error("Claim lead error:", err);
+      setError("Failed to claim lead. Please try again.");
     } finally {
       setClaiming(null);
     }
@@ -138,6 +141,9 @@ export default function LeadFeedPage() {
       setSuccessMsg(data.message || "Debrief submitted.");
       setDebriefLeadId(null);
       await loadLeads();
+    } catch (err) {
+      console.error("Submit debrief error:", err);
+      setError("Failed to submit debrief. Please try again.");
     } finally {
       setSubmittingDebrief(false);
     }

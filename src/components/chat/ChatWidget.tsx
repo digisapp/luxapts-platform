@@ -24,7 +24,7 @@ const SUGGESTED_PROMPTS = [
 const MAX_HISTORY_MESSAGES = 20;
 
 export function ChatWidget() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   // Lift the floating button above the CompareBar when it's showing —
   // otherwise it covers the "Compare Now" CTA.
   const { count: compareCount } = useCompare();

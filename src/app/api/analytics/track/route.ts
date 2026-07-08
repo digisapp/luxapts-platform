@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiError } from "@/lib/api-helpers";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 // Analytics tables no longer have public RLS insert policies (they were
@@ -57,6 +57,15 @@ export async function POST(req: Request) {
       return apiError("Missing required fields");
     }
 
+    // Never trust a client-supplied user_id — it can be used to attribute
+    // events/sessions to arbitrary real users. Resolve it from the session
+    // cookie instead; anonymous visitors get null.
+    const sessionClient = await createClient();
+    const {
+      data: { user },
+    } = await sessionClient.auth.getUser();
+    const userId = user?.id ?? null;
+
     switch (body.type) {
       case "page_view": {
         const { path, referrer, duration_ms, city_slug } = body.data as {
@@ -68,7 +77,7 @@ export async function POST(req: Request) {
 
         await supabase.from("page_views").insert({
           session_id: body.session_id,
-          user_id: body.user_id || null,
+          user_id: userId,
           path,
           referrer,
           user_agent: userAgent,
@@ -100,7 +109,7 @@ export async function POST(req: Request) {
 
         await supabase.from("building_views").insert({
           session_id: body.session_id,
-          user_id: body.user_id || null,
+          user_id: userId,
           building_id,
           source,
           time_on_page_ms,
@@ -121,7 +130,7 @@ export async function POST(req: Request) {
 
         await supabase.from("analytics_events").insert({
           session_id: body.session_id,
-          user_id: body.user_id || null,
+          user_id: userId,
           event_name,
           event_category,
           properties: properties || {},
@@ -149,7 +158,7 @@ export async function POST(req: Request) {
           .upsert(
             {
               session_id: body.session_id,
-              user_id: body.user_id || null,
+              user_id: userId,
               last_seen_at: new Date().toISOString(),
               device_type: deviceType,
               browser,
@@ -170,7 +179,7 @@ export async function POST(req: Request) {
           // If upsert fails (new session), try insert
           await supabase.from("user_sessions").insert({
             session_id: body.session_id,
-            user_id: body.user_id || null,
+            user_id: userId,
             device_type: deviceType,
             browser,
             os,

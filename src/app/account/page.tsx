@@ -62,6 +62,7 @@ export default function AccountPage() {
   // Password reset state
   const [resetSent, setResetSent] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -119,8 +120,13 @@ export default function AccountPage() {
   const handlePasswordReset = async () => {
     if (!user?.email) return;
     setResetting(true);
-    await resetPassword(user.email);
+    setResetError(null);
+    const { error } = await resetPassword(user.email);
     setResetting(false);
+    if (error) {
+      setResetError(error.message || "Failed to send reset link");
+      return;
+    }
     setResetSent(true);
   };
 
@@ -259,15 +265,20 @@ export default function AccountPage() {
                       Reset link sent
                     </span>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handlePasswordReset}
-                      disabled={resetting}
-                    >
-                      {resetting && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                      Send reset link
-                    </Button>
+                    <div className="flex flex-col items-end gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePasswordReset}
+                        disabled={resetting}
+                      >
+                        {resetting && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                        Send reset link
+                      </Button>
+                      {resetError && (
+                        <span className="text-xs text-red-600">{resetError}</span>
+                      )}
+                    </div>
                   )}
                 </div>
               </CardContent>

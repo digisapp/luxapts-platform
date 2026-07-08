@@ -12,7 +12,7 @@ function installLocalStorageShim() {
     clear: () => data.clear(),
   };
   vi.stubGlobal("localStorage", shim);
-  vi.stubGlobal("window", { addEventListener: () => {} });
+  vi.stubGlobal("window", { addEventListener: () => {}, removeEventListener: () => {} });
   return data;
 }
 

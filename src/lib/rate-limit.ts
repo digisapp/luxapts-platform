@@ -106,6 +106,26 @@ export function getClientIp(request: Request): string {
 }
 
 /**
+ * Internal server-to-server calls (e.g. the AI tool-executor calling
+ * /api/search or /api/leads) carry no client IP, so they would all share the
+ * "unknown" bucket. They authenticate with CRON_SECRET so target routes can
+ * skip IP-based limiting — the calling endpoint (chat) is already rate-limited,
+ * which bounds these calls transitively.
+ */
+const INTERNAL_HEADER = "x-internal-secret";
+
+export function internalHeaders(): Record<string, string> {
+  const secret = process.env.CRON_SECRET;
+  return secret ? { [INTERNAL_HEADER]: secret } : {};
+}
+
+export function isInternalRequest(request: Request): boolean {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return false;
+  return request.headers.get(INTERNAL_HEADER) === secret;
+}
+
+/**
  * Rate limit configurations for different endpoints
  */
 export const RATE_LIMITS = {

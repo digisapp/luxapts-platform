@@ -6,7 +6,7 @@ import { X, Mic, Sparkles } from "lucide-react";
 import { SimliAvatar } from "./SimliAvatar";
 
 export function SimliWidget() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const [isOpen, setIsOpen] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const prevPathnameRef = useRef(pathname);

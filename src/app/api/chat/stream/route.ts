@@ -1,6 +1,6 @@
 import { createXAIClient, AI_TOOLS, SYSTEM_PROMPT } from "@/lib/xai/client";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
-import { executeTool } from "@/lib/xai/tool-executor";
+import { executeTool, type ToolContext } from "@/lib/xai/tool-executor";
 import { chatRequestSchema } from "@/lib/validations";
 import type OpenAI from "openai";
 
@@ -94,6 +94,7 @@ export async function POST(req: Request) {
           // Handle tool calls first (non-streamed)
           const MAX_TOOL_ITERATIONS = 5;
           let toolIterations = 0;
+          const toolCtx: ToolContext = { leadsCreated: 0 };
           while (assistantMessage.tool_calls?.length && toolIterations < MAX_TOOL_ITERATIONS) {
             toolIterations++;
 
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
             for (const toolCall of assistantMessage.tool_calls) {
               if (toolCall.type === "function") {
                 const args = JSON.parse(toolCall.function.arguments);
-                const result = await executeTool(toolCall.function.name, args, baseUrl);
+                const result = await executeTool(toolCall.function.name, args, baseUrl, toolCtx);
 
                 messages.push({
                   role: "tool",

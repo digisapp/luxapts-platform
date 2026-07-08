@@ -8,6 +8,16 @@ import { ChevronDown, ChevronRight, Image as ImageIcon, Home, ExternalLink } fro
 import { BuildingDetails } from "./BuildingDetails";
 import type { BuildingSummary } from "./BuildingsManager";
 
+function safeUrl(u?: string | null): string | undefined {
+  if (!u) return undefined;
+  try {
+    const p = new URL(u);
+    return p.protocol === "http:" || p.protocol === "https:" ? u : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 interface BuildingRowProps {
   building: BuildingSummary;
   cities?: Array<{ id: string; name: string; slug: string }>;
@@ -111,9 +121,9 @@ export function BuildingRow({ building, cities = [] }: BuildingRowProps) {
             <Home className="h-3.5 w-3.5" />
             {building.available_unit_count}/{building.unit_count}
           </span>
-          {building.website_url && (
+          {safeUrl(building.website_url) && (
             <a
-              href={building.website_url}
+              href={safeUrl(building.website_url)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground"

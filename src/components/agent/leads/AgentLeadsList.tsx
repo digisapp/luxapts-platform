@@ -60,6 +60,7 @@ export function AgentLeadsList({ assignments }: AgentLeadsListProps) {
   const [filter, setFilter] = useState<FilterType>("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [localAssignments, setLocalAssignments] = useState(assignments);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const filtered = localAssignments.filter((a) => {
     const lead = (Array.isArray(a.leads) ? a.leads[0] : a.leads) as LeadData | null;
@@ -92,6 +93,7 @@ export function AgentLeadsList({ assignments }: AgentLeadsListProps) {
 
   async function handleAssignmentAction(assignmentId: string, action: "accepted" | "declined") {
     setUpdatingId(assignmentId);
+    setActionError(null);
     try {
       const res = await fetch(`/api/agent/assignments/${assignmentId}`, {
         method: "PATCH",
@@ -105,7 +107,13 @@ export function AgentLeadsList({ assignments }: AgentLeadsListProps) {
             a.id === assignmentId ? { ...a, status: action } : a
           )
         );
+      } else {
+        const data = await res.json().catch(() => null);
+        setActionError(data?.error || `Failed to ${action === "accepted" ? "accept" : "decline"} lead`);
       }
+    } catch (err) {
+      console.error("Assignment action error:", err);
+      setActionError(`Failed to ${action === "accepted" ? "accept" : "decline"} lead`);
     } finally {
       setUpdatingId(null);
     }
@@ -113,6 +121,12 @@ export function AgentLeadsList({ assignments }: AgentLeadsListProps) {
 
   return (
     <div className="space-y-6">
+      {actionError && (
+        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-600">
+          {actionError}
+        </div>
+      )}
+
       {/* Filter Tabs */}
       <div className="flex items-center gap-2">
         <Filter className="h-4 w-4 text-muted-foreground" />

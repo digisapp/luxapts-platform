@@ -6,7 +6,9 @@ import { test as base } from "@playwright/test";
  * outbound email, paid avatar sessions) so test runs leave no trace.
  */
 export const test = base.extend({
-  context: async ({ context }, use) => {
+  // Param named `provide` (not Playwright's conventional `use`) so eslint's
+  // react-hooks/rules-of-hooks doesn't misread it as the React `use` hook.
+  context: async ({ context }, provide) => {
     await context.route("**/api/analytics/**", (route) =>
       route.fulfill({ status: 204, body: "" })
     );
@@ -24,7 +26,7 @@ export const test = base.extend({
         body: JSON.stringify({ error: "blocked in e2e" }),
       })
     );
-    await use(context);
+    await provide(context);
   },
 });
 

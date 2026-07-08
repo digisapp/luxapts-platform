@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { apiError } from "@/lib/api-helpers";
+import { isValidUUID } from "@/lib/utils";
 
 // GET - Fetch user's favorites
 export async function GET() {
@@ -39,7 +40,7 @@ export async function GET() {
         return NextResponse.json({ favorites: [] });
       }
       console.error("Error fetching favorites:", error);
-      return apiError(error.message, 500);
+      return apiError("Failed to load favorites", 500);
     }
 
     return NextResponse.json({ favorites: favorites || [] });
@@ -64,6 +65,12 @@ export async function POST(req: Request) {
 
     if (!building_id && !unit_id) {
       return apiError("building_id or unit_id is required");
+    }
+    if (building_id && !isValidUUID(building_id)) {
+      return apiError("Invalid building_id");
+    }
+    if (unit_id && !isValidUUID(unit_id)) {
+      return apiError("Invalid unit_id");
     }
 
     const adminClient = createAdminClient();
@@ -100,7 +107,7 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Error adding favorite:", error);
-      return apiError(error.message, 500);
+      return apiError("Failed to add favorite", 500);
     }
 
     return NextResponse.json({ favorite }, { status: 201 });
@@ -127,6 +134,12 @@ export async function DELETE(req: Request) {
     if (!building_id && !unit_id) {
       return apiError("building_id or unit_id is required");
     }
+    if (building_id && !isValidUUID(building_id)) {
+      return apiError("Invalid building_id");
+    }
+    if (unit_id && !isValidUUID(unit_id)) {
+      return apiError("Invalid unit_id");
+    }
 
     const adminClient = createAdminClient();
 
@@ -146,7 +159,7 @@ export async function DELETE(req: Request) {
 
     if (error) {
       console.error("Error removing favorite:", error);
-      return apiError(error.message, 500);
+      return apiError("Failed to remove favorite", 500);
     }
 
     return NextResponse.json({ message: "Favorite removed" });

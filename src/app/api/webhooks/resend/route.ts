@@ -81,6 +81,15 @@ export async function POST(req: Request) {
         console.log("Missing from/to email in webhook payload");
         return NextResponse.json({ error: "Missing from or to email" }, { status: 400 });
       }
+
+      // Reject malformed addresses. Besides being invalid, a value containing
+      // PostgREST filter metacharacters ( , ( ) " ) could otherwise alter the
+      // .or() filter grammar used below (filter injection).
+      const emailRe = /^[^\s,"()]+@[^\s,"()]+\.[^\s,"()]+$/;
+      if (!emailRe.test(fromEmail) || !emailRe.test(toEmail)) {
+        console.log(`Invalid from/to email in webhook payload: from=${fromEmail} to=${toEmail}`);
+        return NextResponse.json({ error: "Invalid from or to email" }, { status: 400 });
+      }
       const cc = data.cc || null;
       const replyTo = data.reply_to || null;
       const incomingHeaders = data.headers || {};

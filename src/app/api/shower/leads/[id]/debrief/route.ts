@@ -37,20 +37,31 @@ export async function POST(
     const body = parsed.data;
     const adminClient = createAdminClient();
 
-    // Verify this shower owns the active claim
+    // Verify this shower owns the CURRENTLY-ACTIVE claim. Filtering on status
+    // matters: without it a shower's old cancelled claim would still match, and
+    // they could overwrite the lead state of whichever shower now holds the
+    // active claim.
     const { data: claim } = await adminClient
       .from("showing_claims")
       .select("id, status")
       .eq("showing_lead_id", leadId)
       .eq("shower_id", auth.showerId)
-      .single();
+      .eq("status", "active")
+      .maybeSingle();
 
     if (!claim) {
-      return apiError("You do not have a claim on this lead", 403);
-    }
-
-    if (claim.status === "completed") {
-      return apiError("Debrief already submitted", 409);
+      // Distinguish an already-submitted debrief from no claim at all.
+      const { data: completed } = await adminClient
+        .from("showing_claims")
+        .select("id")
+        .eq("showing_lead_id", leadId)
+        .eq("shower_id", auth.showerId)
+        .eq("status", "completed")
+        .maybeSingle();
+      if (completed) {
+        return apiError("Debrief already submitted", 409);
+      }
+      return apiError("You do not have an active claim on this lead", 403);
     }
 
     // Check for duplicate debrief

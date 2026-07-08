@@ -13,7 +13,7 @@ const navItems = [
 ];
 
 export function MobileBottomNav() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
 
   // Don't show on admin pages or building detail pages (which have sticky CTA)
   const shouldHide = pathname.startsWith("/admin") || pathname.match(/^\/buildings\/[^/]+$/);

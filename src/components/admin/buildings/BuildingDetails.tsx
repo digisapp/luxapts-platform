@@ -22,6 +22,16 @@ import { ImageUploadDialog } from "./ImageUploadDialog";
 import { BuildingFormDialog } from "./BuildingFormDialog";
 import { BuildingFactsCard } from "./BuildingFactsCard";
 
+function safeUrl(u?: string | null): string | undefined {
+  if (!u) return undefined;
+  try {
+    const p = new URL(u);
+    return p.protocol === "http:" || p.protocol === "https:" ? u : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 interface BuildingDetailData {
   building: Record<string, unknown>;
   amenities: Array<{
@@ -163,9 +173,9 @@ export function BuildingDetails({ data, buildingId, cities = [] }: BuildingDetai
                         <item.icon className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
                         <div>
                           <span className="text-muted-foreground">{item.label}: </span>
-                          {item.label === "Website" ? (
+                          {item.label === "Website" && safeUrl(item.value) ? (
                             <a
-                              href={item.value}
+                              href={safeUrl(item.value)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-500 hover:underline break-all"

@@ -222,6 +222,7 @@ create policy "lead_events_agent_read_assigned"
 -- 10. LOW: scrape status exposed error messages/internal URLs publicly
 -- =========================
 drop policy if exists "Anyone can view scrape status" on public.building_scrape_status;
+drop policy if exists "scrape_status_admin_read" on public.building_scrape_status;
 create policy "scrape_status_admin_read"
   on public.building_scrape_status for select
   using (public.is_admin());

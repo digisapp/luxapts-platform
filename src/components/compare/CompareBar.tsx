@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { GitCompare, X, Building2 } from "lucide-react";
 
 export function CompareBar() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const { buildings, removeBuilding, clearAll, canCompare, isLoaded } = useCompare();
 
   // Don't show on compare page or admin pages

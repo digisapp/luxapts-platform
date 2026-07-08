@@ -20,7 +20,7 @@ export async function GET() {
         buildings:building_id (
           id, name, address,
           building_certification_content (
-            id, quiz_questions, key_selling_points, amenity_notes,
+            id, key_selling_points, amenity_notes,
             pet_policy_notes, parking_notes, pricing_notes, shadows_required
           )
         )

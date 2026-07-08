@@ -10,6 +10,55 @@ const submitQuizSchema = z.object({
 
 const PASSING_SCORE = 70; // percent
 
+// GET /api/shower/certifications/[buildingId]/quiz — load questions to take
+// the quiz. Never returns correct_index (that would defeat the cert gate).
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ buildingId: string }> }
+) {
+  try {
+    const auth = await checkShowerAuth();
+    if (!auth.isShower) {
+      return apiError(auth.error, auth.status);
+    }
+
+    const { buildingId } = await params;
+    const adminClient = createAdminClient();
+
+    const { data: content, error: contentError } = await adminClient
+      .from("building_certification_content")
+      .select("quiz_questions, shadows_required")
+      .eq("building_id", buildingId)
+      .single();
+
+    if (contentError || !content) {
+      return apiError("No certification content found for this building", 404);
+    }
+
+    const questions = (content.quiz_questions as Array<{
+      question: string;
+      options: string[];
+      correct_index: number;
+    }>) || [];
+
+    // Strip the answer key before it leaves the server.
+    const safeQuestions = questions.map((q) => ({
+      question: q.question,
+      options: q.options,
+    }));
+
+    return apiSuccess({
+      questions: safeQuestions,
+      total: safeQuestions.length,
+      passing_score: PASSING_SCORE,
+      shadows_required: content.shadows_required,
+    });
+  } catch (error) {
+    console.error("Load quiz error:", error);
+    return apiError("Internal server error", 500);
+  }
+}
+
 // POST /api/shower/certifications/[buildingId]/quiz — submit quiz attempt
 export async function POST(
   req: NextRequest,

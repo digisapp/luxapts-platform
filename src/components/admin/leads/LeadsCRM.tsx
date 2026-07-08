@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,8 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [emailTarget, setEmailTarget] = useState<LeadRowData | null>(null);
 
+  const requestIdRef = useRef(0);
+
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => setSearchDebounced(search), 300);
@@ -57,6 +59,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
   }, [search]);
 
   const fetchLeads = useCallback(async (newOffset: number) => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -69,15 +72,19 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
       const res = await fetch(`/api/leads?${params}`);
       const data = await res.json();
 
+      // Ignore stale responses
+      if (requestId !== requestIdRef.current) return;
+
       setLeads(data.leads || []);
       setTotal(data.total || 0);
       setStatusCounts(data.status_counts || {});
       setOffset(newOffset);
       setSelectedIds(new Set());
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       console.error("Fetch leads error:", err);
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, [statusFilter, sourceFilter, searchDebounced]);
 

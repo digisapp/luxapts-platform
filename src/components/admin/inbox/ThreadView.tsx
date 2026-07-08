@@ -148,6 +148,7 @@ export function ThreadView({ emailId, onBack, onRefresh }: {
   }
 
   async function handleInlineReply() {
+    if (inlineSending) return;
     if (!email || !inlineReply.trim()) return;
     setInlineSending(true);
 

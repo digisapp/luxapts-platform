@@ -35,7 +35,16 @@ export function createLocalStore<T>(
   let state: LocalStoreState<T> = { value: fallback, isLoaded: false };
   const serverSnapshot: LocalStoreState<T> = { value: fallback, isLoaded: false };
   const listeners = new Set<() => void>();
-  let storageListenerAttached = false;
+
+  // Kept as a stable reference so it can be removed once the last subscriber
+  // unmounts — otherwise it leaks for the page lifetime and keeps firing
+  // readFromStorage()/emit() with zero subscribers.
+  function handleStorage(e: StorageEvent) {
+    if (e.key === storageKey) {
+      state = { value: readFromStorage(), isLoaded: true };
+      emit();
+    }
+  }
 
   function emit() {
     listeners.forEach((l) => l());
@@ -72,15 +81,10 @@ export function createLocalStore<T>(
     getSnapshot: () => state,
     getServerSnapshot: () => serverSnapshot,
     subscribe(listener: () => void) {
+      const wasEmpty = listeners.size === 0;
       listeners.add(listener);
-      if (!storageListenerAttached && typeof window !== "undefined") {
-        storageListenerAttached = true;
-        window.addEventListener("storage", (e) => {
-          if (e.key === storageKey) {
-            state = { value: readFromStorage(), isLoaded: true };
-            emit();
-          }
-        });
+      if (wasEmpty && typeof window !== "undefined") {
+        window.addEventListener("storage", handleStorage);
       }
       // Defer the initial localStorage read past hydration so server HTML
       // (rendered with the empty fallback) matches the first client render.
@@ -89,6 +93,9 @@ export function createLocalStore<T>(
       }
       return () => {
         listeners.delete(listener);
+        if (listeners.size === 0 && typeof window !== "undefined") {
+          window.removeEventListener("storage", handleStorage);
+        }
       };
     },
     set(updater: (prev: T) => T) {

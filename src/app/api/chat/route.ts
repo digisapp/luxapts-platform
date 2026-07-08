@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createXAIClient, AI_TOOLS, SYSTEM_PROMPT } from "@/lib/xai/client";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { chatRequestSchema } from "@/lib/validations";
-import { executeTool } from "@/lib/xai/tool-executor";
+import { executeTool, type ToolContext } from "@/lib/xai/tool-executor";
 import { apiError } from "@/lib/api-helpers";
 import type OpenAI from "openai";
 
@@ -83,6 +83,7 @@ export async function POST(req: Request) {
     // Handle tool calls (loop for multiple calls, max 5 iterations to prevent infinite loops)
     const MAX_TOOL_ITERATIONS = 5;
     let toolIterations = 0;
+    const toolCtx: ToolContext = { leadsCreated: 0 };
     while (assistantMessage.tool_calls?.length && toolIterations < MAX_TOOL_ITERATIONS) {
       toolIterations++;
       const toolResults: OpenAI.ChatCompletionMessageParam[] = [];
@@ -95,7 +96,7 @@ export async function POST(req: Request) {
         // Handle both function tool calls and custom tool calls
         if (toolCall.type === "function") {
           const args = JSON.parse(toolCall.function.arguments);
-          const result = await executeTool(toolCall.function.name, args, baseUrl);
+          const result = await executeTool(toolCall.function.name, args, baseUrl, toolCtx);
 
           toolResults.push({
             role: "tool",

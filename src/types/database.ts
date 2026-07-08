@@ -71,6 +71,7 @@ export interface Amenity {
   id: string;
   name: string;
   category: string | null;
+  icon: string | null;
   created_at: string;
 }
 
@@ -228,6 +229,17 @@ export interface Agent {
   created_at: string;
 }
 
+export interface Partner {
+  user_id: string;
+  company_name: string;
+  type: "building" | "brokerage";
+  status: string;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  created_at: string;
+}
+
 export interface AgentAssignment {
   id: string;
   lead_id: string;
@@ -355,7 +367,7 @@ export interface EmailCampaign {
   recipients_count: number;
   sent_count: number;
   failed_count: number;
-  status: "pending" | "sending" | "completed" | "partial_failure";
+  status: "pending" | "sending" | "completed" | "partial_failure" | "failed";
   sent_at: string;
   created_by: string | null;
   created_at: string;
