@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Playwright is a devDependency used by the scraper's local render fallback;
+  // keep it out of the bundle so its dynamic import resolves at runtime only
+  // where it's installed (prod uses the Browserless HTTP path instead).
+  serverExternalPackages: ["playwright"],
   images: {
     // The scraper stores image URLs from arbitrary building websites; a URL
     // outside this list makes next/image THROW AT RENDER, taking the whole

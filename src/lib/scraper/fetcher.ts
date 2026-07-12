@@ -3,6 +3,7 @@
 
 import { ScrapeResult, ImageScrapeResult } from "./types";
 import { extractUnitsWithAI, extractAmenitiesWithAI, extractFullBuildingData, extractImagesWithAI } from "./ai-extractor";
+import { needsJsRendering, renderPage } from "./renderer";
 
 // Common headers to appear as a real browser
 const BROWSER_HEADERS = {
@@ -86,34 +87,41 @@ async function rateLimitedFetch(url: string): Promise<Response> {
 }
 
 export async function fetchBuildingHTML(websiteUrl: string): Promise<{ html: string; finalUrl: string } | null> {
+  let fetched: { html: string; finalUrl: string } | null = null;
+
   try {
     const response = await rateLimitedFetch(websiteUrl);
 
-    if (!response.ok) {
+    if (response.ok) {
+      const contentLength = Number(response.headers.get("content-length") || 0);
+      if (contentLength <= MAX_RESPONSE_BYTES) {
+        const html = await response.text();
+        if (html.length <= MAX_RESPONSE_BYTES) {
+          fetched = { html, finalUrl: response.url };
+        } else {
+          console.error(`Response body too large for ${websiteUrl}`);
+        }
+      } else {
+        console.error(`Response too large for ${websiteUrl}: ${contentLength} bytes`);
+      }
+    } else {
       console.error(`Failed to fetch ${websiteUrl}: ${response.status} ${response.statusText}`);
-      return null;
     }
-
-    const contentLength = Number(response.headers.get("content-length") || 0);
-    if (contentLength > MAX_RESPONSE_BYTES) {
-      console.error(`Response too large for ${websiteUrl}: ${contentLength} bytes`);
-      return null;
-    }
-
-    const html = await response.text();
-    if (html.length > MAX_RESPONSE_BYTES) {
-      console.error(`Response body too large for ${websiteUrl}`);
-      return null;
-    }
-
-    return {
-      html,
-      finalUrl: response.url, // In case of redirects
-    };
   } catch (error) {
     console.error(`Error fetching ${websiteUrl}:`, error);
-    return null;
   }
+
+  // JS-rendered leasing sites (Entrata/RealPage/Yardi) ship an empty shell —
+  // and bot-blocked fetches ship nothing. Try a headless render for both.
+  if (!fetched || needsJsRendering(fetched.html)) {
+    const rendered = await renderPage(fetched?.finalUrl || websiteUrl);
+    if (rendered) {
+      console.log(`Rendered ${websiteUrl} via ${rendered.renderer} (${rendered.html.length} bytes)`);
+      return { html: rendered.html, finalUrl: rendered.finalUrl };
+    }
+  }
+
+  return fetched;
 }
 
 // Try to find the amenities page from the main website

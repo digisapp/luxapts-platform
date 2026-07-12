@@ -66,6 +66,8 @@ import {
   Car,
   Layout,
   ImageIcon,
+  BadgeCheck,
+  Footprints,
 } from "lucide-react";
 import { ImageGallery } from "./ImageGallery";
 import { BuildingPageClient } from "./BuildingPageClient";
@@ -73,6 +75,11 @@ import { BuildingContactButtons } from "./BuildingContactButtons";
 import { StickyMobileCTA } from "@/components/ui/StickyMobileCTA";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { ApartmentComplexJsonLd } from "@/components/seo/JsonLd";
+
+// Freshness check for the pricing-verified badge (page regenerates hourly via ISR)
+function isWithinDays(isoDate: string, days: number): boolean {
+  return Date.now() - new Date(isoDate).getTime() < days * 24 * 60 * 60 * 1000;
+}
 import { BuildingVoiceButton } from "@/components/simli";
 
 interface BuildingPageProps {
@@ -165,6 +172,22 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
       allPriceSnapshots.push({ date: p.captured_at, price: p.rent });
     }
   }
+
+  // Trust badges: freshest price snapshot + most recent completed LuxApts tour
+  const latestPriceDate = Object.values(unitPrices).reduce<string | null>(
+    (latest, p) => (!latest || p.captured_at > latest ? p.captured_at : latest),
+    null
+  );
+  const pricingVerified = latestPriceDate !== null && isWithinDays(latestPriceDate, 30);
+
+  const { data: lastTourDebrief } = await supabase
+    .from("showing_debriefs")
+    .select("submitted_at, showing_leads:showing_lead_id!inner(building_id)")
+    .eq("showing_leads.building_id", id)
+    .eq("client_showed_up", true)
+    .order("submitted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   // Aggregate price history by date (average rent per date)
   const priceByDate: Record<string, { total: number; count: number }> = {};
@@ -325,6 +348,22 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                     <p className="text-sm text-muted-foreground">
                       {building.cities.name}, {building.cities.state}
                     </p>
+                  )}
+                  {(pricingVerified || lastTourDebrief) && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {pricingVerified && latestPriceDate && (
+                        <Badge variant="outline" className="gap-1 border-emerald-700/60 text-emerald-400">
+                          <BadgeCheck className="h-3.5 w-3.5" />
+                          Pricing verified {formatDate(latestPriceDate)}
+                        </Badge>
+                      )}
+                      {lastTourDebrief && (
+                        <Badge variant="outline" className="gap-1 border-indigo-700/60 text-indigo-400">
+                          <Footprints className="h-3.5 w-3.5" />
+                          Toured by LuxApts {formatDate(lastTourDebrief.submitted_at)}
+                        </Badge>
+                      )}
+                    </div>
                   )}
                 </div>
 
