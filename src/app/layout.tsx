@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { CompareBar } from "@/components/compare/CompareBar";
@@ -64,6 +65,7 @@ export default function RootLayout({
       >
         <WebsiteJsonLd />
         <AuthProvider>
+          <AnalyticsTracker />
           <ToastProvider>
             {children}
             <MobileBottomNav />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -176,7 +176,12 @@ export function EmailInbox() {
     }
   }
 
+  // Guards against out-of-order responses when view/search/page change
+  // while a previous fetch is still in flight.
+  const fetchRequestIdRef = useRef(0);
+
   const fetchEmails = useCallback(async () => {
+    const requestId = ++fetchRequestIdRef.current;
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -191,14 +196,21 @@ export function EmailInbox() {
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
 
+      // A newer fetch started while this one was in flight — discard.
+      if (requestId !== fetchRequestIdRef.current) return;
+
       setEmails(data.emails);
       setTotal(data.total);
       setUnreadCount(data.unread);
       setSelectedIds(new Set());
     } catch (err) {
-      console.error("Fetch emails error:", err);
+      if (requestId === fetchRequestIdRef.current) {
+        console.error("Fetch emails error:", err);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === fetchRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [view, search, page]);
 

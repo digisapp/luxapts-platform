@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X, Expand } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,14 +20,41 @@ interface ImageGalleryProps {
 export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const goToPrevious = () => {
+  const goToPrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  };
+  }, [images.length]);
 
-  const goToNext = () => {
+  const goToNext = useCallback(() => {
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  };
+  }, [images.length]);
+
+  // Fullscreen modal: keyboard controls, body scroll lock, focus close button
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    closeButtonRef.current?.focus();
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setIsFullscreen(false);
+      } else if (e.key === "ArrowLeft") {
+        goToPrevious();
+      } else if (e.key === "ArrowRight") {
+        goToNext();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isFullscreen, goToPrevious, goToNext]);
 
   const safeIndex = Math.min(currentIndex, images.length - 1);
   const currentImage = images[safeIndex];
@@ -120,10 +147,17 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
 
       {/* Fullscreen Modal */}
       {isFullscreen && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${buildingName} photo gallery`}
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+        >
           <Button
+            ref={closeButtonRef}
             variant="ghost"
             size="icon"
+            aria-label="Close gallery"
             className="absolute top-4 right-4 text-white hover:bg-white/10"
             onClick={() => setIsFullscreen(false)}
           >

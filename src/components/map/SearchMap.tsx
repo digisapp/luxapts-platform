@@ -60,6 +60,22 @@ export function SearchMap({
   const markerElsRef = useRef<Map<string, HTMLElement>>(new Map());
   const [mapLoaded, setMapLoaded] = useState(false);
 
+  // Keep the latest props in refs so the marker/bounds effects don't re-run
+  // when the parent re-renders with new identities but identical data
+  // (inline callbacks and freshly-mapped arrays would otherwise destroy and
+  // recreate every marker under the cursor on each hover)
+  const listingsRef = useRef(listings);
+  const onListingClickRef = useRef(onListingClick);
+  const onListingHoverRef = useRef(onListingHover);
+  useEffect(() => {
+    listingsRef.current = listings;
+    onListingClickRef.current = onListingClick;
+    onListingHoverRef.current = onListingHover;
+  });
+
+  // Stable signature of the listing data — markers only rebuild when this changes
+  const listingsKey = JSON.stringify(listings);
+
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -122,7 +138,7 @@ export function SearchMap({
 
     // Group listings by building for clustering
     const buildingGroups = new Map<string, MapListing[]>();
-    listings.forEach((listing) => {
+    listingsRef.current.forEach((listing) => {
       const key = `${listing.lat.toFixed(4)},${listing.lng.toFixed(4)}`;
       if (!buildingGroups.has(key)) {
         buildingGroups.set(key, []);
@@ -201,28 +217,33 @@ export function SearchMap({
 
       // Event handlers
       el.addEventListener("click", () => {
-        if (count === 1 && onListingClick) {
-          onListingClick(firstListing.id);
+        if (count === 1) {
+          onListingClickRef.current?.(firstListing.id);
         }
       });
 
+      // Open/close explicitly (guarded by isOpen) rather than toggling:
+      // Mapbox's built-in click-to-toggle also fires on marker clicks, and a
+      // blind toggle on enter/leave would get inverted after it runs
       el.addEventListener("mouseenter", () => {
-        if (count === 1 && onListingHover) {
-          onListingHover(firstListing.id);
+        if (count === 1) {
+          onListingHoverRef.current?.(firstListing.id);
         }
-        marker.togglePopup();
+        if (!popup.isOpen()) {
+          marker.togglePopup();
+        }
       });
 
       el.addEventListener("mouseleave", () => {
-        if (onListingHover) {
-          onListingHover(null);
+        onListingHoverRef.current?.(null);
+        if (popup.isOpen()) {
+          marker.togglePopup();
         }
-        marker.togglePopup();
       });
 
       markersRef.current.push(marker);
     });
-  }, [listings, mapLoaded, onListingClick, onListingHover]);
+  }, [listingsKey, mapLoaded]);
 
   // Toggle highlight class on existing marker elements without recreating markers
   useEffect(() => {
@@ -232,14 +253,15 @@ export function SearchMap({
         inner.classList.toggle("highlighted", listingId === highlightedListingId);
       }
     });
-  }, [highlightedListingId, listings, mapLoaded]);
+  }, [highlightedListingId, listingsKey, mapLoaded]);
 
   // Fit bounds to show all markers
   const fitBounds = useCallback(() => {
-    if (!map.current || listings.length === 0) return;
+    const current = listingsRef.current;
+    if (!map.current || current.length === 0) return;
 
     const bounds = new mapboxgl.LngLatBounds();
-    listings.forEach((listing) => {
+    current.forEach((listing) => {
       bounds.extend([listing.lng, listing.lat]);
     });
 
@@ -248,13 +270,13 @@ export function SearchMap({
       maxZoom: 15,
       duration: 1000,
     });
-  }, [listings]);
+  }, []);
 
   useEffect(() => {
-    if (mapLoaded && listings.length > 0) {
+    if (mapLoaded && listingsRef.current.length > 0) {
       fitBounds();
     }
-  }, [mapLoaded, fitBounds, listings.length]);
+  }, [mapLoaded, fitBounds, listingsKey]);
 
   if (!MAPBOX_TOKEN) {
     return (

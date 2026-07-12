@@ -50,6 +50,7 @@ export default function AccountPage() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [profileLoadError, setProfileLoadError] = useState(false);
 
   // Profile edit state
   const [fullName, setFullName] = useState("");
@@ -74,15 +75,19 @@ export default function AccountPage() {
   // Load profile
   useEffect(() => {
     if (!user) return;
+    setProfileLoadError(false);
     fetch("/api/account")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to load profile");
+        return r.json();
+      })
       .then((data) => {
         setProfile(data);
         setFullName(data.full_name || "");
         setPhone(data.phone || "");
-        setLoadingProfile(false);
       })
-      .catch(() => setLoadingProfile(false));
+      .catch(() => setProfileLoadError(true))
+      .finally(() => setLoadingProfile(false));
   }, [user]);
 
   // Clear "Saved" timeout on unmount
@@ -99,7 +104,7 @@ export default function AccountPage() {
       const res = await fetch("/api/account", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ full_name: fullName.trim() || undefined, phone: phone.trim() || null }),
+        body: JSON.stringify({ full_name: fullName.trim() || null, phone: phone.trim() || null }),
       });
       if (res.ok) {
         setProfile((p) => p ? { ...p, full_name: fullName.trim() || null, phone: phone.trim() || null } : p);
@@ -145,6 +150,15 @@ export default function AccountPage() {
     return `/search?${params.toString()}`;
   };
 
+  // While auth is still resolving, show a spinner instead of a blank page
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   if (!user) return null;
 
   return (
@@ -179,6 +193,10 @@ export default function AccountPage() {
                   <div className="flex justify-center py-4">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
+                ) : profileLoadError ? (
+                  <p className="text-sm text-red-500 py-2">
+                    Failed to load your profile. Please refresh the page to try again.
+                  </p>
                 ) : (
                   <>
                     <div className="grid gap-4 sm:grid-cols-2">

@@ -12,7 +12,8 @@ export interface CompareBuilding {
 }
 
 const STORAGE_KEY = "luxapts_compare";
-const MAX_COMPARE = 3;
+// The /api/compare endpoint compares exactly two buildings (building_a/building_b)
+export const MAX_COMPARE = 2;
 
 // Shared across all hook instances — CompareButton clicks update the
 // CompareBar in the root layout immediately.
@@ -27,8 +28,8 @@ export function useCompare() {
         return prev;
       }
       if (prev.length >= MAX_COMPARE) {
-        // Replace the oldest one
-        return [...prev.slice(1), building];
+        // Replace the oldest one(s), also trimming any stale over-limit storage
+        return [...prev.slice(-(MAX_COMPARE - 1)), building];
       }
       return [...prev, building];
     });
@@ -45,7 +46,7 @@ export function useCompare() {
         return prev.filter((b) => b.id !== building.id);
       }
       if (prev.length >= MAX_COMPARE) {
-        return [...prev.slice(1), building];
+        return [...prev.slice(-(MAX_COMPARE - 1)), building];
       }
       return [...prev, building];
     });

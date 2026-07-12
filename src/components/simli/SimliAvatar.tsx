@@ -27,6 +27,11 @@ export function SimliAvatar({
   const [roomUrl, setRoomUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const endedRef = useRef(false);
+  // Track whether a session is live and keep the latest onSessionEnd so the
+  // unmount cleanup can notify the parent without a stale closure
+  const sessionActiveRef = useRef(false);
+  const onSessionEndRef = useRef(onSessionEnd);
+  onSessionEndRef.current = onSessionEnd;
 
   const startSession = async () => {
     setState("starting");
@@ -53,6 +58,7 @@ export function SimliAvatar({
       setSessionId(data.session.sessionId);
       setRoomUrl(data.session.roomUrl);
       setState("active");
+      sessionActiveRef.current = true;
       onSessionStart?.(data.session.sessionId);
     } catch {
       if (endedRef.current) return;
@@ -64,6 +70,10 @@ export function SimliAvatar({
   const endSession = () => {
     if (endedRef.current) return;
     endedRef.current = true;
+    sessionActiveRef.current = false;
+    // Clearing roomUrl unmounts the iframe, which tears down the WebRTC
+    // connection to Simli; the session then expires server-side via
+    // maxIdleTime (there is no explicit end-session API endpoint).
     setRoomUrl(null);
     setSessionId(null);
     setState("idle");
@@ -72,7 +82,15 @@ export function SimliAvatar({
 
   useEffect(() => {
     if (autoStart) startSession();
-    return () => { endedRef.current = true; };
+    return () => {
+      // Unmounting removes the iframe (disconnecting the session); make sure
+      // the parent still hears about the end so its state doesn't get stuck.
+      if (!endedRef.current && sessionActiveRef.current) {
+        sessionActiveRef.current = false;
+        onSessionEndRef.current?.();
+      }
+      endedRef.current = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart]);
 

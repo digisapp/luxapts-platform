@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Mic, Sparkles } from "lucide-react";
 import { SimliAvatar } from "./SimliAvatar";
 
@@ -12,6 +12,14 @@ interface BuildingVoiceButtonProps {
 export function BuildingVoiceButton({ buildingId, buildingName }: BuildingVoiceButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isActive, setIsActive] = useState(false);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear the pending auto-close timer on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    };
+  }, []);
 
   return (
     <>
@@ -61,7 +69,9 @@ export function BuildingVoiceButton({ buildingId, buildingName }: BuildingVoiceB
               onSessionStart={() => setIsActive(true)}
               onSessionEnd={() => {
                 setIsActive(false);
-                setTimeout(() => setIsOpen(false), 1500);
+                // Auto-close 1.5s after session ends
+                if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+                closeTimeoutRef.current = setTimeout(() => setIsOpen(false), 1500);
               }}
             />
           </div>

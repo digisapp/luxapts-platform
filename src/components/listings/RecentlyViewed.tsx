@@ -47,11 +47,17 @@ export function RecentlyViewed({ currentBuildingId, className = "" }: RecentlyVi
       </CardHeader>
       <CardContent className="space-y-3">
         {displayItems.map((item) => (
-          <Link
+          <div
             key={item.id}
-            href={`/buildings/${item.id}`}
-            className="group flex gap-3 rounded-lg border p-2 hover:bg-muted/50 transition-colors"
+            className="group relative flex gap-3 rounded-lg border p-2 hover:bg-muted/50 transition-colors"
           >
+            {/* Stretched link keeps the whole card clickable without nesting
+                the remove button inside the anchor */}
+            <Link
+              href={`/buildings/${item.id}`}
+              aria-label={item.name}
+              className="absolute inset-0 rounded-lg"
+            />
             <div className="relative w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
               {item.image ? (
                 <Image
@@ -94,15 +100,12 @@ export function RecentlyViewed({ currentBuildingId, className = "" }: RecentlyVi
               variant="ghost"
               size="icon"
               aria-label="Remove from recently viewed"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.preventDefault();
-                removeItem(item.id);
-              }}
+              className="relative h-6 w-6 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+              onClick={() => removeItem(item.id)}
             >
               <X className="h-3 w-3" />
             </Button>
-          </Link>
+          </div>
         ))}
       </CardContent>
     </Card>

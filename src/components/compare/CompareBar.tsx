@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useCompare } from "@/hooks/useCompare";
+import { useCompare, MAX_COMPARE } from "@/hooks/useCompare";
 import { Button } from "@/components/ui/button";
 import { GitCompare, X, Building2 } from "lucide-react";
 
@@ -22,13 +22,13 @@ export function CompareBar() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-zinc-900 border-t border-zinc-800 shadow-lg">
+    <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 z-40 bg-zinc-900 border-t border-zinc-800 shadow-lg">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 overflow-x-auto">
             <div className="flex items-center gap-2 text-sm text-zinc-400 flex-shrink-0">
               <GitCompare className="h-4 w-4" />
-              <span>Compare ({buildings.length}/3)</span>
+              <span>Compare ({buildings.length}/{MAX_COMPARE})</span>
             </div>
 
             <div className="flex items-center gap-2">

@@ -30,6 +30,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: base, lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: `${base}/search`, lastModified: now, changeFrequency: "hourly", priority: 0.9 },
     { url: `${base}/cities`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
+    { url: `${base}/neighborhoods`, lastModified: now, changeFrequency: "daily", priority: 0.7 },
+    { url: `${base}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${base}/privacy`, lastModified: now, changeFrequency: "monthly", priority: 0.2 },
+    { url: `${base}/terms`, lastModified: now, changeFrequency: "monthly", priority: 0.2 },
   ];
 
   const cityRoutes: MetadataRoute.Sitemap = cities.map((c) => ({

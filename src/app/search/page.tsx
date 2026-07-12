@@ -17,6 +17,7 @@ import { formatPrice, cn } from "@/lib/utils";
 import { SearchMap } from "@/components/map/SearchMap";
 import { CompareButton } from "@/components/compare/CompareButton";
 import { FavoriteButton } from "@/components/listings/FavoriteButton";
+import { SaveSearchButton } from "@/components/listings/SaveSearchButton";
 import { AMENITY_OPTIONS } from "@/lib/constants/amenities";
 
 interface Neighborhood {
@@ -85,6 +86,16 @@ interface ParsedFilters {
   summary?: string;
 }
 
+// Filter overrides accepted by handleSearch. For the numeric filters,
+// `null` explicitly clears the filter (ignoring current component state),
+// while `undefined`/absent falls back to current state.
+type SearchFilterOverrides = Omit<ParsedFilters, "beds_min" | "beds_max" | "budget_min" | "budget_max"> & {
+  beds_min?: number | null;
+  beds_max?: number | null;
+  budget_min?: number | null;
+  budget_max?: number | null;
+};
+
 interface SavedFilters {
   city?: string;
   bedsMin?: string;
@@ -118,48 +129,50 @@ function SearchContent() {
   const router = useRouter();
   const queryParam = searchParams.get("q");
   const cityParam = searchParams.get("city");
+  const bedsMinParam = searchParams.get("beds_min");
+  const bedsMaxParam = searchParams.get("beds_max");
+  const budgetMinParam = searchParams.get("budget_min");
+  const budgetMaxParam = searchParams.get("budget_max");
+  const hasUrlFilters = Boolean(cityParam || bedsMinParam || bedsMaxParam || budgetMinParam || budgetMaxParam);
 
-  // Restore saved filters synchronously (lazy initializer) so the initial
-  // search uses them instead of racing the async restore
-  const [savedFilters] = useState<SavedFilters | null>(() => {
-    if (typeof window === "undefined") return null;
-    if (queryParam || cityParam) return null;
-    try {
-      const saved = localStorage.getItem("luxapts-search-filters");
-      return saved ? (JSON.parse(saved) as SavedFilters) : null;
-    } catch (e) {
-      console.error("Error loading saved filters:", e);
-      return null;
-    }
-  });
-
-  const [city, setCity] = useState(cityParam || savedFilters?.city || "miami");
-  const [bedsMin, setBedsMin] = useState(savedFilters?.bedsMin || "");
-  const [bedsMax, setBedsMax] = useState(savedFilters?.bedsMax || "");
-  const [budgetMin, setBudgetMin] = useState(savedFilters?.budgetMin || "");
-  const [budgetMax, setBudgetMax] = useState(savedFilters?.budgetMax || "");
-  const [sort, setSort] = useState(savedFilters?.sort || "price_low");
+  // Seed filter state from URL params (hydration-safe — identical on server
+  // and client). Saved filters from localStorage are restored in a
+  // post-hydration effect below to avoid a server/client hydration mismatch.
+  const [city, setCity] = useState(cityParam || "miami");
+  const [bedsMin, setBedsMin] = useState(bedsMinParam || "");
+  const [bedsMax, setBedsMax] = useState(bedsMaxParam || "");
+  const [budgetMin, setBudgetMin] = useState(budgetMinParam || "");
+  const [budgetMax, setBudgetMax] = useState(budgetMaxParam || "");
+  const [sort, setSort] = useState("price_low");
   const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState(queryParam || "");
 
   // Advanced filter states
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
-  const [bathsMin, setBathsMin] = useState(savedFilters?.bathsMin || "");
-  const [petFriendly, setPetFriendly] = useState(savedFilters?.petFriendly || false);
-  const [parkingRequired, setParkingRequired] = useState(savedFilters?.parkingRequired || false);
-  const [moveInDate, setMoveInDate] = useState(savedFilters?.moveInDate || "");
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(savedFilters?.selectedAmenities || []);
+  const [bathsMin, setBathsMin] = useState("");
+  const [petFriendly, setPetFriendly] = useState(false);
+  const [parkingRequired, setParkingRequired] = useState(false);
+  const [moveInDate, setMoveInDate] = useState("");
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [showNeighborhoodDropdown, setShowNeighborhoodDropdown] = useState(false);
   const [showAmenityDropdown, setShowAmenityDropdown] = useState(false);
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
-  const [, setSearchError] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   // Race protection: only the most recent request may apply its results
   const requestIdRef = useRef(0);
+
+  // Whether at least one search has been run (so sort changes can re-search
+  // even when the previous search returned zero results)
+  const hasSearchedRef = useRef(false);
+
+  // True once saved filters have been restored post-hydration; gates the
+  // initial search and the save-to-localStorage effect
+  const [filtersHydrated, setFiltersHydrated] = useState(false);
 
   // Track listings whose images failed to load in the browser
   const [brokenImageIds, setBrokenImageIds] = useState<Set<string>>(new Set());
@@ -177,9 +190,39 @@ function SearchContent() {
   const [semanticResults, setSemanticResults] = useState<SemanticBuilding[]>([]);
   const [semanticQuery, setSemanticQuery] = useState<string | null>(null);
 
+  // Restore saved filters after hydration (skipped when the URL carries an
+  // explicit query or filters — those take precedence)
+  useEffect(() => {
+    if (!queryParam && !hasUrlFilters) {
+      try {
+        const saved = localStorage.getItem("luxapts-search-filters");
+        if (saved) {
+          const parsed = JSON.parse(saved) as SavedFilters;
+          if (parsed.city) setCity(parsed.city);
+          if (parsed.bedsMin) setBedsMin(parsed.bedsMin);
+          if (parsed.bedsMax) setBedsMax(parsed.bedsMax);
+          if (parsed.budgetMin) setBudgetMin(parsed.budgetMin);
+          if (parsed.budgetMax) setBudgetMax(parsed.budgetMax);
+          if (parsed.bathsMin) setBathsMin(parsed.bathsMin);
+          if (parsed.petFriendly) setPetFriendly(true);
+          if (parsed.parkingRequired) setParkingRequired(true);
+          if (parsed.moveInDate) setMoveInDate(parsed.moveInDate);
+          if (parsed.selectedAmenities?.length) setSelectedAmenities(parsed.selectedAmenities);
+          if (parsed.sort) setSort(parsed.sort);
+        }
+      } catch (e) {
+        console.error("Error loading saved filters:", e);
+      }
+    }
+    setFiltersHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Save filters to localStorage when they change
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Don't clobber saved filters with defaults before they've been restored
+    if (!filtersHydrated) return;
     const filters = {
       city,
       bedsMin,
@@ -194,24 +237,30 @@ function SearchContent() {
       sort,
     };
     localStorage.setItem("luxapts-search-filters", JSON.stringify(filters));
-  }, [city, bedsMin, bedsMax, budgetMin, budgetMax, bathsMin, petFriendly, parkingRequired, moveInDate, selectedAmenities, sort]);
+  }, [filtersHydrated, city, bedsMin, bedsMax, budgetMin, budgetMax, bathsMin, petFriendly, parkingRequired, moveInDate, selectedAmenities, sort]);
 
   // Fetch neighborhoods when city changes
   useEffect(() => {
+    const controller = new AbortController();
+    // Reset selections whenever the city changes, regardless of fetch outcome
+    setSelectedNeighborhoods([]);
     async function fetchNeighborhoods() {
       try {
-        const res = await fetch(`/api/cities/${city}/neighborhoods`);
+        const res = await fetch(`/api/cities/${city}/neighborhoods`, { signal: controller.signal });
+        if (controller.signal.aborted) return;
         if (res.ok) {
           const data = await res.json();
+          if (controller.signal.aborted) return;
           setNeighborhoods(data.neighborhoods || []);
-          setSelectedNeighborhoods([]); // Reset selections when city changes
         }
       } catch (error) {
+        if (controller.signal.aborted) return;
         console.error("Error fetching neighborhoods:", error);
         setNeighborhoods([]);
       }
     }
     fetchNeighborhoods();
+    return () => controller.abort();
   }, [city]);
 
   // Count active filters
@@ -228,8 +277,9 @@ function SearchContent() {
     selectedAmenities.length > 0,
   ].filter(Boolean).length;
 
-  const handleSearch = useCallback(async (filters?: ParsedFilters) => {
+  const handleSearch = useCallback(async (filters?: SearchFilterOverrides) => {
     const requestId = ++requestIdRef.current;
+    hasSearchedRef.current = true;
     setLoading(true);
     setSearchError(null);
     try {
@@ -239,11 +289,11 @@ function SearchContent() {
         limit: 200,
       };
 
-      // Basic filters
-      const bedsMinVal = filters?.beds_min !== undefined ? filters.beds_min : (bedsMin ? parseInt(bedsMin) : undefined);
-      const bedsMaxVal = filters?.beds_max !== undefined ? filters.beds_max : (bedsMax ? parseInt(bedsMax) : undefined);
-      const budgetMinVal = filters?.budget_min !== undefined ? filters.budget_min : (budgetMin ? parseInt(budgetMin) : undefined);
-      const budgetMaxVal = filters?.budget_max !== undefined ? filters.budget_max : (budgetMax ? parseInt(budgetMax) : undefined);
+      // Basic filters — `null` explicitly clears, `undefined` falls back to state
+      const bedsMinVal = filters?.beds_min !== undefined ? filters.beds_min ?? undefined : (bedsMin ? parseInt(bedsMin) : undefined);
+      const bedsMaxVal = filters?.beds_max !== undefined ? filters.beds_max ?? undefined : (bedsMax ? parseInt(bedsMax) : undefined);
+      const budgetMinVal = filters?.budget_min !== undefined ? filters.budget_min ?? undefined : (budgetMin ? parseInt(budgetMin) : undefined);
+      const budgetMaxVal = filters?.budget_max !== undefined ? filters.budget_max ?? undefined : (budgetMax ? parseInt(budgetMax) : undefined);
 
       if (bedsMinVal !== undefined) body.beds_min = bedsMinVal;
       if (bedsMaxVal !== undefined) body.beds_max = bedsMaxVal;
@@ -382,27 +432,29 @@ function SearchContent() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !aiParsing && !loading) {
       handleAiSearch();
     }
   };
 
-  // Initial load - check for query param
+  // Initial load — runs once after saved filters (if any) have been restored,
+  // so the first search uses the restored filters without double-searching
+  const initialSearchDoneRef = useRef(false);
   useEffect(() => {
+    if (!filtersHydrated || initialSearchDoneRef.current) return;
+    initialSearchDoneRef.current = true;
     if (queryParam) {
       parseAndSearch(queryParam);
-    } else if (cityParam) {
-      setCity(cityParam);
-      handleSearch();
     } else {
       handleSearch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filtersHydrated]);
 
-  // Re-search when sort changes (but not on initial load)
+  // Re-search when sort changes (but not before the initial search has run,
+  // and even if the previous search returned zero results)
   useEffect(() => {
-    if (!aiParsing && results.length > 0) {
+    if (!aiParsing && hasSearchedRef.current) {
       handleSearch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -617,7 +669,9 @@ function SearchContent() {
                     setBudgetMin("");
                     setBudgetMax("");
                     router.push("/search");
-                    handleSearch();
+                    // State updates above haven't committed yet, so pass
+                    // explicit clear sentinels instead of relying on state
+                    handleSearch({ beds_min: null, beds_max: null, budget_min: null, budget_max: null });
                   }}
                 >
                   <X className="h-4 w-4" />
@@ -772,7 +826,7 @@ function SearchContent() {
                         type="date"
                         value={moveInDate}
                         onChange={(e) => setMoveInDate(e.target.value)}
-                        min={new Date().toISOString().split("T")[0]}
+                        min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
                       />
                     </div>
                   </div>
@@ -934,19 +988,54 @@ function SearchContent() {
             </div>
 
             {!smartSearch && (
-              <Select value={sort} onValueChange={setSort}>
-                <SelectTrigger className="w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
-                  <SelectItem value="price_low">Price: Low to High</SelectItem>
-                  <SelectItem value="price_high">Price: High to Low</SelectItem>
-                  <SelectItem value="sqft_high">Largest First</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <SaveSearchButton
+                  filters={{
+                    city,
+                    bedsMin: bedsMin ? parseInt(bedsMin) : undefined,
+                    bedsMax: bedsMax ? parseInt(bedsMax) : undefined,
+                    budgetMin: budgetMin ? parseInt(budgetMin) : undefined,
+                    budgetMax: budgetMax ? parseInt(budgetMax) : undefined,
+                    petFriendly: petFriendly || undefined,
+                  }}
+                  resultCount={results.length}
+                />
+                <Select value={sort} onValueChange={setSort}>
+                  <SelectTrigger className="w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
+                    <SelectItem value="price_low">Price: Low to High</SelectItem>
+                    <SelectItem value="price_high">Price: High to Low</SelectItem>
+                    <SelectItem value="sqft_high">Largest First</SelectItem>
+                    <SelectItem value="newest">Newest</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             )}
           </div>
+
+          {/* Search error banner */}
+          {searchError && !loading && (
+            <div className="mb-6 flex items-center gap-3 rounded-xl bg-red-500/10 backdrop-blur-xl border border-red-500/20 p-4">
+              <X className="h-5 w-5 text-red-400 flex-shrink-0" />
+              <p className="text-sm font-medium text-red-300">{searchError}</p>
+              <Button
+                variant="glass"
+                size="sm"
+                className="ml-auto"
+                onClick={() => {
+                  if (smartSearch && semanticQuery) {
+                    handleSemanticSearch(semanticQuery);
+                  } else {
+                    handleSearch();
+                  }
+                }}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
 
           {/* Split Layout - Listings + Map */}
           <div className={`flex gap-6 ${showMap && !smartSearch ? "flex-col lg:flex-row" : ""}`}>
@@ -1081,8 +1170,11 @@ function SearchContent() {
                     </p>
                   </div>
                 ) : (
-                  results.filter((r) => !brokenImageIds.has(r.unit.id)).map((result) => {
+                  results.map((result) => {
                     const primaryImage = result.images?.[0];
+                    // Fall back to the placeholder if the photo failed to load,
+                    // rather than dropping the listing from the grid
+                    const showImage = Boolean(primaryImage) && !brokenImageIds.has(result.unit.id);
                     const hasFloorplan = result.floorplan?.layout_image_url;
                     const isHighlighted = highlightedListingId === result.unit.id;
 
@@ -1097,7 +1189,7 @@ function SearchContent() {
                           <CardContent className="p-0">
                             {/* Image section */}
                             <div className="relative h-48 bg-gradient-to-br from-white/[0.03] to-black/20 overflow-hidden">
-                              {primaryImage ? (
+                              {showImage && primaryImage ? (
                                 <Image
                                   src={primaryImage.url}
                                   alt={primaryImage.alt_text || `${result.building.name} - Unit ${result.unit.unit_number}`}
@@ -1114,7 +1206,7 @@ function SearchContent() {
                                 </div>
                               )}
                               {/* Overlay gradient for text readability */}
-                              {primaryImage && (
+                              {showImage && (
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                               )}
                               {result.building.neighborhoods && (

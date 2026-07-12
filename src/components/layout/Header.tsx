@@ -168,7 +168,7 @@ export function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 bg-black/95 backdrop-blur-xl">
+        <div className="md:hidden fixed inset-0 top-16 overflow-y-auto bg-black/95 backdrop-blur-xl">
           <nav className="flex flex-col gap-1 px-6 py-8">
             <Link
               href="/favorites"

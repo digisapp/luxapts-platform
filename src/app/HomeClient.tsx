@@ -12,6 +12,8 @@ const FEATURED_CITIES = [
   { name: "New York", slug: "new-york" },
   { name: "Miami", slug: "miami" },
   { name: "Los Angeles", slug: "los-angeles" },
+  { name: "Chicago", slug: "chicago" },
+  { name: "San Francisco", slug: "san-francisco" },
   { name: "Dallas", slug: "dallas" },
   { name: "Austin", slug: "austin" },
   { name: "Nashville", slug: "nashville" },

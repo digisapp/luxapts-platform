@@ -543,9 +543,15 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                                 </div>
                                 <div className="flex gap-2">
                                   {floorplan?.layout_image_url && (
-                                    <Button size="sm" variant="outline" className="gap-1">
-                                      <Layout className="h-3 w-3" />
-                                      Floor Plan
+                                    <Button size="sm" variant="outline" className="gap-1" asChild>
+                                      <a
+                                        href={floorplan.layout_image_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <Layout className="h-3 w-3" />
+                                        Floor Plan
+                                      </a>
                                     </Button>
                                   )}
                                   <Link href={`/buildings/${building.id}/units/${unit.id}`}>

@@ -35,9 +35,19 @@ export async function POST(req: Request) {
     let systemPrompt = LUXAPTS_ASSISTANT_CONFIG.systemPrompt;
     let firstMessage = LUXAPTS_ASSISTANT_CONFIG.firstMessage;
 
+    const supabase = createAdminClient();
+
+    // Ground the prompt in the live city catalog instead of a hardcoded list
+    const { data: allCities } = await supabase
+      .from("cities")
+      .select("name")
+      .order("name");
+    if (allCities && allCities.length > 0) {
+      systemPrompt += `\n\nAvailable cities: ${allCities.map((c) => c.name).join(", ")}.`;
+    }
+
     // Augment the system prompt with building/city context if provided
     if (context.building_id || context.city_slug) {
-      const supabase = createAdminClient();
       const contextLines: string[] = [];
 
       if (context.building_id) {

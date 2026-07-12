@@ -74,35 +74,54 @@ export function SandboxedEmail({ html, className = "" }: SandboxedEmailProps) {
         td, th { padding: 4px 8px; border: 1px solid #333; }
       </style>
     </head>
-    <body>${processedHtml}</body>
+    <body>${processedHtml}<script>
+      (function () {
+        function report() {
+          var height = Math.max(
+            document.body ? document.body.scrollHeight : 0,
+            document.documentElement ? document.documentElement.scrollHeight : 0
+          );
+          window.parent.postMessage({ type: "sandboxed-email-height", height: height }, "*");
+        }
+        window.addEventListener("load", report);
+        window.addEventListener("resize", report);
+        // Images loading after the load event (or failing) change the height
+        var imgs = document.images;
+        for (var i = 0; i < imgs.length; i++) {
+          imgs[i].addEventListener("load", report);
+          imgs[i].addEventListener("error", report);
+        }
+        report();
+      })();
+    </script></body>
     </html>
   `;
 
+  // The sandbox (deliberately) omits allow-same-origin, so the parent can't
+  // read contentDocument to measure the email. Instead a script injected into
+  // the srcdoc (allow-scripts is safe without allow-same-origin) posts its
+  // scrollHeight up to us.
   useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
+    function handleMessage(event: MessageEvent) {
+      const iframe = iframeRef.current;
+      if (!iframe || event.source !== iframe.contentWindow) return;
 
-    function adjustHeight() {
-      try {
-        const doc = iframe!.contentDocument || iframe!.contentWindow?.document;
-        if (doc?.body) {
-          const newHeight = Math.max(doc.body.scrollHeight + 16, 60);
-          setHeight(Math.min(newHeight, 800)); // cap at 800px
-        }
-      } catch {
-        // Cross-origin restriction — shouldn't happen with srcdoc
-      }
+      const data = event.data as { type?: string; height?: number } | null;
+      if (data?.type !== "sandboxed-email-height" || typeof data.height !== "number") return;
+
+      const newHeight = Math.max(data.height + 16, 60);
+      setHeight(Math.min(newHeight, 800)); // cap at 800px
     }
 
-    iframe.addEventListener("load", adjustHeight);
-    return () => iframe.removeEventListener("load", adjustHeight);
-  }, [sanitizedHtml]);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
 
   return (
     <iframe
       ref={iframeRef}
       srcDoc={srcdoc}
-      sandbox="allow-popups allow-popups-to-escape-sandbox"
+      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
       className={`w-full border-0 rounded ${className}`}
       style={{ height: `${height}px`, background: "transparent" }}
       title="Email content"

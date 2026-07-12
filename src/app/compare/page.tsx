@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useCompare } from "@/hooks/useCompare";
+import { useCompare, MAX_COMPARE } from "@/hooks/useCompare";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -137,7 +137,7 @@ export default function ComparePage() {
           </div>
 
           {/* Selected Buildings */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          <div className="grid gap-4 md:grid-cols-2 mb-8">
             {buildings.map((building) => (
               <Card key={building.id} className="relative">
                 <button
@@ -173,7 +173,7 @@ export default function ComparePage() {
               </Card>
             ))}
 
-            {buildings.length < 3 && (
+            {buildings.length < MAX_COMPARE && (
               <Card className="border-dashed">
                 <Link href="/search">
                   <CardContent className="flex flex-col items-center justify-center h-full min-h-[200px] text-muted-foreground hover:text-foreground transition-colors">

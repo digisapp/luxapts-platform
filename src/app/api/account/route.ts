@@ -4,7 +4,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { apiError } from "@/lib/api-helpers";
 
 const UpdateProfileSchema = z.object({
-  full_name: z.string().min(1).max(100).optional(),
+  full_name: z.string().min(1).max(100).optional().nullable(),
   phone: z.string().max(30).optional().nullable(),
 });
 

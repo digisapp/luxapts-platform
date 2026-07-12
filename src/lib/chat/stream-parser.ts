@@ -15,37 +15,54 @@ export async function parseSSEStream(
   callbacks: StreamCallbacks,
 ): Promise<void> {
   const decoder = new TextDecoder();
+  // Carries a partial trailing line across reads so events split between
+  // chunks aren't dropped.
+  let buffer = "";
+
+  const dispatchLine = (line: string) => {
+    if (!line.startsWith("data: ")) return;
+
+    let data: { type?: string; content?: string };
+    // Parse in its own narrow try/catch so callback errors (e.g. onError
+    // throwing to surface server errors) propagate instead of being swallowed.
+    try {
+      data = JSON.parse(line.slice(6));
+    } catch {
+      // Skip invalid JSON lines
+      return;
+    }
+
+    switch (data.type) {
+      case "content":
+        callbacks.onContent(data.content ?? "");
+        break;
+      case "status":
+        callbacks.onStatus(data.content ?? "");
+        break;
+      case "error":
+        callbacks.onError(data.content ?? "Unknown error");
+        break;
+      case "done":
+        callbacks.onDone();
+        break;
+    }
+  };
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
 
-    const chunk = decoder.decode(value);
-    const lines = chunk.split("\n");
+    // stream: true keeps multibyte characters split across chunks intact
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
 
     for (const line of lines) {
-      if (!line.startsWith("data: ")) continue;
-
-      try {
-        const data = JSON.parse(line.slice(6));
-
-        switch (data.type) {
-          case "content":
-            callbacks.onContent(data.content);
-            break;
-          case "status":
-            callbacks.onStatus(data.content);
-            break;
-          case "error":
-            callbacks.onError(data.content);
-            break;
-          case "done":
-            callbacks.onDone();
-            break;
-        }
-      } catch {
-        // Skip invalid JSON lines
-      }
+      dispatchLine(line);
     }
   }
+
+  // Flush any bytes still held by the decoder and the final unterminated line
+  buffer += decoder.decode();
+  if (buffer) dispatchLine(buffer);
 }

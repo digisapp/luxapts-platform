@@ -39,6 +39,14 @@ export function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const streamingIndexRef = useRef<number | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Abort any in-flight stream on unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   // Extract context from URL
   const getBuildingId = () => {
@@ -66,6 +74,15 @@ export function ChatWidget() {
     setLoading(true);
     setStatusText("Thinking...");
 
+    // Abort any previous stream before starting a new one
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    // Server-provided error message (e.g. "Rate limit exceeded") to surface
+    // instead of the generic fallback
+    let serverErrorMessage: string | null = null;
+
     try {
       // Send only the most recent messages to prevent unbounded context
       const recentMessages = [...messages, userMessage].slice(-MAX_HISTORY_MESSAGES);
@@ -76,6 +93,7 @@ export function ChatWidget() {
           messages: recentMessages,
           building_id: getBuildingId(),
         }),
+        signal: controller.signal,
       });
 
       if (!res.ok) throw new Error("Failed to get response");
@@ -106,7 +124,10 @@ export function ChatWidget() {
             return updated;
           });
         },
-        onError: (msg) => { throw new Error(msg); },
+        onError: (msg) => {
+          serverErrorMessage = msg;
+          throw new Error(msg);
+        },
         onDone: () => {},
       });
 
@@ -116,12 +137,14 @@ export function ChatWidget() {
           { role: "assistant", content: "I couldn't generate a response. Please try again." },
         ]);
       }
-    } catch {
+    } catch (err) {
+      // Aborted by unmount or a newer message — nothing to report
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "Sorry, I encountered an error. Please try again.",
+          content: serverErrorMessage || "Sorry, I encountered an error. Please try again.",
         },
       ]);
     } finally {
@@ -145,12 +168,15 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Floating Chat Button */}
+      {/* Floating Chat Button.
+          When the compare bar is showing, the Simli trigger (SimliWidget)
+          occupies bottom-36 right-4 / lg:bottom-24 lg:right-6, so stack the
+          chat button above it instead of landing on the same spot. */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           className={`fixed right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-white text-black shadow-lg hover:bg-zinc-100 transition-all hover:scale-105 group lg:right-6 ${
-            compareBarVisible ? "bottom-36 lg:bottom-24" : "bottom-20 lg:bottom-6"
+            compareBarVisible ? "bottom-[13.25rem] lg:bottom-[10.75rem]" : "bottom-20 lg:bottom-6"
           }`}
           aria-label="Open chat"
         >
@@ -166,7 +192,7 @@ export function ChatWidget() {
         <div
           className={`fixed z-50 flex flex-col bg-zinc-900 border border-zinc-800 shadow-2xl transition-all duration-200 ${
             isMinimized
-              ? `right-4 w-72 h-14 rounded-2xl lg:right-6 ${compareBarVisible ? "bottom-36 lg:bottom-24" : "bottom-20 lg:bottom-6"}`
+              ? `right-4 w-72 h-14 rounded-2xl lg:right-6 ${compareBarVisible ? "bottom-[13.25rem] lg:bottom-[10.75rem]" : "bottom-20 lg:bottom-6"}`
               : "inset-x-0 bottom-0 h-[85vh] rounded-t-2xl sm:inset-x-auto sm:bottom-6 sm:right-4 sm:w-[calc(100vw-2rem)] sm:max-w-sm sm:h-[32rem] sm:max-h-[calc(100vh-6rem)] sm:rounded-2xl lg:right-6"
           }`}
         >

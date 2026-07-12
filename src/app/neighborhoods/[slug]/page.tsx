@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -23,6 +24,47 @@ export const revalidate = 3600;
 interface NeighborhoodPageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ city?: string }>;
+}
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: NeighborhoodPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const { city: citySlugParam } = await searchParams;
+  const supabase = createAdminClient();
+
+  const { data: matches } = await supabase
+    .from("neighborhoods")
+    .select(`name, description, cities:city_id (name, slug, state)`)
+    .eq("slug", slug)
+    .order("name");
+
+  if (!matches || matches.length === 0) {
+    return { title: "Neighborhood Not Found - LuxApts" };
+  }
+
+  type CityMeta = { name: string; slug: string; state: string };
+  const cityOf = (n: (typeof matches)[number]): CityMeta | null => {
+    const c = n.cities as CityMeta | CityMeta[] | null;
+    return Array.isArray(c) ? c[0] ?? null : c;
+  };
+
+  const neighborhood =
+    (citySlugParam && matches.find((n) => cityOf(n)?.slug === citySlugParam)) || matches[0];
+  const city = cityOf(neighborhood);
+  const title = city
+    ? `${neighborhood.name} Apartments - ${city.name}, ${city.state} | LuxApts`
+    : `${neighborhood.name} Apartments | LuxApts`;
+  const description =
+    neighborhood.description ||
+    `Browse luxury apartments in ${neighborhood.name}${city ? `, ${city.name}` : ""} — verified pricing, amenities, and availability on LuxApts.`;
+
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+  };
 }
 
 export default async function NeighborhoodPage({ params, searchParams }: NeighborhoodPageProps) {

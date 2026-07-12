@@ -92,7 +92,7 @@ function ResetPasswordForm() {
         <p className="text-white/50">Verifying your reset link…</p>
         <p className="text-white/30 text-sm mt-2">
           If nothing happens,{" "}
-          <Link href="/account" className="text-white/50 hover:text-white underline">
+          <Link href="/auth/forgot-password" className="text-white/50 hover:text-white underline">
             request a new link
           </Link>
           .

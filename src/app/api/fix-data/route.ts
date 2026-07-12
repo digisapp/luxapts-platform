@@ -17,19 +17,10 @@ export async function POST() {
       errors: [] as string[],
     };
 
-    // 1. Fix NYC city slug from "new-york" to "nyc"
-    const { error: nycError } = await supabase
-      .from("cities")
-      .update({ slug: "nyc" })
-      .eq("slug", "new-york");
+    // "new-york" is the canonical NYC slug (the duplicate empty "nyc" row was
+    // deleted 2026-07-12) — do NOT rename slugs here.
 
-    if (nycError) {
-      results.errors.push(`Failed to update NYC slug: ${nycError.message}`);
-    } else {
-      results.cities_updated++;
-    }
-
-    // 2. Get all buildings that don't have units
+    // 1. Get all buildings that don't have units
     const { data: buildings } = await supabase
       .from("buildings")
       .select(`
@@ -42,7 +33,7 @@ export async function POST() {
       (b) => !b.units || b.units.length === 0
     );
 
-    // 3. For each building without units, get rent_min/rent_max from building_facts
+    // 2. For each building without units, get rent_min/rent_max from building_facts
     //    and create a sample unit with price snapshot
     for (const building of buildingsWithoutUnits) {
       try {

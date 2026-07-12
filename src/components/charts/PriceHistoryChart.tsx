@@ -148,17 +148,17 @@ export function PriceHistoryChart({
               />
               <ReferenceLine
                 y={avgPrice}
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--muted-foreground)"
                 strokeDasharray="5 5"
                 opacity={0.5}
               />
               <Line
                 type="monotone"
                 dataKey="price"
-                stroke="hsl(var(--primary))"
+                stroke="var(--primary)"
                 strokeWidth={2}
-                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 3 }}
-                activeDot={{ r: 5, fill: "hsl(var(--primary))" }}
+                dot={{ fill: "var(--primary)", strokeWidth: 0, r: 3 }}
+                activeDot={{ r: 5, fill: "var(--primary)" }}
               />
             </LineChart>
           </ResponsiveContainer>
