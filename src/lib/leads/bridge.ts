@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { notifyCertifiedShowers } from "@/lib/shower/notify";
 
 // Auto-bridge a renter lead into the shower showing-lead pipeline.
 //
@@ -73,6 +74,13 @@ export async function bridgeLeadToShowing(
         preferred_date: lead.tourDate,
         method: "auto_bridged",
       },
+    });
+
+    await notifyCertifiedShowers(supabase, {
+      buildingId: lead.buildingId as string,
+      preferredDate: lead.tourDate as string,
+      preferredTime: lead.tourTime,
+      expiresAt,
     });
 
     return showingLead.id;

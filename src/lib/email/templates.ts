@@ -272,3 +272,76 @@ export function welcomeEmail(data: { name?: string | null; email: string }): str
 
   return layout(content, "Your LuxApts account is ready");
 }
+
+/** New showing lead available — sent to certified showers for the building (no client PII pre-claim) */
+export function newShowingLeadEmail(data: {
+  displayName: string;
+  buildingName: string;
+  neighborhood?: string | null;
+  preferredDate: string;
+  preferredTime?: string | null;
+  unitType?: string | null;
+  expiresAt?: string | null;
+}): string {
+  const content = `
+    ${badge("New Showing Available", "#1a1a2a", "#a5b4fc")}
+    <h2 style="color:#ffffff;font-size:22px;font-weight:700;margin:16px 0 8px 0;">A tour just opened up at ${escHtml(data.buildingName)}</h2>
+    <p style="color:#999;font-size:14px;margin:0 0 24px 0;">Hi ${escHtml(data.displayName)} — you're certified for this building, so you get first crack at it. Claims are first-come, first-served.</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${row("Building", escHtml(data.buildingName))}
+      ${data.neighborhood ? row("Neighborhood", escHtml(data.neighborhood)) : ""}
+      ${row("Date", escHtml(data.preferredDate))}
+      ${data.preferredTime ? row("Time", escHtml(data.preferredTime)) : ""}
+      ${data.unitType ? row("Unit type", escHtml(data.unitType)) : ""}
+      ${divider()}
+      ${row("Showing fee", "$150 on approved debrief")}
+      ${data.expiresAt ? row("Claim before", escHtml(new Date(data.expiresAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))) : ""}
+    </table>
+
+    <p style="color:#777;font-size:13px;margin:0 0 16px 0;">Client contact details unlock after you claim.</p>
+
+    <div style="text-align:center;">
+      ${primaryButton("View & Claim →", "https://luxapts.co/shower/leads")}
+    </div>
+  `;
+
+  return layout(content, `New showing at ${data.buildingName} — ${data.preferredDate}`);
+}
+
+/** Price drop alert for a favorited building */
+export function priceDropAlertEmail(data: {
+  name?: string | null;
+  buildingName: string;
+  buildingId: string;
+  neighborhood?: string | null;
+  drops: Array<{
+    unitLabel: string;
+    oldRent: number;
+    newRent: number;
+  }>;
+}): string {
+  const fmt = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+  const content = `
+    ${badge("Price Drop", "#2a1a1a", "#f87171")}
+    <h2 style="color:#ffffff;font-size:22px;font-weight:700;margin:16px 0 8px 0;">Prices just dropped at ${escHtml(data.buildingName)}</h2>
+    <p style="color:#999;font-size:14px;margin:0 0 24px 0;">${data.name ? `${escHtml(data.name)}, a` : "A"} building you favorited lowered pricing${data.neighborhood ? ` in ${escHtml(data.neighborhood)}` : ""}.</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${data.drops
+        .map((d) =>
+          row(
+            escHtml(d.unitLabel),
+            `<span style="color:#777;text-decoration:line-through;">${fmt(d.oldRent)}</span>&nbsp;&nbsp;<span style="color:#4ade80;font-weight:600;">${fmt(d.newRent)}</span>&nbsp;<span style="color:#4ade80;font-size:12px;">(−${fmt(d.oldRent - d.newRent)}/mo)</span>`
+          )
+        )
+        .join("")}
+    </table>
+
+    <div style="text-align:center;">
+      ${primaryButton("View Building →", `https://luxapts.co/buildings/${escHtml(data.buildingId)}`)}
+    </div>
+  `;
+
+  return layout(content, `Price drop at ${data.buildingName}`);
+}

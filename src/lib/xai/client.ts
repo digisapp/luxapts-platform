@@ -149,6 +149,12 @@ export const AI_TOOLS: OpenAI.ChatCompletionTool[] = [
           budget_max: { type: "integer" },
           beds: { type: "integer" },
           move_in_date: { type: "string", description: "YYYY-MM-DD" },
+          tour_date: {
+            type: "string",
+            description:
+              "Requested tour date, YYYY-MM-DD. Set when the user wants to tour a specific building — with a building target this auto-posts the tour to our certified showing network.",
+          },
+          tour_time: { type: "string", description: "Requested tour start time, HH:MM (24h)" },
           notes: { type: "string", description: "Additional notes" },
           targets: {
             type: "array",
@@ -192,6 +198,7 @@ When users ask about apartments:
 
 When users want to tour or get more info:
 - Use create_lead to capture their information
+- For tour requests: ask which date (and rough time) works, then pass tour_date/tour_time and the building as a target — this books them into our certified showing network
 - Confirm what information was saved
 - Let them know an agent will reach out
 

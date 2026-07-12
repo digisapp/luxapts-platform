@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { apiError, apiSuccess } from "@/lib/api-helpers";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { notifyCertifiedShowers } from "@/lib/shower/notify";
 import { z } from "zod";
 
 const postLeadSchema = z.object({
@@ -70,6 +71,14 @@ export async function POST(req: Request) {
       console.error("Post showing lead error:", error);
       return apiError("Failed to create showing lead", 500);
     }
+
+    await notifyCertifiedShowers(adminClient, {
+      buildingId: body.building_id,
+      preferredDate: body.preferred_date,
+      preferredTime: body.preferred_time,
+      unitType: body.unit_type,
+      expiresAt,
+    });
 
     return NextResponse.json({ lead_id: lead.id, status: lead.status }, { status: 201 });
   } catch (error) {

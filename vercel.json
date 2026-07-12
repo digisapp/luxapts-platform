@@ -5,6 +5,10 @@
       "schedule": "0 9 * * *"
     },
     {
+      "path": "/api/cron/price-drop-alerts",
+      "schedule": "30 9 * * *"
+    },
+    {
       "path": "/api/cron/scrape-units?limit=30",
       "schedule": "0 3 * * 0"
     },
