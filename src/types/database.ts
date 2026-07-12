@@ -198,6 +198,8 @@ export interface Lead {
   budget_max: number | null;
   beds: number | null;
   move_in_date: string | null;
+  tour_date: string | null;
+  tour_time: string | null;
   preferred_neighborhoods: unknown | null;
   source: LeadSource;
   status: LeadStatus;
@@ -529,7 +531,8 @@ export interface ShowingLead {
   lease_signed: boolean;
   lease_signed_at: string | null;
   monthly_rent: number | null;
-  posted_by: string;
+  posted_by: string | null;
+  source_lead_id: string | null;
   created_at: string;
   expires_at: string | null;
 }

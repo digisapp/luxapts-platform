@@ -58,4 +58,32 @@ describe("createLeadSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("accepts tour_date and tour_time", () => {
+    const result = createLeadSchema.safeParse({
+      source: "web_form",
+      city_slug: "miami",
+      email: "renter@example.com",
+      tour_date: "2026-08-01",
+      tour_time: "14:00",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects malformed tour_date and tour_time", () => {
+    expect(
+      createLeadSchema.safeParse({
+        source: "web_form",
+        city_slug: "miami",
+        tour_date: "08/01/2026",
+      }).success
+    ).toBe(false);
+    expect(
+      createLeadSchema.safeParse({
+        source: "web_form",
+        city_slug: "miami",
+        tour_time: "2pm",
+      }).success
+    ).toBe(false);
+  });
 });

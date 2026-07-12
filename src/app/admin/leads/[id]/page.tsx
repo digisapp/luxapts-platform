@@ -171,6 +171,26 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
         color: "text-cyan-600 bg-cyan-50",
         label: `Chat: ${(event.payload?.summary as string) || "Conversation recorded"}`,
       },
+      showing_lead_created: {
+        icon: UserCheck,
+        color: "text-indigo-600 bg-indigo-50",
+        label: `Showing lead posted to shower board${event.payload?.preferred_date ? ` for ${event.payload.preferred_date as string}` : ""}`,
+      },
+      tour_claimed: {
+        icon: UserCheck,
+        color: "text-purple-600 bg-purple-50",
+        label: "Tour claimed by a certified shower",
+      },
+      tour_completed: {
+        icon: UserCheck,
+        color: "text-emerald-600 bg-emerald-50",
+        label: `Tour completed${event.payload?.interest_level ? ` — interest ${event.payload.interest_level as number}/5` : ""}`,
+      },
+      tour_no_show: {
+        icon: MessageSquare,
+        color: "text-red-600 bg-red-50",
+        label: "Client no-show reported for tour",
+      },
     };
 
     const config = iconMap[event.type] || {

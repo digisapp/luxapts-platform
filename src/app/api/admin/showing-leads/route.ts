@@ -98,7 +98,7 @@ export async function GET(req: Request) {
         id, client_name, client_email, client_phone,
         preferred_date, preferred_time, unit_type, notes, status,
         lease_signed, lease_signed_at, monthly_rent,
-        created_at, expires_at, posted_by,
+        created_at, expires_at, posted_by, source_lead_id,
         buildings:building_id (id, name, address),
         showing_claims (
           id, claimed_at, status,

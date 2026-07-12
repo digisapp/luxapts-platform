@@ -5,6 +5,7 @@ import { Resend } from "resend";
 import { createLeadSchema } from "@/lib/validations";
 import { apiError } from "@/lib/api-helpers";
 import { autoAssignAgent } from "@/lib/leads/routing";
+import { bridgeLeadToShowing } from "@/lib/leads/bridge";
 import { newLeadEmail, tourConfirmationEmail } from "@/lib/email/templates";
 import { rateLimit, getClientIp, RATE_LIMITS, isInternalRequest } from "@/lib/rate-limit";
 import type { CreateLeadResponse } from "@/types/database";
@@ -67,6 +68,8 @@ export async function POST(req: Request) {
         budget_max: body.budget_max || null,
         beds: body.beds || null,
         move_in_date: body.move_in_date || null,
+        tour_date: body.tour_date || null,
+        tour_time: body.tour_time || null,
         notes: body.notes || null,
         status: "new",
       })
@@ -171,7 +174,7 @@ export async function POST(req: Request) {
               name: body.name,
               buildingName: bld.name,
               buildingAddress: `${bld.address_1}${bld.zip ? ` ${bld.zip}` : ""}`,
-              preferredDate: body.move_in_date ?? null,
+              preferredDate: body.tour_date ?? body.move_in_date ?? null,
               leasingPhone: bld.leasing_phone ?? null,
               buildingId: bld.id,
             }),
@@ -192,6 +195,18 @@ export async function POST(req: Request) {
         payload: { agent_user_id: assignedAgentId, method: "auto_routed" },
       });
     }
+
+    // Auto-bridge tour requests into the shower showing-lead pipeline
+    await bridgeLeadToShowing(supabase, {
+      leadId,
+      buildingId: body.targets?.[0]?.building_id,
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      tourDate: body.tour_date,
+      tourTime: body.tour_time,
+      notes: body.notes,
+    });
 
     const response: CreateLeadResponse = {
       lead_id: leadId,

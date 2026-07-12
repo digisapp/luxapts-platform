@@ -122,6 +122,26 @@ export async function POST(
       });
     }
 
+    // Flow the tour outcome back to the source renter lead (if auto-bridged)
+    const { data: showingLead } = await adminClient
+      .from("showing_leads")
+      .select("source_lead_id")
+      .eq("id", leadId)
+      .single();
+
+    if (showingLead?.source_lead_id) {
+      await adminClient.from("lead_events").insert({
+        lead_id: showingLead.source_lead_id,
+        type: isNoShow ? "tour_no_show" : "tour_completed",
+        payload: {
+          showing_lead_id: leadId,
+          interest_level: body.interest_level ?? null,
+          application_likelihood: body.application_likelihood ?? null,
+          units_of_interest: body.units_of_interest ?? null,
+        },
+      });
+    }
+
     return apiSuccess({
       debrief_id: debrief.id,
       submitted_at: debrief.submitted_at,

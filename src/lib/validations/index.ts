@@ -43,6 +43,14 @@ export const createLeadSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format")
     .optional(),
+  tour_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format")
+    .optional(),
+  tour_time: z
+    .string()
+    .regex(/^\d{2}:\d{2}(:\d{2})?$/, "Time must be HH:MM format")
+    .optional(),
   notes: z.string().max(5000, "Notes too long").optional(),
   targets: z
     .array(

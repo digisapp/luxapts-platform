@@ -42,6 +42,13 @@ export function ScheduleTourModal({
     message: "",
   });
 
+  // The time select stores a window label; the showing pipeline wants HH:MM
+  const TIME_WINDOW_STARTS: Record<string, string> = {
+    morning: "10:00",
+    afternoon: "14:00",
+    evening: "17:30",
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -57,7 +64,8 @@ export function ScheduleTourModal({
           name: formData.name,
           email: formData.email,
           phone: formData.phone || undefined,
-          move_in_date: formData.preferredDate || undefined,
+          tour_date: formData.preferredDate || undefined,
+          tour_time: TIME_WINDOW_STARTS[formData.preferredTime] || undefined,
           notes: `Tour Request for ${buildingName}\nPreferred Date: ${formData.preferredDate || "Flexible"}\nPreferred Time: ${formData.preferredTime || "Flexible"}\n${formData.message ? `Message: ${formData.message}` : ""}`,
           targets: [{ building_id: buildingId, rank: 1 }],
         }),

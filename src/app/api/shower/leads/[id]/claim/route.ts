@@ -20,7 +20,7 @@ export async function POST(
     // Load the lead
     const { data: lead, error: leadError } = await adminClient
       .from("showing_leads")
-      .select("id, status, building_id, preferred_date, preferred_time, client_name, client_email, client_phone, special_instructions, expires_at")
+      .select("id, status, building_id, preferred_date, preferred_time, client_name, client_email, client_phone, special_instructions, expires_at, source_lead_id")
       .eq("id", leadId)
       .single();
 
@@ -88,6 +88,25 @@ export async function POST(
         .eq("id", leadId);
       console.error("Claim insert error:", claimError);
       return apiError("Failed to claim lead", 500);
+    }
+
+    // If this showing lead was auto-bridged from a renter lead, advance the
+    // source lead's funnel status and log the claim for attribution.
+    if (lead.source_lead_id) {
+      await adminClient
+        .from("leads")
+        .update({ status: "touring" })
+        .eq("id", lead.source_lead_id)
+        .in("status", ["new", "contacted"]);
+      await adminClient.from("lead_events").insert({
+        lead_id: lead.source_lead_id,
+        type: "tour_claimed",
+        payload: {
+          showing_lead_id: lead.id,
+          shower_id: auth.showerId,
+          preferred_date: lead.preferred_date,
+        },
+      });
     }
 
     return apiSuccess({
