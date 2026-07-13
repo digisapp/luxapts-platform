@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check, Brain, Star } from "lucide-react";
+import { SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check, Brain, Star, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import { SearchMap } from "@/components/map/SearchMap";
 import { CompareButton } from "@/components/compare/CompareButton";
 import { FavoriteButton } from "@/components/listings/FavoriteButton";
 import { SaveSearchButton } from "@/components/listings/SaveSearchButton";
+import { CommuteFilter, type CommuteTarget } from "@/components/search/CommuteFilter";
 import { AMENITY_OPTIONS } from "@/lib/constants/amenities";
 
 interface Neighborhood {
@@ -181,6 +182,11 @@ function SearchContent() {
   const [showMap, setShowMap] = useState(true);
   const [highlightedListingId, setHighlightedListingId] = useState<string | null>(null);
 
+  // Commute filter: destination + mode + cap; commuteTimes maps building_id -> minutes
+  const [commute, setCommute] = useState<CommuteTarget | null>(null);
+  const [commuteTimes, setCommuteTimes] = useState<Record<string, number> | null>(null);
+  const commuteRequestIdRef = useRef(0);
+
   // AI search state
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiParsing, setAiParsing] = useState(false);
@@ -262,6 +268,63 @@ function SearchContent() {
     fetchNeighborhoods();
     return () => controller.abort();
   }, [city]);
+
+  // Fetch commute times whenever the destination or the result set changes
+  useEffect(() => {
+    if (!commute || results.length === 0) {
+      setCommuteTimes(null);
+      return;
+    }
+
+    const points = [
+      ...new Map(
+        results
+          .filter((r) => r.building.lat != null && r.building.lng != null)
+          .map((r) => [
+            r.building.id,
+            { id: r.building.id, lng: r.building.lng as number, lat: r.building.lat as number },
+          ])
+      ).values(),
+    ].slice(0, 200);
+
+    if (points.length === 0) {
+      setCommuteTimes({});
+      return;
+    }
+
+    const requestId = ++commuteRequestIdRef.current;
+    (async () => {
+      try {
+        const res = await fetch("/api/commute", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            destination: { lng: commute.lng, lat: commute.lat },
+            mode: commute.mode,
+            points,
+          }),
+        });
+        if (requestId !== commuteRequestIdRef.current) return;
+        if (res.ok) {
+          const data = await res.json();
+          setCommuteTimes(data.durations || {});
+        } else {
+          setCommuteTimes({});
+        }
+      } catch {
+        if (requestId === commuteRequestIdRef.current) setCommuteTimes({});
+      }
+    })();
+  }, [commute, results]);
+
+  // Results surviving the commute cap (untouched when no commute is set)
+  const visibleResults =
+    commute && commuteTimes
+      ? results.filter((r) => {
+          const minutes = commuteTimes[r.building.id];
+          return minutes !== undefined && minutes <= commute.maxMinutes;
+        })
+      : results;
 
   // Count active filters
   const activeFilterCount = [
@@ -976,11 +1039,13 @@ function SearchContent() {
               ) : (
                 <>
                   <h1 className="text-2xl font-bold text-white">
-                    {loading ? "Searching..." : `${results.length} ${results.length === 1 ? "Apartment" : "Apartments"} Available`}
+                    {loading ? "Searching..." : `${visibleResults.length} ${visibleResults.length === 1 ? "Apartment" : "Apartments"} Available`}
                   </h1>
                   {capturedAt && (
                     <p className="text-sm text-white/40">
                       Prices updated {new Date(capturedAt).toLocaleDateString()}
+                      {commute && commuteTimes && visibleResults.length < results.length &&
+                        ` · ${results.length - visibleResults.length} hidden by commute filter`}
                     </p>
                   )}
                 </>
@@ -1014,6 +1079,24 @@ function SearchContent() {
               </div>
             )}
           </div>
+
+          {/* Commute filter (standard search only) */}
+          {!smartSearch && (
+            <div className="mb-6">
+              <CommuteFilter
+                proximity={
+                  results.find((r) => r.building.lat != null && r.building.lng != null)
+                    ? {
+                        lng: results.find((r) => r.building.lng != null)!.building.lng as number,
+                        lat: results.find((r) => r.building.lat != null)!.building.lat as number,
+                      }
+                    : null
+                }
+                value={commute}
+                onChange={setCommute}
+              />
+            </div>
+          )}
 
           {/* Search error banner */}
           {searchError && !loading && (
@@ -1159,18 +1242,20 @@ function SearchContent() {
                       </CardContent>
                     </Card>
                   ))
-                ) : results.length === 0 ? (
+                ) : visibleResults.length === 0 ? (
                   <div className="col-span-full py-12 text-center">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] mb-4">
                       <Building2 className="h-8 w-8 text-white/30" />
                     </div>
                     <h3 className="text-lg font-semibold text-white">No apartments found</h3>
                     <p className="mt-2 text-white/50">
-                      Try adjusting your filters or searching in a different city
+                      {commute && results.length > 0
+                        ? "No results within that commute — try a longer time or clear the commute filter"
+                        : "Try adjusting your filters or searching in a different city"}
                     </p>
                   </div>
                 ) : (
-                  results.map((result) => {
+                  visibleResults.map((result) => {
                     const primaryImage = result.images?.[0];
                     // Fall back to the placeholder if the photo failed to load,
                     // rather than dropping the listing from the grid
@@ -1215,6 +1300,12 @@ function SearchContent() {
                                 </Badge>
                               )}
                               <div className="absolute top-3 right-3 flex gap-2">
+                                {commute && commuteTimes?.[result.building.id] !== undefined && (
+                                  <Badge className="bg-cyan-950/90 text-cyan-300 backdrop-blur-sm gap-1" variant="outline">
+                                    <Navigation className="h-3 w-3" />
+                                    {commuteTimes[result.building.id]} min
+                                  </Badge>
+                                )}
                                 {hasFloorplan && (
                                   <Badge className="bg-background/90 backdrop-blur-sm gap-1" variant="outline">
                                     <Layout className="h-3 w-3" />
@@ -1336,7 +1427,7 @@ function SearchContent() {
             {showMap && !smartSearch && (
               <div className="lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100vh-300px)] rounded-xl overflow-hidden border border-white/[0.08] sticky top-4">
                 <SearchMap
-                  listings={results
+                  listings={visibleResults
                     .filter((r) => r.building.lat && r.building.lng && r.pricing)
                     .map((r) => ({
                       id: r.unit.id,
