@@ -30,7 +30,7 @@ async function geocodeAddress(address: string, city: string, state: string): Pro
   try {
     const res = await fetch(url, {
       headers: {
-        "User-Agent": "LuxApts/1.0 (apartment rental platform)",
+        "User-Agent": "Staycio/1.0 (apartment rental platform)",
       },
     });
 

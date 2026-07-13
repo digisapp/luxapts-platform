@@ -48,7 +48,7 @@ function LoginForm() {
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
           <Sparkles className="h-6 w-6 text-cyan-400" />
-          <span className="text-2xl font-semibold text-white">LuxApts</span>
+          <span className="text-2xl font-semibold text-white">Staycio</span>
         </Link>
 
         {/* Card */}
@@ -138,7 +138,7 @@ export default function LoginPage() {
           <div className="w-full max-w-md">
             <div className="flex items-center justify-center gap-2 mb-8">
               <Sparkles className="h-6 w-6 text-cyan-400" />
-              <span className="text-2xl font-semibold text-white">LuxApts</span>
+              <span className="text-2xl font-semibold text-white">Staycio</span>
             </div>
             <div className="p-8 rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]">
               <div className="flex flex-col items-center gap-4">

@@ -22,7 +22,7 @@ function layout(content: string, preheader = ""): string {
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>LuxApts</title>
+<title>Staycio</title>
 </head>
 <body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escHtml(preheader)}</div>` : ""}
@@ -33,8 +33,8 @@ ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:al
       <!-- Header -->
       <tr>
         <td style="padding:0 0 32px 0;text-align:center;">
-          <a href="https://luxapts.co" style="text-decoration:none;">
-            <span style="font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">🏢 LuxApts</span>
+          <a href="https://staycio.com" style="text-decoration:none;">
+            <span style="font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">🏢 Staycio</span>
           </a>
         </td>
       </tr>
@@ -49,11 +49,11 @@ ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:al
       <!-- Footer -->
       <tr>
         <td style="padding:24px 0 0 0;text-align:center;color:#555;font-size:12px;line-height:1.6;">
-          <p style="margin:0 0 8px 0;">LuxApts · AI-Powered Luxury Apartment Search</p>
+          <p style="margin:0 0 8px 0;">Staycio · AI-Powered Luxury Apartment Search</p>
           <p style="margin:0;">
-            <a href="https://luxapts.co/account" style="color:#555;text-decoration:underline;">Manage preferences</a>
+            <a href="https://staycio.com/account" style="color:#555;text-decoration:underline;">Manage preferences</a>
             &nbsp;·&nbsp;
-            <a href="https://luxapts.co" style="color:#555;text-decoration:underline;">Visit site</a>
+            <a href="https://staycio.com" style="color:#555;text-decoration:underline;">Visit site</a>
           </p>
         </td>
       </tr>
@@ -133,7 +133,7 @@ export function newLeadEmail(data: {
     </table>
 
     <div style="margin-top:32px;">
-      ${primaryButton("View in Admin →", `https://luxapts.co/admin/leads`)}
+      ${primaryButton("View in Admin →", `https://staycio.com/admin/leads`)}
     </div>
 
     <p style="color:#555;font-size:11px;margin-top:24px 0 0 0;">Lead ID: ${escHtml(data.leadId)}</p>
@@ -177,7 +177,7 @@ export function tourConfirmationEmail(data: {
       ${data.leasingPhone ? ` You can also call them directly at <a href="tel:${escHtml(data.leasingPhone)}" style="color:#60a5fa;">${escHtml(data.leasingPhone)}</a>.` : ""}
     </p>
 
-    ${primaryButton("View Building →", `https://luxapts.co/buildings/${escHtml(data.buildingId)}`)}
+    ${primaryButton("View Building →", `https://staycio.com/buildings/${escHtml(data.buildingId)}`)}
   `;
 
   return layout(content, `Tour request confirmed for ${data.buildingName}`);
@@ -228,16 +228,16 @@ export function savedSearchAlertEmail(data: {
 
     <p style="color:#555;font-size:12px;margin-top:24px;line-height:1.6;">
       To stop these emails,
-      <a href="https://luxapts.co/account" style="color:#555;text-decoration:underline;">manage your alerts</a> in your account settings.
+      <a href="https://staycio.com/account" style="color:#555;text-decoration:underline;">manage your alerts</a> in your account settings.
     </p>
   `;
 
-  return layout(content, `${data.searches.length} saved search update${data.searches.length !== 1 ? "s" : ""} from LuxApts`);
+  return layout(content, `${data.searches.length} saved search update${data.searches.length !== 1 ? "s" : ""} from Staycio`);
 }
 
 /** Welcome email after signup */
 export function welcomeEmail(data: { name?: string | null; email: string }): string {
-  const greeting = data.name ? `Welcome, ${escHtml(data.name)}!` : "Welcome to LuxApts!";
+  const greeting = data.name ? `Welcome, ${escHtml(data.name)}!` : "Welcome to Staycio!";
 
   const content = `
     <div style="text-align:center;margin-bottom:32px;">
@@ -266,11 +266,11 @@ export function welcomeEmail(data: { name?: string | null; email: string }): str
     </div>
 
     <div style="text-align:center;">
-      ${primaryButton("Start Searching →", "https://luxapts.co/search")}
+      ${primaryButton("Start Searching →", "https://staycio.com/search")}
     </div>
   `;
 
-  return layout(content, "Your LuxApts account is ready");
+  return layout(content, "Your Staycio account is ready");
 }
 
 /** New showing lead available — sent to certified showers for the building (no client PII pre-claim) */
@@ -302,7 +302,7 @@ export function newShowingLeadEmail(data: {
     <p style="color:#777;font-size:13px;margin:0 0 16px 0;">Client contact details unlock after you claim.</p>
 
     <div style="text-align:center;">
-      ${primaryButton("View & Claim →", "https://luxapts.co/shower/leads")}
+      ${primaryButton("View & Claim →", "https://staycio.com/shower/leads")}
     </div>
   `;
 
@@ -339,7 +339,7 @@ export function priceDropAlertEmail(data: {
     </table>
 
     <div style="text-align:center;">
-      ${primaryButton("View Building →", `https://luxapts.co/buildings/${escHtml(data.buildingId)}`)}
+      ${primaryButton("View Building →", `https://staycio.com/buildings/${escHtml(data.buildingId)}`)}
     </div>
   `;
 

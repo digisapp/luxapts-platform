@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Building2, MapPin, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Explore Cities - LuxApts",
+  title: "Explore Cities - Staycio",
   description: "Browse luxury apartments across major US cities including Miami, New York, Los Angeles, Dallas, Austin, Nashville, Atlanta, and Brooklyn.",
 };
 

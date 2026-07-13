@@ -27,29 +27,29 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "LuxApts - Find Your Perfect Apartment",
-  description: "The intelligent rental search platform. AI-powered apartment discovery across major US cities.",
+  title: "Staycio — Your space, found.",
+  description: "AI-powered apartment discovery across major US cities. Find the space that fits your life.",
   keywords: ["apartments", "rentals", "NYC", "Miami", "luxury apartments", "apartment search"],
   openGraph: {
-    title: "LuxApts - Find Your Perfect Apartment",
-    description: "The intelligent rental search platform. AI-powered apartment discovery across major US cities.",
-    url: "https://luxapts.co",
-    siteName: "LuxApts",
+    title: "Staycio — Your space, found.",
+    description: "AI-powered apartment discovery across major US cities. Find the space that fits your life.",
+    url: "https://staycio.com",
+    siteName: "Staycio",
     type: "website",
     images: [
       {
-        url: "https://luxapts.co/og-image.png",
+        url: "https://staycio.com/og-image.png",
         width: 1200,
         height: 630,
-        alt: "LuxApts - AI-Powered Luxury Apartment Search",
+        alt: "Staycio — Your space, found.",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "LuxApts - Find Your Perfect Apartment",
-    description: "The intelligent rental search platform. AI-powered apartment discovery.",
-    images: ["https://luxapts.co/og-image.png"],
+    title: "Staycio — Your space, found.",
+    description: "AI-powered apartment discovery across major US cities.",
+    images: ["https://staycio.com/og-image.png"],
   },
 };
 

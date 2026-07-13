@@ -1,6 +1,6 @@
 // Simli API client for server-side operations
 
-import { SimliSessionConfig, SimliSession, LUXAPTS_ASSISTANT_CONFIG, SIMLI_FACES } from "./types";
+import { SimliSessionConfig, SimliSession, STAYCIO_ASSISTANT_CONFIG, SIMLI_FACES } from "./types";
 
 const SIMLI_API_BASE = "https://api.simli.ai";
 
@@ -38,7 +38,7 @@ export async function startSimliSession(
   config?: Partial<SimliSessionConfig>
 ): Promise<SimliSession> {
   const sessionConfig = {
-    ...LUXAPTS_ASSISTANT_CONFIG,
+    ...STAYCIO_ASSISTANT_CONFIG,
     ...config,
     faceId: config?.faceId || SIMLI_FACES.FEMALE_PROFESSIONAL,
   };

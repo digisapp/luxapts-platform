@@ -41,7 +41,7 @@ export async function generateMetadata({
     .order("name");
 
   if (!matches || matches.length === 0) {
-    return { title: "Neighborhood Not Found - LuxApts" };
+    return { title: "Neighborhood Not Found - Staycio" };
   }
 
   type CityMeta = { name: string; slug: string; state: string };
@@ -54,11 +54,11 @@ export async function generateMetadata({
     (citySlugParam && matches.find((n) => cityOf(n)?.slug === citySlugParam)) || matches[0];
   const city = cityOf(neighborhood);
   const title = city
-    ? `${neighborhood.name} Apartments - ${city.name}, ${city.state} | LuxApts`
-    : `${neighborhood.name} Apartments | LuxApts`;
+    ? `${neighborhood.name} Apartments - ${city.name}, ${city.state} | Staycio`
+    : `${neighborhood.name} Apartments | Staycio`;
   const description =
     neighborhood.description ||
-    `Browse luxury apartments in ${neighborhood.name}${city ? `, ${city.name}` : ""} — verified pricing, amenities, and availability on LuxApts.`;
+    `Browse luxury apartments in ${neighborhood.name}${city ? `, ${city.name}` : ""} — verified pricing, amenities, and availability on Staycio.`;
 
   return {
     title,

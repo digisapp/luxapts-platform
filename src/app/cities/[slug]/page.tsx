@@ -72,13 +72,13 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
     .eq("slug", slug)
     .single();
 
-  if (!city) return { title: "City Not Found - LuxApts" };
+  if (!city) return { title: "City Not Found - Staycio" };
 
   return {
-    title: `Luxury Apartments in ${city.name}, ${city.state} | LuxApts`,
+    title: `Luxury Apartments in ${city.name}, ${city.state} | Staycio`,
     description: `Browse the finest luxury apartments in ${city.name}. Curated listings with verified pricing, photos, and amenities.`,
     openGraph: {
-      title: `Luxury Apartments in ${city.name} | LuxApts`,
+      title: `Luxury Apartments in ${city.name} | Staycio`,
       description: `Find your perfect luxury apartment in ${city.name}.`,
       images: CITY_HERO_IMAGES[slug] ? [CITY_HERO_IMAGES[slug]] : [],
     },

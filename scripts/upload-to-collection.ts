@@ -45,7 +45,7 @@ async function createCollection() {
     process.exit(1);
   }
 
-  console.log("Creating luxapts-buildings collection...");
+  console.log("Creating staycio-buildings collection...");
 
   const res = await fetch(`${MANAGEMENT_API}/collections`, {
     method: "POST",
@@ -54,7 +54,7 @@ async function createCollection() {
       Authorization: `Bearer ${xaiManagementKey}`,
     },
     body: JSON.stringify({
-      collection_name: "luxapts-buildings",
+      collection_name: "staycio-buildings",
       field_definitions: [
         { key: "city", type: "string", description: "City slug" },
         { key: "neighborhood", type: "string", description: "Neighborhood name" },

@@ -8,10 +8,10 @@ export function Footer() {
           {/* Left side */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="text-lg font-medium text-white">
-              LuxApts
+              Staycio
             </Link>
             <p className="text-sm text-zinc-500 max-w-xs">
-              The intelligent way to find your next home.
+              Find the space that fits your life.
             </p>
           </div>
 
@@ -42,11 +42,11 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-zinc-900 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <p className="text-sm text-zinc-600">
-            &copy; {new Date().getFullYear()} LuxApts
+            &copy; {new Date().getFullYear()} Staycio
           </p>
           <div className="flex gap-6">
             <a
-              href="https://twitter.com/luxapts"
+              href="https://twitter.com/staycio"
               target="_blank"
               rel="noopener noreferrer"
               className="text-zinc-600 hover:text-white transition-colors"
@@ -57,7 +57,7 @@ export function Footer() {
               </svg>
             </a>
             <a
-              href="https://instagram.com/luxapts"
+              href="https://instagram.com/staycio"
               target="_blank"
               rel="noopener noreferrer"
               className="text-zinc-600 hover:text-white transition-colors"

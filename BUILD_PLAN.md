@@ -1,4 +1,4 @@
-# LuxApts Build Plan
+# Staycio Build Plan
 ## The Bloomberg Terminal + OpenAI + Zillow of Rentals
 
 ---
@@ -24,7 +24,7 @@
 - [ ] Configure Tailwind CSS + shadcn/ui
 - [ ] Setup project structure:
   ```
-  luxapts-platform/
+  staycio-platform/
   ├── src/
   │   ├── app/                 # Next.js App Router
   │   │   ├── (public)/        # Public pages (search, browse)
@@ -361,7 +361,7 @@ XAI_BASE_URL=https://api.x.ai/v1
 
 # Resend
 RESEND_API_KEY=
-FROM_EMAIL="LuxApts <hello@luxapts.co>"
+FROM_EMAIL="Staycio <hello@staycio.com>"
 
 # LiveKit (Phase 8)
 LIVEKIT_API_KEY=

@@ -3,8 +3,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "Terms of Service - LuxApts",
-  description: "The terms that govern your use of LuxApts.",
+  title: "Terms of Service - Staycio",
+  description: "The terms that govern your use of Staycio.",
 };
 
 const LAST_UPDATED = "July 12, 2026";
@@ -26,19 +26,19 @@ export default function TermsPage() {
             <section>
               <h2>1. Acceptance of terms</h2>
               <p>
-                By accessing or using LuxApts, you agree to these Terms of
+                By accessing or using Staycio, you agree to these Terms of
                 Service. If you do not agree, do not use the service. You must
-                be at least 18 years old to use LuxApts.
+                be at least 18 years old to use Staycio.
               </p>
             </section>
 
             <section>
               <h2>2. The service</h2>
               <p>
-                LuxApts is an apartment discovery and lead-referral platform.
+                Staycio is an apartment discovery and lead-referral platform.
                 We help you find luxury rental listings in major US cities,
                 request tours, and connect with buildings, licensed agents,
-                and certified tour guides. LuxApts is not a party to any lease
+                and certified tour guides. Staycio is not a party to any lease
                 agreement between you and a landlord or building.
               </p>
             </section>
@@ -89,7 +89,7 @@ export default function TermsPage() {
               <h2>6. Tour guides and partners</h2>
               <p>
                 Certified tour guides (&quot;showers&quot;) are independent contractors,
-                not employees of LuxApts. Building partners are responsible
+                not employees of Staycio. Building partners are responsible
                 for the accuracy of the inventory they manage. Additional
                 agreements govern those relationships.
               </p>
@@ -98,7 +98,7 @@ export default function TermsPage() {
             <section>
               <h2>7. Intellectual property</h2>
               <p>
-                The LuxApts name, design, and software are our property or
+                The Staycio name, design, and software are our property or
                 that of our licensors. Listing photos and building content
                 belong to their respective owners. You may not copy,
                 redistribute, or create derivative works from the service
@@ -110,7 +110,7 @@ export default function TermsPage() {
               <h2>8. Disclaimers and limitation of liability</h2>
               <p>
                 The service is provided &quot;as is&quot; without warranties
-                of any kind. To the maximum extent permitted by law, LuxApts
+                of any kind. To the maximum extent permitted by law, Staycio
                 is not liable for indirect, incidental, or consequential
                 damages, or for decisions you make in reliance on listing
                 information or AI responses. Our total liability for any claim
@@ -125,10 +125,10 @@ export default function TermsPage() {
                 We may update these terms; continued use after changes take
                 effect constitutes acceptance. Questions:{" "}
                 <a
-                  href="mailto:hello@luxapts.co"
+                  href="mailto:hello@staycio.com"
                   className="text-white underline underline-offset-4 hover:text-zinc-300"
                 >
-                  hello@luxapts.co
+                  hello@staycio.com
                 </a>
                 .
               </p>

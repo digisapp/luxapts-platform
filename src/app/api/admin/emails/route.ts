@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
 
 /**
  * POST /api/admin/emails
- * Send a new email or reply to a thread. Uses branded LuxApts template.
+ * Send a new email or reply to a thread. Uses branded Staycio template.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
 
     // Extract from name/email
     const fromMatch = fromEmail.match(/^(.+?)\s*<(.+?)>$/);
-    const fromName = fromMatch ? fromMatch[1].trim() : "LuxApts";
+    const fromName = fromMatch ? fromMatch[1].trim() : "Staycio";
     const fromAddr = fromMatch ? fromMatch[2].trim() : fromEmail;
 
     // Resolve lead

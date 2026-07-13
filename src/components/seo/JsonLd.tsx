@@ -75,12 +75,12 @@ interface WebsiteJsonLdProps {
 }
 
 export function WebsiteJsonLd({
-  url = "https://luxapts.co",
+  url = "https://staycio.com",
 }: WebsiteJsonLdProps) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "LuxApts",
+    name: "Staycio",
     url,
     description: "AI-Powered Luxury Apartment Search",
     potentialAction: {

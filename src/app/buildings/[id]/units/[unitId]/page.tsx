@@ -64,11 +64,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { unitId } = await params;
   const { data: unit } = await getUnit(unitId);
-  if (!unit) return { title: "Unit Not Found - LuxApts" };
+  if (!unit) return { title: "Unit Not Found - Staycio" };
 
   const building = Array.isArray(unit.buildings) ? unit.buildings[0] : unit.buildings;
   const bedLabel = unit.beds === 0 ? "Studio" : `${unit.beds}BR`;
-  const title = `${bedLabel} Unit${unit.unit_number ? ` #${unit.unit_number}` : ""} at ${building?.name ?? "LuxApts"} | LuxApts`;
+  const title = `${bedLabel} Unit${unit.unit_number ? ` #${unit.unit_number}` : ""} at ${building?.name ?? "Staycio"} | Staycio`;
 
   return {
     title,

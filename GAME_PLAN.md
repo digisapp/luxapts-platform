@@ -1,4 +1,4 @@
-# LuxApts Game Plan — The Ultimate Major-City Luxury Apartment Marketplace
+# Staycio Game Plan — The Ultimate Major-City Luxury Apartment Marketplace
 
 *Written 2026-07-12, after the third full platform audit. Supersedes the roadmap portion of BUILD_PLAN.md (which remains the historical build record).*
 
@@ -23,7 +23,7 @@
 
 **"Every luxury building in every major city, tourable within 24 hours, with an AI leasing agent that never sleeps."**
 
-Positioning: LuxApts is not a listings site — it's an **AI-powered brokerage with an on-demand tour network**. Zillow shows you apartments; LuxApts *gets you into them*. That's the moat: listings sites can't dispatch a certified human tomorrow at 2pm, and traditional brokerages can't answer at 3am in three modalities.
+Positioning: Staycio is not a listings site — it's an **AI-powered brokerage with an on-demand tour network**. Zillow shows you apartments; Staycio *gets you into them*. That's the moat: listings sites can't dispatch a certified human tomorrow at 2pm, and traditional brokerages can't answer at 3am in three modalities.
 
 Revenue model (already latent in the code): broker commission on lease (½ month's rent), minus shower payouts ($150/showing + 25% placement pool). At ~$4,500 median luxury rent that's ~$2,250 gross per lease, ~$1,500+ net. 100 leases/month ≈ $2.7M/yr gross. The entire roadmap serves that unit economic.
 
@@ -59,8 +59,8 @@ The single highest-leverage engineering work. Everything is already half-built.
 
 ## Phase 4 — Renter experience & trust (weeks 6–12)
 
-1. **Verified-listing badges** — "pricing verified {date}" (snapshots make this honest) and "LuxApts toured" (showers photograph every visit — that's proprietary ground truth no competitor has).
-2. **Tour debrief content flywheel.** Shower debriefs (photos, objections, unit conditions) are unique first-party content. Surface sanitized versions on building pages: "Last toured by LuxApts on July 8 — actual photos." This is review-grade content that can't be astroturfed.
+1. **Verified-listing badges** — "pricing verified {date}" (snapshots make this honest) and "Staycio toured" (showers photograph every visit — that's proprietary ground truth no competitor has).
+2. **Tour debrief content flywheel.** Shower debriefs (photos, objections, unit conditions) are unique first-party content. Surface sanitized versions on building pages: "Last toured by Staycio on July 8 — actual photos." This is review-grade content that can't be astroturfed.
 3. **Neighborhood data layers:** commute-time search (Mapbox Matrix API), transit/walkability scores, and draw-on-map boundary search. Table stakes at StreetEasy; absent here.
 4. **Applications (later, big):** partner with a screening API (TransUnion SmartMove et al.) rather than building. Only after tour volume exists.
 5. **Papercuts already fixed this audit** (saved-search creation, deep-link filters, forgot-password, compare cap, legal pages, a11y) — keep the bar: every funnel must be walkable end-to-end by a stranger.

@@ -11,7 +11,7 @@ export interface CompareBuilding {
   image?: string;
 }
 
-const STORAGE_KEY = "luxapts_compare";
+const STORAGE_KEY = "staycio_compare";
 // The /api/compare endpoint compares exactly two buildings (building_a/building_b)
 export const MAX_COMPARE = 2;
 

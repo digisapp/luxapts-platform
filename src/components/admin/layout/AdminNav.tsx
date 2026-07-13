@@ -53,7 +53,7 @@ export function AdminNav() {
       <div className="flex h-16 items-center border-b px-6">
         <Link href="/admin" className="flex items-center gap-2">
           <Building2 className="h-6 w-6" />
-          <span className="text-lg font-bold">LuxApts Admin</span>
+          <span className="text-lg font-bold">Staycio Admin</span>
         </Link>
       </div>
 

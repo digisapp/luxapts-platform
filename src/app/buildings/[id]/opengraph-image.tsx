@@ -39,7 +39,7 @@ export default async function BuildingOgImage({
           background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
         }}
       >
-        <span style={{ color: "white", fontSize: 48, fontWeight: 700 }}>LuxApts</span>
+        <span style={{ color: "white", fontSize: 48, fontWeight: 700 }}>Staycio</span>
       </div>,
       { ...size }
     );
@@ -144,7 +144,7 @@ export default async function BuildingOgImage({
           </div>
         )}
 
-        {/* LuxApts badge */}
+        {/* Staycio badge */}
         <div
           style={{
             marginTop: 8,
@@ -162,7 +162,7 @@ export default async function BuildingOgImage({
             fontWeight: 600,
           }}
         >
-          🏢 LuxApts
+          🏢 Staycio
         </div>
       </div>
     </div>,

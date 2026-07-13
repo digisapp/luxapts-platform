@@ -185,7 +185,7 @@ export default async function PartnerDashboardPage() {
         <CardContent>
           {(buildings || []).length === 0 ? (
             <p className="text-muted-foreground text-sm py-4 text-center">
-              No buildings yet. Contact your LuxApts account manager to add properties.
+              No buildings yet. Contact your Staycio account manager to add properties.
             </p>
           ) : (
             <div className="space-y-3">

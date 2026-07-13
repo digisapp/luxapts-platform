@@ -97,7 +97,7 @@ export default async function CityOgImage({
             fontWeight: 600,
           }}
         >
-          🏢 LuxApts
+          🏢 Staycio
         </div>
       </div>
     </div>,

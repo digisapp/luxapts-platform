@@ -1,5 +1,5 @@
 """
-LuxApts AI Voice Agent
+Staycio AI Voice Agent
 Handles incoming phone calls via LiveKit SIP and answers apartment-related questions.
 Uses xAI's native Realtime API for speech-to-speech.
 """
@@ -20,21 +20,22 @@ from livekit.plugins import xai
 
 load_dotenv()
 
-logger = logging.getLogger("luxapts-voice-agent")
+logger = logging.getLogger("staycio-voice-agent")
 
 # System prompt for the AI assistant
-LUXAPTS_SYSTEM_PROMPT = """You are Aria, an AI assistant for LuxApts, a luxury apartment rental platform.
+STAYCIO_SYSTEM_PROMPT = """You are Aria, an AI assistant for Staycio, a luxury apartment rental platform.
 You help callers find apartments and answer questions about our listings.
 
 Key Information:
-- LuxApts features luxury apartments in major US cities including New York, Miami, Los Angeles, Dallas, Austin, Nashville, Atlanta, and Brooklyn
+- The name Staycio comes from "stay" + "espacio" (Spanish for space) — it means finding your space. Our tagline is "Your space, found."
+- Staycio features luxury apartments in major US cities including New York, Miami, Los Angeles, Dallas, Austin, Nashville, Atlanta, and Brooklyn
 - We offer AI-powered search to help find the perfect apartment
 - Our platform provides real-time pricing and availability
 - Users can compare buildings side-by-side
 - We have listings ranging from studios to multi-bedroom luxury units
 
 When answering calls:
-1. Greet the caller warmly and introduce yourself as Aria, the LuxApts AI assistant
+1. Greet the caller warmly and introduce yourself as Aria, the Staycio AI assistant
 2. Ask how you can help them today
 3. If they're looking for an apartment, ask about:
    - Their preferred city or neighborhood
@@ -42,7 +43,7 @@ When answering calls:
    - Budget range
    - Any must-have amenities (gym, pool, pet-friendly, etc.)
 4. Provide helpful information based on their needs
-5. Encourage them to visit luxapts.co to browse listings and use our AI chat for detailed searches
+5. Encourage them to visit staycio.com to browse listings and use our AI chat for detailed searches
 6. If you don't know specific listing details, direct them to the website
 
 Be conversational, friendly, and helpful. Keep responses concise since this is a phone call.
@@ -65,7 +66,7 @@ async def entrypoint(ctx: JobContext):
     # Create xAI Realtime model (speech-to-speech)
     model = xai.realtime.RealtimeModel(
         voice="Cove",  # Options: Cove, Maple, Sage, etc.
-        instructions=LUXAPTS_SYSTEM_PROMPT,
+        instructions=STAYCIO_SYSTEM_PROMPT,
         api_key=os.getenv("XAI_API_KEY"),
     )
 

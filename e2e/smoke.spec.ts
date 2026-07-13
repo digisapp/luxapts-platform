@@ -3,7 +3,7 @@ import { test, expect } from "./fixtures";
 test.describe("public pages render", () => {
   test("home page loads with branding", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/LuxApts/);
+    await expect(page).toHaveTitle(/Staycio/);
   });
 
   test("cities index links through to a city page", async ({ page }) => {

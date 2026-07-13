@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { startSimliSession, getSimliTranscript } from "@/lib/simli/client";
-import { LUXAPTS_ASSISTANT_CONFIG } from "@/lib/simli/types";
+import { STAYCIO_ASSISTANT_CONFIG } from "@/lib/simli/types";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
@@ -32,8 +32,8 @@ export async function POST(req: Request) {
       // No body is fine
     }
 
-    let systemPrompt = LUXAPTS_ASSISTANT_CONFIG.systemPrompt;
-    let firstMessage = LUXAPTS_ASSISTANT_CONFIG.firstMessage;
+    let systemPrompt = STAYCIO_ASSISTANT_CONFIG.systemPrompt;
+    let firstMessage = STAYCIO_ASSISTANT_CONFIG.firstMessage;
 
     const supabase = createAdminClient();
 
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
             `\nWhen the conversation starts, acknowledge you can see they're looking at ${building.name} and offer to help them learn more about it or find similar options.`
           );
 
-          firstMessage = `Hey! I'm Lexi, your LuxApts expert. I can see you're checking out ${building.name} — great choice! Would you like to know more about it, or are you comparing a few options?`;
+          firstMessage = `Hey! I'm Lexi, your Staycio expert. I can see you're checking out ${building.name} — great choice! Would you like to know more about it, or are you comparing a few options?`;
         }
       } else if (context.city_slug) {
         const { data: city } = await supabase
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
             `\n\n## Current City Context`,
             `The user is browsing apartments in **${city.name}**. Focus your suggestions on this city.`
           );
-          firstMessage = `Hey! I'm Lexi, your LuxApts expert. Looking for a place in ${city.name}? I know the market well — what's most important to you in your next apartment?`;
+          firstMessage = `Hey! I'm Lexi, your Staycio expert. Looking for a place in ${city.name}? I know the market well — what's most important to you in your next apartment?`;
         }
       }
 

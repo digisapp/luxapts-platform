@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 export const revalidate = 3600; // Rebuild sitemap every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = "https://luxapts.co";
+  const base = "https://staycio.com";
   const supabase = createAdminClient();
 
   // Fetch all data in parallel

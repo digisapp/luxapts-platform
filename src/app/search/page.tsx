@@ -201,7 +201,7 @@ function SearchContent() {
   useEffect(() => {
     if (!queryParam && !hasUrlFilters) {
       try {
-        const saved = localStorage.getItem("luxapts-search-filters");
+        const saved = localStorage.getItem("staycio-search-filters");
         if (saved) {
           const parsed = JSON.parse(saved) as SavedFilters;
           if (parsed.city) setCity(parsed.city);
@@ -242,7 +242,7 @@ function SearchContent() {
       selectedAmenities,
       sort,
     };
-    localStorage.setItem("luxapts-search-filters", JSON.stringify(filters));
+    localStorage.setItem("staycio-search-filters", JSON.stringify(filters));
   }, [filtersHydrated, city, bedsMin, bedsMax, budgetMin, budgetMax, bathsMin, petFriendly, parkingRequired, moveInDate, selectedAmenities, sort]);
 
   // Fetch neighborhoods when city changes

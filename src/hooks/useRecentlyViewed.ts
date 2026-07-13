@@ -16,7 +16,7 @@ export interface RecentlyViewedItem {
   viewedAt: number;
 }
 
-const STORAGE_KEY = "luxapts_recently_viewed";
+const STORAGE_KEY = "staycio_recently_viewed";
 const MAX_ITEMS = 10;
 
 // Shared store: the building page and the RecentlyViewed sidebar previously

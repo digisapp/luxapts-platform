@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
           <Sparkles className="h-6 w-6 text-cyan-400" />
-          <span className="text-2xl font-semibold text-white">LuxApts</span>
+          <span className="text-2xl font-semibold text-white">Staycio</span>
         </Link>
 
         {/* Card */}

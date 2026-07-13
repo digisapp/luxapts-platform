@@ -1,5 +1,5 @@
 -- =========================
--- LuxApts Row Level Security Policies
+-- Staycio Row Level Security Policies
 -- =========================
 
 -- Enable RLS on all tables

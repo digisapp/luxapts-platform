@@ -63,7 +63,7 @@ export default async function PartnerBuildingsPage() {
             <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg mb-2">No buildings yet</h3>
             <p className="text-muted-foreground text-sm max-w-sm">
-              Contact your LuxApts account manager to add properties to your portfolio.
+              Contact your Staycio account manager to add properties to your portfolio.
             </p>
           </CardContent>
         </Card>

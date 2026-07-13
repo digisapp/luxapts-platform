@@ -55,7 +55,7 @@ export async function POST(
           ${lead.name ? `<p>Hi ${escapeHtml(lead.name)},</p>` : ""}
           <div>${emailBody}</div>
           <p style="margin-top: 24px; color: #666; font-size: 12px;">
-            — The LuxApts Team
+            — The Staycio Team
           </p>
         </div>
       `,

@@ -1,5 +1,5 @@
 -- =========================
--- LuxApts Shower System
+-- Staycio Shower System
 -- =========================
 -- Gamified apartment showing platform:
 -- Showers are independent contractors who claim leads, tour apartments,

@@ -15,7 +15,7 @@ export function getResendClient() {
 }
 
 export function getFromEmail() {
-  return process.env.FROM_EMAIL || "LuxApts <hello@luxapts.co>";
+  return process.env.FROM_EMAIL || "Staycio <hello@staycio.com>";
 }
 
 // Email templates
@@ -33,7 +33,7 @@ export const emailTemplates = {
         <p>Thank you for your interest in <strong>${escapeHtml(data.buildingName)}</strong>.</p>
         <p>We've received your tour request${data.date ? ` for ${escapeHtml(data.date)}` : ""} and a member of our team will be in touch within 24 hours to confirm the details.</p>
         <p>If you have any questions, please reply to this email or call us directly.</p>
-        <p>Best regards,<br>The LuxApts Team</p>
+        <p>Best regards,<br>The Staycio Team</p>
       </div>
     `,
   }),
@@ -44,7 +44,7 @@ export const emailTemplates = {
     agentPhone?: string;
     agentEmail?: string;
   }) => ({
-    subject: `Meet Your LuxApts Agent: ${data.agentName}`,
+    subject: `Meet Your Staycio Agent: ${data.agentName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #1a1a1a;">Your Personal Agent</h2>
@@ -53,7 +53,7 @@ export const emailTemplates = {
         ${data.agentPhone ? `<p><strong>Phone:</strong> ${escapeHtml(data.agentPhone)}</p>` : ""}
         ${data.agentEmail ? `<p><strong>Email:</strong> ${escapeHtml(data.agentEmail)}</p>` : ""}
         <p>${escapeHtml(data.agentName)} will reach out shortly to discuss your requirements and schedule tours.</p>
-        <p>Best regards,<br>The LuxApts Team</p>
+        <p>Best regards,<br>The Staycio Team</p>
       </div>
     `,
   }),

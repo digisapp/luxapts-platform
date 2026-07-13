@@ -54,7 +54,7 @@ export async function notifyCertifiedShowers(
     if (showers.length === 0) return 0;
 
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const fromEmail = process.env.FROM_EMAIL || "LuxApts <hello@luxapts.co>";
+    const fromEmail = process.env.FROM_EMAIL || "Staycio <hello@staycio.com>";
     let sent = 0;
 
     for (const shower of showers) {

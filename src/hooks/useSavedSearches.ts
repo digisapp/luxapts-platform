@@ -22,7 +22,7 @@ export interface SavedSearch {
   lastUsedAt: number;
 }
 
-const STORAGE_KEY = "luxapts_saved_searches";
+const STORAGE_KEY = "staycio_saved_searches";
 const MAX_SEARCHES = 10;
 
 const savedSearchesStore = createLocalStore<SavedSearch[]>(STORAGE_KEY, []);

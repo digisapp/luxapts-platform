@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Search Apartments - LuxApts",
+  title: "Search Apartments - Staycio",
   description: "Search luxury apartments with AI-powered natural language search. Filter by city, price, bedrooms, amenities, and more.",
 };
 

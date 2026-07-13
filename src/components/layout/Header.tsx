@@ -56,7 +56,7 @@ export function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
           <span className="text-lg font-medium tracking-tight text-white group-hover:opacity-70 transition-opacity">
-            LuxApts
+            Staycio
           </span>
         </Link>
 

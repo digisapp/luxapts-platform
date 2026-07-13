@@ -5,9 +5,9 @@ import { Footer } from "@/components/layout/Footer";
 import { Sparkles, MapPin, Users, ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About - LuxApts",
+  title: "About - Staycio",
   description:
-    "LuxApts is the intelligent luxury apartment marketplace for major US cities — AI-powered search, real pricing history, and certified in-person tour guides.",
+    "Staycio is the intelligent luxury apartment marketplace for major US cities — AI-powered search, real pricing history, and certified in-person tour guides.",
 };
 
 const values = [
@@ -24,7 +24,7 @@ const values = [
   {
     icon: Users,
     title: "Certified tour guides",
-    body: "Every LuxApts shower is building-certified, background-vetted, and rated by clients — so you tour with someone who actually knows the property.",
+    body: "Every Staycio shower is building-certified, background-vetted, and rated by clients — so you tour with someone who actually knows the property.",
   },
   {
     icon: ShieldCheck,
@@ -43,7 +43,7 @@ export default function AboutPage() {
             The intelligent way to find your next home.
           </h1>
           <p className="mt-6 text-lg text-zinc-400 max-w-2xl">
-            LuxApts is a luxury apartment marketplace built for major US
+            Staycio is a luxury apartment marketplace built for major US
             cities. We combine AI-powered discovery, honest pricing data, and a
             network of certified local tour guides to make renting a great
             apartment feel effortless.

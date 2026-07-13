@@ -29,11 +29,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { data: building } = await getBuilding(id);
 
   if (!building) {
-    return { title: "Building Not Found - LuxApts" };
+    return { title: "Building Not Found - Staycio" };
   }
 
   const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
-  const title = `${building.name} - Luxury Apartments${city?.name ? ` in ${city.name}` : ""} | LuxApts`;
+  const title = `${building.name} - Luxury Apartments${city?.name ? ` in ${city.name}` : ""} | Staycio`;
   const description = `View available units, pricing, amenities, and floor plans at ${building.name}, ${building.address_1}${city?.name ? `, ${city.name}` : ""}.`;
 
   return {
@@ -173,7 +173,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     }
   }
 
-  // Trust badges: freshest price snapshot + most recent completed LuxApts tour
+  // Trust badges: freshest price snapshot + most recent completed Staycio tour
   const latestPriceDate = Object.values(unitPrices).reduce<string | null>(
     (latest, p) => (!latest || p.captured_at > latest ? p.captured_at : latest),
     null
@@ -288,7 +288,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
         city={building.cities?.name || ""}
         state={building.cities?.state}
         zip={building.zip}
-        url={`https://luxapts.co/buildings/${building.id}`}
+        url={`https://staycio.com/buildings/${building.id}`}
         image={allImages[0]?.url}
         priceRange={priceRange || undefined}
         amenities={amenityNames}
@@ -360,7 +360,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                       {lastTourDebrief && (
                         <Badge variant="outline" className="gap-1 border-indigo-700/60 text-indigo-400">
                           <Footprints className="h-3.5 w-3.5" />
-                          Toured by LuxApts {formatDate(lastTourDebrief.submitted_at)}
+                          Toured by Staycio {formatDate(lastTourDebrief.submitted_at)}
                         </Badge>
                       )}
                     </div>

@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     await resend.emails.send({
       from: getFromEmail(),
       to: [parsed.data.email],
-      subject: "Welcome to LuxApts 🏢",
+      subject: "Welcome to Staycio 🏢",
       html: welcomeEmail({ name: parsed.data.name, email: parsed.data.email }),
     });
   } catch (err) {

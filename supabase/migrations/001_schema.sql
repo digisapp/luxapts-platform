@@ -1,5 +1,5 @@
 -- =========================
--- LuxApts Database Schema
+-- Staycio Database Schema
 -- =========================
 
 -- Extensions

@@ -91,7 +91,7 @@ export default function ShowerProfilePage() {
           </div>
           <h1 className="text-3xl font-bold">Become a Shower</h1>
           <p className="text-muted-foreground max-w-sm mx-auto">
-            Join LuxApts as an independent Shower. Get certified for buildings,
+            Join Staycio as an independent Shower. Get certified for buildings,
             claim showing leads, and earn $150 per showing + placement bonuses.
           </p>
         </div>
@@ -190,7 +190,7 @@ export default function ShowerProfilePage() {
                     a late cancel strike. Three strikes within 90 days results in account suspension.
                   </p>
                   <p>
-                    <strong>Quality Standards:</strong> You agree to conduct showings professionally, represent the LuxApts brand,
+                    <strong>Quality Standards:</strong> You agree to conduct showings professionally, represent the Staycio brand,
                     and submit an honest debrief within 30 minutes of completing each tour.
                   </p>
                 </div>

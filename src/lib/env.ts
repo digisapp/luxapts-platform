@@ -15,7 +15,7 @@ export const env = {
   // Resend (optional - only needed for email features)
   RESEND_API_KEY: process.env.RESEND_API_KEY || "",
   RESEND_WEBHOOK_SECRET: process.env.RESEND_WEBHOOK_SECRET || "",
-  FROM_EMAIL: process.env.FROM_EMAIL || "LuxApts <hello@luxapts.co>",
+  FROM_EMAIL: process.env.FROM_EMAIL || "Staycio <hello@staycio.com>",
 
   // Simli avatar + ElevenLabs voice (optional, server-side only)
   SIMLI_API_KEY: process.env.SIMLI_API_KEY || "",

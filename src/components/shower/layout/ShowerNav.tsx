@@ -35,7 +35,7 @@ export function ShowerNav() {
       <div className="flex h-16 items-center border-b px-6">
         <Link href="/shower" className="flex items-center gap-2">
           <Building2 className="h-6 w-6" />
-          <span className="text-lg font-bold">LuxApts Shower</span>
+          <span className="text-lg font-bold">Staycio Shower</span>
         </Link>
       </div>
 

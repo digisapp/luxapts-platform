@@ -118,7 +118,7 @@ export async function POST(req: Request) {
     if (process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
-        const fromEmail = process.env.FROM_EMAIL || "LuxApts <hello@luxapts.co>";
+        const fromEmail = process.env.FROM_EMAIL || "Staycio <hello@staycio.com>";
         const toEmail = fromEmail.includes("<")
           ? fromEmail.split("<")[1].replace(">", "")
           : fromEmail;
@@ -156,7 +156,7 @@ export async function POST(req: Request) {
     ) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
-        const fromEmail = process.env.FROM_EMAIL || "LuxApts <hello@luxapts.co>";
+        const fromEmail = process.env.FROM_EMAIL || "Staycio <hello@staycio.com>";
 
         // Fetch building name/address for the email
         const { data: bld } = await supabase

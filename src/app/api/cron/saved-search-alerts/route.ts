@@ -232,7 +232,7 @@ export async function GET(req: Request) {
       await resend.emails.send({
         from: fromEmail,
         to: [email],
-        subject: `Your LuxApts Apartment Digest — ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" })}`,
+        subject: `Your Staycio Apartment Digest — ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" })}`,
         html,
       });
       alertsSent++;

@@ -54,7 +54,7 @@ export function PartnerNav({ companyName }: { companyName: string }) {
           href="/"
           className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
         >
-          ← Back to LuxApts
+          ← Back to Staycio
         </Link>
       </div>
     </div>

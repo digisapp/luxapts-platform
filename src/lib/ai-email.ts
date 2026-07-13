@@ -78,7 +78,7 @@ export async function classifyAndDraftReply(
 ): Promise<EmailClassification> {
   const xai = getXaiClient();
 
-  const systemPrompt = `You are the AI email assistant for LuxApts, a luxury apartment rental platform.
+  const systemPrompt = `You are the AI email assistant for Staycio, a luxury apartment rental platform.
 You classify inbound emails and draft professional replies.
 
 CATEGORIES (pick exactly one):
@@ -166,7 +166,7 @@ ${bodyText.slice(0, 3000)}`;
 }
 
 /**
- * Send an auto-reply using the branded LuxApts template.
+ * Send an auto-reply using the branded Staycio template.
  * Only sends if auto-reply is enabled in platform settings.
  */
 export async function sendAutoReply(
@@ -220,7 +220,7 @@ export async function sendAutoReply(
 
     // Extract from info
     const fromMatch = fromEmail.match(/^(.+?)\s*<(.+?)>$/);
-    const fromName = fromMatch ? fromMatch[1].trim() : "LuxApts";
+    const fromName = fromMatch ? fromMatch[1].trim() : "Staycio";
     const fromAddr = fromMatch ? fromMatch[2].trim() : fromEmail;
 
     // Store outbound auto-reply in DB
@@ -255,7 +255,7 @@ export async function sendAutoReply(
   }
 }
 
-/** Build the branded LuxApts email template */
+/** Build the branded Staycio email template */
 function buildBrandedTemplate(bodyHtml: string, recipientName?: string): string {
   const greeting = recipientName
     ? `<p style="margin: 0 0 16px 0;">Hi ${escapeHtml(recipientName)},</p>`
@@ -269,7 +269,7 @@ function buildBrandedTemplate(bodyHtml: string, recipientName?: string): string 
   <div style="max-width: 600px; margin: 0 auto; background-color: #111111;">
     <!-- Header -->
     <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 32px 24px; text-align: center;">
-      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 1px;">LuxApts</h1>
+      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 1px;">Staycio</h1>
       <p style="margin: 8px 0 0; color: rgba(255,255,255,0.6); font-size: 13px;">Luxury Apartment Living</p>
     </div>
 
@@ -282,11 +282,11 @@ function buildBrandedTemplate(bodyHtml: string, recipientName?: string): string 
     <!-- Footer -->
     <div style="padding: 24px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
       <p style="margin: 0 0 8px; color: rgba(255,255,255,0.4); font-size: 12px;">
-        LuxApts — Luxury Apartment Rentals
+        Staycio — Luxury Apartment Rentals
       </p>
       <p style="margin: 0; color: rgba(255,255,255,0.3); font-size: 11px;">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://luxapts.co"}" style="color: #60a5fa; text-decoration: none;">luxapts.co</a>
-        &nbsp;·&nbsp; hello@luxapts.co
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://staycio.com"}" style="color: #60a5fa; text-decoration: none;">staycio.com</a>
+        &nbsp;·&nbsp; hello@staycio.com
       </p>
     </div>
   </div>

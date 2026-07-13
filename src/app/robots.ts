@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin/", "/partner/", "/api/", "/auth/"],
       },
     ],
-    sitemap: "https://luxapts.co/sitemap.xml",
+    sitemap: "https://staycio.com/sitemap.xml",
   };
 }

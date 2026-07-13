@@ -1,6 +1,6 @@
-# LuxApts Voice Agent
+# Staycio Voice Agent
 
-AI-powered voice agent that answers phone calls for LuxApts using LiveKit and xAI's Grok Voice Realtime API.
+AI-powered voice agent that answers phone calls for Staycio using LiveKit and xAI's Grok Voice Realtime API.
 
 **Phone Number:** +1 305 952 1533
 
@@ -47,10 +47,10 @@ Route incoming calls to your agent:
 1. In LiveKit Cloud Dashboard, go to **SIP** > **Dispatch Rules**
 2. Click **Create Dispatch Rule**
 3. Configure:
-   - **Name:** `LuxApts Voice Agent`
+   - **Name:** `Staycio Voice Agent`
    - **Phone Numbers:** Select `+1 305 952 1533`
    - **Rule Type:** `Agent Dispatch`
-   - **Agent Name:** `luxapts-voice-agent`
+   - **Agent Name:** `staycio-voice-agent`
 4. Click **Save**
 
 ### 4. Test
@@ -61,7 +61,7 @@ Call +1 305 952 1533 - Aria should answer and help callers find apartments.
 
 1. **Caller dials** +1 305 952 1533
 2. **LiveKit SIP** receives the call and creates a room
-3. **Dispatch rule** routes the call to `luxapts-voice-agent`
+3. **Dispatch rule** routes the call to `staycio-voice-agent`
 4. **Agent connects** to the room
 5. **xAI Realtime API** handles the entire conversation:
    - Speech recognition (STT)
@@ -98,7 +98,7 @@ model = xai.realtime.RealtimeModel(
 
 ### Update the System Prompt
 
-Modify `LUXAPTS_SYSTEM_PROMPT` in `agent.py` to change how the AI responds.
+Modify `STAYCIO_SYSTEM_PROMPT` in `agent.py` to change how the AI responds.
 
 ## Monitoring
 
@@ -125,4 +125,4 @@ View active calls and agent logs in the LiveKit Cloud Dashboard:
 
 - LiveKit Docs: https://docs.livekit.io/agents/
 - xAI Docs: https://docs.x.ai/
-- LuxApts: https://luxapts.co
+- Staycio: https://staycio.com

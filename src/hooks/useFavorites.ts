@@ -18,7 +18,7 @@ export interface FavoriteItem {
   addedAt: number;
 }
 
-const STORAGE_KEY = "luxapts_favorites";
+const STORAGE_KEY = "staycio_favorites";
 
 // Shared store: all FavoriteButtons, the Header badge, and the favorites
 // page see the same list and never clobber each other's writes.

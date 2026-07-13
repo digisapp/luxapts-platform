@@ -1,5 +1,5 @@
 -- =========================
--- LuxApts Seed Data
+-- Staycio Seed Data
 -- =========================
 
 -- Insert common amenities

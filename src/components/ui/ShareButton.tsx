@@ -20,7 +20,7 @@ export function ShareButton({ title, text, url, className }: ShareButtonProps) {
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const shareUrl = url || (typeof window !== "undefined" ? window.location.href : "");
-  const shareText = text || `Check out ${title} on LuxApts`;
+  const shareText = text || `Check out ${title} on Staycio`;
 
   // Close menu when clicking outside
   useEffect(() => {

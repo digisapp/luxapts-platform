@@ -206,7 +206,7 @@ export function ChatWidget() {
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-white">LuxApts AI</p>
+                <p className="text-sm font-medium text-white">Staycio AI</p>
               </div>
             </div>
             <div className="flex items-center gap-1">

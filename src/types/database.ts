@@ -1,4 +1,4 @@
-// Database types for LuxApts
+// Database types for Staycio
 // These mirror the Supabase schema
 
 export type UserRole = "admin" | "agent" | "partner" | "renter";
