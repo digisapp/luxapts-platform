@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   MapPin,
   Award,
+  CalendarClock,
   DollarSign,
   User,
   LogOut,
@@ -18,6 +19,7 @@ const navLinks = [
   { href: "/shower", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/shower/leads", label: "Lead Feed", icon: MapPin, exact: false },
   { href: "/shower/certifications", label: "Certifications", icon: Award, exact: false },
+  { href: "/shower/schedule", label: "My Schedule", icon: CalendarClock, exact: false },
   { href: "/shower/earnings", label: "Earnings", icon: DollarSign, exact: false },
   { href: "/shower/profile", label: "My Profile", icon: User, exact: false },
 ];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,13 +13,43 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Calendar, Loader2, CheckCircle2 } from "lucide-react";
+import { Calendar, Loader2, CheckCircle2, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ScheduleTourModalProps {
   buildingId: string;
   buildingName: string;
   citySlug: string;
   trigger?: React.ReactNode;
+}
+
+interface DaySlots {
+  date: string;
+  slots: { time: string; available: number }[];
+}
+
+function formatDayLabel(date: string): { weekday: string; day: string } {
+  const d = new Date(`${date}T00:00:00Z`);
+  return {
+    weekday: d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }),
+    day: d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }),
+  };
+}
+
+function formatTime(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return m === 0 ? `${hour12} ${suffix}` : `${hour12}:${String(m).padStart(2, "0")} ${suffix}`;
+}
+
+function formatFullDate(date: string): string {
+  return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 export function ScheduleTourModal({
@@ -33,6 +63,13 @@ export function ScheduleTourModal({
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Real bookable slots (certified shower availability). null = not loaded.
+  const [slotDays, setSlotDays] = useState<DaySlots[] | null>(null);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [bookedSlot, setBookedSlot] = useState<{ date: string; time: string } | null>(null);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -42,17 +79,54 @@ export function ScheduleTourModal({
     message: "",
   });
 
-  // The time select stores a window label; the showing pipeline wants HH:MM
+  // The fallback time select stores a window label; the showing pipeline wants HH:MM
   const TIME_WINDOW_STARTS: Record<string, string> = {
     morning: "10:00",
     afternoon: "14:00",
     evening: "17:30",
   };
 
+  useEffect(() => {
+    if (!open || slotDays !== null) return;
+    let cancelled = false;
+    setSlotsLoading(true);
+    fetch(`/api/buildings/${buildingId}/tour-slots`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("slots unavailable"))))
+      .then((data: { instant: boolean; days: DaySlots[] }) => {
+        if (cancelled) return;
+        setSlotDays(data.instant ? data.days : []);
+        if (data.instant && data.days.length > 0) {
+          setSelectedDate(data.days[0].date);
+        }
+      })
+      .catch(() => {
+        // Slot service down or none available — fall back to the request form
+        if (!cancelled) setSlotDays([]);
+      })
+      .finally(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, slotDays, buildingId]);
+
+  const instant = (slotDays?.length ?? 0) > 0;
+  const activeDay = instant ? slotDays!.find((d) => d.date === selectedDate) : undefined;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (instant && (!selectedDate || !selectedTime)) {
+      setError("Pick a date and time for your tour");
+      return;
+    }
     setLoading(true);
     setError(null);
+
+    const tourDate = instant ? selectedDate! : formData.preferredDate || undefined;
+    const tourTime = instant
+      ? selectedTime!
+      : TIME_WINDOW_STARTS[formData.preferredTime] || undefined;
 
     try {
       const response = await fetch("/api/leads", {
@@ -64,9 +138,11 @@ export function ScheduleTourModal({
           name: formData.name,
           email: formData.email,
           phone: formData.phone || undefined,
-          tour_date: formData.preferredDate || undefined,
-          tour_time: TIME_WINDOW_STARTS[formData.preferredTime] || undefined,
-          notes: `Tour Request for ${buildingName}\nPreferred Date: ${formData.preferredDate || "Flexible"}\nPreferred Time: ${formData.preferredTime || "Flexible"}\n${formData.message ? `Message: ${formData.message}` : ""}`,
+          tour_date: tourDate,
+          tour_time: tourTime,
+          notes: instant
+            ? `Instant tour booking for ${buildingName}\nSlot: ${tourDate} at ${tourTime}\n${formData.message ? `Message: ${formData.message}` : ""}`
+            : `Tour Request for ${buildingName}\nPreferred Date: ${formData.preferredDate || "Flexible"}\nPreferred Time: ${formData.preferredTime || "Flexible"}\n${formData.message ? `Message: ${formData.message}` : ""}`,
           targets: [{ building_id: buildingId, rank: 1 }],
         }),
       });
@@ -76,6 +152,9 @@ export function ScheduleTourModal({
         throw new Error(data.error || "Failed to submit request");
       }
 
+      if (instant && selectedDate && selectedTime) {
+        setBookedSlot({ date: selectedDate, time: selectedTime });
+      }
       setSuccess(true);
       setFormData({
         name: "",
@@ -85,6 +164,9 @@ export function ScheduleTourModal({
         preferredTime: "",
         message: "",
       });
+      setSelectedTime(null);
+      // Refetch slots next open — the one just booked may be gone
+      setSlotDays(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -118,10 +200,25 @@ export function ScheduleTourModal({
         {success ? (
           <div className="py-8 text-center">
             <CheckCircle2 className="mx-auto h-12 w-12 text-green-500 mb-4" />
-            <DialogTitle className="text-xl mb-2">Tour Request Sent!</DialogTitle>
-            <DialogDescription className="mb-6">
-              We&apos;ll get back to you within 24 hours to confirm your tour at {buildingName}.
-            </DialogDescription>
+            {bookedSlot ? (
+              <>
+                <DialogTitle className="text-xl mb-2">Tour Booked!</DialogTitle>
+                <DialogDescription className="mb-6">
+                  Your tour at {buildingName} is booked for{" "}
+                  <span className="font-medium text-foreground">
+                    {formatFullDate(bookedSlot.date)} at {formatTime(bookedSlot.time)}
+                  </span>
+                  . A certified Staycio guide will confirm shortly with the meeting details.
+                </DialogDescription>
+              </>
+            ) : (
+              <>
+                <DialogTitle className="text-xl mb-2">Tour Request Sent!</DialogTitle>
+                <DialogDescription className="mb-6">
+                  We&apos;ll get back to you within 24 hours to confirm your tour at {buildingName}.
+                </DialogDescription>
+              </>
+            )}
             <Button onClick={handleClose}>Close</Button>
           </div>
         ) : (
@@ -129,7 +226,14 @@ export function ScheduleTourModal({
             <DialogHeader>
               <DialogTitle>Schedule a Tour</DialogTitle>
               <DialogDescription>
-                Request a tour at {buildingName}. We&apos;ll contact you to confirm the details.
+                {instant ? (
+                  <span className="flex items-center gap-1.5">
+                    <Zap className="h-4 w-4 text-amber-500" />
+                    Live availability at {buildingName} — pick a time and you&apos;re booked.
+                  </span>
+                ) : (
+                  <>Request a tour at {buildingName}. We&apos;ll contact you to confirm the details.</>
+                )}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -167,32 +271,92 @@ export function ScheduleTourModal({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="preferredDate">Preferred Date</Label>
-                  <Input
-                    id="preferredDate"
-                    type="date"
-                    value={formData.preferredDate}
-                    onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-                    min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
-                  />
+              {slotsLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking live availability…
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="preferredTime">Preferred Time</Label>
-                  <select
-                    id="preferredTime"
-                    value={formData.preferredTime}
-                    onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    <option value="">Any time</option>
-                    <option value="morning">Morning (9AM-12PM)</option>
-                    <option value="afternoon">Afternoon (12PM-5PM)</option>
-                    <option value="evening">Evening (5PM-8PM)</option>
-                  </select>
+              ) : instant ? (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label>Pick a Day *</Label>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {slotDays!.map((d) => {
+                        const label = formatDayLabel(d.date);
+                        const active = d.date === selectedDate;
+                        return (
+                          <button
+                            key={d.date}
+                            type="button"
+                            onClick={() => {
+                              setSelectedDate(d.date);
+                              setSelectedTime(null);
+                            }}
+                            className={cn(
+                              "flex min-w-16 flex-col items-center rounded-lg border px-3 py-2 text-sm transition-colors",
+                              active
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-input hover:bg-accent"
+                            )}
+                          >
+                            <span className="font-medium">{label.weekday}</span>
+                            <span className={cn("text-xs", active ? "opacity-90" : "text-muted-foreground")}>
+                              {label.day}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Pick a Time *</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {(activeDay?.slots ?? []).map((s) => (
+                        <button
+                          key={s.time}
+                          type="button"
+                          onClick={() => setSelectedTime(s.time)}
+                          className={cn(
+                            "rounded-md border px-3 py-1.5 text-sm transition-colors",
+                            s.time === selectedTime
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input hover:bg-accent"
+                          )}
+                        >
+                          {formatTime(s.time)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="preferredDate">Preferred Date</Label>
+                    <Input
+                      id="preferredDate"
+                      type="date"
+                      value={formData.preferredDate}
+                      onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
+                      min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="preferredTime">Preferred Time</Label>
+                    <select
+                      id="preferredTime"
+                      value={formData.preferredTime}
+                      onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="">Any time</option>
+                      <option value="morning">Morning (9AM-12PM)</option>
+                      <option value="afternoon">Afternoon (12PM-5PM)</option>
+                      <option value="evening">Evening (5PM-8PM)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="message">Message (optional)</Label>
@@ -218,9 +382,13 @@ export function ScheduleTourModal({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading} className="flex-1">
+                <Button
+                  type="submit"
+                  disabled={loading || (instant && (!selectedDate || !selectedTime))}
+                  className="flex-1"
+                >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {loading ? "Sending..." : "Request Tour"}
+                  {loading ? "Sending..." : instant ? "Book Tour" : "Request Tour"}
                 </Button>
               </div>
             </form>
