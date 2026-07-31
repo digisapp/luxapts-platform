@@ -49,7 +49,7 @@ export function Header() {
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
 
   return (
-    <header className="fixed top-0 z-50 w-full">
+    <header className="fixed top-0 z-50 w-full safe-area-pt">
       {/* Glass background with subtle gradient */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-xl border-b border-white/[0.05]" />
       <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -168,7 +168,7 @@ export function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 overflow-y-auto bg-black/95 backdrop-blur-xl">
+        <div className="md:hidden fixed inset-0 top-[calc(4rem+env(safe-area-inset-top,0px))] overflow-y-auto overscroll-contain bg-black/95 backdrop-blur-xl">
           <nav className="flex flex-col gap-1 px-6 py-8">
             <Link
               href="/favorites"

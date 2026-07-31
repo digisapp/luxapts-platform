@@ -106,7 +106,7 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
               }
             }}
             placeholder="Commute to: work, school, an address…"
-            className="h-9 w-full rounded-md border border-white/[0.08] bg-white/[0.03] pl-9 pr-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-white/30"
+            className="h-11 md:h-9 w-full rounded-md border border-white/[0.08] bg-white/[0.03] pl-9 pr-3 text-base md:text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-white/30"
           />
         </div>
         <div className="flex gap-2">

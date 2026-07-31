@@ -22,7 +22,7 @@ export function CompareBar() {
   }
 
   return (
-    <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 z-40 bg-zinc-900 border-t border-zinc-800 shadow-lg">
+    <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 z-40 bg-zinc-900 border-t border-zinc-800 shadow-lg lg:pb-[env(safe-area-inset-bottom,0px)]">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 overflow-x-auto">
@@ -57,9 +57,9 @@ export function CompareBar() {
                   <button
                     onClick={() => removeBuilding(building.id)}
                     aria-label="Remove from comparison"
-                    className="p-0.5 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                    className="p-2 -m-1 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ))}

@@ -24,12 +24,19 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#000000",
+  interactiveWidget: "resizes-content",
 };
 
 export const metadata: Metadata = {
   title: "Staycio — Your space, found.",
   description: "AI-powered apartment discovery across major US cities. Find the space that fits your life.",
   keywords: ["apartments", "rentals", "NYC", "Miami", "luxury apartments", "apartment search"],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Staycio",
+  },
   openGraph: {
     title: "Staycio — Your space, found.",
     description: "AI-powered apartment discovery across major US cities. Find the space that fits your life.",

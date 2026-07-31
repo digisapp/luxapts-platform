@@ -550,12 +550,12 @@ function SearchContent() {
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={smartSearch ? "Describe your ideal apartment…" : "Try: '2BR in Miami under $3,500'"}
-                  className={`h-10 pl-9 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-violet-500/30" : ""}`}
+                  className={`pl-9 text-base bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-violet-500/30" : ""}`}
                 />
               </div>
               <Button
                 size="icon"
-                className={`h-10 w-10 shadow-lg ${smartSearch ? "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 shadow-violet-500/20" : "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-cyan-500/20"}`}
+                className={`shadow-lg ${smartSearch ? "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 shadow-violet-500/20" : "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-cyan-500/20"}`}
                 onClick={handleAiSearch}
                 disabled={aiParsing || loading}
               >
@@ -797,6 +797,7 @@ function SearchContent() {
                       <label className="mb-2 block text-sm font-medium">Min Budget</label>
                       <Input
                         type="number"
+                        inputMode="numeric"
                         placeholder="$0"
                         value={budgetMin}
                         onChange={(e) => setBudgetMin(e.target.value)}
@@ -807,6 +808,7 @@ function SearchContent() {
                       <label className="mb-2 block text-sm font-medium">Max Budget</label>
                       <Input
                         type="number"
+                        inputMode="numeric"
                         placeholder="No max"
                         value={budgetMax}
                         onChange={(e) => setBudgetMax(e.target.value)}
@@ -1022,7 +1024,7 @@ function SearchContent() {
           </div>
 
           {/* Results Header */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               {smartSearch && semanticQuery ? (
                 <>
@@ -1066,7 +1068,7 @@ function SearchContent() {
                   resultCount={results.length}
                 />
                 <Select value={sort} onValueChange={setSort}>
-                  <SelectTrigger className="w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                  <SelectTrigger className="flex-1 sm:flex-none sm:w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
@@ -1123,7 +1125,7 @@ function SearchContent() {
           {/* Split Layout - Listings + Map */}
           <div className={`flex gap-6 ${showMap && !smartSearch ? "flex-col lg:flex-row" : ""}`}>
             {/* Results Grid */}
-            <div className={`${showMap && !smartSearch ? "lg:w-1/2 xl:w-3/5" : "w-full"} ${showMap && !smartSearch ? "lg:h-[calc(100vh-300px)] lg:overflow-y-auto lg:pr-4" : ""}`}>
+            <div className={`${showMap && !smartSearch ? "lg:w-1/2 xl:w-3/5" : "w-full"} ${showMap && !smartSearch ? "lg:h-[calc(100dvh-300px)] lg:overflow-y-auto lg:pr-4" : ""}`}>
 
               {/* Semantic results */}
               {smartSearch && (
@@ -1325,7 +1327,7 @@ function SearchContent() {
                                 </div>
                               )}
                               {/* Compare and Favorite buttons */}
-                              <div className="absolute bottom-3 left-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="absolute bottom-3 left-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                 <CompareButton
                                   building={{
                                     id: result.building.id,
@@ -1425,7 +1427,7 @@ function SearchContent() {
 
             {/* Map View — only for standard search */}
             {showMap && !smartSearch && (
-              <div className="lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100vh-300px)] rounded-xl overflow-hidden border border-white/[0.08] sticky top-4">
+              <div className="lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100dvh-300px)] rounded-xl overflow-hidden border border-white/[0.08] sticky top-4">
                 <SearchMap
                   listings={visibleResults
                     .filter((r) => r.building.lat && r.building.lng && r.pricing)

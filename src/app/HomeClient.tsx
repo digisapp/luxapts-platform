@@ -119,7 +119,7 @@ export default function HomeClient() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative flex min-h-[85vh] items-center justify-center px-6 overflow-hidden">
+        <section className="relative flex min-h-[85svh] items-center justify-center px-6 overflow-hidden">
           {/* Premium gradient background with aurora effect */}
           <div className="absolute inset-0">
             {/* Primary glow */}
@@ -161,7 +161,7 @@ export default function HomeClient() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="2 bedroom in Miami under $3,500"
-                    className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-36 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white text-sm sm:text-base placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all duration-300"
+                    className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-36 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white text-base placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all duration-300"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2">
                     {/* Voice Search Button */}

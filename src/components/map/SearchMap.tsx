@@ -57,6 +57,7 @@ export function SearchMap({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const popupsRef = useRef<mapboxgl.Popup[]>([]);
   const markerElsRef = useRef<Map<string, HTMLElement>>(new Map());
   const [mapLoaded, setMapLoaded] = useState(false);
 
@@ -131,10 +132,17 @@ export function SearchMap({
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    // Clear existing markers
+    // Clear existing markers and any open popups
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
+    popupsRef.current.forEach((popup) => popup.remove());
+    popupsRef.current = [];
     markerElsRef.current.clear();
+
+    // Touch devices get tap-to-preview (popup) then tap-to-open; hover
+    // devices keep hover-to-preview and click-to-open
+    const hoverCapable = window.matchMedia("(hover: hover)").matches;
+    let activePopup: mapboxgl.Popup | null = null;
 
     // Group listings by building for clustering
     const buildingGroups = new Map<string, MapListing[]>();
@@ -204,44 +212,68 @@ export function SearchMap({
           </div>
         `;
 
+      // Popup is managed manually (not via marker.setPopup) so Mapbox's
+      // built-in click-to-toggle can't fight the handlers below
       const popup = new mapboxgl.Popup({
         offset: 25,
         closeButton: false,
+        closeOnClick: true,
         className: "map-popup-container",
       }).setHTML(popupContent);
 
       const marker = new mapboxgl.Marker({ element: el })
         .setLngLat([lng, lat])
-        .setPopup(popup)
         .addTo(map.current!);
 
-      // Event handlers
-      el.addEventListener("click", () => {
-        if (count === 1) {
-          onListingClickRef.current?.(firstListing.id);
+      const openPopup = () => {
+        if (activePopup && activePopup !== popup) {
+          activePopup.remove();
         }
-      });
-
-      // Open/close explicitly (guarded by isOpen) rather than toggling:
-      // Mapbox's built-in click-to-toggle also fires on marker clicks, and a
-      // blind toggle on enter/leave would get inverted after it runs
-      el.addEventListener("mouseenter", () => {
-        if (count === 1) {
-          onListingHoverRef.current?.(firstListing.id);
-        }
+        activePopup = popup;
         if (!popup.isOpen()) {
-          marker.togglePopup();
+          popup.setLngLat([lng, lat]).addTo(map.current!);
+        }
+      };
+      const closePopup = () => {
+        if (popup.isOpen()) {
+          popup.remove();
+        }
+      };
+
+      // Event handlers
+      el.addEventListener("click", (e) => {
+        // Keep the map's closeOnClick from racing this handler
+        e.stopPropagation();
+        if (hoverCapable) {
+          onListingClickRef.current?.(firstListing.id);
+        } else if (popup.isOpen()) {
+          // Second tap: navigate
+          onListingClickRef.current?.(firstListing.id);
+        } else {
+          // First tap: preview
+          openPopup();
+          if (count === 1) {
+            onListingHoverRef.current?.(firstListing.id);
+          }
         }
       });
 
-      el.addEventListener("mouseleave", () => {
-        onListingHoverRef.current?.(null);
-        if (popup.isOpen()) {
-          marker.togglePopup();
-        }
-      });
+      if (hoverCapable) {
+        el.addEventListener("mouseenter", () => {
+          if (count === 1) {
+            onListingHoverRef.current?.(firstListing.id);
+          }
+          openPopup();
+        });
+
+        el.addEventListener("mouseleave", () => {
+          onListingHoverRef.current?.(null);
+          closePopup();
+        });
+      }
 
       markersRef.current.push(marker);
+      popupsRef.current.push(popup);
     });
   }, [listingsKey, mapLoaded]);
 

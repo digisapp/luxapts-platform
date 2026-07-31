@@ -193,7 +193,7 @@ export function ChatWidget() {
           className={`fixed z-50 flex flex-col bg-zinc-900 border border-zinc-800 shadow-2xl transition-all duration-200 ${
             isMinimized
               ? `right-4 w-72 h-14 rounded-2xl lg:right-6 ${compareBarVisible ? "bottom-[13.25rem] lg:bottom-[10.75rem]" : "bottom-20 lg:bottom-6"}`
-              : "inset-x-0 bottom-0 h-[85vh] rounded-t-2xl sm:inset-x-auto sm:bottom-6 sm:right-4 sm:w-[calc(100vw-2rem)] sm:max-w-sm sm:h-[32rem] sm:max-h-[calc(100vh-6rem)] sm:rounded-2xl lg:right-6"
+              : "inset-x-0 bottom-0 h-[85dvh] rounded-t-2xl sm:inset-x-auto sm:bottom-6 sm:right-4 sm:w-[calc(100vw-2rem)] sm:max-w-sm sm:h-[32rem] sm:max-h-[calc(100dvh-6rem)] sm:rounded-2xl lg:right-6"
           }`}
         >
           {/* Header */}
@@ -295,7 +295,7 @@ export function ChatWidget() {
               </div>
 
               {/* Input */}
-              <div className="p-4 border-t border-zinc-800">
+              <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-4 border-t border-zinc-800">
                 <div className="flex gap-2">
                   <Input
                     ref={inputRef}

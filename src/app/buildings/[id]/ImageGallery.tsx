@@ -30,6 +30,31 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   }, [images.length]);
 
+  // Swipe navigation for touch devices
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      const start = touchStartRef.current;
+      touchStartRef.current = null;
+      if (!start || images.length <= 1) return;
+      const dx = e.changedTouches[0].clientX - start.x;
+      const dy = e.changedTouches[0].clientY - start.y;
+      // Horizontal swipe only — ignore vertical scrolls and small taps
+      if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+      if (dx < 0) {
+        goToNext();
+      } else {
+        goToPrevious();
+      }
+    },
+    [images.length, goToNext, goToPrevious]
+  );
+
   // Fullscreen modal: keyboard controls, body scroll lock, focus close button
   useEffect(() => {
     if (!isFullscreen) return;
@@ -62,7 +87,11 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
   return (
     <>
       {/* Main Gallery */}
-      <div className="relative h-64 md:h-96 rounded-xl overflow-hidden bg-muted group">
+      <div
+        className="relative h-64 md:h-96 rounded-xl overflow-hidden bg-muted group touch-pan-y"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <Image
           src={currentImage.url}
           alt={currentImage.alt || buildingName}
@@ -78,16 +107,18 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
               onClick={goToPrevious}
+              aria-label="Previous photo"
             >
               <ChevronLeft className="h-6 w-6" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
               onClick={goToNext}
+              aria-label="Next photo"
             >
               <ChevronRight className="h-6 w-6" />
             </Button>
@@ -98,8 +129,9 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
           onClick={() => setIsFullscreen(true)}
+          aria-label="View fullscreen"
         >
           <Expand className="h-5 w-5" />
         </Button>
@@ -164,7 +196,11 @@ export function ImageGallery({ images, buildingName }: ImageGalleryProps) {
             <X className="h-6 w-6" />
           </Button>
 
-          <div className="relative w-full h-full max-w-6xl max-h-[90vh] mx-4">
+          <div
+            className="relative w-full h-full max-w-6xl max-h-[90dvh] mx-4 touch-pan-y"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             <Image
               src={currentImage.url}
               alt={currentImage.alt || buildingName}

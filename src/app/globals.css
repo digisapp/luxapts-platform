@@ -127,11 +127,18 @@
   html {
     color-scheme: dark;
     scroll-behavior: smooth;
+    /* iOS Safari: keep text size stable in landscape, no grey tap flash */
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Guard against any single wide child causing horizontal scroll on mobile */
+    overflow-x: clip;
+    /* Tame rubber-band scroll chaining behind overlays on iOS */
+    overscroll-behavior-y: contain;
     /* Subtle noise texture for depth */
     background-image:
       radial-gradient(ellipse at top, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
@@ -571,6 +578,10 @@
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
+  .safe-area-pt {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
   .mobile-nav-spacing {
     @apply pb-20 lg:pb-0;
   }
@@ -616,4 +627,24 @@
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+/* ========================================
+   REDUCED MOTION
+   Disable decorative/infinite animations for users who opt out —
+   also cuts compositor load and battery drain on mobile.
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
