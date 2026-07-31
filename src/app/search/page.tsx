@@ -182,6 +182,27 @@ function SearchContent() {
   const [showMap, setShowMap] = useState(true);
   const [highlightedListingId, setHighlightedListingId] = useState<string | null>(null);
 
+  // Default the map off on mobile (post-hydration to stay SSR-safe): it's a
+  // heavy Mapbox GL instance + tile downloads, and the list is the primary
+  // mobile view. Users can still toggle it on.
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 1023px)").matches) {
+      setShowMap(false);
+    }
+  }, []);
+
+  // Lock body scroll while the mobile filter sheet is open
+  useEffect(() => {
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    if (showFilters && isMobile) {
+      const previous = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = previous;
+      };
+    }
+  }, [showFilters]);
+
   // Commute filter: destination + mode + cap; commuteTimes maps building_id -> minutes
   const [commute, setCommute] = useState<CommuteTarget | null>(null);
   const [commuteTimes, setCommuteTimes] = useState<Record<string, number> | null>(null);
@@ -742,9 +763,17 @@ function SearchContent() {
               </div>
             )}
 
-            {/* Filters Panel */}
+            {/* Filters Panel — bottom sheet on mobile, inline panel on md+ */}
             {showFilters && (
-              <div className="mt-4 rounded-xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-6 space-y-6">
+              <div
+                className="fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm md:hidden"
+                onClick={() => setShowFilters(false)}
+                aria-hidden="true"
+              />
+            )}
+            {showFilters && (
+              <div className="fixed inset-x-0 bottom-0 z-[60] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-2xl border-t border-white/[0.1] bg-zinc-950/95 backdrop-blur-xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] space-y-6 md:static md:z-auto md:mt-4 md:max-h-none md:overflow-visible md:rounded-xl md:border md:border-white/[0.08] md:bg-white/[0.02] md:p-6 md:pb-6">
+                <div className="mx-auto h-1 w-10 rounded-full bg-white/20 md:hidden" aria-hidden="true" />
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-white">Filters</h3>
                   <Button
@@ -997,11 +1026,23 @@ function SearchContent() {
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-4 border-t border-white/[0.06]">
-                  <Button onClick={() => { setAiSummary(null); handleSearch(); }} className="bg-white text-black hover:bg-white/90">
+                  <Button
+                    onClick={() => {
+                      setAiSummary(null);
+                      handleSearch();
+                      // On mobile the sheet covers the results — close it so
+                      // the new results are immediately visible
+                      if (window.matchMedia("(max-width: 767px)").matches) {
+                        setShowFilters(false);
+                      }
+                    }}
+                    className="flex-1 md:flex-none bg-white text-black hover:bg-white/90"
+                  >
                     Apply Filters
                   </Button>
                   <Button
                     variant="glass"
+                    className="flex-1 md:flex-none"
                     onClick={() => {
                       setBedsMin("");
                       setBedsMax("");
