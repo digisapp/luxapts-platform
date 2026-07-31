@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { getBuildingFallbackImage } from "@/lib/images/fallback";
+import { CITY_COPY } from "@/lib/seo/city-copy";
 import { formatPrice } from "@/lib/utils";
 import { Building2, MapPin, Search, ArrowRight, Star, TrendingUp } from "lucide-react";
 
@@ -247,6 +248,22 @@ export default async function CityPage({ params }: CityPageProps) {
         </div>
 
         <div className="container mx-auto px-4 py-12 space-y-12">
+          {/* City intro copy */}
+          {CITY_COPY[slug] && (
+            <section className="max-w-3xl">
+              <h2 className="text-2xl font-bold mb-4">
+                Luxury Apartments in {city.name}
+              </h2>
+              <div className="space-y-4">
+                {CITY_COPY[slug].map((paragraph, i) => (
+                  <p key={i} className="text-muted-foreground leading-relaxed">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Neighborhoods */}
           {neighborhoods.length > 0 && (
             <section>
