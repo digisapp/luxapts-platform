@@ -75,6 +75,13 @@ const STACY_PROMPTS = [
   "Dog-friendly buildings",
 ];
 
+// Conversational example searches — teach "describe it" over "browse"
+const EXAMPLE_SEARCHES = [
+  "Rooftop pool in Brickell under $4,000",
+  "Pet-friendly 2 bed in Austin with a gym",
+  "Doorman building in Chelsea",
+];
+
 // Type for SpeechRecognition
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
@@ -208,11 +215,11 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
             </h1>
 
             <p className="text-base sm:text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed animate-fade-in [animation-delay:200ms]">
-              AI-powered apartment discovery across major US cities. Real-time pricing, instant comparisons, zero hassle.
+              Tell Stacy what you&apos;re looking for — she&apos;ll find it. Your AI apartment agent searches thousands of listings, compares live prices, and brings back the places that actually fit.
             </p>
 
             {/* Search Input - Glass Style */}
-            <div className="max-w-xl mx-auto mb-8 animate-fade-in [animation-delay:300ms]">
+            <div className="max-w-xl mx-auto mb-5 animate-fade-in [animation-delay:300ms]">
               <div className="relative group">
                 {/* Glow effect on focus */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
@@ -251,6 +258,19 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Conversational example searches — tap to run */}
+            <div className="flex flex-wrap justify-center gap-2 mb-8 animate-fade-in [animation-delay:350ms]">
+              {EXAMPLE_SEARCHES.map((example) => (
+                <button
+                  key={example}
+                  onClick={() => router.push(`/search?q=${encodeURIComponent(example)}`)}
+                  className="px-3 py-1.5 rounded-full text-xs text-white/50 border border-transparent hover:text-white hover:bg-white/[0.05] hover:border-white/[0.1] transition-colors duration-300 cursor-pointer"
+                >
+                  &ldquo;{example}&rdquo;
+                </button>
+              ))}
             </div>
 
             {/* Quick links - Glass Pills */}
@@ -396,7 +416,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                 Meet <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">Stacy</span>
               </h2>
               <p className="text-lg text-white/60 max-w-xl mx-auto">
-                Your personal apartment expert. Talk to Stacy about what you&apos;re looking for and she&apos;ll help you find your perfect home.
+                Your budget, your commute, your must-haves — say it out loud or type it in chat, and Stacy does the searching for you.
               </p>
             </div>
 
