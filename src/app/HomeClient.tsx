@@ -209,9 +209,9 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
             </div>
 
             <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-medium tracking-tight text-white mb-6 sm:mb-8 animate-fade-in [animation-delay:100ms]">
-              Your space,
+              Move in.
               <br />
-              <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">found.</span>
+              <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">Stay.</span>
             </h1>
 
             <p className="text-base sm:text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed animate-fade-in [animation-delay:200ms]">
