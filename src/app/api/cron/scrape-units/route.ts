@@ -87,7 +87,9 @@ export async function GET(req: Request) {
     };
 
     for (const building of buildings) {
-      const websiteUrl = building.website_url || building.building_scrape_status?.[0]?.website_url;
+      // Scraper-internal override first: building_scrape_status.website_url points at the
+      // best scrape target (portal/API/manager page) without changing the user-facing link
+      const websiteUrl = building.building_scrape_status?.[0]?.website_url || building.website_url;
 
       if (!websiteUrl) {
         results.failed++;

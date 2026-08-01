@@ -46,7 +46,7 @@ export async function POST(req: Request, context: RouteContext) {
     // Get building info
     const { data: building, error: buildingError } = await supabase
       .from("buildings")
-      .select("id, name, website_url")
+      .select("id, name, website_url, building_scrape_status (website_url)")
       .eq("id", buildingId)
       .single();
 
@@ -54,20 +54,26 @@ export async function POST(req: Request, context: RouteContext) {
       return NextResponse.json({ error: "Building not found" }, { status: 404 });
     }
 
-    if (!building.website_url) {
+    // Scraper-internal override first — see cron/scrape-units
+    const statusRel = building.building_scrape_status as { website_url: string | null }[] | { website_url: string | null } | null;
+    const scrapeUrl =
+      (Array.isArray(statusRel) ? statusRel[0]?.website_url : statusRel?.website_url) ||
+      building.website_url;
+
+    if (!scrapeUrl) {
       return NextResponse.json({ error: "Building has no website URL" }, { status: 400 });
     }
 
     // Handle image scraping separately since it has a different result shape
     if (scrapeType === "images") {
-      const imageResult = await scrapeImagesOnly(building.website_url);
+      const imageResult = await scrapeImagesOnly(scrapeUrl);
 
       if (!imageResult.success || !imageResult.data) {
         await updateScrapeStatus(supabase, buildingId, {
           type: "images",
           success: false,
           error: imageResult.error,
-          websiteUrl: building.website_url,
+          websiteUrl: scrapeUrl,
         });
 
         return NextResponse.json({
@@ -95,7 +101,7 @@ export async function POST(req: Request, context: RouteContext) {
         type: "images",
         success: true,
         imagesFound: totalImages,
-        websiteUrl: building.website_url,
+        websiteUrl: scrapeUrl,
       });
 
       return NextResponse.json({
@@ -132,7 +138,7 @@ export async function POST(req: Request, context: RouteContext) {
         type: scrapeType,
         success: false,
         error: result.error,
-        websiteUrl: building.website_url,
+        websiteUrl: scrapeUrl,
       });
 
       return NextResponse.json({
@@ -183,7 +189,7 @@ export async function POST(req: Request, context: RouteContext) {
       type: scrapeType,
       success: true,
       unitsFound: result.data.units.length,
-      websiteUrl: building.website_url,
+      websiteUrl: scrapeUrl,
     });
 
     return NextResponse.json({
