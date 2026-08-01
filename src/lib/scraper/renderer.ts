@@ -65,8 +65,19 @@ async function renderViaBrowserless(url: string): Promise<RenderResult | null> {
   const base = process.env.BROWSERLESS_URL;
   if (!base) return null;
 
+  const params = new URLSearchParams();
   const token = process.env.BROWSERLESS_API_KEY;
-  const endpoint = `${base.replace(/\/$/, "")}/content${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+  if (token) params.set("token", token);
+  // Residential proxy defeats datacenter-IP bot walls (AMLI, RentCafe, WP Engine
+  // sites). Costs extra units — enable per Browserless plan via env:
+  //   BROWSERLESS_PROXY=residential  (optionally BROWSERLESS_PROXY_COUNTRY=us)
+  const proxy = process.env.BROWSERLESS_PROXY;
+  if (proxy) {
+    params.set("proxy", proxy);
+    params.set("proxyCountry", process.env.BROWSERLESS_PROXY_COUNTRY || "us");
+  }
+  params.set("timeout", String(RENDER_TIMEOUT_MS));
+  const endpoint = `${base.replace(/\/$/, "")}/content?${params.toString()}`;
 
   try {
     const response = await fetch(endpoint, {
