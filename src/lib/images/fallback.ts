@@ -9,7 +9,7 @@ const BUILDING_FALLBACKS = [
   "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80",
   "https://images.unsplash.com/photo-1515263487990-61b07816b324?w=800&q=80",
   "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=800&q=80",
-  "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800&q=80",
+  "https://images.unsplash.com/photo-1448630360428-65456885c650?w=800&q=80",
   "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80",
   "https://images.unsplash.com/photo-1567496898669-ee935f5f647a?w=800&q=80",
   "https://images.unsplash.com/photo-1613545325278-f24b0cae1224?w=800&q=80",

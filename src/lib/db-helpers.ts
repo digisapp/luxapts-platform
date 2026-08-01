@@ -21,6 +21,33 @@ export function getFirstRelation<T>(relation: T | T[] | null | undefined): T | n
  *   items.forEach(i => { counts[i.key] = (counts[i.key] || 0) + 1; });
  *   const top = Object.entries(counts).sort(...).slice(0, limit).map(...)
  */
+/**
+ * Fetch every row of a query that would otherwise be silently truncated at
+ * Supabase's 1000-row response cap, by paging with .range().
+ *
+ * The caller builds the query per page and MUST apply a deterministic order
+ * (e.g. .order("id")) so pages don't overlap or skip rows:
+ *
+ *   const units = await fetchAllRows((from, to) =>
+ *     supabase.from("units").select("id, building_id")
+ *       .eq("is_available", true).order("id").range(from, to)
+ *   );
+ */
+export async function fetchAllRows<T>(
+  queryPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>,
+  { pageSize = 1000, maxPages = 30 }: { pageSize?: number; maxPages?: number } = {},
+): Promise<T[]> {
+  const all: T[] = [];
+  for (let page = 0; page < maxPages; page++) {
+    const from = page * pageSize;
+    const { data, error } = await queryPage(from, from + pageSize - 1);
+    if (error || !data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < pageSize) break;
+  }
+  return all;
+}
+
 export function aggregateByProperty<T>(
   items: T[],
   getKey: (item: T) => string | null | undefined,

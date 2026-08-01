@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { getBuildingFallbackImage } from "@/lib/images/fallback";
+import { fetchAllRows } from "@/lib/db-helpers";
 import { CITY_COPY } from "@/lib/seo/city-copy";
 import { formatPrice } from "@/lib/utils";
 import { Building2, MapPin, Search, ArrowRight, Star, TrendingUp } from "lucide-react";
@@ -129,35 +130,46 @@ export default async function CityPage({ params }: CityPageProps) {
   const minPriceMap: Record<string, number> = {};
 
   if (buildingIds.length > 0) {
-    const { data: units } = await supabase
-      .from("units")
-      .select("id, building_id")
-      .in("building_id", buildingIds)
-      .eq("is_available", true);
+    // Paged past Supabase's 1000-row response cap so counts and minimum
+    // prices stay accurate for large cities
+    const units = await fetchAllRows<{ id: string; building_id: string }>((from, to) =>
+      supabase
+        .from("units")
+        .select("id, building_id")
+        .in("building_id", buildingIds)
+        .eq("is_available", true)
+        .order("id")
+        .range(from, to)
+    );
 
-    for (const u of units || []) {
+    for (const u of units) {
       unitCountMap[u.building_id] = (unitCountMap[u.building_id] || 0) + 1;
     }
 
-    const unitIds = (units || []).map((u) => u.id);
-    if (unitIds.length > 0) {
-      const { data: prices } = await supabase
-        .from("unit_price_snapshots")
-        .select("unit_id, rent, captured_at")
-        .in("unit_id", unitIds)
-        .order("captured_at", { ascending: false });
+    if (units.length > 0) {
+      const unitIds = units.map((u) => u.id);
+      const prices = await fetchAllRows<{ unit_id: string; rent: number; captured_at: string }>(
+        (from, to) =>
+          supabase
+            .from("unit_price_snapshots")
+            .select("unit_id, rent, captured_at")
+            .in("unit_id", unitIds)
+            .order("captured_at", { ascending: false })
+            .order("id")
+            .range(from, to)
+      );
 
       // Only keep latest snapshot per unit
+      const unitToBuilding = new Map(units.map((u) => [u.id, u.building_id]));
       const seenUnits = new Set<string>();
-      for (const p of prices || []) {
+      for (const p of prices) {
         if (!seenUnits.has(p.unit_id)) {
           seenUnits.add(p.unit_id);
-          // Find which building this unit belongs to
-          const unit = units?.find((u) => u.id === p.unit_id);
-          if (unit) {
-            const cur = minPriceMap[unit.building_id];
+          const buildingId = unitToBuilding.get(p.unit_id);
+          if (buildingId) {
+            const cur = minPriceMap[buildingId];
             if (cur === undefined || p.rent < cur) {
-              minPriceMap[unit.building_id] = p.rent;
+              minPriceMap[buildingId] = p.rent;
             }
           }
         }
