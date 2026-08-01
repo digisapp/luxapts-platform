@@ -1,7 +1,21 @@
 // Database operations for the scraper
 
 import { SupabaseClient } from "@supabase/supabase-js";
+import { fetchAllRows } from "@/lib/db-helpers";
 import { ScrapedUnit, ScrapedAmenity, ScrapedImage } from "./types";
+
+interface ScrapeCandidate {
+  id: string;
+  name: string;
+  website_url: string;
+  city_id: string;
+  building_scrape_status: {
+    website_url: string | null;
+    scrape_enabled: boolean | null;
+    amenities_scraped_at: string | null;
+    units_scraped_at: string | null;
+  }[] | null;
+}
 
 export async function getBuildingsToScrape(
   supabase: SupabaseClient,
@@ -18,56 +32,55 @@ export async function getBuildingsToScrape(
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysStale);
 
-  let query = supabase
-    .from("buildings")
-    .select(`
-      id,
-      name,
-      website_url,
-      city_id,
-      building_scrape_status (
+  // Fetch the ENTIRE eligible fleet (paged past the 1000-row cap), not a
+  // window of it: the previous `limit * 2` fetch had no ORDER BY, so the
+  // same arbitrary rows won every run and later-inserted cities (e.g. all
+  // of New York) were never reached at all.
+  const buildings = await fetchAllRows<ScrapeCandidate>((from, to) => {
+    let query = supabase
+      .from("buildings")
+      .select(`
+        id,
+        name,
         website_url,
-        scrape_enabled,
-        amenities_scraped_at,
-        units_scraped_at
-      )
-    `)
-    .eq("status", "active")
-    .not("website_url", "is", null);
-
-  if (cityId) {
-    query = query.eq("city_id", cityId);
-  }
-
-  const { data: buildings, error } = await query.limit(limit * 2); // Fetch more to filter
-
-  if (error) {
-    console.error("Error fetching buildings to scrape:", error);
-    return [];
-  }
-
-  // Filter buildings that need scraping
-  return (buildings || []).filter((b) => {
-    const status = b.building_scrape_status?.[0];
-
-    // If no status record, needs full scrape
-    if (!status) return true;
-
-    // If scraping disabled, skip
-    if (status.scrape_enabled === false) return false;
-
-    if (onlyUnits) {
-      // Only check units scrape date
-      if (!status.units_scraped_at) return true;
-      return new Date(status.units_scraped_at) < cutoffDate;
-    } else {
-      // Check if amenities never scraped
-      if (!status.amenities_scraped_at) return true;
-      // Check if units stale
-      if (!status.units_scraped_at) return true;
-      return new Date(status.units_scraped_at) < cutoffDate;
+        city_id,
+        building_scrape_status (
+          website_url,
+          scrape_enabled,
+          amenities_scraped_at,
+          units_scraped_at
+        )
+      `)
+      .eq("status", "active")
+      .not("website_url", "is", null);
+    if (cityId) {
+      query = query.eq("city_id", cityId);
     }
-  }).slice(0, limit);
+    return query.order("id").range(from, to);
+  });
+
+  // Timestamp the staleness decision keys off; null = never scraped
+  const scrapeKey = (b: ScrapeCandidate): number | null => {
+    const status = b.building_scrape_status?.[0];
+    if (!status) return null;
+    if (onlyUnits) {
+      return status.units_scraped_at ? new Date(status.units_scraped_at).getTime() : null;
+    }
+    if (!status.amenities_scraped_at || !status.units_scraped_at) return null;
+    return new Date(status.units_scraped_at).getTime();
+  };
+
+  return buildings
+    .filter((b) => {
+      const status = b.building_scrape_status?.[0];
+      if (status?.scrape_enabled === false) return false;
+      const key = scrapeKey(b);
+      return key === null || key < cutoffDate.getTime();
+    })
+    // Stalest first, never-scraped at the very front — a fair round-robin
+    // instead of the same buildings monopolizing every run
+    .sort((a, b) => (scrapeKey(a) ?? -Infinity) - (scrapeKey(b) ?? -Infinity))
+    .slice(0, limit);
 }
 
 export async function updateScrapeStatus(

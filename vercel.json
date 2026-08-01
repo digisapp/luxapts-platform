@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/scrape-units?limit=30",
-      "schedule": "0 3 * * 0"
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/cron/scrape-amenities?limit=15",
