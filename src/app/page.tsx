@@ -42,6 +42,10 @@ export const metadata: Metadata = {
 const FEATURED_COUNT = 6;
 const MAX_PER_CITY = 2;
 const TOP_NEIGHBORHOODS = 12;
+// Cities with sales coverage get first claim on featured slots — a conversion
+// there has someone to catch it
+const SALES_CITY_SLUGS = new Set(["new-york", "miami", "brooklyn"]);
+const SALES_CITY_SLOTS = 4;
 
 interface BuildingImageRow {
   url: string;
@@ -107,12 +111,25 @@ async function getHomeData(): Promise<{
 
     const perCity: Record<string, number> = {};
     const picked: typeof sorted = [];
-    for (const b of sorted) {
-      const citySlug = getFirstRelation(b.cities)?.slug ?? "unknown";
-      if ((perCity[citySlug] || 0) >= MAX_PER_CITY) continue;
+    const take = (b: HomeBuildingRow, citySlug: string) => {
       perCity[citySlug] = (perCity[citySlug] || 0) + 1;
       picked.push(b);
-      if (picked.length === FEATURED_COUNT) break;
+    };
+    // Pass 1: sales-coverage cities claim the first slots
+    for (const b of sorted) {
+      if (picked.length >= SALES_CITY_SLOTS) break;
+      const citySlug = getFirstRelation(b.cities)?.slug ?? "unknown";
+      if (!SALES_CITY_SLUGS.has(citySlug)) continue;
+      if ((perCity[citySlug] || 0) >= MAX_PER_CITY) continue;
+      take(b, citySlug);
+    }
+    // Pass 2: fill the rest from the whole fleet for breadth
+    for (const b of sorted) {
+      if (picked.length >= FEATURED_COUNT) break;
+      if (picked.includes(b)) continue;
+      const citySlug = getFirstRelation(b.cities)?.slug ?? "unknown";
+      if ((perCity[citySlug] || 0) >= MAX_PER_CITY) continue;
+      take(b, citySlug);
     }
 
     // Latest rent per unit, then min per featured building
