@@ -75,7 +75,7 @@ export async function extractUnitsWithAI(
     if (process.env.XAI_API_KEY) {
       const client = createXAIClient();
       const response = await client.chat.completions.create({
-        model: "grok-3",
+        model: "grok-4.3",
         messages: [
           { role: "system", content: UNITS_EXTRACTION_PROMPT },
           { role: "user", content: `URL: ${sourceUrl}\n\nHTML:\n${truncatedHtml}` },
@@ -116,7 +116,7 @@ export async function extractAmenitiesWithAI(
     if (process.env.XAI_API_KEY) {
       const client = createXAIClient();
       const response = await client.chat.completions.create({
-        model: "grok-3",
+        model: "grok-4.3",
         messages: [
           { role: "system", content: AMENITIES_EXTRACTION_PROMPT },
           { role: "user", content: `URL: ${sourceUrl}\n\nHTML:\n${truncatedHtml}` },
@@ -218,7 +218,7 @@ export async function extractImagesWithAI(
     if (process.env.XAI_API_KEY) {
       const client = createXAIClient();
       const response = await client.chat.completions.create({
-        model: "grok-3",
+        model: "grok-4.3",
         messages: [
           { role: "system", content: IMAGES_EXTRACTION_PROMPT },
           { role: "user", content: `Website URL: ${sourceUrl}\n\nHTML:\n${truncatedHtml}` },

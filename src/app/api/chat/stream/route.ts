@@ -82,7 +82,7 @@ export async function POST(req: Request) {
         try {
           // First API call - non-streaming to handle tools first
           let response = await client.chat.completions.create({
-            model: "grok-3",
+            model: "grok-4.3",
             messages,
             tools: AI_TOOLS,
             tool_choice: "auto",
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
 
             // Get next response
             response = await client.chat.completions.create({
-              model: "grok-3",
+              model: "grok-4.3",
               messages,
               tools: AI_TOOLS,
               tool_choice: "auto",
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
           } else {
             // Make a streaming call for the final response
             const streamResponse = await client.chat.completions.create({
-              model: "grok-3",
+              model: "grok-4.3",
               messages,
               stream: true,
               max_tokens: 2048,

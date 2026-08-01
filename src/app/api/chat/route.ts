@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
     // First API call
     let response = await client.chat.completions.create({
-      model: "grok-3",
+      model: "grok-4.3",
       messages,
       tools: AI_TOOLS,
       tool_choice: "auto",
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
 
       // Get next response
       response = await client.chat.completions.create({
-        model: "grok-3",
+        model: "grok-4.3",
         messages,
         tools: AI_TOOLS,
         tool_choice: "auto",

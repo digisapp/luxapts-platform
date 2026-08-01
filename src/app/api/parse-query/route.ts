@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     const client = createXAIClient();
     const completion = await client.chat.completions.create({
-      model: "grok-3",
+      model: "grok-4.3",
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: PARSE_SYSTEM_PROMPT },

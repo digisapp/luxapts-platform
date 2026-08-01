@@ -45,7 +45,7 @@ export async function startSimliSession(
 
   // Use xAI as the LLM backend (OpenAI-compatible API)
   const llmConfig = {
-    model: "grok-3",
+    model: "grok-4.3",
     baseURL: "https://api.x.ai/v1",
     llmAPIKey: process.env.XAI_API_KEY || "",
   };

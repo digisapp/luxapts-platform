@@ -124,7 +124,7 @@ ${bodyText.slice(0, 3000)}`;
 
   try {
     const response = await xai.chat.completions.create({
-      model: "grok-3-mini",
+      model: "grok-4.3",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
