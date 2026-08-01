@@ -143,11 +143,14 @@ export async function findAmenitiesPage(websiteUrl: string, mainHtml: string): P
       // Build full URL
       try {
         const baseUrl = new URL(websiteUrl);
-        const amenitiesUrl = new URL(amenitiesPath, baseUrl).href;
+        const amenitiesUrl = new URL(amenitiesPath, baseUrl);
+
+        // Same-host only — see findUnitsPage
+        if (amenitiesUrl.hostname !== baseUrl.hostname) continue;
 
         // Check if the URL contains likely amenities keywords
-        if (/amenities|features|lifestyle/i.test(amenitiesUrl)) {
-          return amenitiesUrl;
+        if (/amenities|features|lifestyle/i.test(amenitiesUrl.href)) {
+          return amenitiesUrl.href;
         }
       } catch {
         continue;
@@ -177,11 +180,16 @@ export async function findUnitsPage(websiteUrl: string, mainHtml: string): Promi
       // Build full URL
       try {
         const baseUrl = new URL(websiteUrl);
-        const unitsUrl = new URL(unitsPath, baseUrl).href;
+        const unitsUrl = new URL(unitsPath, baseUrl);
+
+        // Never leave the building's own site — nav pages link out to Google
+        // Maps, Instagram, portfolio sites etc., and "apartments" in those
+        // URLs would send the scraper off to render the wrong site entirely
+        if (unitsUrl.hostname !== baseUrl.hostname) continue;
 
         // Check if the URL contains likely units keywords
-        if (/floor[-_]?plans?|availability|apartments|units|pricing/i.test(unitsUrl)) {
-          return unitsUrl;
+        if (/floor[-_]?plans?|availability|apartments|units|pricing/i.test(unitsUrl.href)) {
+          return unitsUrl.href;
         }
       } catch {
         continue;
