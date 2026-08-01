@@ -77,9 +77,9 @@ const STACY_PROMPTS = [
 
 // Conversational example searches — teach "describe it" over "browse"
 const EXAMPLE_SEARCHES = [
-  "Rooftop pool in Brickell under $4,000",
-  "Pet-friendly 2 bed in Austin with a gym",
-  "Doorman building in Chelsea",
+  "Studio in Williamsburg under $2,800",
+  "2 bed to split in Midtown with a gym",
+  "Rooftop pool in Brickell, budget $3k",
 ];
 
 // Type for SpeechRecognition
@@ -209,13 +209,13 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
             </div>
 
             <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-medium tracking-tight text-white mb-6 sm:mb-8 animate-fade-in [animation-delay:100ms]">
-              Move in.
+              New city.
               <br />
-              <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">Stay.</span>
+              <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">New era.</span>
             </h1>
 
             <p className="text-base sm:text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed animate-fade-in [animation-delay:200ms]">
-              Tell Stacy what you&apos;re looking for — she&apos;ll find it. Your AI apartment agent searches thousands of listings, compares live prices, and brings back the places that actually fit.
+              Tell Stacy your city, your budget, your vibe — your AI apartment agent finds your place in minutes. No 40 tabs, no stale prices, no sketchy listings.
             </p>
 
             {/* Search Input - Glass Style */}
@@ -309,7 +309,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                     Featured <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">residences</span>
                   </h2>
                   <p className="text-white/60">
-                    The buildings with the most availability right now, with live pricing.
+                    The buildings with the most open apartments right now — real prices, updated daily.
                   </p>
                 </div>
                 <Link
@@ -381,7 +381,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                 Browse by neighborhood
               </h2>
               <p className="text-white/60 mb-8">
-                The neighborhoods with the most homes available right now.
+                The neighborhoods with the most places open right now.
               </p>
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                 {neighborhoods.map((n) => (
@@ -416,7 +416,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                 Meet <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">Stacy</span>
               </h2>
               <p className="text-lg text-white/60 max-w-xl mx-auto">
-                Your budget, your commute, your must-haves — say it out loud or type it in chat, and Stacy does the searching for you.
+                Budget, neighborhood, natural light, dog-friendly — tell her the vibe, out loud or in chat, and she searches while you pack.
               </p>
             </div>
 
