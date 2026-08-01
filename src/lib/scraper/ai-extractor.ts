@@ -30,7 +30,9 @@ Return a JSON object with this structure:
   "move_in_specials": ["2 months free on 13+ month lease", ...]
 }
 
-If you cannot find units, return {"units": [], "total_available": 0}.
+Many leasing sites list FLOORPLANS with starting prices (e.g. "A1 — 1 Bed / 1 Bath — from $3,224/mo — 2 available") instead of individual units. That data is valuable: return one entry per floorplan that is currently available or priced, with floorplan_name set, unit_number omitted, and rent = the starting price. Skip floorplans marked unavailable/sold out with no price.
+
+If you cannot find units or priced floorplans, return {"units": [], "total_available": 0}.
 Only return valid JSON, no explanations.`;
 
 const AMENITIES_EXTRACTION_PROMPT = `You are an expert at extracting apartment amenities from HTML.
