@@ -9,14 +9,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fetch all data in parallel
   const [citiesRes, buildingsRes, neighborhoodsRes] = await Promise.all([
-    supabase.from("cities").select("slug, updated_at").order("slug"),
+    supabase.from("cities").select("slug, created_at").order("slug"),
     supabase
       .from("buildings")
-      .select("id, updated_at")
+      .select("id, created_at")
       .eq("status", "active"),
     supabase
       .from("neighborhoods")
-      .select("slug, updated_at")
+      .select("slug, created_at")
       .order("slug"),
   ]);
 
@@ -38,21 +38,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const cityRoutes: MetadataRoute.Sitemap = cities.map((c) => ({
     url: `${base}/cities/${c.slug}`,
-    lastModified: c.updated_at || now,
+    lastModified: c.created_at || now,
     changeFrequency: "daily",
     priority: 0.8,
   }));
 
   const buildingRoutes: MetadataRoute.Sitemap = buildings.map((b) => ({
     url: `${base}/buildings/${b.id}`,
-    lastModified: b.updated_at || now,
+    lastModified: b.created_at || now,
     changeFrequency: "daily",
     priority: 0.7,
   }));
 
   const neighborhoodRoutes: MetadataRoute.Sitemap = neighborhoods.map((n) => ({
     url: `${base}/neighborhoods/${n.slug}`,
-    lastModified: n.updated_at || now,
+    lastModified: n.created_at || now,
     changeFrequency: "weekly",
     priority: 0.6,
   }));
