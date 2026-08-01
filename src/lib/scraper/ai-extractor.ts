@@ -65,12 +65,31 @@ Return a JSON object with this structure:
 Extract as many amenities as you can find. Be thorough.
 Only return valid JSON, no explanations.`;
 
+// Page builders ship hundreds of KB of scripts/CSS before any listing data —
+// naive head-truncation feeds the model nothing but boilerplate. Strip the
+// bloat but KEEP script blocks that look like they carry pricing/unit JSON
+// (Greystar, SightMap, and RentCafe embed listings that way).
+export function condenseHtml(html: string): string {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, "")
+    .replace(/<head[\s\S]*?<\/head>/i, "")
+    .replace(/<link\b[^>]*>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, (block) =>
+      /\$\s?\d{3,}|"(?:rent|price|minPrice|min_rent|starting)/i.test(block) ? block : ""
+    )
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n");
+}
+
 export async function extractUnitsWithAI(
   html: string,
   sourceUrl: string
 ): Promise<{ units: ScrapedUnit[]; total_available: number; move_in_specials: string[] }> {
-  // Truncate HTML if too long (keep first 100k chars for context)
-  const truncatedHtml = html.length > 100000 ? html.slice(0, 100000) + "\n... [truncated]" : html;
+  // Condense first, then truncate (keep first 100k chars for context)
+  const condensed = condenseHtml(html);
+  const truncatedHtml = condensed.length > 100000 ? condensed.slice(0, 100000) + "\n... [truncated]" : condensed;
 
   try {
     // Try xAI first
@@ -110,8 +129,9 @@ export async function extractAmenitiesWithAI(
   html: string,
   sourceUrl: string
 ): Promise<{ amenities: ScrapedAmenity[]; pet_policy?: string; parking_policy?: string }> {
-  // Truncate HTML if too long
-  const truncatedHtml = html.length > 100000 ? html.slice(0, 100000) + "\n... [truncated]" : html;
+  // Condense first, then truncate
+  const condensed = condenseHtml(html);
+  const truncatedHtml = condensed.length > 100000 ? condensed.slice(0, 100000) + "\n... [truncated]" : condensed;
 
   try {
     // Try xAI first
