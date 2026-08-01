@@ -136,6 +136,14 @@ function isSaneUnit(unit: ScrapedUnit): boolean {
   return true;
 }
 
+// Out-of-bounds terms are dropped (not the whole unit) — a hallucinated term
+// shouldn't cost us an otherwise-good listing.
+export function sanitizeLeaseTerm(value: number | null | undefined): number | null {
+  if (value == null || !Number.isFinite(value)) return null;
+  const months = Math.round(value);
+  return months >= 1 && months <= 36 ? months : null;
+}
+
 export async function saveScrapedUnits(
   supabase: SupabaseClient,
   buildingId: string,
@@ -181,6 +189,7 @@ export async function saveScrapedUnits(
           await supabase.from("unit_price_snapshots").insert({
             unit_id: existing.id,
             rent: unit.rent,
+            lease_term_months: sanitizeLeaseTerm(unit.lease_term_months),
             source_id: sourceId,
           });
         }
@@ -212,6 +221,7 @@ export async function saveScrapedUnits(
       await supabase.from("unit_price_snapshots").insert({
         unit_id: newUnit.id,
         rent: unit.rent,
+        lease_term_months: sanitizeLeaseTerm(unit.lease_term_months),
         source_id: sourceId,
       });
       unitsCreated++;

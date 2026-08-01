@@ -11,6 +11,8 @@ export interface ScrapedUnit {
   floorplan_name?: string;
   view?: string;
   features?: string[];
+  /** Shortest lease term offered (months), when the source page shows terms */
+  lease_term_months?: number;
 }
 
 export interface ScrapedAmenity {

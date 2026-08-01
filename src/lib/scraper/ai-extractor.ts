@@ -18,11 +18,12 @@ For each unit, extract:
 - available_on: Move-in date if shown (YYYY-MM-DD format)
 - floorplan_name: Name of the floor plan if shown
 - view: View type if mentioned (city, water, park, etc.)
+- lease_term_months: The SHORTEST lease term in months offered for this unit, if lease terms are shown (e.g. a 3-15 month picker or "flexible terms from 6 months" → 6; a single "12-month lease" → 12). Omit if the page shows no lease term information — never guess.
 
 Return a JSON object with this structure:
 {
   "units": [
-    {"unit_number": "1204", "beds": 2, "baths": 2, "sqft": 1100, "rent": 3500, "available_on": "2024-02-01"},
+    {"unit_number": "1204", "beds": 2, "baths": 2, "sqft": 1100, "rent": 3500, "available_on": "2024-02-01", "lease_term_months": 12},
     ...
   ],
   "total_available": 15,
