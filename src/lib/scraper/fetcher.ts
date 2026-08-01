@@ -215,7 +215,33 @@ export async function scrapeUnitsOnly(websiteUrl: string): Promise<ScrapeResult>
     }
 
     // Extract units with AI
-    const unitsData = await extractUnitsWithAI(htmlToProcess, sourceUrl);
+    let unitsData = await extractUnitsWithAI(htmlToProcess, sourceUrl);
+
+    // Zero units from a dedicated availability page usually means a JS
+    // widget whose shell carried enough nav text to defeat the
+    // needsJsRendering heuristic. Force a render and retry before giving up.
+    if (unitsData.units.length === 0 && unitsPageUrl) {
+      const rendered = await renderPage(unitsPageUrl);
+      if (rendered) {
+        const rerun = await extractUnitsWithAI(rendered.html, rendered.finalUrl);
+        if (rerun.units.length > 0) {
+          console.log(`Recovered ${rerun.units.length} units from force-rendered ${unitsPageUrl}`);
+          unitsData = rerun;
+          sourceUrl = rendered.finalUrl;
+        }
+      }
+
+      // Last resort: the main page we already fetched sometimes lists
+      // availability directly (condo towers with marketing-page pricing)
+      if (unitsData.units.length === 0 && htmlToProcess !== mainResult.html) {
+        const fromMain = await extractUnitsWithAI(mainResult.html, mainResult.finalUrl);
+        if (fromMain.units.length > 0) {
+          console.log(`Recovered ${fromMain.units.length} units from main page for ${websiteUrl}`);
+          unitsData = fromMain;
+          sourceUrl = mainResult.finalUrl;
+        }
+      }
+    }
 
     return {
       success: true,
