@@ -99,7 +99,7 @@ export function SimliAvatar({
       {/* Idle state */}
       {state === "idle" && (
         <div className="flex flex-col items-center gap-4 py-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-800">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-700">
             <Mic className="h-9 w-9 text-white" />
           </div>
           <div className="text-center">
@@ -108,7 +108,7 @@ export function SimliAvatar({
           </div>
           <Button
             onClick={startSession}
-            className="bg-violet-600 hover:bg-violet-500 text-white px-6"
+            className="bg-white hover:bg-white/90 text-black px-6"
           >
             Start Conversation
           </Button>
@@ -118,7 +118,7 @@ export function SimliAvatar({
       {/* Connecting */}
       {state === "starting" && (
         <div className="flex flex-col items-center gap-3 py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-violet-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
           <p className="text-sm text-zinc-400">Connecting to Stacy…</p>
         </div>
       )}

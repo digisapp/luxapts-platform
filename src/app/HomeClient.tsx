@@ -185,7 +185,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
           {/* Premium gradient background with aurora effect */}
           <div className="absolute inset-0">
             {/* Primary glow */}
-            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 rounded-full blur-[120px]" />
+            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-cyan-500/10 rounded-full blur-[120px]" />
             {/* Secondary glow */}
             <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-gradient-to-r from-rose-500/5 to-orange-500/5 rounded-full blur-[100px]" />
             {/* Accent glow */}
@@ -215,7 +215,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
             <div className="max-w-xl mx-auto mb-8 animate-fade-in [animation-delay:300ms]">
               <div className="relative group">
                 {/* Glow effect on focus */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
                 <div className="relative flex items-center">
                   <input
                     type="text"
@@ -383,17 +383,17 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
         <section className="py-24 px-6 relative overflow-hidden">
           {/* Background effects */}
           <div className="absolute inset-0">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-pink-500/10 rounded-full blur-[100px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-cyan-500/5 rounded-full blur-[100px]" />
           </div>
 
           <div className="relative z-10 max-w-4xl mx-auto">
             <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 mb-6">
-                <Video className="h-4 w-4 text-violet-400" />
-                <span className="text-sm text-violet-300">AI Video Assistant</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
+                <Video className="h-4 w-4 text-cyan-400" />
+                <span className="text-sm text-cyan-300">AI Video Assistant</span>
               </div>
               <h2 className="text-4xl md:text-5xl font-medium text-white mb-4">
-                Meet <span className="bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">Stacy</span>
+                Meet <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">Stacy</span>
               </h2>
               <p className="text-lg text-white/60 max-w-xl mx-auto">
                 Your personal apartment expert. Talk to Stacy about what you&apos;re looking for and she&apos;ll help you find your perfect home.
@@ -402,7 +402,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
 
             {/* Avatar Card */}
             <div className="max-w-md mx-auto">
-              <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-8 hover:border-violet-500/30 transition-all duration-500">
+              <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-8 hover:border-cyan-500/30 transition-all duration-500">
                 <SimliAvatar
                   autoStart={false}
                   className="mb-6"

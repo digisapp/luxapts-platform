@@ -47,7 +47,7 @@ export function SimliWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-36 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-lg hover:from-violet-500 hover:to-purple-600 transition-all hover:scale-105 group ring-2 ring-white/20 lg:bottom-24 lg:right-6 lg:h-16 lg:w-16"
+          className="fixed bottom-36 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg hover:from-cyan-400 hover:to-blue-500 transition-all hover:scale-105 group ring-2 ring-white/20 lg:bottom-24 lg:right-6 lg:h-16 lg:w-16"
           aria-label="Talk to Stacy"
         >
           <Mic className="h-6 w-6 lg:h-7 lg:w-7" />
@@ -71,9 +71,9 @@ export function SimliWidget() {
 
           <div className="fixed bottom-20 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden lg:bottom-24 lg:right-6">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-gradient-to-r from-violet-950/60 to-purple-950/60">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-gradient-to-r from-cyan-950/60 to-blue-950/60">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600 shrink-0">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 shrink-0">
                   <Mic className="h-4 w-4 text-white" />
                 </div>
                 <div>

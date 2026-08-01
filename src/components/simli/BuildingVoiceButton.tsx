@@ -25,11 +25,11 @@ export function BuildingVoiceButton({ buildingId, buildingName }: BuildingVoiceB
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-violet-700/50 bg-violet-950/30 px-4 py-3 text-sm font-medium text-violet-300 transition-colors hover:bg-violet-950/50 hover:text-violet-200"
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-cyan-700/50 bg-cyan-950/30 px-4 py-3 text-sm font-medium text-cyan-300 transition-colors hover:bg-cyan-950/50 hover:text-cyan-200"
       >
         <Mic className="h-4 w-4" />
         Ask Stacy about {buildingName}
-        <span className="ml-auto flex items-center gap-1 text-xs text-violet-400/60">
+        <span className="ml-auto flex items-center gap-1 text-xs text-cyan-400/60">
           <Sparkles className="h-3 w-3" /> AI
         </span>
       </button>
@@ -38,9 +38,9 @@ export function BuildingVoiceButton({ buildingId, buildingName }: BuildingVoiceB
       {isOpen && (
         <div className="rounded-xl border border-zinc-800 bg-zinc-900 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-gradient-to-r from-violet-950/40 to-purple-950/40">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-gradient-to-r from-cyan-950/40 to-blue-950/40">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600">
                 <Mic className="h-3.5 w-3.5 text-white" />
               </div>
               <div>

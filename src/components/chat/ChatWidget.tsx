@@ -202,7 +202,7 @@ export function ChatWidget() {
             onClick={() => isMinimized && setIsMinimized(false)}
           >
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-zinc-600 to-zinc-800">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div>
