@@ -103,7 +103,7 @@ export async function POST(req: Request) {
             `\nWhen the conversation starts, acknowledge you can see they're looking at ${building.name} and offer to help them learn more about it or find similar options.`
           );
 
-          firstMessage = `Hey! I'm Lexi, your Staycio expert. I can see you're checking out ${building.name} — great choice! Would you like to know more about it, or are you comparing a few options?`;
+          firstMessage = `Hey! I'm Stacy, your Staycio expert. I can see you're checking out ${building.name} — great choice! Would you like to know more about it, or are you comparing a few options?`;
         }
       } else if (context.city_slug) {
         const { data: city } = await supabase
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
             `\n\n## Current City Context`,
             `The user is browsing apartments in **${city.name}**. Focus your suggestions on this city.`
           );
-          firstMessage = `Hey! I'm Lexi, your Staycio expert. Looking for a place in ${city.name}? I know the market well — what's most important to you in your next apartment?`;
+          firstMessage = `Hey! I'm Stacy, your Staycio expert. Looking for a place in ${city.name}? I know the market well — what's most important to you in your next apartment?`;
         }
       }
 

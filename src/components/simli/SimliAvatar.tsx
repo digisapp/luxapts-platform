@@ -103,7 +103,7 @@ export function SimliAvatar({
             <Mic className="h-9 w-9 text-white" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-white">Lexi is ready</p>
+            <p className="text-sm font-medium text-white">Stacy is ready</p>
             <p className="text-xs text-zinc-400 mt-0.5">AI apartment expert · voice-enabled</p>
           </div>
           <Button
@@ -119,7 +119,7 @@ export function SimliAvatar({
       {state === "starting" && (
         <div className="flex flex-col items-center gap-3 py-8">
           <Loader2 className="h-8 w-8 animate-spin text-violet-400" />
-          <p className="text-sm text-zinc-400">Connecting to Lexi…</p>
+          <p className="text-sm text-zinc-400">Connecting to Stacy…</p>
         </div>
       )}
 
@@ -142,7 +142,7 @@ export function SimliAvatar({
               allow="camera; microphone; autoplay; display-capture; clipboard-write"
               allowFullScreen
               className="absolute inset-0 w-full h-full border-0"
-              title="Talk to Lexi"
+              title="Talk to Stacy"
             />
           </div>
 

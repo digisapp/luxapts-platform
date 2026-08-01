@@ -48,14 +48,14 @@ export function SimliWidget() {
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-36 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-lg hover:from-violet-500 hover:to-purple-600 transition-all hover:scale-105 group ring-2 ring-white/20 lg:bottom-24 lg:right-6 lg:h-16 lg:w-16"
-          aria-label="Talk to Lexi"
+          aria-label="Talk to Stacy"
         >
           <Mic className="h-6 w-6 lg:h-7 lg:w-7" />
           <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 ring-2 ring-white">
             <Sparkles className="h-3 w-3" />
           </span>
           <span className="absolute right-full mr-3 px-3 py-1.5 bg-zinc-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden lg:block pointer-events-none">
-            Talk to Lexi
+            Talk to Stacy
           </span>
         </button>
       )}
@@ -77,7 +77,7 @@ export function SimliWidget() {
                   <Mic className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white leading-none">Lexi</p>
+                  <p className="text-sm font-semibold text-white leading-none">Stacy</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-green-400 animate-pulse" : "bg-zinc-500"}`} />
                     <p className="text-xs text-zinc-400">

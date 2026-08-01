@@ -65,7 +65,7 @@ export default function AboutPage() {
           <div className="mt-16 rounded-2xl border border-zinc-800 bg-zinc-950 p-8 text-center">
             <h2 className="text-2xl font-semibold">Find your place</h2>
             <p className="mt-2 text-zinc-400">
-              Start with a search, or just tell Lexi what you&apos;re looking
+              Start with a search, or just tell Stacy what you&apos;re looking
               for.
             </p>
             <Link

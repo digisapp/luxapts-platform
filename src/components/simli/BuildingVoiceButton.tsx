@@ -28,7 +28,7 @@ export function BuildingVoiceButton({ buildingId, buildingName }: BuildingVoiceB
         className="flex w-full items-center justify-center gap-2 rounded-lg border border-violet-700/50 bg-violet-950/30 px-4 py-3 text-sm font-medium text-violet-300 transition-colors hover:bg-violet-950/50 hover:text-violet-200"
       >
         <Mic className="h-4 w-4" />
-        Ask Lexi about {buildingName}
+        Ask Stacy about {buildingName}
         <span className="ml-auto flex items-center gap-1 text-xs text-violet-400/60">
           <Sparkles className="h-3 w-3" /> AI
         </span>
@@ -44,7 +44,7 @@ export function BuildingVoiceButton({ buildingId, buildingName }: BuildingVoiceB
                 <Mic className="h-3.5 w-3.5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-white leading-none">Lexi</p>
+                <p className="text-sm font-medium text-white leading-none">Stacy</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-green-400 animate-pulse" : "bg-zinc-500"}`} />
                   <p className="text-xs text-zinc-400">

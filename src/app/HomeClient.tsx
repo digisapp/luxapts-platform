@@ -69,7 +69,7 @@ const FEATURED_CITIES = [
   { name: "Brooklyn", slug: "brooklyn" },
 ];
 
-const LEXI_PROMPTS = [
+const STACY_PROMPTS = [
   "Find me a 2 bed in Miami",
   "What has a rooftop pool?",
   "Dog-friendly buildings",
@@ -379,7 +379,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
           </section>
         )}
 
-        {/* Meet Lexi Section */}
+        {/* Meet Stacy Section */}
         <section className="py-24 px-6 relative overflow-hidden">
           {/* Background effects */}
           <div className="absolute inset-0">
@@ -393,10 +393,10 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                 <span className="text-sm text-violet-300">AI Video Assistant</span>
               </div>
               <h2 className="text-4xl md:text-5xl font-medium text-white mb-4">
-                Meet <span className="bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">Lexi</span>
+                Meet <span className="bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">Stacy</span>
               </h2>
               <p className="text-lg text-white/60 max-w-xl mx-auto">
-                Your personal apartment expert. Talk to Lexi about what you&apos;re looking for and she&apos;ll help you find your perfect home.
+                Your personal apartment expert. Talk to Stacy about what you&apos;re looking for and she&apos;ll help you find your perfect home.
               </p>
             </div>
 
@@ -412,7 +412,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                 <div className="space-y-2">
                   <p className="text-xs text-white/50 uppercase tracking-wider mb-3">Try asking</p>
                   <div className="flex flex-wrap gap-2">
-                    {LEXI_PROMPTS.map((prompt) => (
+                    {STACY_PROMPTS.map((prompt) => (
                       <button
                         key={prompt}
                         onClick={() => router.push(`/search?q=${encodeURIComponent(prompt)}`)}

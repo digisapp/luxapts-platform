@@ -250,7 +250,7 @@ export function welcomeEmail(data: { name?: string | null; email: string }): str
       ${[
         ["🔍", "AI Search", "Describe what you want in plain English and we&rsquo;ll find it."],
         ["💜", "Save Favorites", "Bookmark buildings and get email alerts when prices drop."],
-        ["🎙️", "Talk to Lexi", "Our AI video assistant knows every building inside out."],
+        ["🎙️", "Talk to Stacy", "Our AI video assistant knows every building inside out."],
       ]
         .map(
           ([icon, title, desc]) => `

@@ -144,7 +144,7 @@ export function BuildingFactsCard({ buildingId }: BuildingFactsCardProps) {
           </div>
         ) : facts.length === 0 ? (
           <p className="text-xs text-muted-foreground py-2">
-            No facts yet. Facts like <code className="bg-muted px-1 rounded">year_built</code>, <code className="bg-muted px-1 rounded">floors</code>, and <code className="bg-muted px-1 rounded">transit_score</code> help Lexi answer questions accurately.
+            No facts yet. Facts like <code className="bg-muted px-1 rounded">year_built</code>, <code className="bg-muted px-1 rounded">floors</code>, and <code className="bg-muted px-1 rounded">transit_score</code> help Stacy answer questions accurately.
           </p>
         ) : (
           <div className="rounded-lg border divide-y text-sm">

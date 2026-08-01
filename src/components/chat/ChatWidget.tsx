@@ -206,7 +206,8 @@ export function ChatWidget() {
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-white">Staycio AI</p>
+                <p className="text-sm font-medium text-white">Stacy</p>
+                <p className="text-[11px] leading-tight text-zinc-500">Staycio assistant</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -242,7 +243,7 @@ export function ChatWidget() {
                     <div className="text-center py-4">
                       <Building2 className="h-10 w-10 mx-auto text-zinc-600 mb-3" />
                       <p className="text-zinc-400 text-sm px-4">
-                        I can help you find apartments, compare buildings, and answer questions.
+                        Hi, I&apos;m Stacy. I can help you find apartments, compare buildings, and answer questions.
                       </p>
                     </div>
                     <div className="space-y-2">
