@@ -272,13 +272,62 @@
     data.domain="perrinbrickell.com";data.building="The Perrin";
     fetch("https://staycio.com/api/microsite-leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
       .then(function(r){if(!r.ok)return r.json().catch(function(){return{};}).then(function(j){throw new Error(j.error||"Something went wrong");});return r.json();})
-      .then(function(){form.innerHTML='<p style="font-family:var(--serif);font-size:1.7rem">You\'re on the list.</p><p style="color:rgba(255,255,255,.72);margin-top:10px">We\'ll email you the moment pricing and availability are released.</p>';})
+      .then(function(){if(window.__scTrack)window.__scTrack("form_submit");form.innerHTML='<p style="font-family:var(--serif);font-size:1.7rem">You\'re on the list.</p><p style="color:rgba(255,255,255,.72);margin-top:10px">We\'ll email you the moment pricing and availability are released.</p>';})
       .catch(function(err){
         btn.disabled=false;btn.textContent=old;
         var m=form.querySelector(".form-error");
         if(!m){m=document.createElement("p");m.className="form-error";m.style.cssText="color:#e2a3a3;font-size:.9rem;margin-top:14px";form.appendChild(m);}
         m.textContent=(err&&err.message?err.message:"Something went wrong")+" — please try again.";
       });
+  });
+})();
+</script>
+<script>
+/* Staycio microsite analytics — anonymous, first-party, no cookies. */
+(function(){
+  var D="perrinbrickell.com", EP="https://staycio.com/api/microsite-analytics";
+  var sid;
+  try{
+    sid=localStorage.getItem("_sc_sid");
+    if(!sid){sid=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem("_sc_sid",sid);}
+  }catch(e){sid=Math.random().toString(36).slice(2)+Date.now().toString(36);}
+  function send(p,beacon){
+    p.domain=D;p.session_id=sid;p.path=location.pathname;
+    var b=JSON.stringify(p);
+    try{
+      if(beacon&&navigator.sendBeacon){navigator.sendBeacon(EP,new Blob([b],{type:"application/json"}));return;}
+      fetch(EP,{method:"POST",headers:{"Content-Type":"application/json"},body:b,keepalive:true}).catch(function(){});
+    }catch(e){}
+  }
+  window.__scTrack=function(name,props){send({type:"event",event_name:name,properties:props||{}});};
+  send({type:"pageview",referrer:document.referrer||null});
+  var hit={};
+  addEventListener("scroll",function(){
+    var h=document.documentElement.scrollHeight-innerHeight;
+    if(h<=0)return;
+    var p=Math.round(scrollY/h*100);
+    [25,50,75,100].forEach(function(m){
+      if(!hit[m]&&p>=m){hit[m]=1;send({type:"event",event_name:"scroll_depth",properties:{depth:m}});}
+    });
+  },{passive:true});
+  document.addEventListener("click",function(e){
+    var a=e.target.closest&&e.target.closest("a,button");if(!a)return;
+    var label=(a.textContent||"").trim().slice(0,60);
+    var href=a.getAttribute("href")||null;
+    if(href&&href.indexOf("staycio.com")>-1){send({type:"event",event_name:"staycio_click",properties:{label:label}});return;}
+    if(a.className&&/btn|nav-cta/.test(a.className)){send({type:"event",event_name:"cta_click",properties:{label:label,href:href}});}
+  });
+  var started=false;
+  document.addEventListener("focusin",function(e){
+    if(started||!e.target.closest)return;
+    if(!e.target.closest("form[data-lead]"))return;
+    started=true;send({type:"event",event_name:"form_start"});
+  });
+  var t0=Date.now(),sent=false;
+  addEventListener("visibilitychange",function(){
+    if(document.visibilityState==="hidden"&&!sent){
+      sent=true;send({type:"event",event_name:"time_on_page",properties:{ms:Date.now()-t0}},true);
+    }
   });
 })();
 </script>

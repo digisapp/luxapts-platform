@@ -18,6 +18,7 @@ import {
   MapPin,
   Award,
   SlidersHorizontal,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ const navLinks = [
   { href: "/admin/leads", label: "Leads", icon: Users, exact: false },
   { href: "/admin/buildings", label: "Buildings", icon: Building2, exact: false },
   { href: "/admin/data-quality", label: "Data Quality", icon: BarChart3, exact: false },
+  { href: "/admin/microsites", label: "Microsites", icon: Globe, exact: false },
   { href: "/admin/agents", label: "Agents", icon: FileText, exact: false },
   { href: "/admin/showers", label: "Showers", icon: UserCheck, exact: false },
   { href: "/admin/showing-leads", label: "Showing Leads", icon: MapPin, exact: false },

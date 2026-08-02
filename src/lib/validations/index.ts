@@ -94,6 +94,33 @@ export const micrositeLeadSchema = z.object({
 
 export type MicrositeLeadInput = z.infer<typeof micrositeLeadSchema>;
 
+export const micrositeAnalyticsSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("pageview"),
+    domain: z.enum(MICROSITE_DOMAINS, { message: "Unknown microsite domain" }),
+    session_id: z.string().min(6).max(64),
+    path: z.string().max(500),
+    referrer: z.string().max(1000).nullish(),
+  }),
+  z.object({
+    type: z.literal("event"),
+    domain: z.enum(MICROSITE_DOMAINS, { message: "Unknown microsite domain" }),
+    session_id: z.string().min(6).max(64),
+    path: z.string().max(500),
+    event_name: z.enum([
+      "form_start",
+      "form_submit",
+      "cta_click",
+      "staycio_click",
+      "scroll_depth",
+      "time_on_page",
+    ]),
+    properties: z.record(z.string(), z.unknown()).optional(),
+  }),
+]);
+
+export type MicrositeAnalyticsInput = z.infer<typeof micrositeAnalyticsSchema>;
+
 // ---- Chat ----
 
 const chatMessageSchema = z.object({
