@@ -12,7 +12,12 @@ import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 // echo back allowed origins.
 
 const ALLOWED_ORIGINS = new Set(
-  MICROSITE_DOMAINS.flatMap((d) => [`https://${d}`, `https://www.${d}`])
+  MICROSITE_DOMAINS.flatMap((d) => [
+    `https://${d}`,
+    `https://www.${d}`,
+    // Stable Vercel alias (pre-DNS testing), e.g. namdartowerscom.vercel.app
+    `https://${d.replace(/\./g, "")}.vercel.app`,
+  ])
 );
 
 function corsHeaders(req: Request): Record<string, string> {
