@@ -78,8 +78,9 @@ const STACY_PROMPTS = [
 // Conversational example searches — teach "describe it" over "browse"
 const EXAMPLE_SEARCHES = [
   "Studio in Williamsburg under $2,800",
-  "2 bed to split in Midtown with a gym",
-  "Rooftop pool in Brickell, budget $3k",
+  "2-bedroom in Miami under $3,500",
+  "Dog-friendly apartment in Austin with a yard",
+  "Brickell apartment with a rooftop pool under $3,000",
 ];
 
 // Type for SpeechRecognition
@@ -178,8 +179,8 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
   const proofLine =
     stats && stats.buildings >= 20
       ? stats.availableUnits >= 100
-        ? `${stats.availableUnits.toLocaleString()} apartments across ${stats.cities} cities — updated daily`
-        : `${stats.buildings.toLocaleString()} buildings across ${stats.cities} cities — updated daily`
+        ? `${stats.availableUnits.toLocaleString()} apartments across ${stats.cities} cities • Updated daily`
+        : `${stats.buildings.toLocaleString()} buildings across ${stats.cities} cities • Updated daily`
       : "AI-Powered Search";
 
   return (
@@ -208,14 +209,18 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
               <span className="text-sm text-white/70">{proofLine}</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-medium tracking-tight text-white mb-6 sm:mb-8 animate-fade-in [animation-delay:100ms]">
-              New city.
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-white mb-5 sm:mb-6 animate-fade-in [animation-delay:100ms]">
+              Stop searching.
               <br />
-              <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">New era.</span>
+              <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">Just describe your next apartment.</span>
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed animate-fade-in [animation-delay:200ms]">
-              Tell Stacy your city, your budget, your vibe — your AI apartment agent finds your place in minutes. No 40 tabs, no stale prices, no sketchy listings.
+            <p className="text-lg sm:text-xl md:text-2xl font-medium text-white mb-4 animate-fade-in [animation-delay:180ms]">
+              Meet Stacy, your AI apartment agent.
+            </p>
+
+            <p className="text-base sm:text-lg text-white/60 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed animate-fade-in [animation-delay:240ms]">
+              Tell her your city, budget, neighborhood, commute, pets, or must-haves. Stacy searches thousands of apartments, compares live prices, and narrows it down to the ones actually worth seeing.
             </p>
 
             {/* Search Input - Glass Style */}
@@ -230,7 +235,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="2 bedroom in Miami under $3,500"
-                    className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-36 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white text-base placeholder:text-white/40 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all duration-300"
+                    className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-48 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white text-base placeholder:text-white/40 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all duration-300"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2">
                     {/* Voice Search Button */}
@@ -250,10 +255,11 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                     {/* Search Button */}
                     <button
                       onClick={handleSearch}
+                      aria-label="Ask Stacy"
                       className="h-9 w-9 sm:h-10 sm:w-auto sm:px-5 rounded-full bg-white text-black font-medium text-sm flex items-center justify-center gap-2 hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all duration-300"
                     >
                       <ArrowRight className="h-4 w-4" />
-                      <span className="hidden sm:inline">Search</span>
+                      <span className="hidden sm:inline whitespace-nowrap">Ask Stacy</span>
                     </button>
                   </div>
                 </div>
@@ -261,6 +267,9 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
             </div>
 
             {/* Conversational example searches — tap to run */}
+            <p className="text-xs uppercase tracking-wider text-white/40 mb-3 animate-fade-in [animation-delay:330ms]">
+              Try asking
+            </p>
             <div className="flex flex-wrap justify-center gap-2 mb-8 animate-fade-in [animation-delay:350ms]">
               {EXAMPLE_SEARCHES.map((example) => (
                 <button
@@ -413,7 +422,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                 <span className="text-sm text-cyan-300">AI Video Assistant</span>
               </div>
               <h2 className="text-4xl md:text-5xl font-medium text-white mb-4">
-                Meet <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">Stacy</span>
+                Talk to <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">Stacy</span>
               </h2>
               <p className="text-lg text-white/60 max-w-xl mx-auto">
                 Budget, neighborhood, natural light, dog-friendly — tell her the vibe, out loud or in chat, and she searches while you pack.

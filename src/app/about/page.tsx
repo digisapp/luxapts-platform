@@ -5,39 +5,39 @@ import { Footer } from "@/components/layout/Footer";
 import { Sparkles, MapPin, Users, ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About Staycio — /STAY-see-oh/",
+  title: "About Staycio — Your space, found.",
   description:
-    "Staycio is stay + espacio, English and Spanish joined: a space to stay while you figure out the rest. AI-powered apartment discovery across major US cities.",
+    "Finding a home should feel like a conversation, not a search. Staycio is an AI apartment agent that searches thousands of apartments so you don't have to.",
 };
 
-/** The three beats of the name, said out loud — also the shape of the search. */
-const beats = [
-  { word: "Stay", line: "Stop scrolling. Forty open tabs was never a search." },
-  { word: "See", line: "See the place — and see yourself in it." },
-  { word: "Oh", line: "Oh. That one." },
-];
-
-const values = [
+const principles = [
   {
     icon: Sparkles,
-    title: "AI-native search",
-    body: "Describe the place you want the way you'd say it out loud. Stacy understands budget, neighborhood, amenities, and timing — and only shows real, verified pricing.",
-  },
-  {
-    icon: MapPin,
-    title: "Deep in a few cities",
-    body: "New York, Miami, Los Angeles, Austin, Dallas, Atlanta, Nashville, Brooklyn. We'd rather know eight cities properly than list fifty badly.",
-  },
-  {
-    icon: Users,
-    title: "Someone who's actually been inside",
-    body: "Every Staycio tour guide is building-certified, background-vetted, and rated by the people they've shown around. You tour with someone who knows the property.",
+    title: "Ask in your own words",
+    body: "“Two bedrooms in Miami under $3,500 with a gym and good light” is a complete search. There's no filter grammar to learn, because you shouldn't have to search like a database to find a home.",
   },
   {
     icon: ShieldCheck,
     title: "Prices with a timestamp",
-    body: "We track price history over time and stamp every quote, so you know what a unit really costs — and which way it's been moving.",
+    body: "Rents move constantly. We track price history and stamp every quote, so you know what a place actually costs today — and which direction it's been heading.",
   },
+  {
+    icon: Users,
+    title: "Tours with someone who's been inside",
+    body: "Every Staycio tour guide is building-certified, background-vetted, and rated by the renters who came before you. Not someone who just unlocks the door.",
+  },
+  {
+    icon: MapPin,
+    title: "Fewer cities, known properly",
+    body: "Anyone can scrape a hundred cities. We'd rather know eight of them exceptionally well — the neighborhoods, the buildings, the price history. Every city we launch is one we intend to know deeply.",
+  },
+];
+
+/** The name, said out loud — three syllables that happen to be the process. */
+const beats = [
+  { word: "Stay", line: "Stop scrolling." },
+  { word: "See", line: "See yourself in it." },
+  { word: "Oh", line: "That's the one." },
 ];
 
 export default function AboutPage() {
@@ -45,141 +45,124 @@ export default function AboutPage() {
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Header />
       <main className="flex-1">
-        {/* The name */}
-        <section className="relative overflow-hidden px-6 pt-16 pb-20 lg:pt-24">
+        {/* Mission */}
+        <section className="relative overflow-hidden px-6 pt-16 pb-16 lg:pt-24">
           <div className="absolute inset-0" aria-hidden="true">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-cyan-500/10 rounded-full blur-[120px]" />
           </div>
 
           <div className="relative z-10 mx-auto max-w-3xl">
-            {/* Dictionary entry — owns the pronunciation instead of apologizing for it */}
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 pb-6 border-b border-white/[0.08]">
-              <span className="text-2xl font-medium text-white">Staycio</span>
-              <span className="font-mono text-sm text-cyan-300">/STAY-see-oh/</span>
-              <span className="text-sm italic text-white/40">noun</span>
-            </div>
-
-            <h1 className="mt-10 text-4xl lg:text-5xl font-medium tracking-tight leading-[1.1]">
-              A space to stay while you
-              <br />
+            <h1 className="text-4xl lg:text-5xl font-medium tracking-tight leading-[1.1]">
+              Finding a home should feel like{" "}
               <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
-                figure out the rest.
+                a conversation.
               </span>
             </h1>
-
-            <p className="mt-8 text-lg text-white/60 leading-relaxed">
-              The name is two words from two languages. It took us a while to
-              admit that it&apos;s also the entire idea.
-            </p>
-
-            {/* Stay + espacio */}
-            <div className="mt-12 grid gap-5 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6">
-                <p className="font-mono text-xs uppercase tracking-wider text-cyan-300">
-                  English
-                </p>
-                <p className="mt-3 text-2xl font-medium">stay</p>
-                <p className="mt-3 text-sm text-white/60 leading-relaxed">
-                  Not <em>settle down</em>. Not <em>forever home</em>. Stay. A
-                  year in this city, maybe two, then somewhere else. That
-                  isn&apos;t a smaller version of a life — it&apos;s how this
-                  decade is supposed to work, and it deserves a word that
-                  doesn&apos;t pretend otherwise.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6">
-                <p className="font-mono text-xs uppercase tracking-wider text-cyan-300">
-                  Spanish
-                </p>
-                <p className="mt-3 text-2xl font-medium">espacio</p>
-                <p className="mt-3 text-sm text-white/60 leading-relaxed">
-                  Space — but not only square footage.{" "}
-                  <em>Hacer espacio</em> means to make room: for a person, for a
-                  chapter, for whoever you&apos;re about to become. Nobody moves
-                  to a new city for the square footage.
-                </p>
-              </div>
-            </div>
-
-            <p className="mt-8 text-lg text-white/70 leading-relaxed">
-              Put them together and you get the whole thing.{" "}
-              <span className="text-white">
-                Stay + espacio. Staycio. Your space, found.
-              </span>
+            <p className="mt-8 text-lg text-white/60 leading-relaxed max-w-2xl">
+              Not a search. Not forty open tabs. A conversation with someone who
+              already knows what you&apos;re looking for.
             </p>
           </div>
         </section>
 
-        {/* Stay. See. Oh. */}
-        <section className="relative overflow-hidden px-6 py-20 border-t border-white/[0.06]">
+        {/* Why we exist */}
+        <section className="px-6 py-16 border-t border-white/[0.06]">
+          <div className="mx-auto max-w-3xl">
+            <p className="font-mono text-xs uppercase tracking-wider text-cyan-300">
+              Why we exist
+            </p>
+            <h2 className="mt-4 text-3xl md:text-4xl font-medium">
+              Apartment search hasn&apos;t changed since 2008.
+            </h2>
+            <div className="mt-6 space-y-4 text-lg text-white/60 leading-relaxed max-w-2xl">
+              <p>
+                You open a site. Click filters. Sort by price. Open a dozen tabs
+                to compare, then hope the numbers you&apos;re reading are still
+                true. Somewhere along the way, the work of finding a home got
+                handed to the person looking for one.
+              </p>
+              <p className="text-white/80">
+                We think that&apos;s backwards. Software should do the
+                searching. You should just say what you want.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* What makes us different */}
+        <section className="px-6 py-16 border-t border-white/[0.06]">
+          <div className="mx-auto max-w-3xl">
+            <h2 className="text-3xl md:text-4xl font-medium">
+              What we hold ourselves to
+            </h2>
+
+            <div className="mt-10 grid gap-5 sm:grid-cols-2">
+              {principles.map((p) => (
+                <div
+                  key={p.title}
+                  className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 hover:border-white/[0.16] transition-colors duration-300"
+                >
+                  <p.icon className="h-6 w-6 text-cyan-300" aria-hidden="true" />
+                  <h3 className="mt-4 text-lg font-medium">{p.title}</h3>
+                  <p className="mt-2 text-sm text-white/60 leading-relaxed">
+                    {p.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* The name — a payoff, not the main event */}
+        <section className="relative overflow-hidden px-6 py-16 border-t border-white/[0.06]">
           <div className="absolute inset-0" aria-hidden="true">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] bg-cyan-500/[0.07] rounded-full blur-[110px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[280px] bg-cyan-500/[0.06] rounded-full blur-[110px]" />
           </div>
 
           <div className="relative z-10 mx-auto max-w-3xl">
-            <p className="font-mono text-xs uppercase tracking-wider text-white/40">
-              Say it out loud
-            </p>
-            <h2 className="mt-4 text-3xl md:text-4xl font-medium">
-              It tells you what to do.
-            </h2>
-            <p className="mt-4 text-white/60">
-              Three syllables, three beats. It&apos;s how the name is
-              pronounced, and it happens to be exactly how finding a place
-              goes.
-            </p>
+            <div className="flex flex-wrap items-baseline gap-x-3">
+              <h2 className="text-3xl md:text-4xl font-medium">
+                Why we&apos;re called Staycio
+              </h2>
+              <span className="font-mono text-sm text-cyan-300">
+                /STAY-see-oh/
+              </span>
+            </div>
 
-            <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.06] sm:grid-cols-3">
+            <div className="mt-6 space-y-4 text-lg text-white/60 leading-relaxed max-w-2xl">
+              <p>
+                <span className="text-white font-medium">Stay</span>, because
+                most homes today aren&apos;t forever. People move for work, for
+                school, for someone, for a fresh start. A place doesn&apos;t
+                have to last forever to matter.
+              </p>
+              <p>
+                <span className="text-white font-medium">Espacio</span>,
+                Spanish for space — but not square footage. Nobody moves to a
+                new city for the square footage. They move for the room to
+                become someone.
+              </p>
+              <p className="text-white">Stay + espacio. Staycio.</p>
+            </div>
+
+            {/* Say it out loud and it's already the process */}
+            <div className="mt-10 flex flex-wrap gap-x-10 gap-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-7 py-6">
               {beats.map((beat) => (
-                <div key={beat.word} className="bg-black/60 p-8">
-                  <p className="text-3xl font-medium bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">
+                <div key={beat.word}>
+                  <span className="text-xl font-medium bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">
                     {beat.word}.
-                  </p>
-                  <p className="mt-3 text-sm text-white/60 leading-relaxed">
+                  </span>
+                  <span className="ml-2.5 text-sm text-white/50">
                     {beat.line}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <p className="mt-8 text-sm text-white/40">
-              Stay. See. Oh. — now you know how to say it, and you already know
-              what we do.
-            </p>
-          </div>
-        </section>
-
-        {/* What that means in practice */}
-        <section className="px-6 py-20 border-t border-white/[0.06]">
-          <div className="mx-auto max-w-3xl">
-            <h2 className="text-3xl md:text-4xl font-medium">
-              What that means in practice
-            </h2>
-            <p className="mt-4 text-white/60 max-w-2xl">
-              A name is only worth something if the product agrees with it.
-              Here&apos;s what we hold ourselves to.
-            </p>
-
-            <div className="mt-12 grid gap-5 sm:grid-cols-2">
-              {values.map((v) => (
-                <div
-                  key={v.title}
-                  className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 hover:border-white/[0.16] transition-colors duration-300"
-                >
-                  <v.icon className="h-6 w-6 text-cyan-300" aria-hidden="true" />
-                  <h3 className="mt-4 text-lg font-medium">{v.title}</h3>
-                  <p className="mt-2 text-sm text-white/60 leading-relaxed">
-                    {v.body}
-                  </p>
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Stacy */}
-        <section className="px-6 pb-24">
+        {/* Stacy + close */}
+        <section className="px-6 py-16 pb-24 border-t border-white/[0.06]">
           <div className="mx-auto max-w-3xl">
             <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] p-10 text-center">
               <div className="absolute inset-0" aria-hidden="true">
@@ -195,15 +178,14 @@ export default function AboutPage() {
                   is who finds it for you.
                 </p>
                 <p className="mt-4 text-white/60 max-w-lg mx-auto">
-                  She&apos;s the name said out loud — the first two beats of it.
-                  Tell her the city, the budget, the vibe. She searches while
-                  you pack.
+                  Tell her the city, the budget, the commute, the dog. She
+                  searches thousands of apartments so you don&apos;t have to.
                 </p>
                 <Link
                   href="/search"
                   className="mt-8 inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-medium text-black hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all duration-300"
                 >
-                  Find your space
+                  Your space, found.
                 </Link>
               </div>
             </div>
