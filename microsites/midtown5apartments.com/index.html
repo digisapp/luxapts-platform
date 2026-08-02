@@ -8,8 +8,12 @@
 <link rel="canonical" href="https://midtown5apartments.com/">
 <meta property="og:title" content="Midtown 5 Miami Apartments — Rents & Availability">
 <meta property="og:description" content="400 luxury rentals in the heart of Midtown Miami, steps from Wynwood. Studios–3BR from ~$2,462/mo.">
+<meta property="og:image" content="https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=1200&q=80">
 <meta property="og:url" content="https://midtown5apartments.com/">
 <meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -22,144 +26,243 @@
 }
 </script>
 <style>
-  :root{--accent:#e0475b;--accent-dark:#ab2b3d;--ink:#1f1418;--muted:#71595f;--bg:#ffffff;--soft:#fbf4f5;--line:#f2dfe2}
+  :root{
+    --ink:#1a0f14; --coral:#ff4d5e; --coral-deep:#d92c3d; --sun:#ffb547; --electric:#2f2aa8;
+    --paper:#fffaf7; --off:#fdf1ef; --muted:#8d7b7f; --muted-dark:#584a4e;
+    --display:'Space Grotesk',system-ui,sans-serif; --body:'DM Sans',system-ui,sans-serif;
+  }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
-  .wrap{max-width:1060px;margin:0 auto;padding:0 24px}
-  header{position:sticky;top:0;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:10}
-  header .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
-  .logo{font-weight:800;font-size:1.05rem;letter-spacing:-.01em}
-  .logo span{color:var(--accent)}
-  .badge{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
-  .btn{display:inline-block;background:var(--accent);color:#fff;font-weight:700;padding:12px 22px;border-radius:10px;text-decoration:none;border:none;font-size:1rem;cursor:pointer}
-  .btn:hover{background:var(--accent-dark)}
-  .btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--accent)}
-  .hero{background:linear-gradient(160deg,rgba(37,9,15,.92) 0%,rgba(112,27,42,.82) 55%,rgba(224,71,91,.7) 140%),url('https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=1600&q=80') center/cover;color:#fff;padding:72px 0 64px}
-  .hero h1{font-size:clamp(1.9rem,4.5vw,3rem);line-height:1.15;letter-spacing:-.02em;max-width:720px}
-  .hero p.lead{margin:18px 0 28px;font-size:1.15rem;color:#f6cfd4;max-width:640px}
-  .hero .cta{display:flex;gap:12px;flex-wrap:wrap}
-  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:-34px 0 0;position:relative}
-  .facts div{background:#fff;padding:18px 16px}
-  .facts b{display:block;font-size:1.25rem;letter-spacing:-.01em}
-  .facts small{color:var(--muted)}
-  section{padding:56px 0}
-  section.alt{background:var(--soft)}
-  h2{font-size:1.6rem;letter-spacing:-.01em;margin-bottom:14px}
-  .sub{color:var(--muted);max-width:640px;margin-bottom:28px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px}
-  .card h3{font-size:1.05rem;margin-bottom:6px}
-  .card p{color:var(--muted);font-size:.95rem}
-  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-  th,td{text-align:left;padding:14px 18px;border-bottom:1px solid var(--line);font-size:.97rem}
-  th{background:var(--soft);font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-  tr:last-child td{border-bottom:none}
-  details{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:10px}
-  summary{font-weight:700;cursor:pointer}
-  details p{margin-top:10px;color:var(--muted)}
-  form{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px;max-width:560px}
-  label{display:block;font-size:.85rem;font-weight:700;margin:14px 0 6px}
-  input,select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:1rem;font-family:inherit}
-  form .btn{width:100%;margin-top:20px}
-  .fineprint{font-size:.8rem;color:var(--muted);margin-top:12px}
-  footer{border-top:1px solid var(--line);padding:36px 0;font-size:.85rem;color:var(--muted)}
-  footer a{color:var(--accent)}
-  @media(max-width:640px){.facts{margin-top:-20px}}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--body);font-weight:400;color:var(--ink);background:var(--paper);line-height:1.7;font-size:1.02rem}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+  img{max-width:100%;display:block}
+
+  header{position:fixed;top:0;left:0;right:0;z-index:50;transition:all .35s;padding:20px 0}
+  header.scrolled{background:rgba(26,15,20,.97);backdrop-filter:blur(12px);padding:12px 0}
+  header .wrap{display:flex;align-items:center;justify-content:space-between}
+  .wordmark{font-family:var(--display);font-weight:700;font-size:1.25rem;color:#fff;text-decoration:none;letter-spacing:-.02em}
+  .wordmark span{color:var(--coral)}
+  .nav-cta{font-family:var(--display);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--coral);text-decoration:none;padding:12px 24px;transition:all .3s}
+  .nav-cta:hover{background:var(--sun);color:var(--ink)}
+
+  .hero{position:relative;min-height:100vh;display:flex;align-items:center;color:#fff;
+    background:linear-gradient(150deg,rgba(26,15,20,.84) 0%,rgba(217,44,61,.38) 55%,rgba(26,15,20,.8) 100%),
+    url('https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=2000&q=80') center/cover}
+  .hero-inner{max-width:860px;padding:150px 0 110px}
+  .chip{display:inline-block;font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--coral);color:#fff;padding:9px 18px;margin-bottom:26px}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(2.5rem,6.4vw,4.6rem);line-height:1.02;letter-spacing:-.035em}
+  .hero h1 .sun{color:var(--sun)}
+  .hero p.sub{margin:24px 0 36px;font-size:1.14rem;color:rgba(255,255,255,.86);max-width:560px}
+  .price-flash{font-family:var(--display);font-size:1.05rem;font-weight:500;color:var(--sun);margin-bottom:36px;letter-spacing:-.01em}
+  .btn{display:inline-block;font-family:var(--display);font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:17px 36px;transition:all .3s;cursor:pointer;border:none}
+  .btn-coral{background:var(--coral);color:#fff}
+  .btn-coral:hover{background:var(--sun);color:var(--ink)}
+  .btn-ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.45);margin-left:14px}
+  .btn-ghost:hover{border-color:var(--sun);color:var(--sun)}
+
+  .stats{background:var(--ink);color:#fff;padding:64px 0}
+  .stats .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:34px}
+  .stat{border-top:3px solid var(--coral);padding-top:18px}
+  .stat b{display:block;font-family:var(--display);font-weight:700;font-size:2.5rem;letter-spacing:-.03em;line-height:1.1}
+  .stat small{font-size:.72rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+
+  section{padding:100px 0}
+  .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--coral-deep);margin-bottom:16px}
+  h2{font-family:var(--display);font-weight:700;font-size:clamp(1.85rem,3.6vw,2.7rem);line-height:1.1;letter-spacing:-.03em;margin-bottom:20px}
+  .prose{color:var(--muted-dark);max-width:58ch}
+  .prose+.prose{margin-top:16px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
+  .split img{width:100%;height:540px;object-fit:cover}
+
+  .plans{background:var(--off)}
+  .plan-table{width:100%;border-collapse:collapse;margin-top:40px;background:#fff}
+  .plan-table th{font-family:var(--display);font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:20px 24px;border-bottom:2px solid var(--ink)}
+  .plan-table td{padding:24px;border-bottom:1px solid #f2e2df;font-size:1rem}
+  .plan-table td:first-child{font-family:var(--display);font-weight:700;font-size:1.1rem;letter-spacing:-.01em}
+  .plan-table td.rent{font-family:var(--display);font-weight:700;color:var(--coral-deep)}
+  .plan-note{margin-top:20px;font-size:.86rem;color:var(--muted)}
+
+  .perks{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px;margin-top:46px}
+  .perk{background:#fff;border:2px solid var(--ink);padding:34px 30px;transition:transform .25s}
+  .perk:hover{transform:translate(-4px,-4px);box-shadow:6px 6px 0 var(--coral)}
+  .perk b{display:block;font-family:var(--display);font-weight:700;font-size:1.1rem;margin-bottom:8px;letter-spacing:-.01em}
+  .perk p{color:var(--muted-dark);font-size:.94rem}
+
+  .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:50px}
+  .gallery-grid figure{overflow:hidden;position:relative}
+  .gallery-grid img{width:100%;height:400px;object-fit:cover;transition:transform 1s ease}
+  .gallery-grid figure:hover img{transform:scale(1.06)}
+  .gallery-grid figcaption{position:absolute;left:0;right:0;bottom:0;padding:18px;color:#fff;font-family:var(--display);font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(transparent,rgba(26,15,20,.78))}
+
+  details{background:#fff;border:2px solid var(--ink);padding:20px 26px;margin-bottom:12px}
+  summary{font-family:var(--display);font-weight:700;font-size:1.05rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:-.01em}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:'+';font-size:1.4rem;color:var(--coral);transition:transform .3s}
+  details[open] summary::after{transform:rotate(45deg)}
+  details p{margin-top:12px;color:var(--muted-dark)}
+
+  .cta-band{position:relative;color:#fff;padding:120px 0;
+    background:linear-gradient(150deg,rgba(26,15,20,.93),rgba(217,44,61,.75)),
+    url('https://images.unsplash.com/photo-1508394522741-82ac9c15ba69?w=2000&q=80') center/cover}
+  .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:74px;align-items:start}
+  .cta-band h2{color:#fff}
+  .cta-band .prose{color:rgba(255,255,255,.82)}
+  form{background:#fff;padding:44px;color:var(--ink);position:relative;border:3px solid var(--ink);box-shadow:12px 12px 0 var(--sun)}
+  label{display:block;font-family:var(--display);font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--coral-deep);margin:20px 0 8px}
+  form label:first-of-type{margin-top:0}
+  input,select{width:100%;background:var(--off);border:2px solid #f2ddd9;color:var(--ink);font-family:var(--body);font-size:1rem;padding:13px 15px;outline:none;transition:border-color .25s}
+  input:focus,select:focus{border-color:var(--coral)}
+  select{appearance:none;cursor:pointer}
+  form .btn{width:100%;margin-top:26px}
+  .fineprint{margin-top:16px;font-size:.84rem;color:var(--muted)}
+  .fineprint a{color:var(--coral-deep)}
+
+  footer{background:var(--ink);color:var(--muted);padding:54px 0;font-size:.82rem}
+  footer .wordmark{font-size:1rem;display:inline-block;margin-bottom:18px}
+  footer a{color:var(--coral)}
+  footer p{max-width:92ch}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:900px){
+    .split,.cta-grid{grid-template-columns:1fr;gap:42px}
+    .split img{height:340px}
+    .gallery-grid{grid-template-columns:1fr}
+    .gallery-grid img{height:280px}
+    section{padding:70px 0}
+    .btn-ghost{margin-left:0;margin-top:12px}
+    form{box-shadow:8px 8px 0 var(--sun)}
+    .plan-table td,.plan-table th{padding:16px 12px;font-size:.92rem}
+  }
 </style>
 </head>
 <body>
-<header>
+
+<header id="hdr">
   <div class="wrap">
-    <div class="logo">Midtown5<span>Apartments</span>.com</div>
-    <div class="badge">Independent Rental Guide</div>
-    <a class="btn" href="#availability" style="padding:9px 16px;font-size:.9rem">Check Availability</a>
+    <a class="wordmark" href="#top">MIDTOWN<span>5</span></a>
+    <a class="nav-cta" href="#availability">Check Availability</a>
   </div>
 </header>
 
-<div class="hero">
+<div class="hero" id="top">
   <div class="wrap">
-    <h1>Midtown 5 — Luxury Apartments in the Heart of Midtown Miami</h1>
-    <p class="lead">400 residences across 24 stories at 3201 NE 1st Avenue — where Midtown's shops meet Wynwood's art district. Studios to three-bedrooms from roughly $2,462/month.</p>
-    <div class="cta">
-      <a class="btn" href="#availability" style="background:#fff;color:var(--accent-dark)">Check Current Availability</a>
-      <a class="btn ghost" href="#plans" style="color:#fff;border-color:rgba(255,255,255,.5)">Floor Plans & Rents</a>
+    <div class="hero-inner">
+      <span class="chip">Now Leasing · Midtown Miami</span>
+      <h1>Wynwood murals out front.<br>Your balcony <span class="sun">up top.</span></h1>
+      <p class="sub">400 residences, 24 stories, right where Midtown's shops meet Wynwood's art district. Studios through three bedrooms — this is what's actually available right now.</p>
+      <p class="price-flash">From ~$2,462/mo · 538–1,501 sq ft · ~29 homes available</p>
+      <a class="btn btn-coral" href="#availability">Check Today's Availability</a>
+      <a class="btn btn-ghost" href="#plans">Floor Plans &amp; Rents</a>
     </div>
   </div>
 </div>
 
-<div class="wrap">
-  <div class="facts">
-    <div><b>24</b><small>stories</small></div>
-    <div><b>400</b><small>residences</small></div>
-    <div><b>538–1,501</b><small>square feet</small></div>
-    <div><b>~$2,462+</b><small>starting rent (Aug 2026)</small></div>
-    <div><b>Midtown</b><small>3201 NE 1st Ave</small></div>
+<div class="stats">
+  <div class="wrap">
+    <div class="stat reveal"><b>400</b><small>Residences</small></div>
+    <div class="stat reveal"><b>24</b><small>Stories</small></div>
+    <div class="stat reveal"><b>538–1,501</b><small>Square Feet</small></div>
+    <div class="stat reveal"><b>~$2,462</b><small>Starting Rent</small></div>
   </div>
 </div>
 
-<section id="plans">
+<section>
   <div class="wrap">
-    <h2>Floor plans & current pricing</h2>
-    <p class="sub">Pricing snapshot from public listings, August 2026 — roughly 29 units were available at last check. Exact rents move weekly; use the form below for today's numbers.</p>
-    <table>
-      <tr><th>Layout</th><th>Size range</th><th>Typical asking rent</th></tr>
-      <tr><td>Studio / Convertible</td><td>538–700 sq ft</td><td>from ~$2,462/mo</td></tr>
-      <tr><td>1 Bedroom</td><td>~700–950 sq ft</td><td>~$2,600s–$3,000s</td></tr>
-      <tr><td>2 Bedroom</td><td>~1,000–1,300 sq ft</td><td>~$3,000s–$4,000s</td></tr>
-      <tr><td>3 Bedroom</td><td>up to 1,501 sq ft</td><td>inquire</td></tr>
-    </table>
-    <p class="fineprint">Snapshot compiled from public listing sites; verify current pricing with the leasing office or request today's availability below.</p>
+    <div class="split">
+      <div class="reveal">
+        <p class="kicker">3201 NE 1st Avenue</p>
+        <h2>The best-located building in Midtown</h2>
+        <p class="prose">The Shops at Midtown Miami are downstairs — Target, Trader Joe's, Sweetgreen, the whole run. Wynwood's murals, breweries and galleries start one block west. The Design District sits a short walk north.</p>
+        <p class="prose">Inside: nine-foot ceilings, stainless appliances, in-unit washer and dryer, ceramic floors and balconies deep enough to actually use. Twenty-four-hour door service, EV charging, bike storage with a wash station, and a building that's genuinely pet-friendly.</p>
+      </div>
+      <img class="reveal" src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=80" alt="Bright modern apartment interior" loading="lazy">
+    </div>
   </div>
 </section>
 
-<section class="alt">
+<section class="plans" id="plans">
   <div class="wrap">
-    <h2>Why renters pick Midtown 5</h2>
-    <div class="grid">
-      <div class="card"><h3>In-unit quality</h3><p>9-foot ceilings, stainless appliances, in-unit washer/dryer, ceramic floors and expansive balconies with city views.</p></div>
-      <div class="card"><h3>Building perks</h3><p>24-hour door service, EV charging stations, bike storage with wash area, pet-friendly with no weight anxiety over amenity access.</p></div>
-      <div class="card"><h3>The location</h3><p>Ground-zero Midtown: The Shops at Midtown Miami downstairs, Wynwood's murals and restaurants across the tracks, Design District a short walk north.</p></div>
-    </div>
+    <p class="kicker reveal">Floor Plans</p>
+    <h2 class="reveal">What's renting, and for how much</h2>
+    <table class="plan-table reveal">
+      <tr><th>Layout</th><th>Size</th><th>Typical Asking Rent</th></tr>
+      <tr><td>Studio / Convertible</td><td>538–700 sq ft</td><td class="rent">from ~$2,462/mo</td></tr>
+      <tr><td>One Bedroom</td><td>~700–950 sq ft</td><td class="rent">$2,600s–$3,000s</td></tr>
+      <tr><td>Two Bedroom</td><td>~1,000–1,300 sq ft</td><td class="rent">$3,000s–$4,000s</td></tr>
+      <tr><td>Three Bedroom</td><td>up to 1,501 sq ft</td><td class="rent">Inquire</td></tr>
+    </table>
+    <p class="plan-note reveal">Snapshot from public listings, August 2026 — roughly 29 homes were available at last check. Rents move weekly; use the form below for today's exact numbers and any active specials.</p>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <h2>Frequently asked questions</h2>
-    <details><summary>How much is rent at Midtown 5?</summary><p>As of August 2026, published availability starts around $2,462/month (12-month lease, fees included in advertised total) for smaller layouts, ranging up through the $4,000s for two-bedrooms. Submit the form for exact current pricing.</p></details>
-    <details><summary>Where is Midtown 5 located?</summary><p>3201 NE 1st Avenue (also addressed as 125 NE 32nd Street), Miami, FL 33137 — in Midtown Miami, directly adjacent to The Shops at Midtown and a short walk to Wynwood.</p></details>
-    <details><summary>Is Midtown 5 pet friendly?</summary><p>Yes — the building is pet friendly with dedicated pet amenities. Confirm breed/weight policies with the leasing office.</p></details>
-    <details><summary>Is Midtown 5 the same as Midtown Five?</summary><p>Yes — same building, written both ways. It's also distinct from Midtown 8/Yard 8, its sister-parcel neighbor two blocks north.</p></details>
+    <p class="kicker reveal">The Building</p>
+    <h2 class="reveal">Why people pick Midtown 5</h2>
+    <div class="perks">
+      <div class="perk reveal"><b>Finishes that hold up</b><p>Nine-foot ceilings, stainless appliances, in-unit laundry, ceramic floors, wide balconies with city views.</p></div>
+      <div class="perk reveal"><b>Actually pet-friendly</b><p>Dedicated pet amenities, not just a policy — plus bike storage with a wash area and EV charging in the garage.</p></div>
+      <div class="perk reveal"><b>24-hour service</b><p>Around-the-clock door and maintenance staff, smoke-free throughout.</p></div>
+    </div>
+    <div class="gallery-grid">
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=1000&q=80" alt="Living room with balcony" loading="lazy"><figcaption>The Homes</figcaption></figure>
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1000&q=80" alt="Fitness and wellness space" loading="lazy"><figcaption>Amenities</figcaption></figure>
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1000&q=80" alt="Midtown street life" loading="lazy"><figcaption>The Neighborhood</figcaption></figure>
+    </div>
   </div>
 </section>
 
-<section class="alt" id="availability">
+<section style="padding-top:0">
   <div class="wrap">
-    <h2>Check today's availability</h2>
-    <p class="sub">Tell us what you need — we'll reply with current units, real pricing and any active specials at Midtown 5.</p>
-    <form data-lead>
-      <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
-      <label for="name">Name</label>
-      <input id="name" name="name" type="text" required placeholder="Your name">
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" required placeholder="you@email.com">
-      <label for="unit">Looking for</label>
-      <select id="unit" name="unit_type"><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option></select>
-      <label for="movein">Move-in timeframe</label>
-      <select id="movein" name="move_in"><option>ASAP</option><option>Within 30 days</option><option>1–3 months</option><option>Just researching</option></select>
-      <button class="btn" type="submit">Get Current Availability</button>
-      <p class="fineprint">Comparing buildings? <a href="https://staycio.com?utm_source=midtown5apartments&utm_medium=microsite">See all Midtown & Wynwood apartments on Staycio →</a></p>
-    </form>
+    <p class="kicker reveal">FAQ</p>
+    <h2 class="reveal" style="margin-bottom:34px">Quick answers</h2>
+    <details class="reveal"><summary>How much is rent at Midtown 5?</summary><p>As of August 2026, published availability starts around $2,462/month for smaller layouts (12-month lease, fees included in the advertised total), ranging up through the $4,000s for two-bedrooms. Submit the form for exact current pricing.</p></details>
+    <details class="reveal"><summary>Where is Midtown 5 located?</summary><p>3201 NE 1st Avenue — also addressed as 125 NE 32nd Street — Miami, FL 33137, in Midtown Miami directly beside The Shops at Midtown and a short walk to Wynwood.</p></details>
+    <details class="reveal"><summary>Is Midtown 5 pet friendly?</summary><p>Yes, with dedicated pet amenities. Confirm breed and weight policies with the leasing office.</p></details>
+    <details class="reveal"><summary>Is Midtown 5 the same as "Midtown Five"?</summary><p>Same building, written both ways. It's a different building from Midtown 8 / Yard 8, its sister-parcel neighbor a couple blocks north.</p></details>
   </div>
 </section>
+
+<div class="cta-band" id="availability">
+  <div class="wrap">
+    <div class="cta-grid">
+      <div class="reveal">
+        <p class="kicker" style="color:#ffd9a0">Availability</p>
+        <h2>Tell us what you need. We'll send what's open.</h2>
+        <p class="prose">Real units, real pricing, plus any specials running this week at Midtown 5 — usually within a few hours.</p>
+      </div>
+      <form data-lead class="reveal">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" required placeholder="Your name">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required placeholder="you@email.com">
+        <label for="unit">Looking for</label>
+        <select id="unit" name="unit_type"><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option></select>
+        <label for="movein">Move-in timeframe</label>
+        <select id="movein" name="move_in"><option>ASAP</option><option>Within 30 days</option><option>1–3 months</option><option>Just researching</option></select>
+        <button class="btn btn-coral" type="submit">Get Current Availability</button>
+        <p class="fineprint">Comparing buildings? <a href="https://staycio.com?utm_source=midtown5apartments&utm_medium=microsite">See all Midtown &amp; Wynwood apartments on Staycio →</a></p>
+      </form>
+    </div>
+  </div>
+</div>
 
 <footer>
   <div class="wrap">
-    <p>© 2026 midtown5apartments.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Midtown 5 or its management. Building names are used for identification only. Pricing compiled from public listings as of August 2026 and changes frequently — verify with the leasing office.</p>
+    <span class="wordmark">MIDTOWN<span>5</span>APARTMENTS.COM</span>
+    <p>© 2026 midtown5apartments.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Midtown 5 or its management. Building names are used for identification only. Photography is representative placeholder imagery, not the actual building. Pricing compiled from public listings as of August 2026 and changes frequently — verify with the leasing office.</p>
   </div>
 </footer>
+
 <script>
 (function(){
+  var hdr=document.getElementById("hdr");
+  addEventListener("scroll",function(){hdr.classList.toggle("scrolled",scrollY>40)},{passive:true});
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(function(el){io.observe(el)});
   var form=document.querySelector("form[data-lead]");if(!form)return;
   form.addEventListener("submit",function(e){
     e.preventDefault();
@@ -169,11 +272,11 @@
     data.domain="midtown5apartments.com";data.building="Midtown 5";
     fetch("https://staycio.com/api/microsite-leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
       .then(function(r){if(!r.ok)return r.json().catch(function(){return{};}).then(function(j){throw new Error(j.error||"Something went wrong");});return r.json();})
-      .then(function(){form.innerHTML='<h3 style="margin:6px 0">✓ Request received!</h3><p style="color:var(--muted)">We\'ll reply shortly with today\'s availability and any active specials.</p>';})
+      .then(function(){form.innerHTML='<p style="font-family:var(--display);font-weight:700;font-size:1.5rem">Request received.</p><p style="color:var(--muted-dark);margin-top:10px">We\'ll reply shortly with today\'s availability and any active specials.</p>';})
       .catch(function(err){
         btn.disabled=false;btn.textContent=old;
         var m=form.querySelector(".form-error");
-        if(!m){m=document.createElement("p");m.className="form-error";m.style.cssText="color:#b3261e;font-size:.9rem;margin-top:10px";form.appendChild(m);}
+        if(!m){m=document.createElement("p");m.className="form-error";m.style.cssText="color:#c0392b;font-size:.9rem;margin-top:12px";form.appendChild(m);}
         m.textContent=(err&&err.message?err.message:"Something went wrong")+" — please try again.";
       });
   });

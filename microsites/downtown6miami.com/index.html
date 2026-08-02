@@ -8,8 +8,12 @@
 <link rel="canonical" href="https://downtown6miami.com/">
 <meta property="og:title" content="Downtown 6 Miami — 824 New Apartments Leasing Late 2026">
 <meta property="og:description" content="Melo Group's newest downtown tower delivers Q4 2026, steps from MiamiCentral. Get on the waitlist.">
+<meta property="og:image" content="https://images.unsplash.com/photo-1506966953602-c20cc11f75e3?w=1200&q=80">
 <meta property="og:url" content="https://downtown6miami.com/">
 <meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -22,128 +26,229 @@
 }
 </script>
 <style>
-  :root{--accent:#0e9aa7;--accent-dark:#0a6f79;--ink:#13202a;--muted:#5a6a75;--bg:#ffffff;--soft:#f2f8f9;--line:#e2ecee}
+  :root{
+    --ink:#041f22; --aqua:#00c2cb; --aqua-deep:#00858c; --aqua-pale:#d7f6f7;
+    --white:#ffffff; --off:#f4fbfb; --muted:#7d9296; --muted-dark:#43585c;
+    --display:'Sora',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif;
+  }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
-  .wrap{max-width:1060px;margin:0 auto;padding:0 24px}
-  header{position:sticky;top:0;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:10}
-  header .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
-  .logo{font-weight:800;font-size:1.05rem;letter-spacing:-.01em}
-  .logo span{color:var(--accent)}
-  .badge{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
-  .btn{display:inline-block;background:var(--accent);color:#fff;font-weight:700;padding:12px 22px;border-radius:10px;text-decoration:none;border:none;font-size:1rem;cursor:pointer}
-  .btn:hover{background:var(--accent-dark)}
-  .btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--accent)}
-  .hero{background:linear-gradient(160deg,rgba(6,42,46,.93) 0%,rgba(10,75,82,.84) 55%,rgba(14,154,167,.72) 135%),url('https://images.unsplash.com/photo-1506966953602-c20cc11f75e3?w=1600&q=80') center/cover;color:#fff;padding:72px 0 64px}
-  .hero h1{font-size:clamp(1.9rem,4.5vw,3rem);line-height:1.15;letter-spacing:-.02em;max-width:740px}
-  .hero p.lead{margin:18px 0 28px;font-size:1.15rem;color:#c2e8ec;max-width:640px}
-  .hero .cta{display:flex;gap:12px;flex-wrap:wrap}
-  .ticker{background:#062a2e;color:#7fc8cf;font-size:.85rem;padding:10px 0}
-  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:-34px 0 0;position:relative}
-  .facts div{background:#fff;padding:18px 16px}
-  .facts b{display:block;font-size:1.25rem;letter-spacing:-.01em}
-  .facts small{color:var(--muted)}
-  section{padding:56px 0}
-  section.alt{background:var(--soft)}
-  h2{font-size:1.6rem;letter-spacing:-.01em;margin-bottom:14px}
-  .sub{color:var(--muted);max-width:640px;margin-bottom:28px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px}
-  .card h3{font-size:1.05rem;margin-bottom:6px}
-  .card p{color:var(--muted);font-size:.95rem}
-  details{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:10px}
-  summary{font-weight:700;cursor:pointer}
-  details p{margin-top:10px;color:var(--muted)}
-  form{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px;max-width:560px}
-  label{display:block;font-size:.85rem;font-weight:700;margin:14px 0 6px}
-  input,select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:1rem;font-family:inherit}
-  form .btn{width:100%;margin-top:20px}
-  .fineprint{font-size:.8rem;color:var(--muted);margin-top:12px}
-  footer{border-top:1px solid var(--line);padding:36px 0;font-size:.85rem;color:var(--muted)}
-  footer a{color:var(--accent)}
-  @media(max-width:640px){.facts{margin-top:-20px}}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--body);font-weight:300;color:var(--ink);background:var(--white);line-height:1.7;font-size:1.02rem}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+  img{max-width:100%;display:block}
+
+  header{position:fixed;top:0;left:0;right:0;z-index:50;transition:all .35s;padding:20px 0}
+  header.scrolled{background:rgba(4,31,34,.96);backdrop-filter:blur(12px);padding:12px 0}
+  header .wrap{display:flex;align-items:center;justify-content:space-between}
+  .wordmark{font-family:var(--display);font-weight:800;font-size:1.25rem;color:#fff;text-decoration:none;letter-spacing:-.01em}
+  .wordmark span{color:var(--aqua)}
+  .nav-cta{font-family:var(--display);font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--aqua);text-decoration:none;padding:12px 24px;border-radius:999px;transition:all .3s}
+  .nav-cta:hover{background:#fff}
+
+  .hero{position:relative;min-height:100vh;display:flex;align-items:center;color:#fff;
+    background:linear-gradient(165deg,rgba(4,31,34,.82) 0%,rgba(0,133,140,.45) 60%,rgba(4,31,34,.72) 100%),
+    url('https://images.unsplash.com/photo-1506966953602-c20cc11f75e3?w=2000&q=80') center/cover}
+  .hero-inner{max-width:840px;padding:150px 0 110px}
+  .chip{display:inline-block;font-family:var(--display);font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;background:rgba(0,194,203,.18);border:1px solid rgba(0,194,203,.5);color:#9ff0f4;padding:8px 18px;border-radius:999px;margin-bottom:28px}
+  .hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,6.4vw,4.8rem);line-height:1.04;letter-spacing:-.03em}
+  .hero h1 .aqua{color:var(--aqua)}
+  .hero p.sub{margin:26px 0 38px;font-size:1.15rem;color:rgba(255,255,255,.85);max-width:560px}
+  .btn{display:inline-block;font-family:var(--display);font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;padding:17px 36px;border-radius:999px;transition:all .3s;cursor:pointer;border:none}
+  .btn-aqua{background:var(--aqua);color:var(--ink)}
+  .btn-aqua:hover{background:#fff}
+  .btn-ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.4);margin-left:14px}
+  .btn-ghost:hover{border-color:var(--aqua);color:var(--aqua)}
+  .hero-ticker{position:absolute;bottom:0;left:0;right:0;background:var(--aqua);color:var(--ink);font-family:var(--display);font-weight:600;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;padding:13px 0;white-space:nowrap;overflow:hidden}
+  .hero-ticker div{display:inline-block;animation:tick 28s linear infinite}
+  @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+  .stats{background:var(--ink);color:#fff;padding:70px 0}
+  .stats .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:36px}
+  .stat{border-left:2px solid var(--aqua);padding-left:22px}
+  .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.6rem;letter-spacing:-.02em;line-height:1.15}
+  .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+
+  section{padding:104px 0}
+  .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
+  h2{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,3.6vw,2.7rem);line-height:1.12;letter-spacing:-.02em;margin-bottom:20px}
+  .prose{color:var(--muted-dark);max-width:58ch}
+  .prose+.prose{margin-top:16px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
+  .split img{width:100%;height:540px;object-fit:cover;border-radius:24px}
+
+  .melo{background:var(--off)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;margin-top:46px}
+  .card{background:#fff;border-radius:20px;padding:36px 32px;border:1px solid #e3f0f1;transition:transform .3s,box-shadow .3s}
+  .card:hover{transform:translateY(-4px);box-shadow:0 18px 42px rgba(4,31,34,.09)}
+  .card .num{font-family:var(--display);font-weight:800;font-size:.85rem;color:var(--aqua-deep);letter-spacing:.14em}
+  .card b{display:block;font-family:var(--display);font-weight:700;font-size:1.15rem;margin:12px 0 8px;letter-spacing:-.01em}
+  .card p{color:var(--muted-dark);font-size:.95rem}
+
+  .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .gallery-grid figure{overflow:hidden;border-radius:22px;position:relative}
+  .gallery-grid img{width:100%;height:400px;object-fit:cover;transition:transform 1s ease}
+  .gallery-grid figure:hover img{transform:scale(1.06)}
+  .gallery-grid figcaption{position:absolute;left:0;right:0;bottom:0;padding:20px;color:#fff;font-family:var(--display);font-size:.72rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;background:linear-gradient(transparent,rgba(4,31,34,.72))}
+
+  details{background:var(--off);border-radius:16px;padding:22px 28px;margin-bottom:12px;border:1px solid #e3f0f1}
+  summary{font-family:var(--display);font-weight:600;font-size:1.05rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:-.01em}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:'+';font-size:1.4rem;color:var(--aqua-deep);transition:transform .3s}
+  details[open] summary::after{transform:rotate(45deg)}
+  details p{margin-top:12px;color:var(--muted-dark)}
+
+  .cta-band{position:relative;color:#fff;padding:120px 0;
+    background:linear-gradient(160deg,rgba(4,31,34,.93),rgba(0,133,140,.82)),
+    url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=2000&q=80') center/cover}
+  .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:76px;align-items:start}
+  .cta-band h2{color:#fff}
+  .cta-band .prose{color:rgba(255,255,255,.8)}
+  form{background:rgba(255,255,255,.99);border-radius:24px;padding:44px;color:var(--ink);position:relative;box-shadow:0 30px 80px rgba(0,0,0,.3)}
+  label{display:block;font-family:var(--display);font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--aqua-deep);margin:20px 0 8px}
+  form label:first-of-type{margin-top:0}
+  input,select{width:100%;background:var(--off);border:1px solid #dcecee;border-radius:12px;color:var(--ink);font-family:var(--body);font-size:1rem;padding:14px 16px;outline:none;transition:border-color .3s}
+  input:focus,select:focus{border-color:var(--aqua)}
+  select{appearance:none;cursor:pointer}
+  form .btn{width:100%;margin-top:28px}
+  .fineprint{margin-top:16px;font-size:.83rem;color:var(--muted)}
+  .fineprint a{color:var(--aqua-deep)}
+
+  footer{background:var(--ink);color:var(--muted);padding:54px 0;font-size:.82rem}
+  footer .wordmark{font-size:1rem;display:inline-block;margin-bottom:18px}
+  footer a{color:var(--aqua)}
+  footer p{max-width:90ch}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:900px){
+    .split,.cta-grid{grid-template-columns:1fr;gap:42px}
+    .split img{height:360px}
+    .gallery-grid{grid-template-columns:1fr}
+    .gallery-grid img{height:280px}
+    section{padding:72px 0}
+    .btn-ghost{margin-left:0;margin-top:12px}
+  }
 </style>
 </head>
 <body>
-<header>
+
+<header id="hdr">
   <div class="wrap">
-    <div class="logo">Downtown<span>6</span>Miami.com</div>
-    <div class="badge">Independent Rental Guide</div>
-    <a class="btn" href="#waitlist" style="padding:9px 16px;font-size:.9rem">Join Waitlist</a>
+    <a class="wordmark" href="#top">DOWNTOWN<span>6</span></a>
+    <a class="nav-cta" href="#waitlist">Get Pricing First</a>
   </div>
 </header>
 
-<div class="hero">
+<div class="hero" id="top">
   <div class="wrap">
-    <h1>Downtown 6 — 824 New Apartments Coming to Downtown Miami, Late 2026</h1>
-    <p class="lead">Melo Group's newest tower at 46 NE 6th Street topped off in March 2026 and delivers by year-end — steps from MiamiCentral Brightline. Get pricing before the leasing office opens.</p>
-    <div class="cta">
-      <a class="btn" href="#waitlist" style="background:#fff;color:var(--accent-dark)">Join the Waitlist</a>
-      <a class="btn ghost" href="#details" style="color:#fff;border-color:rgba(255,255,255,.5)">Building Details</a>
+    <div class="hero-inner">
+      <span class="chip">Topped Off · Delivering Q4 2026</span>
+      <h1>824 new apartments.<br>Zero excuses to<br>leave <span class="aqua">Downtown.</span></h1>
+      <p class="sub">Melo Group's newest tower at 46 NE 6th Street — two blocks from Brightline, in the middle of everything. Get pricing before the leasing office even opens.</p>
+      <a class="btn btn-aqua" href="#waitlist">Join the Waitlist</a>
+      <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
   </div>
+  <div class="hero-ticker"><div>Topped off March 2026 &nbsp;·&nbsp; 824 residences &nbsp;·&nbsp; 2 blocks to MiamiCentral &nbsp;·&nbsp; Leasing late 2026 &nbsp;·&nbsp; Topped off March 2026 &nbsp;·&nbsp; 824 residences &nbsp;·&nbsp; 2 blocks to MiamiCentral &nbsp;·&nbsp; Leasing late 2026 &nbsp;·&nbsp;</div></div>
 </div>
-<div class="ticker"><div class="wrap">🏗️ Topped off March 2026 · On track for completion Q4 2026 · Leasing details expected soon</div></div>
 
-<div class="wrap">
-  <div class="facts" id="details">
-    <div><b>824</b><small>residences</small></div>
-    <div><b>Q4 2026</b><small>expected completion</small></div>
-    <div><b>Melo</b><small>Group — developer</small></div>
-    <div><b>46 NE 6th St</b><small>Downtown Miami</small></div>
-    <div><b>2 blocks</b><small>to MiamiCentral</small></div>
+<div class="stats">
+  <div class="wrap">
+    <div class="stat reveal"><b>824</b><small>Residences</small></div>
+    <div class="stat reveal"><b>Q4 '26</b><small>Completion</small></div>
+    <div class="stat reveal"><b>2 min</b><small>Walk to Brightline</small></div>
+    <div class="stat reveal"><b>6th</b><small>Melo Downtown Tower</small></div>
   </div>
 </div>
+
+<section id="building">
+  <div class="wrap">
+    <div class="split">
+      <div class="reveal">
+        <p class="kicker">46 NE 6th Street</p>
+        <h2>The A&E District just got its anchor</h2>
+        <p class="prose">Downtown 6 rises in Miami's Arts & Entertainment District — two blocks from MiamiCentral, where Brightline runs to Fort Lauderdale, Boca, West Palm and Orlando. Metromover at the corner. Wynwood and Brickell, ten minutes either way.</p>
+        <p class="prose">This is Melo Group's sixth downtown tower, following the same playbook that filled Downtown 1st, Downtown 5th, Art Plaza and Miami Plaza: new construction, real pricing, fast approvals — buildings that lease up while competitors are still printing brochures.</p>
+      </div>
+      <img class="reveal" src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1200&q=80" alt="Downtown city towers" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section class="melo" style="padding-top:90px">
+  <div class="wrap">
+    <p class="kicker reveal">Why renters track Melo buildings</p>
+    <h2 class="reveal">Priced like they actually want you to move in</h2>
+    <div class="cards">
+      <div class="card reveal"><span class="num">01</span><b>Below-market instinct</b><p>Melo has delivered thousands of downtown units priced consistently under flashier competition — their lease-ups routinely outpace the market.</p></div>
+      <div class="card reveal"><span class="num">02</span><b>No-drama leasing</b><p>Sister towers are known for straightforward pricing and quick, simple approvals. No broker games.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>Location without markup</b><p>Steps from transit, arenas, Bayside and the bay — the same blocks luxury towers charge a premium for.</p></div>
+    </div>
+  </div>
+</section>
 
 <section>
   <div class="wrap">
-    <h2>Melo's biggest downtown tower yet</h2>
-    <p class="sub">Downtown 6 follows the same playbook that filled Downtown 1st, Downtown 5th, Art Plaza and Miami Plaza: well-priced new construction in the urban core, walkable to Brightline, Metromover, the A&E District and Biscayne Bay. Melo towers historically lease fast — their sister buildings are known for straightforward pricing and quick approvals.</p>
-    <div class="grid">
-      <div class="card"><h3>Why renters track Melo buildings</h3><p>Melo Group has delivered thousands of downtown units with pricing consistently below flashier competitors — their lease-ups routinely outpace the market.</p></div>
-      <div class="card"><h3>Location</h3><p>The A&E District: two blocks to MiamiCentral (Brightline to Fort Lauderdale, Boca, WPB and Orlando), Metromover access, ten minutes to Wynwood or Brickell.</p></div>
-      <div class="card"><h3>What we know</h3><p>824 residences in a mixed-use tower. Unit mix and rents haven't been published — waitlist members hear first.</p></div>
+    <p class="kicker reveal">The Neighborhood</p>
+    <h2 class="reveal" style="margin-bottom:44px">Your ten-minute radius</h2>
+    <div class="gallery-grid">
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=1000&q=80" alt="Palm-lined Miami street" loading="lazy"><figcaption>Miami Outside</figcaption></figure>
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1000&q=80" alt="Bright apartment interior" loading="lazy"><figcaption>New Construction</figcaption></figure>
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1508394522741-82ac9c15ba69?w=1000&q=80" alt="Palms and skyline" loading="lazy"><figcaption>The Skyline</figcaption></figure>
     </div>
   </div>
 </section>
 
-<section class="alt">
+<section style="padding-top:0">
   <div class="wrap">
-    <h2>Frequently asked questions</h2>
-    <details><summary>When does Downtown 6 start leasing?</summary><p>The tower is on track for completion in Q4 2026. Based on Melo's past lease-ups, applications typically open around building completion. Join the waitlist to be notified the day it happens.</p></details>
-    <details><summary>How much will rent be at Downtown 6?</summary><p>Not yet published. Melo's downtown sister towers have historically leased below comparable new construction — we'll email exact pricing when the leasing office releases it.</p></details>
-    <details><summary>Where exactly is it?</summary><p>46 NE 6th Street, in Downtown Miami's Arts & Entertainment District — two blocks from MiamiCentral station.</p></details>
-    <details><summary>Who is the developer?</summary><p>Melo Group, the family developer behind Downtown 1st, Downtown 5th, Art Plaza, Miami Plaza, Square Station and Melody Tower.</p></details>
+    <p class="kicker reveal">FAQ</p>
+    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
+    <details class="reveal"><summary>When does Downtown 6 start leasing?</summary><p>The tower is on track for completion in Q4 2026. Based on Melo's past lease-ups, applications typically open around building completion — waitlist members are notified the day it happens.</p></details>
+    <details class="reveal"><summary>How much will rent be?</summary><p>Not yet published. Melo's downtown sister towers have historically leased below comparable new construction — exact pricing goes out to the waitlist the moment the leasing office releases it.</p></details>
+    <details class="reveal"><summary>Where exactly is it?</summary><p>46 NE 6th Street — Downtown Miami's Arts & Entertainment District, two blocks from MiamiCentral station.</p></details>
+    <details class="reveal"><summary>Who is Melo Group?</summary><p>The family developer behind Downtown 1st, Downtown 5th, Art Plaza, Miami Plaza, Square Station and Melody Tower — over a dozen towers of downtown rental housing.</p></details>
   </div>
 </section>
 
-<section id="waitlist">
+<div class="cta-band" id="waitlist">
   <div class="wrap">
-    <h2>Get Downtown 6 pricing first</h2>
-    <p class="sub">Free waitlist — floor plans, rents and opening specials the moment they're announced.</p>
-    <form data-lead>
-      <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
-      <label for="name">Name</label>
-      <input id="name" name="name" type="text" required placeholder="Your name">
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" required placeholder="you@email.com">
-      <label for="unit">Interested in</label>
-      <select id="unit" name="unit_type"><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
-      <label for="movein">Target move-in</label>
-      <select id="movein" name="move_in"><option>Q4 2026</option><option>Early 2027</option><option>Flexible</option></select>
-      <button class="btn" type="submit">Join the Waitlist</button>
-      <p class="fineprint">Need a place sooner? <a href="https://staycio.com?utm_source=downtown6miami&utm_medium=microsite">Browse available Miami apartments on Staycio →</a></p>
-    </form>
+    <div class="cta-grid">
+      <div class="reveal">
+        <p class="kicker" style="color:#9ff0f4">The Waitlist</p>
+        <h2>Get pricing before the crowd.</h2>
+        <p class="prose">824 apartments will not stay quiet for long. Floor plans, rents and opening specials — emailed the moment they drop.</p>
+      </div>
+      <form data-lead class="reveal">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" required placeholder="Your name">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required placeholder="you@email.com">
+        <label for="unit">Interested in</label>
+        <select id="unit" name="unit_type"><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
+        <label for="movein">Target move-in</label>
+        <select id="movein" name="move_in"><option>Q4 2026</option><option>Early 2027</option><option>Flexible</option></select>
+        <button class="btn btn-aqua" type="submit">Join the Waitlist</button>
+        <p class="fineprint">Need a place sooner? <a href="https://staycio.com?utm_source=downtown6miami&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
+      </form>
+    </div>
   </div>
-</section>
+</div>
 
 <footer>
   <div class="wrap">
-    <p>© 2026 downtown6miami.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Melo Group. Building names are used for identification only. Details compiled from public reporting, believed accurate as of August 2026 — always verify with the official leasing office.</p>
+    <span class="wordmark">DOWNTOWN<span>6</span>MIAMI.COM</span>
+    <p>© 2026 downtown6miami.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Melo Group. Building names are used for identification only. Photography is representative placeholder imagery, not the actual building. Details compiled from public reporting, believed accurate as of August 2026 — always verify with the official leasing office.</p>
   </div>
 </footer>
+
 <script>
 (function(){
+  var hdr=document.getElementById("hdr");
+  addEventListener("scroll",function(){hdr.classList.toggle("scrolled",scrollY>40)},{passive:true});
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(function(el){io.observe(el)});
   var form=document.querySelector("form[data-lead]");if(!form)return;
   form.addEventListener("submit",function(e){
     e.preventDefault();
@@ -153,11 +258,11 @@
     data.domain="downtown6miami.com";data.building="Downtown 6";
     fetch("https://staycio.com/api/microsite-leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
       .then(function(r){if(!r.ok)return r.json().catch(function(){return{};}).then(function(j){throw new Error(j.error||"Something went wrong");});return r.json();})
-      .then(function(){form.innerHTML='<h3 style="margin:6px 0">✓ You\'re on the list!</h3><p style="color:var(--muted)">We\'ll email you the moment pricing and availability are released.</p>';})
+      .then(function(){form.innerHTML='<p style="font-family:var(--display);font-weight:700;font-size:1.5rem">You\'re on the list! 🎉</p><p style="color:var(--muted-dark);margin-top:10px">We\'ll email you the moment pricing and availability drop.</p>';})
       .catch(function(err){
         btn.disabled=false;btn.textContent=old;
         var m=form.querySelector(".form-error");
-        if(!m){m=document.createElement("p");m.className="form-error";m.style.cssText="color:#b3261e;font-size:.9rem;margin-top:10px";form.appendChild(m);}
+        if(!m){m=document.createElement("p");m.className="form-error";m.style.cssText="color:#c0392b;font-size:.9rem;margin-top:12px";form.appendChild(m);}
         m.textContent=(err&&err.message?err.message:"Something went wrong")+" — please try again.";
       });
   });
