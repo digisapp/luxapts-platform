@@ -67,6 +67,33 @@ export const createLeadSchema = z.object({
 
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
 
+// ---- Microsite lead capture ----
+
+export const MICROSITE_DOMAINS = [
+  "namdartowers.com",
+  "downtown6miami.com",
+  "jadebrickell.com",
+  "sentralbrickell.com",
+  "perrinbrickell.com",
+  "midtown5apartments.com",
+] as const;
+
+export const micrositeLeadSchema = z.object({
+  domain: z.enum(MICROSITE_DOMAINS, { message: "Unknown microsite domain" }),
+  building: z.string().min(1, "Building is required").max(200),
+  name: z.string().min(1, "Name is required").max(200),
+  email: z.string().email("Invalid email address").max(320),
+  unit_type: z.string().max(100).optional(),
+  move_in: z.string().max(100).optional(),
+  intent: z.string().max(100).optional(),
+  bedrooms: z.string().max(100).optional(),
+  stay_type: z.string().max(100).optional(),
+  // Honeypot — real users never fill this; bots do.
+  website: z.string().max(0, "Invalid submission").optional(),
+});
+
+export type MicrositeLeadInput = z.infer<typeof micrositeLeadSchema>;
+
 // ---- Chat ----
 
 const chatMessageSchema = z.object({
