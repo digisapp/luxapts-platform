@@ -7,11 +7,16 @@ export function Footer() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           {/* Left side */}
           <div className="flex flex-col gap-4">
-            <Link href="/" className="text-lg font-medium text-white">
-              Staycio
-            </Link>
+            <div className="flex items-baseline gap-2.5">
+              <Link href="/" className="text-lg font-medium text-white">
+                Staycio
+              </Link>
+              <span className="font-mono text-xs text-zinc-600">
+                /STAY-see-oh/
+              </span>
+            </div>
             <p className="text-sm text-zinc-500 max-w-xs">
-              Find the space that fits your life.
+              Stay + <em>espacio</em>. Find the space that fits your life.
             </p>
           </div>
 

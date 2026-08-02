@@ -30,7 +30,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "Staycio — Your space, found.",
-  description: "AI-powered apartment discovery across major US cities. Find the space that fits your life.",
+  description: "Stay + espacio: a space to stay while you figure out the rest. AI-powered apartment discovery across major US cities.",
   keywords: ["apartments", "rentals", "NYC", "Miami", "luxury apartments", "apartment search"],
   appleWebApp: {
     capable: true,
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Staycio — Your space, found.",
-    description: "AI-powered apartment discovery across major US cities. Find the space that fits your life.",
+    description: "Stay + espacio: a space to stay while you figure out the rest. AI-powered apartment discovery across major US cities.",
     url: "https://staycio.com",
     siteName: "Staycio",
     type: "website",
