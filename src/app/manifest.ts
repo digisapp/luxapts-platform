@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Staycio — Your space, found.",
     short_name: "Staycio",
     description:
-      "AI-powered apartment discovery across major US cities. Find the space that fits your life.",
+      "AI-powered apartment discovery across major US cities. Your space, found.",
     start_url: "/",
     display: "standalone",
     background_color: "#000000",

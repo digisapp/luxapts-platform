@@ -16,7 +16,7 @@ export function Footer() {
               </span>
             </div>
             <p className="text-sm text-zinc-500 max-w-xs">
-              Stay + <em>espacio</em>. Find the space that fits your life.
+              Your space, found.
             </p>
           </div>
 

@@ -12,10 +12,10 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Staycio — Your space, found.",
-  description: "Stop searching — just describe your next apartment. Stacy, your AI apartment agent, finds apartments in New York, Miami, Los Angeles, Chicago, Dallas, Austin, Nashville, Atlanta, and Brooklyn, with live pricing and zero hassle.",
+  description: "Stop searching — just tell Stacy what you want. Describe your ideal apartment and Stacy searches live listings in New York, Miami, Los Angeles, Chicago, Dallas, Austin, Nashville, Atlanta, and Brooklyn, comparing pricing and availability to recommend the ones worth touring.",
   openGraph: {
     title: "Staycio — Your space, found.",
-    description: "Stop searching. Just describe your next apartment. Meet Stacy, your AI apartment agent.",
+    description: "Stop searching. Just tell Stacy what you want.",
     url: "https://staycio.com",
     siteName: "Staycio",
     type: "website",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Staycio — Your space, found.",
-    description: "Stop searching. Just describe your next apartment. Meet Stacy, your AI apartment agent.",
+    description: "Stop searching. Just tell Stacy what you want.",
     images: ["https://staycio.com/og-image.png"],
   },
   alternates: {

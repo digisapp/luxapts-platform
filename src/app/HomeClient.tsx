@@ -9,6 +9,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SimliAvatar } from "@/components/simli";
 import { formatPrice } from "@/lib/utils";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 export interface HomeStats {
   cities: number;
@@ -75,13 +76,25 @@ const STACY_PROMPTS = [
   "Dog-friendly buildings",
 ];
 
-// Conversational example searches — teach "describe it" over "browse"
+// Conversational example searches — teach "describe it" over "browse".
+// Price-first phrasing: most people think in price before amenities.
 const EXAMPLE_SEARCHES = [
   "Studio in Williamsburg under $2,800",
   "2-bedroom in Miami under $3,500",
-  "Dog-friendly apartment in Austin with a yard",
-  "Brickell apartment with a rooftop pool under $3,000",
+  "Dog-friendly apartment in Austin under $2,400",
+  "Luxury apartment in Brickell with a rooftop pool",
+  "Walk to downtown Nashville under $2,200",
 ];
+
+// A/B test: which frustration framing converts better. Variant is sticky per
+// browser (localStorage) and stamped on hero engagement events so conversion
+// can be compared per variant in the analytics dashboard.
+const HERO_VARIANTS = {
+  searching: "Stop searching.",
+  scrolling: "Stop scrolling.",
+} as const;
+type HeroVariant = keyof typeof HERO_VARIANTS;
+const HERO_VARIANT_KEY = "staycio_hero_variant";
 
 // Type for SpeechRecognition
 interface SpeechRecognitionEvent extends Event {
@@ -94,9 +107,14 @@ interface SpeechRecognitionErrorEvent extends Event {
 
 export default function HomeClient({ stats, featured, neighborhoods }: HomeClientProps) {
   const router = useRouter();
+  const { trackEvent } = useAnalytics();
   const [searchQuery, setSearchQuery] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  // SSR renders the "searching" variant; the sticky assignment swaps in
+  // post-hydration to avoid a server/client mismatch.
+  const [heroVariant, setHeroVariant] = useState<HeroVariant>("searching");
+  const heroVariantRef = useRef<HeroVariant>("searching");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   // Check for speech recognition support + cleanup on unmount
@@ -105,7 +123,6 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       // Browser-capability detection must happen post-hydration so server and
       // first client render match.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSpeechSupported(!!SpeechRecognition);
     }
     return () => {
@@ -114,6 +131,30 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
       recognitionRef.current = null;
     };
   }, []);
+
+  // Assign (or restore) the sticky hero headline variant and log an
+  // impression so each variant has a denominator for conversion rate.
+  useEffect(() => {
+    let variant = localStorage.getItem(HERO_VARIANT_KEY) as HeroVariant | null;
+    if (!variant || !(variant in HERO_VARIANTS)) {
+      variant = Math.random() < 0.5 ? "searching" : "scrolling";
+      localStorage.setItem(HERO_VARIANT_KEY, variant);
+    }
+    heroVariantRef.current = variant;
+    setHeroVariant(variant);
+    const impressionKey = `${HERO_VARIANT_KEY}_seen`;
+    if (!sessionStorage.getItem(impressionKey)) {
+      sessionStorage.setItem(impressionKey, "true");
+      trackEvent("hero_variant_view", "engagement", { variant });
+    }
+    // trackEvent identity changes when auth hydrates; the impressionKey guard
+    // makes re-runs harmless, but only mount matters here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const trackHeroEngagement = (source: "search" | "voice" | "example" | "browse_link") => {
+    trackEvent("hero_engaged", "conversion", { variant: heroVariantRef.current, source });
+  };
 
   const startListening = () => {
     if (!speechSupported) return;
@@ -137,6 +178,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
       setIsListening(false);
       // Auto-search after voice input
       if (transcript.trim()) {
+        trackHeroEngagement("voice");
         router.push(`/search?q=${encodeURIComponent(transcript.trim())}`);
       }
     };
@@ -162,6 +204,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
   };
 
   const handleSearch = () => {
+    trackHeroEngagement("search");
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     } else {
@@ -210,17 +253,13 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
             </div>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-white mb-5 sm:mb-6 animate-fade-in [animation-delay:100ms]">
-              Stop searching.
+              {HERO_VARIANTS[heroVariant]}
               <br />
-              <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">Just describe your next apartment.</span>
+              <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">Just tell Stacy what you want.</span>
             </h1>
 
-            <p className="text-lg sm:text-xl md:text-2xl font-medium text-white mb-4 animate-fade-in [animation-delay:180ms]">
-              Meet Stacy, your AI apartment agent.
-            </p>
-
             <p className="text-base sm:text-lg text-white/60 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed animate-fade-in [animation-delay:240ms]">
-              Tell her your city, budget, neighborhood, commute, pets, or must-haves. Stacy searches thousands of apartments, compares live prices, and narrows it down to the ones actually worth seeing.
+              Describe your ideal apartment naturally. Stacy searches thousands of live listings, compares pricing and availability, and recommends the ones actually worth touring.
             </p>
 
             {/* Search Input - Glass Style */}
@@ -234,7 +273,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="2 bedroom in Miami under $3,500"
+                    placeholder="2-bedroom in Miami under $3,500"
                     className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-48 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white text-base placeholder:text-white/40 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all duration-300"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2">
@@ -264,6 +303,16 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                   </div>
                 </div>
               </div>
+              <p className="mt-4 text-sm text-white/40">
+                or{" "}
+                <Link
+                  href="/search"
+                  onClick={() => trackHeroEngagement("browse_link")}
+                  className="text-white/60 underline underline-offset-4 decoration-white/20 hover:text-white hover:decoration-white/50 transition-colors"
+                >
+                  start your search
+                </Link>
+              </p>
             </div>
 
             {/* Conversational example searches — tap to run */}
@@ -274,7 +323,10 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
               {EXAMPLE_SEARCHES.map((example) => (
                 <button
                   key={example}
-                  onClick={() => router.push(`/search?q=${encodeURIComponent(example)}`)}
+                  onClick={() => {
+                    trackHeroEngagement("example");
+                    router.push(`/search?q=${encodeURIComponent(example)}`);
+                  }}
                   className="px-3 py-1.5 rounded-full text-xs text-white/50 border border-transparent hover:text-white hover:bg-white/[0.05] hover:border-white/[0.1] transition-colors duration-300 cursor-pointer"
                 >
                   &ldquo;{example}&rdquo;
@@ -318,7 +370,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                     Featured <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">residences</span>
                   </h2>
                   <p className="text-white/60">
-                    The buildings with the most open apartments right now — real prices, updated daily.
+                    Buildings with the most availability right now.
                   </p>
                 </div>
                 <Link
@@ -390,7 +442,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                 Browse by neighborhood
               </h2>
               <p className="text-white/60 mb-8">
-                The neighborhoods with the most places open right now.
+                Explore apartments by neighborhood.
               </p>
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                 {neighborhoods.map((n) => (
@@ -425,7 +477,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                 Talk to <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">Stacy</span>
               </h2>
               <p className="text-lg text-white/60 max-w-xl mx-auto">
-                Budget, neighborhood, natural light, dog-friendly — tell her the vibe, out loud or in chat, and she searches while you pack.
+                Talk naturally. Stacy understands budgets, neighborhoods, commute times, pets, amenities, and the little details that matter.
               </p>
             </div>
 
