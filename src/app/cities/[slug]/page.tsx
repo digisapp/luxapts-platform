@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { getBuildingFallbackImage } from "@/lib/images/fallback";
-import { fetchAllRows } from "@/lib/db-helpers";
+import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 import { CITY_COPY } from "@/lib/seo/city-copy";
 import { formatPrice } from "@/lib/utils";
 import { Building2, MapPin, Search, ArrowRight, Star, TrendingUp } from "lucide-react";
@@ -131,44 +131,15 @@ export default async function CityPage({ params }: CityPageProps) {
   const minPriceMap: Record<string, number> = {};
 
   if (buildingIds.length > 0) {
-    // Paged past Supabase's 1000-row response cap so counts and minimum
-    // prices stay accurate for large cities
-    const units = await fetchAllRows<{ id: string; building_id: string }>((from, to) =>
-      supabase
-        .from("units")
-        .select("id, building_id")
-        .in("building_id", buildingIds)
-        .eq("is_available", true)
-        .order("id")
-        .range(from, to)
-    );
-
+    // One chunked + paged query on the price view: unit counts and minimum
+    // rents per building without the giant `.in(unitIds)` URL that broke
+    // past a few hundred units.
+    const units = await fetchAvailableUnitPrices(supabase, buildingIds);
     for (const u of units) {
       unitCountMap[u.building_id] = (unitCountMap[u.building_id] || 0) + 1;
-    }
-
-    if (units.length > 0) {
-      const unitIds = units.map((u) => u.id);
-      // latest_unit_prices: one row per unit, so no history scan or dedup
-      const prices = await fetchAllRows<{ unit_id: string; rent: number }>(
-        (from, to) =>
-          supabase
-            .from("latest_unit_prices")
-            .select("unit_id, rent")
-            .in("unit_id", unitIds)
-            .order("unit_id")
-            .range(from, to)
-      );
-
-      const unitToBuilding = new Map(units.map((u) => [u.id, u.building_id]));
-      for (const p of prices) {
-        const buildingId = unitToBuilding.get(p.unit_id);
-        if (buildingId) {
-          const cur = minPriceMap[buildingId];
-          if (cur === undefined || p.rent < cur) {
-            minPriceMap[buildingId] = p.rent;
-          }
-        }
+      if (u.latest_rent != null) {
+        const cur = minPriceMap[u.building_id];
+        if (cur === undefined || u.latest_rent < cur) minPriceMap[u.building_id] = u.latest_rent;
       }
     }
   }

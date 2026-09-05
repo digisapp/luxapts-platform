@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
+import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -118,28 +119,26 @@ export default async function NeighborhoodPage({ params, searchParams }: Neighbo
 
   const buildingIds = buildings?.map((b) => b.id) || [];
 
-  // Get available units
-  const { data: units } = await supabase
-    .from("units")
-    .select("id, building_id, beds, baths, sqft")
-    .in("building_id", buildingIds)
-    .eq("is_available", true);
-
-  const unitIds = units?.map((u) => u.id) || [];
+  // Available units with their latest rent — chunked by building and paged,
+  // instead of a second query with every unit id in the URL (400s past a
+  // few hundred units, so busy neighborhoods showed no prices)
+  const units = await fetchAvailableUnitPrices<{
+    id: string;
+    building_id: string;
+    latest_rent: number | null;
+    beds: number | null;
+    baths: number | null;
+    sqft: number | null;
+  }>(supabase, buildingIds, ["beds", "baths", "sqft"]);
 
   // Get price stats
   let priceStats = { min: 0, max: 0, avg: 0 };
   const priceByBuilding: Record<string, { min: number; count: number }> = {};
 
-  if (unitIds.length > 0) {
-    const { data: prices } = await supabase
-      .from("latest_unit_prices")
-      .select("unit_id, rent")
-      .in("unit_id", unitIds);
-
+  if (units.length > 0) {
     const latestPrices: Record<string, number> = {};
-    for (const p of prices || []) {
-      latestPrices[p.unit_id] = p.rent;
+    for (const u of units) {
+      if (u.latest_rent != null) latestPrices[u.id] = u.latest_rent;
     }
 
     // Map unit to building for building prices

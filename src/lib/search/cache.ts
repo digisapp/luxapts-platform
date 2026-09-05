@@ -124,7 +124,10 @@ interface UnitRow {
   buildings: unknown;
 }
 
-const UNIT_SELECT = `
+// Typed as plain string so supabase-js doesn't try to parse the embed
+// grammar at the type level (2.115's parser blows the instantiation depth on
+// nested embeds; the client is untyped anyway).
+const UNIT_SELECT: string = `
   id, building_id, floorplan_id, unit_number, beds, baths, sqft,
   available_on, latest_rent, latest_net_effective_rent, price_captured_at,
   buildings:building_id (
@@ -158,30 +161,20 @@ function compareUnits(sort: string, a: UnitRow, b: UnitRow): number {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function applyOrder<Q extends { order: (...args: any[]) => Q }>(query: Q, sort: string): Q {
+type OrderSpec = [column: string, opts: { ascending: boolean; nullsFirst?: boolean }];
+
+/** SQL ordering that mirrors compareUnits; the trailing id keeps range() paging stable. */
+function orderSpec(sort: string): OrderSpec[] {
   switch (sort) {
     case "price_low":
-      return query
-        .order("latest_rent", { ascending: true })
-        .order("price_captured_at", { ascending: false })
-        .order("id", { ascending: true });
+      return [["latest_rent", { ascending: true }], ["price_captured_at", { ascending: false }], ["id", { ascending: true }]];
     case "price_high":
-      return query
-        .order("latest_rent", { ascending: false })
-        .order("price_captured_at", { ascending: false })
-        .order("id", { ascending: true });
+      return [["latest_rent", { ascending: false }], ["price_captured_at", { ascending: false }], ["id", { ascending: true }]];
     case "sqft_high":
-      return query
-        .order("sqft", { ascending: false, nullsFirst: false })
-        .order("latest_rent", { ascending: true })
-        .order("id", { ascending: true });
+      return [["sqft", { ascending: false, nullsFirst: false }], ["latest_rent", { ascending: true }], ["id", { ascending: true }]];
     case "newest":
     default:
-      return query
-        .order("price_captured_at", { ascending: false })
-        .order("latest_rent", { ascending: true })
-        .order("id", { ascending: true });
+      return [["price_captured_at", { ascending: false }], ["latest_rent", { ascending: true }], ["id", { ascending: true }]];
   }
 }
 
@@ -273,7 +266,8 @@ async function executeSearch(params: SearchParams): Promise<SearchResponse> {
     if (typeof params.budget_min === "number") q = q.gte("latest_rent", params.budget_min);
     if (typeof params.budget_max === "number") q = q.lte("latest_rent", params.budget_max);
 
-    return applyOrder(q, sort);
+    for (const [column, opts] of orderSpec(sort)) q = q.order(column, opts);
+    return q;
   };
 
   const cursors = chunk(buildingIds, IN_CHUNK_SIZE).map((ids) => ({

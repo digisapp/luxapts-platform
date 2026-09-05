@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { apiError } from "@/lib/api-helpers";
 import { getFirstRelation } from "@/lib/db-helpers";
+import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 
 // Public read-only data — let the CDN serve it (5 min fresh, 1 h stale-while-revalidate)
 const CACHE_HEADERS = {
@@ -113,25 +114,16 @@ async function processBuildings(
 ) {
   const buildingIds = buildings.map((b) => b.id);
 
-  // Get available units with prices
-  const { data: units } = await supabase
-    .from("units")
-    .select("id, building_id, beds, baths")
-    .in("building_id", buildingIds)
-    .eq("is_available", true);
-
-  if (!units || units.length === 0) {
-    return NextResponse.json({ listings: [] }, { headers: CACHE_HEADERS });
-  }
-
-  const unitIds = units.map((u) => u.id);
-
-  // Fetch prices and images in parallel
-  const [{ data: prices }, { data: images }] = await Promise.all([
-    supabase
-      .from("latest_unit_prices")
-      .select("unit_id, rent")
-      .in("unit_id", unitIds),
+  // Available units with their latest rent (chunked by building, paged) and
+  // primary images, in parallel — no unit-id list in any URL
+  const [units, { data: images }] = await Promise.all([
+    fetchAvailableUnitPrices<{
+      id: string;
+      building_id: string;
+      latest_rent: number | null;
+      beds: number | null;
+      baths: number | null;
+    }>(supabase, buildingIds, ["beds", "baths"]),
     supabase
       .from("building_images")
       .select("building_id, url")
@@ -139,11 +131,13 @@ async function processBuildings(
       .eq("is_primary", true),
   ]);
 
+  if (units.length === 0) {
+    return NextResponse.json({ listings: [] }, { headers: CACHE_HEADERS });
+  }
+
   const priceByUnit: Record<string, number> = {};
-  for (const p of prices || []) {
-    if (!priceByUnit[p.unit_id]) {
-      priceByUnit[p.unit_id] = p.rent;
-    }
+  for (const u of units) {
+    if (u.latest_rent != null) priceByUnit[u.id] = u.latest_rent;
   }
 
   const imageByBuilding: Record<string, string> = {};

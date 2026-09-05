@@ -4,6 +4,9 @@ import { NextResponse } from "next/server";
 export const maxDuration = 300;
 import { createAdminClient } from "@/lib/supabase/server";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
+import { cachedSearch, type SearchResponse } from "@/lib/search/cache";
+import { normalizeCitySlug } from "@/lib/constants/cities";
+import { escapeHtml } from "@/lib/utils";
 
 /**
  * GET /api/cron/saved-search-alerts
@@ -92,85 +95,62 @@ export async function GET(req: Request) {
     const searchSections: string[] = [];
 
     for (const savedSearch of searches) {
-      const params = savedSearch.query_params as Record<string, unknown>;
-      const citySlug = params.city_slug as string | undefined;
+      const raw = savedSearch.query_params as Record<string, unknown>;
+      // Saved searches are stored with the UI's camelCase keys ({city,
+      // bedsMin, budgetMax, …}) — this cron only ever read snake_case, so no
+      // search resolved a city and no alert was ever sent. Accept both.
+      const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
+      const citySlug = normalizeCitySlug(raw.city_slug ?? raw.city);
       if (!citySlug) continue;
+      const searchParams = {
+        city_slug: citySlug,
+        beds_min: num(raw.beds_min ?? raw.bedsMin),
+        beds_max: num(raw.beds_max ?? raw.bedsMax),
+        budget_min: num(raw.budget_min ?? raw.budgetMin),
+        budget_max: num(raw.budget_max ?? raw.budgetMax),
+        pet_friendly: raw.pet_friendly === true || raw.petFriendly === true ? true : undefined,
+        limit: 5,
+      };
 
-      // Resolve city
       const { data: city } = await supabase
         .from("cities")
         .select("id, name")
         .eq("slug", citySlug)
         .single();
-
       if (!city) continue;
 
-      // Quick unit availability query matching the saved search params
-      let unitsQuery = supabase
-        .from("units")
-        .select(`
-          id, beds, baths, sqft, available_on,
-          buildings:building_id (id, name, address_1,
-            neighborhoods:neighborhood_id (name)
-          )
-        `)
-        .eq("is_available", true)
-        .limit(5);
-
-      // Apply bed/bath filters if present
-      if (typeof params.beds_min === "number") unitsQuery = unitsQuery.gte("beds", params.beds_min);
-      if (typeof params.beds_max === "number") unitsQuery = unitsQuery.lte("beds", params.beds_max);
-
-      // Filter to buildings in this city
-      const { data: buildingsInCity } = await supabase
-        .from("buildings")
-        .select("id")
-        .eq("city_id", city.id)
-        .eq("status", "active");
-
-      const buildingIds = (buildingsInCity || []).map((b) => b.id);
-      if (buildingIds.length === 0) continue;
-
-      unitsQuery = unitsQuery.in("building_id", buildingIds);
-
-      const { data: units } = await unitsQuery;
-      if (!units || units.length === 0) continue;
-
-      // Fetch latest prices for these units
-      const unitIds = units.map((u) => u.id);
-      const { data: prices } = await supabase
-        .from("latest_unit_prices")
-        .select("unit_id, rent")
-        .in("unit_id", unitIds);
-
-      const priceByUnit: Record<string, number> = {};
-      for (const p of prices || []) {
-        priceByUnit[p.unit_id] = p.rent;
+      // Same engine as the search page: budget + sort in SQL, photo gate,
+      // per-building diversification — not five arbitrary units.
+      let results: SearchResponse["results"];
+      try {
+        ({ results } = await cachedSearch(searchParams));
+      } catch (err) {
+        console.error(`saved-search ${savedSearch.id}: search failed`, err);
+        continue;
       }
+      if (results.length === 0) continue;
 
-      // Build HTML rows for this search
-      const rows = units
-        .filter((u) => priceByUnit[u.id])
-        .map((u) => {
-          const building = Array.isArray(u.buildings) ? u.buildings[0] : u.buildings;
-          const neighborhood = building
-            ? Array.isArray(building.neighborhoods)
-              ? building.neighborhoods[0]
-              : building.neighborhoods
-            : null;
-          const rent = priceByUnit[u.id];
-          const bedsLabel = u.beds === 0 ? "Studio" : `${u.beds}BR`;
-          const available = u.available_on
-            ? new Date(u.available_on).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      const rows = results
+        .map((r) => {
+          const building = r.building as
+            | { name?: string | null; neighborhoods?: { name?: string | null } | { name?: string | null }[] | null }
+            | null;
+          const neighborhood = Array.isArray(building?.neighborhoods)
+            ? building?.neighborhoods[0]
+            : building?.neighborhoods;
+          const rent = (r.pricing as { rent?: number } | null)?.rent ?? 0;
+          const bedsLabel = r.unit.beds === 0 ? "Studio" : `${r.unit.beds ?? "?"}BR`;
+          const available = r.unit.available_on
+            ? new Date(r.unit.available_on).toLocaleDateString("en-US", { month: "short", day: "numeric" })
             : "Now";
 
           return `
             <tr>
               <td style="padding: 12px 8px; border-bottom: 1px solid #f0f0f0;">
-                <strong>${building?.name || "Unknown"}</strong>
-                ${neighborhood?.name ? `<br><span style="color:#666;font-size:12px;">${neighborhood.name}</span>` : ""}
+                <strong>${escapeHtml(building?.name) || "Unknown"}</strong>
+                ${neighborhood?.name ? `<br><span style="color:#666;font-size:12px;">${escapeHtml(neighborhood.name)}</span>` : ""}
               </td>
-              <td style="padding: 12px 8px; border-bottom: 1px solid #f0f0f0; white-space: nowrap;">${bedsLabel}${u.baths ? ` / ${u.baths}BA` : ""}</td>
+              <td style="padding: 12px 8px; border-bottom: 1px solid #f0f0f0; white-space: nowrap;">${bedsLabel}${r.unit.baths ? ` / ${r.unit.baths}BA` : ""}</td>
               <td style="padding: 12px 8px; border-bottom: 1px solid #f0f0f0; white-space: nowrap; font-weight: bold;">$${rent.toLocaleString()}/mo</td>
               <td style="padding: 12px 8px; border-bottom: 1px solid #f0f0f0; white-space: nowrap; color: #666; font-size: 12px;">Avail. ${available}</td>
             </tr>
@@ -178,18 +158,16 @@ export async function GET(req: Request) {
         })
         .join("");
 
-      if (!rows) continue;
-
       const searchUrl = `${appUrl}/search?city=${encodeURIComponent(citySlug)}${
-        params.beds_min != null ? `&beds_min=${params.beds_min}` : ""
-      }${params.beds_max != null ? `&beds_max=${params.beds_max}` : ""}${
-        params.budget_max != null ? `&budget_max=${params.budget_max}` : ""
+        searchParams.beds_min != null ? `&beds_min=${searchParams.beds_min}` : ""
+      }${searchParams.beds_max != null ? `&beds_max=${searchParams.beds_max}` : ""}${
+        searchParams.budget_max != null ? `&budget_max=${searchParams.budget_max}` : ""
       }`;
 
       searchSections.push(`
         <div style="margin-bottom: 32px;">
-          <h3 style="margin: 0 0 4px; font-size: 16px; color: #1a1a1a;">${savedSearch.name}</h3>
-          <p style="margin: 0 0 12px; color: #666; font-size: 13px;">${city.name}</p>
+          <h3 style="margin: 0 0 4px; font-size: 16px; color: #1a1a1a;">${escapeHtml(savedSearch.name)}</h3>
+          <p style="margin: 0 0 12px; color: #666; font-size: 13px;">${escapeHtml(city.name)}</p>
           <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
             <thead>
               <tr style="background: #f8f8f8;">

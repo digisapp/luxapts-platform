@@ -160,3 +160,41 @@ export async function fetchFloorplans(
 
   return floorplansByUnit;
 }
+
+export interface AvailableUnitPrice {
+  id: string;
+  building_id: string;
+  latest_rent: number | null;
+}
+
+/**
+ * Every available unit for a set of buildings with its latest rent, from the
+ * units_with_latest_price view — chunked by building id and paged. Replaces
+ * the "fetch unit ids, then latest_unit_prices .in(all unit ids)" pattern,
+ * whose URL exceeded PostgREST's limit past a few hundred units: 800 ids →
+ * 400 Bad Request (Los Angeles silently lost its minimum prices) and 1,500
+ * ids hung the request until the build's 60 s page timeout.
+ */
+export async function fetchAvailableUnitPrices<T extends AvailableUnitPrice = AvailableUnitPrice>(
+  supabase: SupabaseClient,
+  buildingIds: string[],
+  extraColumns: string[] = [],
+): Promise<T[]> {
+  if (buildingIds.length === 0) return [];
+  const columns = ["id", "building_id", "latest_rent", ...extraColumns].join(", ");
+  const pages = await Promise.all(
+    chunk(buildingIds, IN_CHUNK_SIZE).map((ids) =>
+      fetchAllRows<T>((from, to) =>
+        supabase
+          .from("units_with_latest_price")
+          .select(columns)
+          .in("building_id", ids)
+          .eq("is_available", true)
+          .order("id")
+          // dynamic column list → supabase-js can't infer the row type
+          .range(from, to) as unknown as PromiseLike<{ data: T[] | null; error: unknown }>
+      )
+    )
+  );
+  return pages.flat();
+}

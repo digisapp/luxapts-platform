@@ -7,6 +7,7 @@ import HomeClient, {
 import { createAdminClient } from "@/lib/supabase/server";
 import { getBuildingFallbackImage } from "@/lib/images/fallback";
 import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
+import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 
 export const revalidate = 3600;
 
@@ -133,28 +134,15 @@ async function getHomeData(): Promise<{
     }
 
     // Latest rent per unit, then min per featured building
-    const pickedIds = new Set(picked.map((b) => b.id));
-    const pickedUnitIds = units.filter((u) => pickedIds.has(u.building_id)).map((u) => u.id);
     const minPrice: Record<string, number> = {};
 
-    if (pickedUnitIds.length > 0) {
-      // latest_unit_prices: one row per unit, so no history scan or dedup
-      const prices = await fetchAllRows<{ unit_id: string; rent: number }>(
-        (from, to) =>
-          supabase
-            .from("latest_unit_prices")
-            .select("unit_id, rent")
-            .in("unit_id", pickedUnitIds)
-            .order("unit_id")
-            .range(from, to)
-      );
-
-      const unitToBuilding = new Map(units.map((u) => [u.id, u.building_id]));
-      for (const p of prices ?? []) {
-        const buildingId = unitToBuilding.get(p.unit_id);
-        if (!buildingId) continue;
-        const cur = minPrice[buildingId];
-        if (cur === undefined || p.rent < cur) minPrice[buildingId] = p.rent;
+    if (picked.length > 0) {
+      // Chunked by building id — never a giant `.in(unitIds)` URL
+      const priced = await fetchAvailableUnitPrices(supabase, picked.map((b) => b.id));
+      for (const u of priced) {
+        if (u.latest_rent == null) continue;
+        const cur = minPrice[u.building_id];
+        if (cur === undefined || u.latest_rent < cur) minPrice[u.building_id] = u.latest_rent;
       }
     }
 

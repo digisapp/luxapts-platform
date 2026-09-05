@@ -86,7 +86,7 @@ export function UnitPriceHistory({ data }: UnitPriceHistoryProps) {
           />
           <Tooltip
             formatter={(value) => [formatPrice(value as number), "Rent"]}
-            labelFormatter={formatAxisDate}
+            labelFormatter={(label) => formatAxisDate(String(label))}
             contentStyle={{
               borderRadius: "8px",
               border: "1px solid hsl(var(--border))",
