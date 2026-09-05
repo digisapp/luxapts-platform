@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
-import { SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check, Brain, Star, Navigation } from "lucide-react";
+import { SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Clock, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check, Brain, Star, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -96,6 +96,23 @@ interface ParsedFilters {
   amenities?: string[];
   sort?: string;
   summary?: string;
+}
+
+// Per-listing freshness: the page header shows the newest capture date, but
+// inventory that can't be rescraped (buildings without a website) keeps its
+// January-import price for months. Say so on the card itself.
+const STALE_PRICE_DAYS = 45;
+function priceAgeLabel(capturedAt: string | null | undefined): { label: string; stale: boolean } | null {
+  if (!capturedAt) return null;
+  const t = Date.parse(capturedAt);
+  if (Number.isNaN(t)) return null;
+  const days = Math.floor((Date.now() - t) / 86_400_000);
+  const stale = days > STALE_PRICE_DAYS;
+  const when = new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric", ...(days > 300 ? { year: "numeric" } : {}) });
+  if (days <= 0) return { label: "Verified today", stale };
+  if (days === 1) return { label: "Verified yesterday", stale };
+  if (days < 14) return { label: `Verified ${days}d ago`, stale };
+  return { label: `Price from ${when}`, stale };
 }
 
 // Filter overrides accepted by handleSearch. For the numeric filters,
@@ -1327,6 +1344,7 @@ function SearchContent() {
                 ) : (
                   visibleResults.map((result) => {
                     const primaryImage = result.images?.[0];
+                    const priceAge = priceAgeLabel(result.pricing?.captured_at);
                     // Fall back to the placeholder if the photo failed to load,
                     // rather than dropping the listing from the grid
                     const showImage = Boolean(primaryImage) && !brokenImageIds.has(result.unit.id);
@@ -1475,12 +1493,23 @@ function SearchContent() {
                                     <span className="text-white/50">Contact for pricing</span>
                                   )}
                                 </div>
-                                {result.unit.available_on && (
-                                  <span className="flex items-center gap-1 text-sm text-white/50">
-                                    <Calendar className="h-3 w-3" />
-                                    {new Date(result.unit.available_on).toLocaleDateString()}
-                                  </span>
-                                )}
+                                <div className="flex flex-col items-end gap-0.5">
+                                  {result.unit.available_on && (
+                                    <span className="flex items-center gap-1 text-sm text-white/50">
+                                      <Calendar className="h-3 w-3" />
+                                      {new Date(result.unit.available_on).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                  {priceAge && (
+                                    <span
+                                      className={`flex items-center gap-1 text-xs ${priceAge.stale ? "text-amber-400/90" : "text-white/50"}`}
+                                      title={priceAge.stale ? "This price hasn't been re-verified recently" : "Price last verified"}
+                                    >
+                                      <Clock className="h-3 w-3" />
+                                      {priceAge.label}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </CardContent>
