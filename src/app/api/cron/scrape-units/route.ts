@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 // Serial multi-building scrape with AI extraction — needs the full window (default serverless timeout kills it mid-run, stranding jobs in "running")
 export const maxDuration = 300;
 import { createAdminClient } from "@/lib/supabase/server";
+import { withTimeout } from "@/lib/with-timeout";
 import {
   scrapeUnitsOnly,
   getBuildingsToScrape,
@@ -14,12 +15,15 @@ import {
   updateScrapeJob,
 } from "@/lib/scraper";
 
-// Stop starting new buildings once this much of the function window has
-// elapsed. A single building (fetch + render fallback + AI extraction) can
-// take up to ~60s, so the headroom keeps the final job update and the HTTP
-// response inside maxDuration instead of the platform killing the invocation
-// mid-loop — which left every nightly job stranded in status "running".
-const TIME_BUDGET_MS = (maxDuration - 75) * 1000;
+// A single building (two fetches, JS-render fallback, two AI extractions)
+// can take well over two minutes, so a loop-level budget alone still let the
+// platform kill the invocation mid-building and strand the job in "running".
+// Each building now gets its own deadline, capped by what is left of the
+// window, and the loop stops early enough to write the final job update.
+const PER_BUILDING_TIMEOUT_MS = 120_000;
+const FINALIZE_HEADROOM_MS = 30_000;
+const MIN_USEFUL_REMAINING_MS = 20_000;
+const TIME_BUDGET_MS = maxDuration * 1000 - FINALIZE_HEADROOM_MS;
 
 // This endpoint should be called by a cron job (e.g., Vercel Cron)
 // to update unit availability across all buildings
@@ -106,9 +110,10 @@ export async function GET(req: Request) {
     };
 
     for (const building of buildings) {
-      if (Date.now() - startedAt > TIME_BUDGET_MS) {
+      const remainingMs = TIME_BUDGET_MS - (Date.now() - startedAt);
+      if (remainingMs < MIN_USEFUL_REMAINING_MS) {
         // Untouched buildings keep their old units_scraped_at, so the fair
-        // stalest-first ordering picks them up first tomorrow.
+        // stalest-first ordering picks them up first next run.
         results.skipped_for_time = buildings.length - results.processed;
         break;
       }
@@ -133,7 +138,11 @@ export async function GET(req: Request) {
           await new Promise((resolve) => setTimeout(resolve, 3000)); // 3 second delay
         }
 
-        const scrapeResult = await scrapeUnitsOnly(websiteUrl);
+        const scrapeResult = await withTimeout(
+          scrapeUnitsOnly(websiteUrl),
+          Math.min(PER_BUILDING_TIMEOUT_MS, remainingMs),
+          "Scrape timed out",
+        );
 
         if (scrapeResult.success && scrapeResult.data) {
           // Save units

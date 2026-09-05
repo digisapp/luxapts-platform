@@ -2,7 +2,15 @@ import { NextResponse } from "next/server";
 
 // Serial multi-building scrape with AI extraction — needs the full window (default serverless timeout kills it mid-run, stranding jobs in "running")
 export const maxDuration = 300;
+
+// Same guard as scrape-units: per-building deadline + loop budget so the
+// final job update is always written inside the function window.
+const PER_BUILDING_TIMEOUT_MS = 120_000;
+const FINALIZE_HEADROOM_MS = 30_000;
+const MIN_USEFUL_REMAINING_MS = 20_000;
+const TIME_BUDGET_MS = maxDuration * 1000 - FINALIZE_HEADROOM_MS;
 import { createAdminClient } from "@/lib/supabase/server";
+import { withTimeout } from "@/lib/with-timeout";
 import {
   scrapeAmenitiesOnly,
   updateScrapeStatus,
@@ -108,7 +116,10 @@ export async function GET(req: Request) {
       errors: [] as { building_id: string; building_name: string; error: string }[],
     };
 
+    const loopStartedAt = Date.now();
     for (const building of buildings) {
+      const remainingMs = TIME_BUDGET_MS - (Date.now() - loopStartedAt);
+      if (remainingMs < MIN_USEFUL_REMAINING_MS) break;
       // Scraper-internal override first: building_scrape_status.website_url points at the
       // best scrape target (portal/API/manager page) without changing the user-facing link
       const websiteUrl = scrapeStatusOf(building)?.website_url || building.website_url;
@@ -129,7 +140,11 @@ export async function GET(req: Request) {
           await new Promise((resolve) => setTimeout(resolve, 5000)); // 5 second delay for amenities
         }
 
-        const scrapeResult = await scrapeAmenitiesOnly(websiteUrl);
+        const scrapeResult = await withTimeout(
+          scrapeAmenitiesOnly(websiteUrl),
+          Math.min(PER_BUILDING_TIMEOUT_MS, remainingMs),
+          "Scrape timed out",
+        );
 
         if (scrapeResult.success && scrapeResult.data) {
           // Save amenities
