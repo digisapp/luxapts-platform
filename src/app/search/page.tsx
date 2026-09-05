@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check, Brain, Star, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,12 +15,21 @@ import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { formatPrice, cn } from "@/lib/utils";
-import { SearchMap } from "@/components/map/SearchMap";
 import { CompareButton } from "@/components/compare/CompareButton";
 import { FavoriteButton } from "@/components/listings/FavoriteButton";
 import { SaveSearchButton } from "@/components/listings/SaveSearchButton";
 import { CommuteFilter, type CommuteTarget } from "@/components/search/CommuteFilter";
 import { AMENITY_OPTIONS } from "@/lib/constants/amenities";
+
+// mapbox-gl is huge — load the map chunk only when the map view mounts,
+// never during SSR or in the initial bundle
+const SearchMap = dynamic(
+  () => import("@/components/map/SearchMap").then((m) => m.SearchMap),
+  {
+    ssr: false,
+    loading: () => <div className="h-full w-full animate-pulse bg-white/[0.03]" />,
+  }
+);
 
 interface Neighborhood {
   slug: string;
@@ -454,10 +464,18 @@ function SearchContent() {
     }
   }, [city, handleSearch]);
 
-  // Parse AI query and apply filters
+  // Parse AI query and apply filters. The LLM parse takes 1-3s, so a default
+  // search (current city, numeric filters cleared) fires immediately in
+  // parallel — its results render as soon as they land. The parsed-filter
+  // search below bumps requestId, so the existing race protection guarantees
+  // the refined results always win once the parse resolves.
   const parseAndSearch = useCallback(async (query: string) => {
     setAiParsing(true);
     setAiSummary(null);
+
+    // Fire-and-forget default search; also serves as the fallback when the
+    // parse fails (handleSearch never rejects — it handles its own errors)
+    handleSearch({ beds_min: null, beds_max: null, budget_min: null, budget_max: null });
 
     try {
       const res = await fetch("/api/parse-query", {
@@ -480,15 +498,12 @@ function SearchContent() {
         if (filters.sort) setSort(filters.sort);
         if (filters.summary) setAiSummary(filters.summary);
 
-        // Search with the parsed filters
+        // Search with the parsed filters (supersedes the default search)
         await handleSearch(filters);
-      } else {
-        // Fallback to regular search
-        await handleSearch();
       }
+      // On a failed parse the concurrent default search already covers us
     } catch (error) {
       console.error("AI parsing error:", error);
-      await handleSearch();
     } finally {
       setAiParsing(false);
     }

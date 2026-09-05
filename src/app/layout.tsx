@@ -29,6 +29,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://staycio.com"),
   title: "Staycio — Your space, found.",
   description: "Stay + espacio: a space to stay while you figure out the rest. AI-powered apartment discovery across major US cities.",
   keywords: ["apartments", "rentals", "NYC", "Miami", "luxury apartments", "apartment search"],

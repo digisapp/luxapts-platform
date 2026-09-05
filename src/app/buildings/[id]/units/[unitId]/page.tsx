@@ -28,13 +28,10 @@ import { UnitPriceHistory } from "./UnitPriceHistory";
 
 export const revalidate = 3600;
 
+// Empty array = no build-time pages (keeps builds flat), but still opts the
+// route into on-demand static generation + ISR
 export async function generateStaticParams() {
-  const supabase = createAdminClient();
-  const { data } = await supabase
-    .from("units")
-    .select("id, building_id")
-    .eq("is_available", true);
-  return (data || []).map((u) => ({ id: u.building_id, unitId: u.id }));
+  return [];
 }
 
 const getUnit = cache(async (unitId: string) => {
@@ -62,7 +59,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string; unitId: string }>;
 }): Promise<Metadata> {
-  const { unitId } = await params;
+  const { id, unitId } = await params;
   const { data: unit } = await getUnit(unitId);
   if (!unit) return { title: "Unit Not Found - Staycio" };
 
@@ -73,6 +70,7 @@ export async function generateMetadata({
   return {
     title,
     description: `${bedLabel}${unit.baths ? `, ${unit.baths} bath` : ""}${unit.sqft ? `, ${unit.sqft.toLocaleString()} sqft` : ""} at ${building?.name}. ${unit.is_available ? "Available now." : ""}`,
+    alternates: { canonical: `/buildings/${id}/units/${unitId}` },
   };
 }
 

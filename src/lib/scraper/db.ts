@@ -172,44 +172,59 @@ export async function saveScrapedUnits(
     return ok;
   });
 
+  // One round trip replaces the old per-unit SELECT: existing units with
+  // their latest snapshot rent, so unchanged prices don't get a new snapshot.
+  const { data: existingUnits } = await supabase
+    .from("units_with_latest_price")
+    .select("id, unit_number, latest_rent")
+    .eq("building_id", buildingId);
+
+  const existingByNumber = new Map<string, { id: string; latest_rent: number | null }>();
+  for (const u of existingUnits || []) {
+    if (u.unit_number) {
+      existingByNumber.set(u.unit_number, { id: u.id, latest_rent: u.latest_rent });
+    }
+  }
+
+  const snapshots: Array<{
+    unit_id: string;
+    rent: number;
+    lease_term_months: number | null;
+    source_id?: string;
+  }> = [];
+
   for (const unit of saneUnits) {
-    // Try to find existing unit by unit number
-    if (unit.unit_number) {
-      const { data: existing } = await supabase
+    const existing = unit.unit_number ? existingByNumber.get(unit.unit_number) : undefined;
+
+    if (existing) {
+      // Update existing unit
+      await supabase
         .from("units")
-        .select("id")
-        .eq("building_id", buildingId)
-        .eq("unit_number", unit.unit_number)
-        .single();
+        .update({
+          beds: unit.beds,
+          baths: unit.baths,
+          sqft: unit.sqft,
+          is_available: true,
+          available_on: unit.available_on || null,
+          floor: unit.floor,
+          view: unit.view,
+        })
+        .eq("id", existing.id);
 
-      if (existing) {
-        // Update existing unit
-        await supabase
-          .from("units")
-          .update({
-            beds: unit.beds,
-            baths: unit.baths,
-            sqft: unit.sqft,
-            is_available: true,
-            available_on: unit.available_on || null,
-            floor: unit.floor,
-            view: unit.view,
-          })
-          .eq("id", existing.id);
-
-        // Add price snapshot
-        if (unit.rent) {
-          await supabase.from("unit_price_snapshots").insert({
-            unit_id: existing.id,
-            rent: unit.rent,
-            lease_term_months: sanitizeLeaseTerm(unit.lease_term_months),
-            source_id: sourceId,
-          });
-        }
-
-        unitsUpdated++;
-        continue;
+      // Snapshot only when rent actually changed — blind daily inserts grew
+      // unit_price_snapshots unboundedly and pushed units past PostgREST's
+      // 1000-row cap in downstream latest-price reads.
+      if (unit.rent && unit.rent !== existing.latest_rent) {
+        snapshots.push({
+          unit_id: existing.id,
+          rent: unit.rent,
+          lease_term_months: sanitizeLeaseTerm(unit.lease_term_months),
+          source_id: sourceId,
+        });
       }
+
+      unitsUpdated++;
+      continue;
     }
 
     // Create new unit
@@ -229,16 +244,22 @@ export async function saveScrapedUnits(
       .select("id")
       .single();
 
-    if (!unitError && newUnit && unit.rent) {
-      // Add price snapshot
-      await supabase.from("unit_price_snapshots").insert({
-        unit_id: newUnit.id,
-        rent: unit.rent,
-        lease_term_months: sanitizeLeaseTerm(unit.lease_term_months),
-        source_id: sourceId,
-      });
+    if (!unitError && newUnit) {
+      if (unit.rent) {
+        snapshots.push({
+          unit_id: newUnit.id,
+          rent: unit.rent,
+          lease_term_months: sanitizeLeaseTerm(unit.lease_term_months),
+          source_id: sourceId,
+        });
+      }
       unitsCreated++;
     }
+  }
+
+  if (snapshots.length > 0) {
+    const { error: snapError } = await supabase.from("unit_price_snapshots").insert(snapshots);
+    if (snapError) console.error(`Snapshot insert failed for building ${buildingId}:`, snapError.message);
   }
 
   return { unitsCreated, unitsUpdated };

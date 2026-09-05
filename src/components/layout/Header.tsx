@@ -65,6 +65,7 @@ export function Header() {
           {/* Saved button */}
           <Link
             href="/favorites"
+            aria-label="Favorites"
             className="relative p-2 text-white/60 hover:text-white transition-colors"
           >
             <Heart className="h-5 w-5" />

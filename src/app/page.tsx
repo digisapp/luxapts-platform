@@ -138,22 +138,19 @@ async function getHomeData(): Promise<{
     const minPrice: Record<string, number> = {};
 
     if (pickedUnitIds.length > 0) {
-      const prices = await fetchAllRows<{ unit_id: string; rent: number; captured_at: string }>(
+      // latest_unit_prices: one row per unit, so no history scan or dedup
+      const prices = await fetchAllRows<{ unit_id: string; rent: number }>(
         (from, to) =>
           supabase
-            .from("unit_price_snapshots")
-            .select("unit_id, rent, captured_at")
+            .from("latest_unit_prices")
+            .select("unit_id, rent")
             .in("unit_id", pickedUnitIds)
-            .order("captured_at", { ascending: false })
-            .order("id")
+            .order("unit_id")
             .range(from, to)
       );
 
       const unitToBuilding = new Map(units.map((u) => [u.id, u.building_id]));
-      const seenUnits = new Set<string>();
       for (const p of prices ?? []) {
-        if (seenUnits.has(p.unit_id)) continue;
-        seenUnits.add(p.unit_id);
         const buildingId = unitToBuilding.get(p.unit_id);
         if (!buildingId) continue;
         const cur = minPrice[buildingId];
@@ -254,7 +251,7 @@ export default async function HomePage() {
       {itemListJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd).replace(/</g, "\\u003c") }}
         />
       )}
       <HomeClient

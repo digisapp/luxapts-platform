@@ -35,53 +35,29 @@ export async function GET(req: Request) {
   const supabase = createAdminClient();
   const windowStart = new Date(Date.now() - LOOKBACK_HOURS * 60 * 60 * 1000).toISOString();
 
-  // 1. Latest snapshot per unit captured inside the window
-  const { data: recentSnaps, error: snapsError } = await supabase
-    .from("unit_price_snapshots")
-    .select("unit_id, rent, captured_at")
-    .gte("captured_at", windowStart)
-    .order("captured_at", { ascending: false });
-
-  if (snapsError) {
-    console.error("Price snapshot fetch error:", snapsError);
-    return NextResponse.json({ error: "Failed to fetch snapshots" }, { status: 500 });
-  }
-
-  const latestByUnit = new Map<string, { rent: number; captured_at: string }>();
-  for (const s of recentSnaps || []) {
-    if (!latestByUnit.has(s.unit_id)) {
-      latestByUnit.set(s.unit_id, { rent: s.rent, captured_at: s.captured_at });
-    }
-  }
-
-  if (latestByUnit.size === 0) {
-    return NextResponse.json({ message: "No new snapshots in window", emails_sent: 0 });
-  }
-
-  // 2. Prior snapshot per unit (latest one older than the window)
-  const unitIds = [...latestByUnit.keys()];
-  const { data: priorSnaps } = await supabase
-    .from("unit_price_snapshots")
-    .select("unit_id, rent, captured_at")
-    .in("unit_id", unitIds)
-    .lt("captured_at", windowStart)
-    .order("captured_at", { ascending: false });
-
-  const priorByUnit = new Map<string, number>();
-  for (const s of priorSnaps || []) {
-    if (!priorByUnit.has(s.unit_id)) priorByUnit.set(s.unit_id, s.rent);
-  }
-
-  // 3. Compute drops on still-available units
-  const droppedUnitIds = unitIds.filter((id) => {
-    const prior = priorByUnit.get(id);
-    const latest = latestByUnit.get(id);
-    return prior !== undefined && latest !== undefined && latest.rent < prior;
+  // 1+2. Server-side window comparison. The old client-side version fetched
+  // the whole snapshot table ordered desc and silently truncated at
+  // PostgREST's 1000-row cap — drops past row 1000 never alerted.
+  const { data: dropRows, error: dropsError } = await supabase.rpc("get_recent_price_drops", {
+    p_since: windowStart,
   });
 
-  if (droppedUnitIds.length === 0) {
+  if (dropsError) {
+    console.error("Price drop RPC error:", dropsError);
+    return NextResponse.json({ error: "Failed to fetch price drops" }, { status: 500 });
+  }
+
+  if (!dropRows || dropRows.length === 0) {
     return NextResponse.json({ message: "No price drops found", emails_sent: 0 });
   }
+
+  const priorByUnit = new Map<string, number>();
+  const latestByUnit = new Map<string, { rent: number; captured_at: string }>();
+  for (const r of dropRows as Array<{ unit_id: string; old_rent: number; new_rent: number; captured_at: string }>) {
+    priorByUnit.set(r.unit_id, Number(r.old_rent));
+    latestByUnit.set(r.unit_id, { rent: Number(r.new_rent), captured_at: r.captured_at });
+  }
+  const droppedUnitIds = [...latestByUnit.keys()];
 
   const { data: units } = await supabase
     .from("units")

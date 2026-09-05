@@ -52,35 +52,47 @@ export async function POST(req: Request) {
 
   const durations: Record<string, number> = {};
 
+  const batches: (typeof uniquePoints)[] = [];
+  for (let i = 0; i < uniquePoints.length; i += BATCH_SIZE) {
+    batches.push(uniquePoints.slice(i, i + BATCH_SIZE));
+  }
+
   try {
-    for (let i = 0; i < uniquePoints.length; i += BATCH_SIZE) {
-      const batch = uniquePoints.slice(i, i + BATCH_SIZE);
-      const coords = [
-        ...batch.map((p) => `${p.lng},${p.lat}`),
-        `${destination.lng},${destination.lat}`,
-      ].join(";");
-      const destIndex = batch.length;
+    // All Matrix batches in parallel — each keeps its own 10s timeout, and
+    // results are keyed back to their batch by index so ordering is preserved
+    const batchResults = await Promise.all(
+      batches.map(async (batch) => {
+        const coords = [
+          ...batch.map((p) => `${p.lng},${p.lat}`),
+          `${destination.lng},${destination.lat}`,
+        ].join(";");
+        const destIndex = batch.length;
 
-      const url =
-        `https://api.mapbox.com/directions-matrix/v1/mapbox/${mode}/${coords}` +
-        `?sources=${batch.map((_, idx) => idx).join(";")}` +
-        `&destinations=${destIndex}` +
-        `&annotations=duration&access_token=${token}`;
+        const url =
+          `https://api.mapbox.com/directions-matrix/v1/mapbox/${mode}/${coords}` +
+          `?sources=${batch.map((_, idx) => idx).join(";")}` +
+          `&destinations=${destIndex}` +
+          `&annotations=duration&access_token=${token}`;
 
-      const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
-      if (!res.ok) {
-        console.error(`Matrix API error ${res.status}:`, await res.text());
-        continue;
-      }
+        const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+        if (!res.ok) {
+          console.error(`Matrix API error ${res.status}:`, await res.text());
+          return null;
+        }
 
-      const data = (await res.json()) as { durations?: (number | null)[][] };
-      batch.forEach((p, idx) => {
+        return (await res.json()) as { durations?: (number | null)[][] };
+      })
+    );
+
+    batchResults.forEach((data, batchIdx) => {
+      if (!data) return;
+      batches[batchIdx].forEach((p, idx) => {
         const seconds = data.durations?.[idx]?.[0];
         if (typeof seconds === "number") {
           durations[p.id] = Math.round(seconds / 60); // minutes
         }
       });
-    }
+    });
 
     return NextResponse.json({ mode, durations });
   } catch (error) {

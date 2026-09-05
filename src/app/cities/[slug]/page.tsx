@@ -79,6 +79,7 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
   return {
     title: `Luxury Apartments in ${city.name}, ${city.state} | Staycio`,
     description: `Browse the finest luxury apartments in ${city.name}. Curated listings with verified pricing, photos, and amenities.`,
+    alternates: { canonical: `/cities/${slug}` },
     openGraph: {
       title: `Luxury Apartments in ${city.name} | Staycio`,
       description: `Find your perfect luxury apartment in ${city.name}.`,
@@ -148,29 +149,24 @@ export default async function CityPage({ params }: CityPageProps) {
 
     if (units.length > 0) {
       const unitIds = units.map((u) => u.id);
-      const prices = await fetchAllRows<{ unit_id: string; rent: number; captured_at: string }>(
+      // latest_unit_prices: one row per unit, so no history scan or dedup
+      const prices = await fetchAllRows<{ unit_id: string; rent: number }>(
         (from, to) =>
           supabase
-            .from("unit_price_snapshots")
-            .select("unit_id, rent, captured_at")
+            .from("latest_unit_prices")
+            .select("unit_id, rent")
             .in("unit_id", unitIds)
-            .order("captured_at", { ascending: false })
-            .order("id")
+            .order("unit_id")
             .range(from, to)
       );
 
-      // Only keep latest snapshot per unit
       const unitToBuilding = new Map(units.map((u) => [u.id, u.building_id]));
-      const seenUnits = new Set<string>();
       for (const p of prices) {
-        if (!seenUnits.has(p.unit_id)) {
-          seenUnits.add(p.unit_id);
-          const buildingId = unitToBuilding.get(p.unit_id);
-          if (buildingId) {
-            const cur = minPriceMap[buildingId];
-            if (cur === undefined || p.rent < cur) {
-              minPriceMap[buildingId] = p.rent;
-            }
+        const buildingId = unitToBuilding.get(p.unit_id);
+        if (buildingId) {
+          const cur = minPriceMap[buildingId];
+          if (cur === undefined || p.rent < cur) {
+            minPriceMap[buildingId] = p.rent;
           }
         }
       }

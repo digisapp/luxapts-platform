@@ -1,6 +1,8 @@
 import { searchDocuments } from "@/lib/xai/collections";
 import { isValidUUID } from "@/lib/utils";
 import { internalHeaders } from "@/lib/rate-limit";
+import { cachedSearch } from "@/lib/search/cache";
+import { searchRequestSchema } from "@/lib/validations";
 
 // Per-request state passed through a single chat turn so tool usage can be
 // bounded (e.g. at most one lead created per conversation turn).
@@ -23,13 +25,16 @@ export async function executeTool(
     const jsonHeaders = { "Content-Type": "application/json", ...internalHeaders() };
 
     switch (name) {
-      case "search_listings":
-        response = await fetch(`${baseUrl}/api/search`, {
-          method: "POST",
-          headers: jsonHeaders,
-          body: JSON.stringify(args),
-        });
-        break;
+      case "search_listings": {
+        // Call the cached search directly instead of self-fetching /api/search —
+        // avoids an extra function invocation + network hop. Validated with the
+        // same schema the route uses.
+        const parsed = searchRequestSchema.safeParse(args);
+        if (!parsed.success) {
+          return { error: parsed.error.issues[0]?.message || "Invalid search parameters" };
+        }
+        return await cachedSearch(parsed.data);
+      }
 
       case "compare_buildings":
         response = await fetch(`${baseUrl}/api/compare`, {

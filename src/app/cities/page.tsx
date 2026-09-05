@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/db-helpers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,56 +13,50 @@ export const metadata: Metadata = {
   description: "Browse luxury apartments across major US cities including Miami, New York, Los Angeles, Dallas, Austin, Nashville, Atlanta, and Brooklyn.",
 };
 
-export const dynamic = "force-dynamic";
+// Revalidate hourly — counts don't need to be live, and this page was the
+// slowest TTFB on the site under force-dynamic
+export const revalidate = 3600;
 
 export default async function CitiesPage() {
   const supabase = createAdminClient();
 
-  // Get all cities with building counts
-  const { data: cities } = await supabase
-    .from("cities")
-    .select("id, name, slug, state")
-    .order("name");
-
-  // Get building counts per city
-  const cityStats: Record<string, { buildingCount: number; unitCount: number }> = {};
-
-  for (const city of cities || []) {
-    const { count: buildingCount } = await supabase
-      .from("buildings")
-      .select("*", { count: "exact", head: true })
-      .eq("city_id", city.id)
-      .eq("status", "active");
-
-    const { data: buildings } = await supabase
-      .from("buildings")
-      .select("id")
-      .eq("city_id", city.id)
-      .eq("status", "active");
-
-    const buildingIds = buildings?.map((b) => b.id) || [];
-
-    let unitCount = 0;
-    if (buildingIds.length > 0) {
-      const { count } = await supabase
+  // Flat queries instead of 3-per-city (N+1) — counts are aggregated in JS
+  const [citiesRes, buildingsRes, units, neighborhoodsRes] = await Promise.all([
+    supabase.from("cities").select("id, name, slug, state").order("name"),
+    supabase.from("buildings").select("id, city_id").eq("status", "active"),
+    // Available units can exceed Supabase's 1000-row response cap
+    fetchAllRows<{ id: string; building_id: string }>((from, to) =>
+      supabase
         .from("units")
-        .select("*", { count: "exact", head: true })
-        .in("building_id", buildingIds)
-        .eq("is_available", true);
-      unitCount = count || 0;
-    }
+        .select("id, building_id")
+        .eq("is_available", true)
+        .order("id")
+        .range(from, to)
+    ),
+    supabase.from("neighborhoods").select("id, name, slug, city_id").order("name"),
+  ]);
 
-    cityStats[city.id] = {
-      buildingCount: buildingCount || 0,
-      unitCount,
-    };
+  const cities = citiesRes.data;
+  const neighborhoods = neighborhoodsRes.data;
+
+  // Aggregate building + available-unit counts per city
+  const cityStats: Record<string, { buildingCount: number; unitCount: number }> = {};
+  const cityByBuilding: Record<string, string> = {};
+
+  for (const b of buildingsRes.data || []) {
+    cityByBuilding[b.id] = b.city_id;
+    if (!cityStats[b.city_id]) {
+      cityStats[b.city_id] = { buildingCount: 0, unitCount: 0 };
+    }
+    cityStats[b.city_id].buildingCount++;
   }
 
-  // Get neighborhoods per city
-  const { data: neighborhoods } = await supabase
-    .from("neighborhoods")
-    .select("id, name, slug, city_id")
-    .order("name");
+  for (const u of units) {
+    const cityId = cityByBuilding[u.building_id];
+    if (cityId && cityStats[cityId]) {
+      cityStats[cityId].unitCount++;
+    }
+  }
 
   const neighborhoodsByCity: Record<string, Array<{ id: string; name: string; slug: string }>> = {};
   for (const n of neighborhoods || []) {

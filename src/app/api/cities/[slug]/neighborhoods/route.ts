@@ -32,10 +32,14 @@ export async function GET(
       return apiError(error.message, 500);
     }
 
-    return NextResponse.json({
-      city: cityRes.data,
-      neighborhoods: data,
-    });
+    return NextResponse.json(
+      {
+        city: cityRes.data,
+        neighborhoods: data,
+      },
+      // Public read-only data — let the CDN serve it
+      { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" } }
+    );
   } catch (error) {
     console.error("List neighborhoods error:", error);
     return apiError("Internal server error", 500);

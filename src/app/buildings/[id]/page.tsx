@@ -9,6 +9,13 @@ import { getBuildingGalleryFallbacks } from "@/lib/images/fallback";
 // Revalidate every hour instead of force-dynamic — reduces DB load ~90%
 export const revalidate = 3600;
 
+// Empty array = no build-time pages, but this opts the route into on-demand
+// static generation + ISR. Without generateStaticParams, a dynamic-param
+// route builds fully dynamic under Next 16 (no-store, CDN MISS every hit).
+export async function generateStaticParams() {
+  return [];
+}
+
 // Deduplicate the building fetch between generateMetadata and the page
 const getBuilding = cache(async (id: string) => {
   const supabase = createAdminClient();
@@ -24,9 +31,26 @@ const getBuilding = cache(async (id: string) => {
   return { data, error };
 });
 
+// Primary building image for social shares (deduplicated across renders)
+const getPrimaryBuildingImage = cache(async (id: string) => {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("building_images")
+    .select("url")
+    .eq("building_id", id)
+    .order("is_primary", { ascending: false })
+    .order("sort_order", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data?.url ?? null;
+});
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const { data: building } = await getBuilding(id);
+  const [{ data: building }, ogImage] = await Promise.all([
+    getBuilding(id),
+    getPrimaryBuildingImage(id),
+  ]);
 
   if (!building) {
     return { title: "Building Not Found - Staycio" };
@@ -39,10 +63,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title,
     description,
+    alternates: { canonical: `/buildings/${id}` },
     openGraph: {
       title,
       description,
       type: "website",
+      ...(ogImage ? { images: [ogImage] } : {}),
     },
   };
 }
@@ -117,60 +143,91 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     notFound();
   }
 
-  // Fetch amenities
-  const { data: amenities } = await supabase
-    .from("building_amenities")
-    .select("details, amenities(id, name, category, icon)")
-    .eq("building_id", id);
+  // Phase 1: building-scoped queries (independent of each other)
+  const [amenitiesRes, factsRes, buildingImagesRes, unitsRes] = await Promise.all([
+    supabase
+      .from("building_amenities")
+      .select("details, amenities(id, name, category, icon)")
+      .eq("building_id", id),
+    supabase.from("building_facts").select("key, value").eq("building_id", id),
+    supabase
+      .from("building_images")
+      .select("url, alt_text, category")
+      .eq("building_id", id)
+      .order("is_primary", { ascending: false })
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("units")
+      .select("id, unit_number, beds, baths, sqft, available_on, floorplan_id")
+      .eq("building_id", id)
+      .eq("is_available", true)
+      .order("beds", { ascending: true }),
+  ]);
 
-  // Fetch building facts (including images)
-  const { data: facts } = await supabase
-    .from("building_facts")
-    .select("key, value")
-    .eq("building_id", id);
+  const amenities = amenitiesRes.data;
+  const buildingImages = buildingImagesRes.data;
+  const units = unitsRes.data;
 
   const buildingFacts: Record<string, string | number> = {};
-  for (const fact of facts || []) {
+  for (const fact of factsRes.data || []) {
     buildingFacts[fact.key] = fact.value as string | number;
   }
 
-  // Fetch building images
-  const { data: buildingImages } = await supabase
-    .from("building_images")
-    .select("*")
-    .eq("building_id", id)
-    .order("is_primary", { ascending: false })
-    .order("sort_order", { ascending: true });
-
-  // Fetch available units with latest prices
-  const { data: units } = await supabase
-    .from("units")
-    .select("*")
-    .eq("building_id", id)
-    .eq("is_available", true)
-    .order("beds", { ascending: true });
-
   // Get unit IDs for fetching related data
   const unitIds = units?.map((u) => u.id) || [];
+  const floorplanIds = [...new Set(units?.map(u => u.floorplan_id).filter(Boolean) || [])];
 
-  // Get latest prices for units
+  const emptyRes = Promise.resolve({ data: null });
+
+  // Phase 2: unit-scoped queries (all depend only on phase-1 results)
+  const [latestPricesRes, historyRes, unitImagesRes, floorplansRes, debriefRes] =
+    await Promise.all([
+      // Latest price per unit — the view guarantees one row per unit, so no
+      // dedup loop and no risk of the 1000-row cap hiding older units
+      unitIds.length
+        ? supabase
+            .from("latest_unit_prices")
+            .select("unit_id, rent, captured_at")
+            .in("unit_id", unitIds)
+        : emptyRes,
+      // Bounded recent history for the price chart (full history scans get
+      // silently capped at 1000 rows)
+      unitIds.length
+        ? supabase
+            .from("unit_price_snapshots")
+            .select("rent, captured_at")
+            .in("unit_id", unitIds)
+            .order("captured_at", { ascending: false })
+            .limit(90)
+        : emptyRes,
+      unitIds.length
+        ? supabase
+            .from("unit_images")
+            .select("id, unit_id, url, alt_text, category, is_primary, sort_order")
+            .in("unit_id", unitIds)
+            .order("is_primary", { ascending: false })
+            .order("sort_order", { ascending: true })
+        : emptyRes,
+      floorplanIds.length
+        ? supabase
+            .from("floorplans")
+            .select("id, name, beds, baths, sqft_min, sqft_max, layout_image_url")
+            .in("id", floorplanIds)
+        : emptyRes,
+      supabase
+        .from("showing_debriefs")
+        .select("submitted_at, showing_leads:showing_lead_id!inner(building_id)")
+        .eq("showing_leads.building_id", id)
+        .eq("client_showed_up", true)
+        .order("submitted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+  // Latest price per unit
   const unitPrices: Record<string, { rent: number; captured_at: string }> = {};
-  const allPriceSnapshots: { date: string; price: number }[] = [];
-
-  if (unitIds.length) {
-    const { data: prices } = await supabase
-      .from("unit_price_snapshots")
-      .select("unit_id, rent, captured_at")
-      .in("unit_id", unitIds)
-      .order("captured_at", { ascending: false });
-
-    for (const p of prices || []) {
-      if (!unitPrices[p.unit_id]) {
-        unitPrices[p.unit_id] = { rent: p.rent, captured_at: p.captured_at };
-      }
-      // Collect all snapshots for price history
-      allPriceSnapshots.push({ date: p.captured_at, price: p.rent });
-    }
+  for (const p of latestPricesRes.data || []) {
+    unitPrices[p.unit_id] = { rent: p.rent, captured_at: p.captured_at };
   }
 
   // Trust badges: freshest price snapshot + most recent completed Staycio tour
@@ -180,23 +237,16 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
   );
   const pricingVerified = latestPriceDate !== null && isWithinDays(latestPriceDate, 30);
 
-  const { data: lastTourDebrief } = await supabase
-    .from("showing_debriefs")
-    .select("submitted_at, showing_leads:showing_lead_id!inner(building_id)")
-    .eq("showing_leads.building_id", id)
-    .eq("client_showed_up", true)
-    .order("submitted_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const lastTourDebrief = debriefRes.data;
 
   // Aggregate price history by date (average rent per date)
   const priceByDate: Record<string, { total: number; count: number }> = {};
-  for (const snap of allPriceSnapshots) {
-    const dateKey = snap.date.split("T")[0];
+  for (const snap of historyRes.data || []) {
+    const dateKey = snap.captured_at.split("T")[0];
     if (!priceByDate[dateKey]) {
       priceByDate[dateKey] = { total: 0, count: 0 };
     }
-    priceByDate[dateKey].total += snap.price;
+    priceByDate[dateKey].total += snap.rent;
     priceByDate[dateKey].count++;
   }
 
@@ -207,36 +257,19 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  // Fetch unit images
+  // Group unit images by unit
   const unitImages: Record<string, UnitImage[]> = {};
-  if (unitIds.length) {
-    const { data: images } = await supabase
-      .from("unit_images")
-      .select("*")
-      .in("unit_id", unitIds)
-      .order("is_primary", { ascending: false })
-      .order("sort_order", { ascending: true });
-
-    for (const img of images || []) {
-      if (!unitImages[img.unit_id]) {
-        unitImages[img.unit_id] = [];
-      }
-      unitImages[img.unit_id].push(img);
+  for (const img of unitImagesRes.data || []) {
+    if (!unitImages[img.unit_id]) {
+      unitImages[img.unit_id] = [];
     }
+    unitImages[img.unit_id].push(img);
   }
 
-  // Fetch floorplans for units
-  const floorplanIds = [...new Set(units?.map(u => u.floorplan_id).filter(Boolean) || [])];
+  // Floorplans keyed by id
   const floorplans: Record<string, Floorplan> = {};
-  if (floorplanIds.length) {
-    const { data: fps } = await supabase
-      .from("floorplans")
-      .select("*")
-      .in("id", floorplanIds);
-
-    for (const fp of fps || []) {
-      floorplans[fp.id] = fp;
-    }
+  for (const fp of floorplansRes.data || []) {
+    floorplans[fp.id] = fp;
   }
 
   // Calculate price range

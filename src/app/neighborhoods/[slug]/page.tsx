@@ -63,6 +63,7 @@ export async function generateMetadata({
   return {
     title,
     description,
+    alternates: { canonical: `/neighborhoods/${slug}` },
     openGraph: { title, description },
   };
 }
@@ -132,16 +133,13 @@ export default async function NeighborhoodPage({ params, searchParams }: Neighbo
 
   if (unitIds.length > 0) {
     const { data: prices } = await supabase
-      .from("unit_price_snapshots")
+      .from("latest_unit_prices")
       .select("unit_id, rent")
-      .in("unit_id", unitIds)
-      .order("captured_at", { ascending: false });
+      .in("unit_id", unitIds);
 
     const latestPrices: Record<string, number> = {};
     for (const p of prices || []) {
-      if (!latestPrices[p.unit_id]) {
-        latestPrices[p.unit_id] = p.rent;
-      }
+      latestPrices[p.unit_id] = p.rent;
     }
 
     // Map unit to building for building prices

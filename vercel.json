@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/scrape-amenities?limit=15",
       "schedule": "0 4 1 * *"
+    },
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "0 5 * * 0"
     }
   ]
 }

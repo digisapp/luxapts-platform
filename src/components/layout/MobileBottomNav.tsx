@@ -34,6 +34,7 @@ export function MobileBottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex flex-col items-center gap-1 px-4 py-3 text-xs font-medium transition-colors",
                   isActive

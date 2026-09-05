@@ -39,6 +39,46 @@ export async function fetchPriceSnapshots(
   supabase: SupabaseClient,
   unitIds: string[],
 ): Promise<{ snapByUnit: Map<string, PriceSnapshot>; capturedAtMax: string | null }> {
+  // latest_unit_prices returns exactly one row per unit. The old query
+  // fetched FULL snapshot history and kept the first row per unit in JS —
+  // silently truncated at PostgREST's 1000-row cap, which dropped units
+  // from search results as daily snapshots accumulated.
+  const results = await Promise.all(
+    chunk(unitIds, IN_CHUNK_SIZE).map((ids) =>
+      supabase
+        .from("latest_unit_prices")
+        .select("unit_id, rent, net_effective_rent, lease_term_months, captured_at")
+        .in("unit_id", ids)
+    )
+  );
+
+  const snapByUnit = new Map<string, PriceSnapshot>();
+  let capturedAtMax: string | null = null;
+  for (const res of results) {
+    if (res.error) {
+      // 42P01 = view missing (migration 023 not applied yet). Fall back to
+      // the legacy history scan so a deploy ahead of the migration can't
+      // take down search. Remove once 023 is confirmed in production.
+      if (res.error.code === "42P01") {
+        return fetchPriceSnapshotsLegacy(supabase, unitIds);
+      }
+      throw new Error(res.error.message);
+    }
+    for (const s of res.data || []) {
+      snapByUnit.set(s.unit_id, s);
+      if (!capturedAtMax || s.captured_at > capturedAtMax) {
+        capturedAtMax = s.captured_at;
+      }
+    }
+  }
+
+  return { snapByUnit, capturedAtMax };
+}
+
+async function fetchPriceSnapshotsLegacy(
+  supabase: SupabaseClient,
+  unitIds: string[],
+): Promise<{ snapByUnit: Map<string, PriceSnapshot>; capturedAtMax: string | null }> {
   const results = await Promise.all(
     chunk(unitIds, IN_CHUNK_SIZE).map((ids) =>
       supabase

@@ -4,6 +4,13 @@ import { executeTool, type ToolContext } from "@/lib/xai/tool-executor";
 import { chatRequestSchema } from "@/lib/validations";
 import type OpenAI from "openai";
 
+// Tool-call fragments accumulated from streamed deltas.
+interface AccumulatedToolCall {
+  id: string;
+  name: string;
+  arguments: string;
+}
+
 export async function POST(req: Request) {
   try {
     // Rate limiting
@@ -79,98 +86,95 @@ export async function POST(req: Request) {
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
+        const send = (event: { type: string; content?: string }) => {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        };
+
         try {
-          // First API call - non-streaming to handle tools first
-          let response = await client.chat.completions.create({
-            model: "grok-4.3",
-            messages,
-            tools: AI_TOOLS,
-            tool_choice: "auto",
-            max_tokens: 2048,
-          });
-
-          let assistantMessage = response.choices[0].message;
-
-          // Handle tool calls first (non-streamed)
           const MAX_TOOL_ITERATIONS = 5;
-          let toolIterations = 0;
           const toolCtx: ToolContext = { leadsCreated: 0 };
-          while (assistantMessage.tool_calls?.length && toolIterations < MAX_TOOL_ITERATIONS) {
-            toolIterations++;
+
+          // Each pass streams a completion; text deltas are forwarded to the
+          // client as they arrive. If the model finishes with tool calls, we
+          // execute them, append the results, and stream the next completion.
+          // After MAX_TOOL_ITERATIONS tool rounds, one final pass runs without
+          // tools so the model must answer in text.
+          for (let iteration = 0; iteration <= MAX_TOOL_ITERATIONS; iteration++) {
+            const allowTools = iteration < MAX_TOOL_ITERATIONS;
+            const completion = await client.chat.completions.create({
+              model: "grok-4.3",
+              messages,
+              ...(allowTools ? { tools: AI_TOOLS, tool_choice: "auto" as const } : {}),
+              max_tokens: 2048,
+              stream: true,
+            });
+
+            let content = "";
+            const partialToolCalls: AccumulatedToolCall[] = [];
+
+            for await (const chunk of completion) {
+              const delta = chunk.choices[0]?.delta;
+              if (!delta) continue;
+
+              if (delta.content) {
+                content += delta.content;
+                send({ type: "content", content: delta.content });
+              }
+
+              for (const tc of delta.tool_calls ?? []) {
+                const acc = (partialToolCalls[tc.index] ??= { id: "", name: "", arguments: "" });
+                if (tc.id) acc.id = tc.id;
+                if (tc.function?.name) acc.name = tc.function.name;
+                if (tc.function?.arguments) acc.arguments += tc.function.arguments;
+              }
+            }
+
+            const toolCalls = partialToolCalls.filter((tc) => tc?.id && tc.name);
+            if (toolCalls.length === 0) break;
 
             // Send a status update
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ type: "status", content: "Searching..." })}\n\n`)
+            send({ type: "status", content: "Searching..." });
+
+            messages.push({
+              role: "assistant",
+              content: content || null,
+              tool_calls: toolCalls.map((tc) => ({
+                id: tc.id,
+                type: "function" as const,
+                function: { name: tc.name, arguments: tc.arguments },
+              })),
+            });
+
+            // Execute all tool calls in parallel, preserving the
+            // result-to-tool_call_id mapping.
+            const toolResults = await Promise.all(
+              toolCalls.map(async (tc) => {
+                let result: unknown;
+                try {
+                  const args = JSON.parse(tc.arguments || "{}");
+                  result = await executeTool(tc.name, args, baseUrl, toolCtx);
+                } catch {
+                  result = { error: `Invalid arguments for ${tc.name}` };
+                }
+                return { tool_call_id: tc.id, result };
+              })
             );
 
-            messages.push(assistantMessage);
-
-            // Execute each tool call
-            for (const toolCall of assistantMessage.tool_calls) {
-              if (toolCall.type === "function") {
-                const args = JSON.parse(toolCall.function.arguments);
-                const result = await executeTool(toolCall.function.name, args, baseUrl, toolCtx);
-
-                messages.push({
-                  role: "tool",
-                  tool_call_id: toolCall.id,
-                  content: JSON.stringify(result),
-                });
-              }
-            }
-
-            // Get next response
-            response = await client.chat.completions.create({
-              model: "grok-4.3",
-              messages,
-              tools: AI_TOOLS,
-              tool_choice: "auto",
-              max_tokens: 2048,
-            });
-
-            assistantMessage = response.choices[0].message;
-          }
-
-          // Now stream the final response
-          if (assistantMessage.content) {
-            // If we already have content from non-streaming call, stream it word by word
-            const words = assistantMessage.content.split(/(\s+)/);
-            for (const word of words) {
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ type: "content", content: word })}\n\n`)
-              );
-              // Small delay for natural feel
-              await new Promise((r) => setTimeout(r, 20));
-            }
-          } else {
-            // Make a streaming call for the final response
-            const streamResponse = await client.chat.completions.create({
-              model: "grok-4.3",
-              messages,
-              stream: true,
-              max_tokens: 2048,
-            });
-
-            for await (const chunk of streamResponse) {
-              const content = chunk.choices[0]?.delta?.content;
-              if (content) {
-                controller.enqueue(
-                  encoder.encode(`data: ${JSON.stringify({ type: "content", content })}\n\n`)
-                );
-              }
+            for (const { tool_call_id, result } of toolResults) {
+              messages.push({
+                role: "tool",
+                tool_call_id,
+                content: JSON.stringify(result),
+              });
             }
           }
 
           // Send done signal
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+          send({ type: "done" });
           controller.close();
         } catch (error) {
           console.error("Stream error:", error);
-          controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ type: "error", content: "Failed to process message" })}\n\n`
-            )
-          );
+          send({ type: "error", content: "Failed to process message" });
           controller.close();
         }
       },

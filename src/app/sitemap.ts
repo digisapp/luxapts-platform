@@ -50,7 +50,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const neighborhoodRoutes: MetadataRoute.Sitemap = neighborhoods.map((n) => ({
+  // Neighborhood slugs collide across cities ("midtown" exists in several) —
+  // dedupe by slug so the sitemap never emits the same URL twice.
+  const uniqueNeighborhoods = [
+    ...new Map(neighborhoods.map((n) => [n.slug, n])).values(),
+  ];
+
+  const neighborhoodRoutes: MetadataRoute.Sitemap = uniqueNeighborhoods.map((n) => ({
     url: `${base}/neighborhoods/${n.slug}`,
     lastModified: n.created_at || now,
     changeFrequency: "weekly",

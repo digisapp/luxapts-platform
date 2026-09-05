@@ -3,6 +3,11 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { apiError } from "@/lib/api-helpers";
 import { getFirstRelation } from "@/lib/db-helpers";
 
+// Public read-only data — let the CDN serve it (5 min fresh, 1 h stale-while-revalidate)
+const CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
+};
+
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
@@ -26,7 +31,7 @@ export async function GET(req: NextRequest) {
       .single();
 
     if (!city) {
-      return NextResponse.json({ listings: [] });
+      return NextResponse.json({ listings: [] }, { headers: CACHE_HEADERS });
     }
 
     // Build query for similar buildings
@@ -79,7 +84,7 @@ export async function GET(req: NextRequest) {
         .limit(5);
 
       if (!fallbackBuildings || fallbackBuildings.length === 0) {
-        return NextResponse.json({ listings: [] });
+        return NextResponse.json({ listings: [] }, { headers: CACHE_HEADERS });
       }
 
       // Process fallback buildings
@@ -116,7 +121,7 @@ async function processBuildings(
     .eq("is_available", true);
 
   if (!units || units.length === 0) {
-    return NextResponse.json({ listings: [] });
+    return NextResponse.json({ listings: [] }, { headers: CACHE_HEADERS });
   }
 
   const unitIds = units.map((u) => u.id);
@@ -124,10 +129,9 @@ async function processBuildings(
   // Fetch prices and images in parallel
   const [{ data: prices }, { data: images }] = await Promise.all([
     supabase
-      .from("unit_price_snapshots")
+      .from("latest_unit_prices")
       .select("unit_id, rent")
-      .in("unit_id", unitIds)
-      .order("captured_at", { ascending: false }),
+      .in("unit_id", unitIds),
     supabase
       .from("building_images")
       .select("building_id, url")
@@ -202,5 +206,5 @@ async function processBuildings(
     })
     .slice(0, 5);
 
-  return NextResponse.json({ listings });
+  return NextResponse.json({ listings }, { headers: CACHE_HEADERS });
 }

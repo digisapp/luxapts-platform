@@ -32,10 +32,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Send the welcome email flagged at signup once a session exists —
+      // the API requires auth and emails the session user's own address.
+      // Fires immediately when email confirmation is off, or after the user
+      // clicks the confirmation link when it's on.
+      if (event === "SIGNED_IN" && session) {
+        try {
+          if (localStorage.getItem("staycio:welcome-pending")) {
+            localStorage.removeItem("staycio:welcome-pending");
+            fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
+          }
+        } catch {}
+      }
     });
 
     return () => subscription.unsubscribe();

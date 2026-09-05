@@ -143,4 +143,7 @@ export const RATE_LIMITS = {
 
   // Auth endpoints - prevent brute force
   auth: { limit: 10, windowMs: 5 * 60 * 1000 }, // 10 req/5min
+
+  // Welcome email - strict, one real signup shouldn't need more
+  welcome: { limit: 5, windowMs: 60 * 1000 }, // 5 req/min
 };

@@ -6,7 +6,17 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/partner/", "/api/", "/auth/"],
+        disallow: [
+          "/admin/",
+          "/partner/",
+          "/api/",
+          "/auth/",
+          "/favorites",
+          "/compare",
+          "/account",
+          "/shower/",
+          "/agent/",
+        ],
       },
     ],
     sitemap: "https://staycio.com/sitemap.xml",

@@ -20,7 +20,26 @@ export async function POST(req: Request) {
       return apiError(parsed.error.issues[0]?.message || "Invalid request");
     }
 
+    const started = Date.now();
     const result = await cachedSearch(parsed.data);
+
+    // Search analytics: no writer has existed since migration 017 dropped the
+    // public insert policy, so the admin analytics dashboard read an empty
+    // table. Service-role insert, fire-and-forget — never blocks the response.
+    void (async () => {
+      try {
+        const { createAdminClient } = await import("@/lib/supabase/server");
+        await createAdminClient().from("search_events").insert({
+          city_slug: parsed.data.city_slug ?? null,
+          filters: parsed.data,
+          results_count: result.results?.length ?? 0,
+          response_time_ms: Date.now() - started,
+        });
+      } catch (err) {
+        console.error("search_events insert failed:", err);
+      }
+    })();
+
     return NextResponse.json(result);
   } catch (error) {
     console.error("Search error:", error);

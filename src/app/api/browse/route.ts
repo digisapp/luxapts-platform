@@ -7,6 +7,11 @@ interface BrowseBody {
   limit?: number;
 }
 
+// Public read-only data — let the CDN serve it (5 min fresh, 1 h stale-while-revalidate)
+const CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
+};
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as BrowseBody;
@@ -172,8 +177,11 @@ export async function GET(req: Request) {
     image: factsMap[b.id]?.image_exterior || null,
   }));
 
-  return NextResponse.json({
-    total: results.length,
-    results,
-  });
+  return NextResponse.json(
+    {
+      total: results.length,
+      results,
+    },
+    { headers: CACHE_HEADERS }
+  );
 }

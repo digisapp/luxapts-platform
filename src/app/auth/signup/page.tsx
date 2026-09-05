@@ -27,9 +27,20 @@ export default function SignUpPage() {
       return;
     }
 
+    // Flag the pending welcome email before signUp so the auth listener
+    // catches SIGNED_IN even when it fires during the signUp call (email
+    // confirmation disabled). /api/auth/welcome requires a session and sends
+    // to the session user's own email, so it can only fire once one exists.
+    try {
+      localStorage.setItem("staycio:welcome-pending", "1");
+    } catch {}
+
     const { error } = await signUp(email, password, name);
 
     if (error) {
+      try {
+        localStorage.removeItem("staycio:welcome-pending");
+      } catch {}
       setError(error.message);
       setLoading(false);
       return;
@@ -37,13 +48,6 @@ export default function SignUpPage() {
 
     setSuccess(true);
     setLoading(false);
-
-    // Fire welcome email (best-effort)
-    fetch("/api/auth/welcome", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, name: name.trim() || null }),
-    }).catch(() => {});
   };
 
   if (success) {

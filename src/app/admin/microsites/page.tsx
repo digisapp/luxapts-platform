@@ -27,17 +27,11 @@ function pct(n: number, d: number): string {
   return `${((n / d) * 100).toFixed(1)}%`;
 }
 
-export default async function AdminMicrositesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ days?: string }>;
-}) {
-  const params = await searchParams;
-  const days = Math.min(Math.max(parseInt(params.days || "30", 10) || 30, 1), 365);
-
+// Data access lives outside the component so time-dependent query bounds
+// don't count as impure render work (react-hooks/purity).
+async function loadMicrositeData(days: number) {
   const supabase = createAdminClient();
-
-  const [statsRes, recentLeadsRes, eventsRes] = await Promise.all([
+  return Promise.all([
     supabase.rpc("get_microsite_stats", { days_back: days }),
     supabase
       .from("leads")
@@ -52,6 +46,17 @@ export default async function AdminMicrositesPage({
       .gte("created_at", new Date(Date.now() - days * 86400000).toISOString())
       .limit(1000),
   ]);
+}
+
+export default async function AdminMicrositesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ days?: string }>;
+}) {
+  const params = await searchParams;
+  const days = Math.min(Math.max(parseInt(params.days || "30", 10) || 30, 1), 365);
+
+  const [statsRes, recentLeadsRes, eventsRes] = await loadMicrositeData(days);
 
   const statsByDomain = new Map<string, Stat>();
   ((statsRes.data as Stat[] | null) || []).forEach((s) => statsByDomain.set(s.domain, s));

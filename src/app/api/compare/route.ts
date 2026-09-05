@@ -79,21 +79,17 @@ export async function POST(req: Request) {
       const unitIds = unitsRes.data.map((u) => u.id);
 
       const snapsRes = await supabase
-        .from("unit_price_snapshots")
+        .from("latest_unit_prices")
         .select("unit_id, rent, captured_at")
-        .in("unit_id", unitIds)
-        .order("captured_at", { ascending: false });
+        .in("unit_id", unitIds);
 
       if (snapsRes.error) {
         return { by_beds: {}, captured_at_max: null };
       }
 
-      // Get latest price per unit
       const latestByUnit = new Map<string, { rent: number; captured_at: string }>();
       for (const s of snapsRes.data || []) {
-        if (!latestByUnit.has(s.unit_id)) {
-          latestByUnit.set(s.unit_id, { rent: s.rent, captured_at: s.captured_at });
-        }
+        latestByUnit.set(s.unit_id, { rent: s.rent, captured_at: s.captured_at });
       }
 
       // Group by beds

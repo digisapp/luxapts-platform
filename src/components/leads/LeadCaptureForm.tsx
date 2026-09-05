@@ -101,16 +101,18 @@ export function LeadCaptureForm({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium">Name</label>
+              <label htmlFor="lead-name" className="mb-2 block text-sm font-medium">Name</label>
               <Input
+                id="lead-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium">Email *</label>
+              <label htmlFor="lead-email" className="mb-2 block text-sm font-medium">Email *</label>
               <Input
+                id="lead-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -122,8 +124,9 @@ export function LeadCaptureForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium">Phone</label>
+              <label htmlFor="lead-phone" className="mb-2 block text-sm font-medium">Phone</label>
               <Input
+                id="lead-phone"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -131,9 +134,9 @@ export function LeadCaptureForm({
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium">Bedrooms</label>
+              <label htmlFor="lead-beds" className="mb-2 block text-sm font-medium">Bedrooms</label>
               <Select value={beds} onValueChange={setBeds}>
-                <SelectTrigger>
+                <SelectTrigger id="lead-beds" aria-label="Bedrooms">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
@@ -149,8 +152,9 @@ export function LeadCaptureForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium">Max Budget</label>
+              <label htmlFor="lead-budget" className="mb-2 block text-sm font-medium">Max Budget</label>
               <Input
+                id="lead-budget"
                 type="number"
                 value={budgetMax}
                 onChange={(e) => setBudgetMax(e.target.value)}
@@ -158,8 +162,9 @@ export function LeadCaptureForm({
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium">Move-in Date</label>
+              <label htmlFor="lead-move-in" className="mb-2 block text-sm font-medium">Move-in Date</label>
               <Input
+                id="lead-move-in"
                 type="date"
                 value={moveInDate}
                 onChange={(e) => setMoveInDate(e.target.value)}
@@ -168,8 +173,9 @@ export function LeadCaptureForm({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium">Additional Notes</label>
+            <label htmlFor="lead-notes" className="mb-2 block text-sm font-medium">Additional Notes</label>
             <textarea
+              id="lead-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any specific requirements or questions?"

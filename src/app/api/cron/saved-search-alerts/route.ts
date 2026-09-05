@@ -139,14 +139,13 @@ export async function GET(req: Request) {
       // Fetch latest prices for these units
       const unitIds = units.map((u) => u.id);
       const { data: prices } = await supabase
-        .from("unit_price_snapshots")
+        .from("latest_unit_prices")
         .select("unit_id, rent")
-        .in("unit_id", unitIds)
-        .order("captured_at", { ascending: false });
+        .in("unit_id", unitIds);
 
       const priceByUnit: Record<string, number> = {};
       for (const p of prices || []) {
-        if (!priceByUnit[p.unit_id]) priceByUnit[p.unit_id] = p.rent;
+        priceByUnit[p.unit_id] = p.rent;
       }
 
       // Build HTML rows for this search

@@ -1,10 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
-import { PriceHistoryChart } from "@/components/charts/PriceHistoryChart";
 import { RecentlyViewed } from "@/components/listings/RecentlyViewed";
 import { SimilarListings } from "@/components/listings/SimilarListings";
+
+// Recharts (~450KB) only loads when there's actually a chart to draw —
+// the component below renders solely inside the priceHistory.length >= 2 branch
+const PriceHistoryChart = dynamic(
+  () => import("@/components/charts/PriceHistoryChart").then((m) => m.PriceHistoryChart),
+  {
+    ssr: false,
+    loading: () => <div className="h-[300px] animate-pulse rounded-xl border bg-card" />,
+  }
+);
 
 interface BuildingInfo {
   id: string;

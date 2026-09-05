@@ -303,7 +303,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                   </div>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-white/40">
+              <p className="mt-4 text-sm text-white/50">
                 or{" "}
                 <Link
                   href="/search"
@@ -316,7 +316,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
             </div>
 
             {/* Conversational example searches — tap to run */}
-            <p className="text-xs uppercase tracking-wider text-white/40 mb-3 animate-fade-in [animation-delay:330ms]">
+            <p className="text-xs uppercase tracking-wider text-white/50 mb-3 animate-fade-in [animation-delay:330ms]">
               Try asking
             </p>
             <div className="flex flex-wrap justify-center gap-2 mb-8 animate-fade-in [animation-delay:350ms]">

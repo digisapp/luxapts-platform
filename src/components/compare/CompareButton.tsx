@@ -59,6 +59,8 @@ export function CompareButton({
         className
       )}
       title={isSelected ? "Remove from compare" : "Add to compare"}
+      aria-label={isSelected ? "Remove from compare" : "Add to compare"}
+      aria-pressed={isSelected}
     >
       {isSelected ? (
         <Check className="h-4 w-4" />
