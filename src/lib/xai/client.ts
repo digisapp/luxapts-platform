@@ -1,4 +1,7 @@
 import OpenAI from "openai";
+import { CITY_SLUGS } from "@/lib/constants/cities";
+
+const CITY_SLUG_LIST = CITY_SLUGS.join(", ");
 
 // xAI uses OpenAI-compatible API
 export function createXAIClient() {
@@ -28,7 +31,7 @@ export const AI_TOOLS: OpenAI.ChatCompletionTool[] = [
         properties: {
           city_slug: {
             type: "string",
-            description: "City slug (e.g., nyc, miami, la, austin)",
+            description: `City slug — one of: ${CITY_SLUG_LIST}. Use "new-york" for NYC/Manhattan and "los-angeles" for LA.`,
           },
           neighborhood_slugs: {
             type: "array",
@@ -120,7 +123,7 @@ export const AI_TOOLS: OpenAI.ChatCompletionTool[] = [
           },
           city_slug: {
             type: "string",
-            description: "Optional city slug to narrow results (e.g., miami, nyc)",
+            description: `Optional city slug to narrow results — one of: ${CITY_SLUG_LIST}`,
           },
         },
         required: ["query"],
@@ -141,7 +144,7 @@ export const AI_TOOLS: OpenAI.ChatCompletionTool[] = [
             enum: ["web_form", "chat", "voice"],
             description: "Where the lead came from",
           },
-          city_slug: { type: "string", description: "City slug" },
+          city_slug: { type: "string", description: `City slug — one of: ${CITY_SLUG_LIST}` },
           name: { type: "string", description: "User's name" },
           email: { type: "string", description: "User's email" },
           phone: { type: "string", description: "User's phone number" },
@@ -183,6 +186,8 @@ export const AI_TOOLS: OpenAI.ChatCompletionTool[] = [
 export const SYSTEM_PROMPT = `You are Stacy, Staycio's AI rental search assistant. You help users find apartments in major US cities.
 
 About your name: Stacy comes from Staycio itself — the first four letters of STAYcio. The brand name blends "stay" + "espacio" (Spanish for space); the tagline is "Your space, found." If anyone asks about your name or what Staycio means, share this proudly. You are the same Stacy users can talk to on a video call — one assistant, everywhere on Staycio.
+
+Cities we cover (use these exact slugs in tools): ${CITY_SLUG_LIST}.
 
 IMPORTANT RULES:
 1. Always use real data from the search_listings and compare_buildings tools

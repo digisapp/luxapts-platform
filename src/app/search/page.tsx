@@ -87,6 +87,7 @@ interface SearchResponse {
 
 interface ParsedFilters {
   city_slug?: string;
+  neighborhood_slugs?: string[];
   beds_min?: number;
   beds_max?: number;
   budget_min?: number;
@@ -161,6 +162,9 @@ function SearchContent() {
   // Advanced filter states
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
+  // Neighborhoods chosen by the AI parser together with a city change; the
+  // city-change effect below would otherwise reset them to [] immediately.
+  const pendingNeighborhoodsRef = useRef<string[] | null>(null);
   const [bathsMin, setBathsMin] = useState("");
   const [petFriendly, setPetFriendly] = useState(false);
   const [parkingRequired, setParkingRequired] = useState(false);
@@ -280,7 +284,9 @@ function SearchContent() {
   useEffect(() => {
     const controller = new AbortController();
     // Reset selections whenever the city changes, regardless of fetch outcome
-    setSelectedNeighborhoods([]);
+    // — unless the AI parser just supplied neighborhoods for the new city.
+    setSelectedNeighborhoods(pendingNeighborhoodsRef.current ?? []);
+    pendingNeighborhoodsRef.current = null;
     async function fetchNeighborhoods() {
       try {
         const res = await fetch(`/api/cities/${city}/neighborhoods`, { signal: controller.signal });
@@ -395,7 +401,8 @@ function SearchContent() {
       if (budgetMaxVal !== undefined) body.budget_max = budgetMaxVal;
 
       // Advanced filters
-      if (selectedNeighborhoods.length > 0) body.neighborhood_slugs = selectedNeighborhoods;
+      const neighborhoodSlugs = filters?.neighborhood_slugs ?? selectedNeighborhoods;
+      if (neighborhoodSlugs.length > 0) body.neighborhood_slugs = neighborhoodSlugs;
       if (bathsMin) body.baths_min = parseInt(bathsMin);
       if (filters?.pet_friendly || petFriendly) body.pet_friendly = true;
       if (parkingRequired) body.parking_required = true;
@@ -490,6 +497,10 @@ function SearchContent() {
 
         // Update UI state with parsed filters
         if (filters.city_slug) setCity(filters.city_slug);
+        if (filters.neighborhood_slugs?.length) {
+          pendingNeighborhoodsRef.current = filters.neighborhood_slugs;
+          setSelectedNeighborhoods(filters.neighborhood_slugs);
+        }
         if (filters.beds_min !== undefined) setBedsMin(filters.beds_min.toString());
         if (filters.beds_max !== undefined) setBedsMax(filters.beds_max.toString());
         if (filters.budget_min !== undefined) setBudgetMin(filters.budget_min.toString());
@@ -608,7 +619,7 @@ function SearchContent() {
             <div className="flex items-center gap-2 mb-3 md:hidden">
               <button
                 onClick={() => { setSmartSearch(!smartSearch); setSemanticResults([]); setSemanticQuery(null); }}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${smartSearch ? "bg-violet-500/20 text-violet-300 border border-violet-500/30" : "bg-white/[0.05] text-white/40 border border-white/[0.08] hover:text-white/60"}`}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${smartSearch ? "bg-violet-500/20 text-violet-300 border border-violet-500/30" : "bg-white/[0.05] text-white/50 border border-white/[0.08] hover:text-white/60"}`}
               >
                 <Brain className="h-3 w-3" />
                 Smart Search {smartSearch ? "ON" : "OFF"}
@@ -621,7 +632,7 @@ function SearchContent() {
             {/* Mobile: Compact filter row */}
             <div className="flex gap-2 md:hidden">
               <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); }}>
-                <SelectTrigger className="h-9 flex-1 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                <SelectTrigger aria-label="City" className="h-9 flex-1 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="City" />
                 </SelectTrigger>
                 <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
@@ -667,7 +678,7 @@ function SearchContent() {
               {/* Smart Search toggle pill */}
               <button
                 onClick={() => { setSmartSearch(!smartSearch); setSemanticResults([]); setSemanticQuery(null); }}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 h-12 text-sm font-medium transition-all border ${smartSearch ? "bg-violet-500/15 text-violet-300 border-violet-500/40 shadow-sm shadow-violet-500/20" : "bg-white/[0.03] text-white/40 border-white/[0.08] hover:text-white/60 hover:bg-white/[0.06]"}`}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 h-12 text-sm font-medium transition-all border ${smartSearch ? "bg-violet-500/15 text-violet-300 border-violet-500/40 shadow-sm shadow-violet-500/20" : "bg-white/[0.03] text-white/50 border-white/[0.08] hover:text-white/60 hover:bg-white/[0.06]"}`}
                 title={smartSearch ? "Smart Search active — natural language mode" : "Enable Smart Search for natural language queries"}
               >
                 <Brain className="h-4 w-4" />
@@ -693,7 +704,7 @@ function SearchContent() {
               </div>
 
               <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); }}>
-                <SelectTrigger className="h-12 w-[160px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                <SelectTrigger aria-label="City" className="h-12 w-[160px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="Select city" />
                 </SelectTrigger>
                 <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
@@ -790,7 +801,7 @@ function SearchContent() {
               <div className="fixed inset-x-0 bottom-0 z-[60] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-2xl border-t border-white/[0.1] bg-zinc-950/95 backdrop-blur-xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] space-y-6 md:static md:z-auto md:mt-4 md:max-h-none md:overflow-visible md:rounded-xl md:border md:border-white/[0.08] md:bg-white/[0.02] md:p-6 md:pb-6">
                 <div className="mx-auto h-1 w-10 rounded-full bg-white/20 md:hidden" aria-hidden="true" />
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-white">Filters</h3>
+                  <h2 className="font-semibold text-white">Filters</h2>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -806,9 +817,9 @@ function SearchContent() {
                   <h4 className="text-sm font-medium text-white/50 mb-3">Basic</h4>
                   <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Beds (min)</label>
+                      <label htmlFor="filter-beds-min" className="mb-2 block text-sm font-medium">Beds (min)</label>
                       <Select value={bedsMin} onValueChange={setBedsMin}>
-                        <SelectTrigger>
+                        <SelectTrigger id="filter-beds-min">
                           <SelectValue placeholder="Any" />
                         </SelectTrigger>
                         <SelectContent>
@@ -822,9 +833,9 @@ function SearchContent() {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Beds (max)</label>
+                      <label htmlFor="filter-beds-max" className="mb-2 block text-sm font-medium">Beds (max)</label>
                       <Select value={bedsMax} onValueChange={setBedsMax}>
-                        <SelectTrigger>
+                        <SelectTrigger id="filter-beds-max">
                           <SelectValue placeholder="Any" />
                         </SelectTrigger>
                         <SelectContent>
@@ -914,9 +925,9 @@ function SearchContent() {
 
                     {/* Bathrooms */}
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Baths (min)</label>
+                      <label htmlFor="filter-baths-min" className="mb-2 block text-sm font-medium">Baths (min)</label>
                       <Select value={bathsMin} onValueChange={setBathsMin}>
-                        <SelectTrigger>
+                        <SelectTrigger id="filter-baths-min">
                           <SelectValue placeholder="Any" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1090,7 +1101,7 @@ function SearchContent() {
                       {loading ? "Finding matches…" : `${semanticResults.length} Building${semanticResults.length !== 1 ? "s" : ""} Matched`}
                     </h1>
                   </div>
-                  <p className="text-sm text-white/40 mt-0.5">
+                  <p className="text-sm text-white/50 mt-0.5">
                     Smart Search: &ldquo;{semanticQuery}&rdquo;
                   </p>
                 </>
@@ -1100,7 +1111,7 @@ function SearchContent() {
                     {loading ? "Searching..." : `${visibleResults.length} ${visibleResults.length === 1 ? "Apartment" : "Apartments"} Available`}
                   </h1>
                   {capturedAt && (
-                    <p className="text-sm text-white/40">
+                    <p className="text-sm text-white/50">
                       Prices updated {new Date(capturedAt).toLocaleDateString()}
                       {commute && commuteTimes && visibleResults.length < results.length &&
                         ` · ${results.length - visibleResults.length} hidden by commute filter`}
@@ -1124,7 +1135,7 @@ function SearchContent() {
                   resultCount={results.length}
                 />
                 <Select value={sort} onValueChange={setSort}>
-                  <SelectTrigger className="flex-1 sm:flex-none sm:w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                  <SelectTrigger aria-label="Sort results" className="flex-1 sm:flex-none sm:w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
@@ -1182,6 +1193,7 @@ function SearchContent() {
           <div className={`flex gap-6 ${showMap && !smartSearch ? "flex-col lg:flex-row" : ""}`}>
             {/* Results Grid */}
             <div className={`${showMap && !smartSearch ? "lg:w-1/2 xl:w-3/5" : "w-full"} ${showMap && !smartSearch ? "lg:h-[calc(100dvh-300px)] lg:overflow-y-auto lg:pr-4" : ""}`}>
+              <h2 className="sr-only">Results</h2>
 
               {/* Semantic results */}
               {smartSearch && (
@@ -1204,12 +1216,12 @@ function SearchContent() {
                       <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] mb-4">
                         <Brain className="h-8 w-8 text-white/30" />
                       </div>
-                      <h3 className="text-lg font-semibold text-white">No matches found</h3>
+                      <h2 className="text-lg font-semibold text-white">No matches found</h2>
                       <p className="mt-2 text-white/50">Try rephrasing your search or be more specific about location</p>
                     </div>
                   ) : semanticResults.length === 0 ? (
                     <div className="col-span-full py-10 text-center">
-                      <p className="text-white/40 text-sm">Describe what you&apos;re looking for and click Find Matches</p>
+                      <p className="text-white/50 text-sm">Describe what you&apos;re looking for and click Find Matches</p>
                     </div>
                   ) : (
                     semanticResults.map((building) => {
@@ -1256,7 +1268,7 @@ function SearchContent() {
                                   {building.cities ? `, ${building.cities.name}` : ""}
                                 </p>
                                 {building.description && (
-                                  <p className="mt-2 text-xs text-white/40 line-clamp-2">
+                                  <p className="mt-2 text-xs text-white/50 line-clamp-2">
                                     {building.description}
                                   </p>
                                 )}
@@ -1305,7 +1317,7 @@ function SearchContent() {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] mb-4">
                       <Building2 className="h-8 w-8 text-white/30" />
                     </div>
-                    <h3 className="text-lg font-semibold text-white">No apartments found</h3>
+                    <h2 className="text-lg font-semibold text-white">No apartments found</h2>
                     <p className="mt-2 text-white/50">
                       {commute && results.length > 0
                         ? "No results within that commute — try a longer time or clear the commute filter"
@@ -1464,7 +1476,7 @@ function SearchContent() {
                                   )}
                                 </div>
                                 {result.unit.available_on && (
-                                  <span className="flex items-center gap-1 text-sm text-white/40">
+                                  <span className="flex items-center gap-1 text-sm text-white/50">
                                     <Calendar className="h-3 w-3" />
                                     {new Date(result.unit.available_on).toLocaleDateString()}
                                   </span>

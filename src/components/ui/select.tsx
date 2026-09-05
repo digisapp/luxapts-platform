@@ -76,7 +76,17 @@ function Select({ value, defaultValue, onValueChange, children }: SelectProps) {
   );
 }
 
-function SelectTrigger({ className, children, id }: { className?: string; children: React.ReactNode; id?: string }) {
+function SelectTrigger({
+  className,
+  children,
+  id,
+  "aria-label": ariaLabel,
+}: {
+  className?: string;
+  children: React.ReactNode;
+  id?: string;
+  "aria-label"?: string;
+}) {
   const context = React.useContext(SelectContext);
   if (!context) throw new Error("SelectTrigger must be used within Select");
 
@@ -125,6 +135,7 @@ function SelectTrigger({ className, children, id }: { className?: string; childr
     <button
       type="button"
       id={id}
+      aria-label={ariaLabel}
       role="combobox"
       aria-haspopup="listbox"
       aria-expanded={open}

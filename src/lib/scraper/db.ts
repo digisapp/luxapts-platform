@@ -1,20 +1,35 @@
 // Database operations for the scraper
 
 import { SupabaseClient } from "@supabase/supabase-js";
-import { fetchAllRows } from "@/lib/db-helpers";
+import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
 import { ScrapedUnit, ScrapedAmenity, ScrapedImage } from "./types";
 
-interface ScrapeCandidate {
+export interface ScrapeStatusRelation {
+  website_url: string | null;
+  scrape_enabled: boolean | null;
+  amenities_scraped_at: string | null;
+  units_scraped_at: string | null;
+}
+
+export interface ScrapeCandidate {
   id: string;
   name: string;
   website_url: string;
   city_id: string;
-  building_scrape_status: {
-    website_url: string | null;
-    scrape_enabled: boolean | null;
-    amenities_scraped_at: string | null;
-    units_scraped_at: string | null;
-  }[] | null;
+  // building_scrape_status.building_id is the table's PRIMARY KEY, so
+  // PostgREST treats the relationship as one-to-one and embeds an OBJECT
+  // (or null) — NOT an array. Every consumer must go through scrapeStatusOf():
+  // indexing it as `[0]` made every building look never-scraped, which sorted
+  // the fleet by id and re-scraped the same ~25 buildings every night while
+  // 205 others were never reached.
+  building_scrape_status: ScrapeStatusRelation | ScrapeStatusRelation[] | null;
+}
+
+/** Normalize the one-to-one scrape-status embed regardless of PostgREST's shape. */
+export function scrapeStatusOf<T>(
+  building: { building_scrape_status?: T | T[] | null } | null | undefined,
+): T | null {
+  return getFirstRelation(building?.building_scrape_status);
 }
 
 export async function getBuildingsToScrape(
@@ -61,7 +76,7 @@ export async function getBuildingsToScrape(
 
   // Timestamp the staleness decision keys off; null = never scraped
   const scrapeKey = (b: ScrapeCandidate): number | null => {
-    const status = b.building_scrape_status?.[0];
+    const status = scrapeStatusOf(b);
     if (!status) return null;
     if (onlyUnits) {
       return status.units_scraped_at ? new Date(status.units_scraped_at).getTime() : null;
@@ -72,7 +87,7 @@ export async function getBuildingsToScrape(
 
   return buildings
     .filter((b) => {
-      const status = b.building_scrape_status?.[0];
+      const status = scrapeStatusOf(b);
       if (status?.scrape_enabled === false) return false;
       const key = scrapeKey(b);
       return key === null || key < cutoffDate.getTime();
@@ -157,14 +172,38 @@ export function sanitizeLeaseTerm(value: number | null | undefined): number | nu
   return months >= 1 && months <= 36 ? months : null;
 }
 
+export interface SaveScrapedUnitsResult {
+  unitsCreated: number;
+  unitsUpdated: number;
+  /** Every unit this scrape matched or created — anything else still listed for the building is gone. */
+  seenUnitIds: string[];
+}
+
+interface ExistingUnit {
+  id: string;
+  latest_rent: number | null;
+}
+
+/**
+ * Identity for listings that carry no unit number (floorplan-level pricing:
+ * "1BR/1BA 823 sqft from $2,151"). Without this, every nightly scrape
+ * inserted a brand-new unit row per floorplan and nothing ever retired the
+ * old ones — Arte Grand Central accumulated 567 phantom "available" units.
+ */
+export function floorplanKey(u: { beds?: number | null; baths?: number | null; sqft?: number | null }): string {
+  return `${u.beds ?? ""}|${u.baths ?? ""}|${u.sqft ?? ""}`;
+}
+
 export async function saveScrapedUnits(
   supabase: SupabaseClient,
   buildingId: string,
   units: ScrapedUnit[],
   sourceId?: string
-) {
+): Promise<SaveScrapedUnitsResult> {
   let unitsCreated = 0;
   let unitsUpdated = 0;
+  const seenUnitIds = new Set<string>();
+  const seenIdentities = new Set<string>();
 
   const saneUnits = units.filter((u) => {
     const ok = isSaneUnit(u);
@@ -176,13 +215,21 @@ export async function saveScrapedUnits(
   // their latest snapshot rent, so unchanged prices don't get a new snapshot.
   const { data: existingUnits } = await supabase
     .from("units_with_latest_price")
-    .select("id, unit_number, latest_rent")
-    .eq("building_id", buildingId);
+    .select("id, unit_number, beds, baths, sqft, latest_rent, created_at")
+    .eq("building_id", buildingId)
+    .order("created_at", { ascending: false });
 
-  const existingByNumber = new Map<string, { id: string; latest_rent: number | null }>();
+  // Newest row wins for either identity, so pre-existing duplicates collapse
+  // onto one canonical unit and the rest get retired by markUnitsUnavailable.
+  const existingByNumber = new Map<string, ExistingUnit>();
+  const existingByFloorplan = new Map<string, ExistingUnit>();
   for (const u of existingUnits || []) {
+    const rec: ExistingUnit = { id: u.id, latest_rent: u.latest_rent };
     if (u.unit_number) {
-      existingByNumber.set(u.unit_number, { id: u.id, latest_rent: u.latest_rent });
+      if (!existingByNumber.has(u.unit_number)) existingByNumber.set(u.unit_number, rec);
+    } else {
+      const key = floorplanKey(u);
+      if (!existingByFloorplan.has(key)) existingByFloorplan.set(key, rec);
     }
   }
 
@@ -194,9 +241,17 @@ export async function saveScrapedUnits(
   }> = [];
 
   for (const unit of saneUnits) {
-    const existing = unit.unit_number ? existingByNumber.get(unit.unit_number) : undefined;
+    const identity = unit.unit_number ? `n:${unit.unit_number}` : `f:${floorplanKey(unit)}`;
+    // The extractor sometimes lists the same floorplan twice on one page.
+    if (seenIdentities.has(identity)) continue;
+    seenIdentities.add(identity);
+
+    const existing = unit.unit_number
+      ? existingByNumber.get(unit.unit_number)
+      : existingByFloorplan.get(floorplanKey(unit));
 
     if (existing) {
+      seenUnitIds.add(existing.id);
       // Update existing unit
       await supabase
         .from("units")
@@ -245,6 +300,7 @@ export async function saveScrapedUnits(
       .single();
 
     if (!unitError && newUnit) {
+      seenUnitIds.add(newUnit.id);
       if (unit.rent) {
         snapshots.push({
           unit_id: newUnit.id,
@@ -262,7 +318,7 @@ export async function saveScrapedUnits(
     if (snapError) console.error(`Snapshot insert failed for building ${buildingId}:`, snapError.message);
   }
 
-  return { unitsCreated, unitsUpdated };
+  return { unitsCreated, unitsUpdated, seenUnitIds: [...seenUnitIds] };
 }
 
 export async function saveScrapedAmenities(
@@ -318,15 +374,15 @@ export async function saveScrapedAmenities(
 export async function markUnitsUnavailable(
   supabase: SupabaseClient,
   buildingId: string,
-  activeUnitNumbers: string[]
+  seenUnitIds: string[]
 ) {
-  // Mark units as unavailable if they weren't found in the latest scrape
-  if (activeUnitNumbers.length === 0) return;
+  // A scrape that saw nothing is not evidence the building is empty (it is
+  // far more often a bot wall or a layout change) — never retire on it.
+  if (seenUnitIds.length === 0) return;
 
-  // First get all available units for this building
   const { data: availableUnits, error: fetchError } = await supabase
     .from("units")
-    .select("id, unit_number")
+    .select("id")
     .eq("building_id", buildingId)
     .eq("is_available", true);
 
@@ -335,19 +391,17 @@ export async function markUnitsUnavailable(
     return;
   }
 
-  // Filter to units NOT in the active list
-  const activeSet = new Set(activeUnitNumbers);
-  const unitsToMark = availableUnits.filter(u => !activeSet.has(u.unit_number));
-
+  const seen = new Set(seenUnitIds);
+  const unitsToMark = availableUnits.filter((u) => !seen.has(u.id)).map((u) => u.id);
   if (unitsToMark.length === 0) return;
 
-  const { error } = await supabase
-    .from("units")
-    .update({ is_available: false })
-    .in("id", unitsToMark.map(u => u.id));
-
-  if (error) {
-    console.error("Error marking units unavailable:", error);
+  // Keep the .in() URL bounded
+  for (let i = 0; i < unitsToMark.length; i += 100) {
+    const { error } = await supabase
+      .from("units")
+      .update({ is_available: false })
+      .in("id", unitsToMark.slice(i, i + 100));
+    if (error) console.error("Error marking units unavailable:", error);
   }
 }
 

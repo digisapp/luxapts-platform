@@ -1,5 +1,11 @@
 import { AMENITY_KEYWORDS } from "@/lib/constants/amenities";
+import { fetchAllRows } from "@/lib/db-helpers";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+// PostgREST caps responses at 1000 rows and long `.in()` URLs fail outright —
+// both tables are read in chunks/pages so the filter never silently drops a
+// building as the catalog grows (amenities: 817 rows and rising monthly).
+const IN_CHUNK_SIZE = 100;
 
 /**
  * Filter building IDs by amenity requirements using keyword matching.
@@ -15,28 +21,41 @@ export async function filterBuildingsByAmenities(
     return buildingIds;
   }
 
-  const amenitiesRes = await supabase
-    .from("amenities")
-    .select("id, name");
+  const amenities = await fetchAllRows<{ id: string; name: string }>((from, to) =>
+    supabase.from("amenities").select("id, name").order("id").range(from, to)
+  );
 
-  if (!amenitiesRes.data?.length) return buildingIds;
+  if (!amenities.length) return buildingIds;
 
   // Build a map of amenity ID to its lowercase name
   const amenityIdToName = new Map(
-    amenitiesRes.data.map(a => [a.id, a.name.toLowerCase()])
+    amenities.map(a => [a.id, a.name.toLowerCase()])
   );
 
   // Get building_amenities for the current buildings
-  const buildingAmenitiesRes = await supabase
-    .from("building_amenities")
-    .select("building_id, amenity_id")
-    .in("building_id", buildingIds);
-
-  if (!buildingAmenitiesRes.data) return buildingIds;
+  const chunks: string[][] = [];
+  for (let i = 0; i < buildingIds.length; i += IN_CHUNK_SIZE) {
+    chunks.push(buildingIds.slice(i, i + IN_CHUNK_SIZE));
+  }
+  const buildingAmenities = (
+    await Promise.all(
+      chunks.map((ids) =>
+        fetchAllRows<{ building_id: string; amenity_id: string }>((from, to) =>
+          supabase
+            .from("building_amenities")
+            .select("building_id, amenity_id")
+            .in("building_id", ids)
+            .order("building_id")
+            .order("amenity_id")
+            .range(from, to)
+        )
+      )
+    )
+  ).flat();
 
   // Build a map of building -> amenity names (lowercase)
   const buildingToAmenityNames = new Map<string, string[]>();
-  for (const ba of buildingAmenitiesRes.data) {
+  for (const ba of buildingAmenities) {
     if (!buildingToAmenityNames.has(ba.building_id)) {
       buildingToAmenityNames.set(ba.building_id, []);
     }

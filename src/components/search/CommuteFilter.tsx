@@ -94,7 +94,7 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
     <div className="space-y-2">
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
-          <Navigation className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" aria-hidden="true" />
+          <Navigation className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" aria-hidden="true" />
           <input
             type="text"
             value={address}
@@ -106,12 +106,12 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
               }
             }}
             placeholder="Commute to: work, school, an address…"
-            className="h-11 md:h-9 w-full rounded-md border border-white/[0.08] bg-white/[0.03] pl-9 pr-3 text-base md:text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-white/30"
+            className="h-11 md:h-9 w-full rounded-md border border-white/[0.08] bg-white/[0.03] pl-9 pr-3 text-base md:text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-white/30"
           />
         </div>
         <div className="flex gap-2">
           <Select value={mode} onValueChange={(v) => setMode(v as CommuteTarget["mode"])}>
-            <SelectTrigger className="h-9 w-[92px] text-sm bg-white/[0.03] border-white/[0.08]">
+            <SelectTrigger aria-label="Travel mode" className="h-9 w-[92px] text-sm bg-white/[0.03] border-white/[0.08]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
@@ -121,7 +121,7 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
             </SelectContent>
           </Select>
           <Select value={String(maxMinutes)} onValueChange={(v) => setMaxMinutes(parseInt(v, 10))}>
-            <SelectTrigger className="h-9 w-[104px] text-sm bg-white/[0.03] border-white/[0.08]">
+            <SelectTrigger aria-label="Maximum commute time" className="h-9 w-[104px] text-sm bg-white/[0.03] border-white/[0.08]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">

@@ -6,12 +6,20 @@ import { createAdminClient } from "@/lib/supabase/server";
 import {
   scrapeUnitsOnly,
   getBuildingsToScrape,
+  scrapeStatusOf,
   updateScrapeStatus,
   saveScrapedUnits,
   markUnitsUnavailable,
   createScrapeJob,
   updateScrapeJob,
 } from "@/lib/scraper";
+
+// Stop starting new buildings once this much of the function window has
+// elapsed. A single building (fetch + render fallback + AI extraction) can
+// take up to ~60s, so the headroom keeps the final job update and the HTTP
+// response inside maxDuration instead of the platform killing the invocation
+// mid-loop — which left every nightly job stranded in status "running".
+const TIME_BUDGET_MS = (maxDuration - 75) * 1000;
 
 // This endpoint should be called by a cron job (e.g., Vercel Cron)
 // to update unit availability across all buildings
@@ -48,6 +56,16 @@ export async function GET(req: Request) {
       cityId = city?.id;
     }
 
+    // Jobs from invocations the platform killed mid-run never get their
+    // final update; anything still "running" after an hour is dead.
+    await supabase
+      .from("scrape_jobs")
+      .update({ status: "failed", completed_at: new Date().toISOString() })
+      .eq("status", "running")
+      .lt("started_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
+
+    const startedAt = Date.now();
+
     // Create scrape job for tracking
     const jobId = await createScrapeJob(supabase, "units", { cityId });
 
@@ -82,14 +100,22 @@ export async function GET(req: Request) {
       processed: 0,
       success: 0,
       failed: 0,
+      skipped_for_time: 0,
       total_units_found: 0,
       errors: [] as { building_id: string; building_name: string; error: string }[],
     };
 
     for (const building of buildings) {
+      if (Date.now() - startedAt > TIME_BUDGET_MS) {
+        // Untouched buildings keep their old units_scraped_at, so the fair
+        // stalest-first ordering picks them up first tomorrow.
+        results.skipped_for_time = buildings.length - results.processed;
+        break;
+      }
+
       // Scraper-internal override first: building_scrape_status.website_url points at the
       // best scrape target (portal/API/manager page) without changing the user-facing link
-      const websiteUrl = building.building_scrape_status?.[0]?.website_url || building.website_url;
+      const websiteUrl = scrapeStatusOf(building)?.website_url || building.website_url;
 
       if (!websiteUrl) {
         results.failed++;
@@ -112,16 +138,9 @@ export async function GET(req: Request) {
         if (scrapeResult.success && scrapeResult.data) {
           // Save units
           if (scrapeResult.data.units.length > 0) {
-            await saveScrapedUnits(supabase, building.id, scrapeResult.data.units);
-
-            // Mark units not in scrape as unavailable
-            const scrapedUnitNumbers = scrapeResult.data.units
-              .map((u) => u.unit_number)
-              .filter((n): n is string => !!n);
-
-            if (scrapedUnitNumbers.length > 0) {
-              await markUnitsUnavailable(supabase, building.id, scrapedUnitNumbers);
-            }
+            const saved = await saveScrapedUnits(supabase, building.id, scrapeResult.data.units);
+            // Anything still listed that this scrape didn't see is no longer available
+            await markUnitsUnavailable(supabase, building.id, saved.seenUnitIds);
           }
 
           await updateScrapeStatus(supabase, building.id, {
@@ -198,7 +217,9 @@ export async function GET(req: Request) {
         buildings_processed: results.processed,
         buildings_success: results.success,
         buildings_failed: results.failed,
+        buildings_skipped_for_time: results.skipped_for_time,
         total_units_found: results.total_units_found,
+        elapsed_ms: Date.now() - startedAt,
       },
       errors: results.errors.slice(0, 10), // Only return first 10 errors
     });

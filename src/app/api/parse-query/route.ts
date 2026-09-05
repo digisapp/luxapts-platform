@@ -3,6 +3,11 @@ import { z } from "zod";
 import { createXAIClient } from "@/lib/xai/client";
 import { apiError } from "@/lib/api-helpers";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+import { CITY_SLUGS, isKnownCitySlug, normalizeCitySlug } from "@/lib/constants/cities";
+import { getNeighborhoodCatalog, resolveNeighborhoods } from "@/lib/search/neighborhood-resolver";
+
+const PARSE_MODEL = process.env.XAI_PARSE_MODEL || "grok-4.20-0309-non-reasoning";
+const PARSE_FALLBACK_MODEL = "grok-4.3";
 
 const RequestSchema = z.object({
   query: z.string().min(1).max(500),
@@ -12,17 +17,26 @@ const RequestSchema = z.object({
 const PARSE_SYSTEM_PROMPT = `You are a search query parser for a luxury apartment rental platform.
 Extract structured search filters from natural language queries.
 
-Available cities (use exact slug): miami, new-york, los-angeles, austin, dallas, nashville, atlanta, brooklyn, chicago, san-francisco
-
-Common amenities to extract: pool, gym, rooftop, doorman, concierge, parking, washer-dryer, balcony, fireplace, pet-friendly, elevator, storage, bike-room, package-room
+Return a JSON object with ONLY these keys (omit any key you cannot fill):
+{
+  "city_slug": string,          // one of: ${CITY_SLUGS.join(", ")}
+  "neighborhoods": string[],    // neighborhood/district/area names exactly as written in the query
+  "beds_min": integer, "beds_max": integer,
+  "baths_min": number,
+  "budget_min": integer, "budget_max": integer,   // monthly USD
+  "pet_friendly": boolean, "parking_required": boolean,
+  "amenities": string[],        // from: pool, gym, rooftop, doorman, concierge, parking, washer-dryer, balcony, fireplace, elevator, storage, bike-room, package-room
+  "sort": "best_match" | "price_low" | "price_high" | "newest" | "sqft_high",
+  "summary": string             // brief human-readable confirmation, e.g. "2BR in Miami under $3,500, pet-friendly, with pool"
+}
 
 Rules:
-- If a city is mentioned, map it to the closest city slug (e.g. "NYC" → "new-york", "LA" → "los-angeles", "SF" → "san-francisco")
-- For beds: "studio" → beds_min=0, beds_max=0; "1BR" → beds_min=1, beds_max=1; "2+" → beds_min=2
-- For budget: extract monthly dollar amounts. "$3k" → 3000. "under $4,000" → budget_max=4000
-- pet_friendly: true if user mentions pets, dogs, cats, or "pet-friendly"
-- For sort hints: "cheapest" → price_low; "biggest" → sqft_high; "newest" → newest
-- summary: a brief, human-readable confirmation of what you parsed (e.g. "2BR in Miami under $3,500, pet-friendly, with pool")
+- city_slug: map any city mention to the closest slug ("NYC"/"Manhattan" → "new-york", "LA" → "los-angeles", "SF" → "san-francisco"). Williamsburg, DUMBO, Greenpoint, Fort Greene and Downtown Brooklyn are in "brooklyn". If a neighborhood implies a city, set city_slug too.
+- neighborhoods: include a name whenever the query mentions a neighborhood, district or area ("Williamsburg", "Brickell", "SoMa", "downtown", "walk to downtown"). Never invent one.
+- beds: "studio" → beds_min=0, beds_max=0; "1BR" → beds_min=1, beds_max=1; "2+" → beds_min=2
+- budget: "$3k" → 3000; "under $4,000" → budget_max=4000; a bare amount like "$2,800" is budget_max
+- pet_friendly: true if the user mentions pets, dogs, cats or "pet-friendly"
+- sort: "cheapest" → price_low; "biggest" → sqft_high; "newest" → newest
 
 Respond ONLY with valid JSON. No markdown, no explanation.`;
 
@@ -40,24 +54,39 @@ export async function POST(req: Request) {
       return apiError(parsed.error.issues[0]?.message ?? "Invalid input", 400);
     }
 
-    const { query, city_slug } = parsed.data;
+    const { query } = parsed.data;
+    const contextCity = normalizeCitySlug(parsed.data.city_slug);
 
     const client = createXAIClient();
-    const completion = await client.chat.completions.create({
-      model: "grok-4.3",
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: PARSE_SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: city_slug
-            ? `Parse this query (current city context: ${city_slug}): "${query}"`
-            : `Parse this query: "${query}"`,
-        },
-      ],
-      max_tokens: 300,
-      temperature: 0,
-    });
+    const messages = [
+      { role: "system" as const, content: PARSE_SYSTEM_PROMPT },
+      {
+        role: "user" as const,
+        content: contextCity
+          ? `Parse this query (current city context: ${contextCity}): "${query}"`
+          : `Parse this query: "${query}"`,
+      },
+    ];
+    const complete = (model: string) =>
+      client.chat.completions.create({
+        model,
+        response_format: { type: "json_object" },
+        messages,
+        max_tokens: 300,
+        temperature: 0,
+      });
+
+    // Extraction doesn't need a reasoning model: the non-reasoning snapshot
+    // answers in ~1s versus 3-5s for grok-4.3 at the same price, and the
+    // search page is waiting on this round trip. Fall back if the snapshot
+    // is ever retired.
+    let completion;
+    try {
+      completion = await complete(PARSE_MODEL);
+    } catch (err) {
+      console.warn(`parse-query: ${PARSE_MODEL} failed, retrying with ${PARSE_FALLBACK_MODEL}:`, err);
+      completion = await complete(PARSE_FALLBACK_MODEL);
+    }
 
     const raw = completion.choices[0]?.message?.content ?? "{}";
     let parsed_json: Record<string, unknown> = {};
@@ -70,9 +99,10 @@ export async function POST(req: Request) {
     // Sanitise and extract only valid fields
     const filters: Record<string, unknown> = {};
 
-    const validCities = ["miami","new-york","los-angeles","austin","dallas","nashville","atlanta","brooklyn","chicago","san-francisco"];
-    if (typeof parsed_json.city_slug === "string" && validCities.includes(parsed_json.city_slug)) {
-      filters.city_slug = parsed_json.city_slug;
+    // Accept the key the model actually emits ("city" is a common drift).
+    const citySlug = normalizeCitySlug(parsed_json.city_slug ?? parsed_json.city);
+    if (citySlug && isKnownCitySlug(citySlug)) {
+      filters.city_slug = citySlug;
     }
     if (typeof parsed_json.beds_min === "number" && parsed_json.beds_min >= 0) filters.beds_min = Math.round(parsed_json.beds_min);
     if (typeof parsed_json.beds_max === "number" && parsed_json.beds_max >= 0) filters.beds_max = Math.round(parsed_json.beds_max);
@@ -87,6 +117,21 @@ export async function POST(req: Request) {
     const validSorts = ["best_match", "price_low", "price_high", "newest", "sqft_high"];
     if (typeof parsed_json.sort === "string" && validSorts.includes(parsed_json.sort)) {
       filters.sort = parsed_json.sort;
+    }
+
+    if (Array.isArray(parsed_json.neighborhoods) && parsed_json.neighborhoods.length > 0) {
+      const names = parsed_json.neighborhoods
+        .filter((n): n is string => typeof n === "string" && n.trim().length > 0)
+        .slice(0, 5);
+      if (names.length) {
+        const catalog = await getNeighborhoodCatalog();
+        const target = (filters.city_slug as string | undefined) ?? (contextCity || undefined);
+        const resolved = resolveNeighborhoods(names, target, catalog);
+        if (resolved.slugs.length) {
+          filters.neighborhood_slugs = resolved.slugs;
+          if (resolved.city_slug) filters.city_slug = resolved.city_slug;
+        }
+      }
     }
 
     const summary = typeof parsed_json.summary === "string" ? parsed_json.summary : null;

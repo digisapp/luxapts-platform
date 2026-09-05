@@ -71,7 +71,7 @@ export class ErrorBoundary extends React.Component<
             </div>
             {process.env.NODE_ENV === "development" && this.state.error && (
               <details className="mt-6 text-left">
-                <summary className="text-sm text-white/40 cursor-pointer">
+                <summary className="text-sm text-white/50 cursor-pointer">
                   Error Details
                 </summary>
                 <pre className="mt-2 p-4 bg-white/5 rounded-lg text-xs text-red-400 overflow-auto">
@@ -124,7 +124,7 @@ export function ErrorFallback({
         </div>
         {process.env.NODE_ENV === "development" && (
           <details className="mt-6 text-left">
-            <summary className="text-sm text-white/40 cursor-pointer">
+            <summary className="text-sm text-white/50 cursor-pointer">
               Error Details
             </summary>
             <pre className="mt-2 p-4 bg-white/5 rounded-lg text-xs text-red-400 overflow-auto">

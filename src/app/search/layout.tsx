@@ -7,5 +7,13 @@ export const metadata: Metadata = {
 };
 
 export default function SearchLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      {/* The map is client-only and loads late; warming the Mapbox origins
+          during SSR shaves the DNS/TLS handshake off its first tile request. */}
+      <link rel="preconnect" href="https://api.mapbox.com" crossOrigin="anonymous" />
+      <link rel="preconnect" href="https://events.mapbox.com" crossOrigin="anonymous" />
+      {children}
+    </>
+  );
 }

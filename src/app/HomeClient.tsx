@@ -452,7 +452,7 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
                     className="px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-sm text-white/60 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] transition-colors duration-300"
                   >
                     {n.name}
-                    {n.cityName && <span className="text-white/40"> · {n.cityName}</span>}
+                    {n.cityName && <span className="text-white/50"> · {n.cityName}</span>}
                   </Link>
                 ))}
               </div>

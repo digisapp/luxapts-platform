@@ -178,10 +178,13 @@ export function ChatWidget() {
           className={`fixed right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-white text-black shadow-lg hover:bg-zinc-100 transition-all hover:scale-105 group lg:right-6 ${
             compareBarVisible ? "bottom-[13.25rem] lg:bottom-[10.75rem]" : "bottom-20 lg:bottom-6"
           }`}
-          aria-label="Open chat"
+          aria-label="Open AI chat"
         >
           <MessageCircle className="h-6 w-6" />
-          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[10px] text-white font-medium">
+          <span
+            aria-hidden="true"
+            className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-700 text-[10px] text-white font-medium"
+          >
             AI
           </span>
         </button>
@@ -207,7 +210,7 @@ export function ChatWidget() {
               </div>
               <div>
                 <p className="text-sm font-medium text-white">Stacy</p>
-                <p className="text-[11px] leading-tight text-zinc-500">Staycio assistant</p>
+                <p className="text-[11px] leading-tight text-zinc-400">Staycio assistant</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -247,7 +250,7 @@ export function ChatWidget() {
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-xs text-zinc-500 uppercase tracking-wider px-1">
+                      <p className="text-xs text-zinc-400 uppercase tracking-wider px-1">
                         Try asking
                       </p>
                       {SUGGESTED_PROMPTS.map((prompt, i) => (

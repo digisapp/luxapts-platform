@@ -3,6 +3,7 @@ import { isValidUUID } from "@/lib/utils";
 import { internalHeaders } from "@/lib/rate-limit";
 import { cachedSearch } from "@/lib/search/cache";
 import { searchRequestSchema } from "@/lib/validations";
+import { normalizeCitySlug } from "@/lib/constants/cities";
 
 // Per-request state passed through a single chat turn so tool usage can be
 // bounded (e.g. at most one lead created per conversation turn).
@@ -28,8 +29,12 @@ export async function executeTool(
       case "search_listings": {
         // Call the cached search directly instead of self-fetching /api/search —
         // avoids an extra function invocation + network hop. Validated with the
-        // same schema the route uses.
-        const parsed = searchRequestSchema.safeParse(args);
+        // same schema the route uses. The model routinely writes "NYC"/"LA";
+        // map shorthand onto the real database slugs before validating.
+        const parsed = searchRequestSchema.safeParse({
+          ...args,
+          city_slug: normalizeCitySlug(args.city_slug),
+        });
         if (!parsed.success) {
           return { error: parsed.error.issues[0]?.message || "Invalid search parameters" };
         }
@@ -75,7 +80,7 @@ export async function executeTool(
         response = await fetch(`${baseUrl}/api/leads`, {
           method: "POST",
           headers: jsonHeaders,
-          body: JSON.stringify(args),
+          body: JSON.stringify({ ...args, city_slug: normalizeCitySlug(args.city_slug) }),
         });
         if (ctx && response.ok) {
           ctx.leadsCreated++;

@@ -157,7 +157,7 @@ export function SimliAvatar({
           </Button>
 
           {sessionId && (
-            <p className="text-center text-xs text-zinc-600">
+            <p className="text-center text-xs text-zinc-400">
               Session {sessionId.slice(0, 8)}…
             </p>
           )}

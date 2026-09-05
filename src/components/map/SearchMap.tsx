@@ -60,6 +60,9 @@ export function SearchMap({
   const popupsRef = useRef<mapboxgl.Popup[]>([]);
   const markerElsRef = useRef<Map<string, HTMLElement>>(new Map());
   const [mapLoaded, setMapLoaded] = useState(false);
+  // Tile/style requests rejected by Mapbox (401/403: bad token, URL
+  // restriction, account billing hold) used to leave a silent black box.
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // Keep the latest props in refs so the marker/bounds effects don't re-run
   // when the parent re-renders with new identities but identical data
@@ -96,6 +99,18 @@ export function SearchMap({
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+
+    let reportedError = false;
+    map.current.on("error", (e) => {
+      const status = (e as { error?: { status?: number } }).error?.status;
+      if (status === 401 || status === 403) {
+        if (!reportedError) {
+          reportedError = true;
+          console.error(`Mapbox rejected the request (${status}) — check the token's URL restrictions and account billing`);
+        }
+        setMapError("Map tiles are unavailable right now.");
+      }
+    });
 
     map.current.on("load", () => {
       // Hide Mapbox's built-in neighborhood/subdivision labels to avoid
@@ -407,7 +422,17 @@ export function SearchMap({
           font-size: 11px;
         }
       `}</style>
-      <div ref={mapContainer} className={`w-full h-full ${className}`} />
+      <div className={`relative w-full h-full ${className}`}>
+        <div ref={mapContainer} className="absolute inset-0" />
+        {mapError && (
+          <div
+            role="status"
+            className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm"
+          >
+            <p className="text-sm text-zinc-300">{mapError} Listings are still available in the list.</p>
+          </div>
+        )}
+      </div>
     </>
   );
 }

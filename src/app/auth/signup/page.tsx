@@ -72,7 +72,7 @@ export default function SignUpPage() {
             <Button asChild className="w-full bg-white text-black hover:bg-white/90">
               <Link href="/auth/login">Go to Sign In</Link>
             </Button>
-            <p className="mt-6 text-sm text-white/40">
+            <p className="mt-6 text-sm text-white/50">
               Didn&apos;t receive the email?{" "}
               <button
                 onClick={() => setSuccess(false)}
@@ -163,7 +163,7 @@ export default function SignUpPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-white/40">
+          <p className="mt-6 text-center text-sm text-white/50">
             Already have an account?{" "}
             <Link href="/auth/login" className="text-white/70 hover:text-white transition-colors">
               Sign in

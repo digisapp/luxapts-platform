@@ -154,16 +154,10 @@ export async function POST(req: Request, context: RouteContext) {
 
     if (scrapeType === "units" || scrapeType === "full") {
       if (result.data.units.length > 0) {
-        unitsResult = await saveScrapedUnits(supabase, buildingId, result.data.units);
-
-        // Mark units not in scrape as unavailable
-        const scrapedUnitNumbers = result.data.units
-          .map((u) => u.unit_number)
-          .filter((n): n is string => !!n);
-
-        if (scrapedUnitNumbers.length > 0) {
-          await markUnitsUnavailable(supabase, buildingId, scrapedUnitNumbers);
-        }
+        const saved = await saveScrapedUnits(supabase, buildingId, result.data.units);
+        unitsResult = { unitsCreated: saved.unitsCreated, unitsUpdated: saved.unitsUpdated };
+        // Anything still listed that this scrape didn't see is no longer available
+        await markUnitsUnavailable(supabase, buildingId, saved.seenUnitIds);
       }
     }
 

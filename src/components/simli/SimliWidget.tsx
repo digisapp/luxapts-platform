@@ -115,7 +115,7 @@ export function SimliWidget() {
             {/* Footer hint */}
             {!isActive && (
               <div className="px-4 pb-4">
-                <p className="text-xs text-zinc-500 text-center">
+                <p className="text-xs text-zinc-400 text-center">
                   Ask about apartments, pricing, neighborhoods, or availability
                 </p>
               </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { scrapeStatusOf } from "@/lib/scraper/db";
 
 // Batch image scrape across buildings (default serverless timeout kills it mid-run, stranding jobs in "running")
 export const maxDuration = 300;
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
     let toScrape = buildings;
     if (skip_already_scraped) {
       toScrape = buildings.filter((b) => {
-        const status = b.building_scrape_status?.[0];
+        const status = scrapeStatusOf(b);
         return !status?.images_scraped_at || !status?.images_scrape_success;
       });
     }
@@ -279,7 +280,7 @@ export async function GET(req: Request) {
     }
 
     const processed = (buildings || []).map((b) => {
-      const scrapeStatus = b.building_scrape_status?.[0];
+      const scrapeStatus = scrapeStatusOf(b);
       const city = Array.isArray(b.cities) ? b.cities[0] : b.cities;
       const imageCount = b.building_images?.length || 0;
 

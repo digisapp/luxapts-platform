@@ -78,7 +78,7 @@ function LoginForm() {
                 <label className="block text-sm font-medium text-white/70">Password</label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm text-white/40 hover:text-white/70 transition-colors"
+                  className="text-sm text-white/50 hover:text-white/70 transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -109,7 +109,7 @@ function LoginForm() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-white/40">
+          <p className="mt-6 text-center text-sm text-white/50">
             Don&apos;t have an account?{" "}
             <Link href="/auth/signup" className="text-white/70 hover:text-white transition-colors">
               Sign up
@@ -118,7 +118,7 @@ function LoginForm() {
         </div>
 
         <p className="mt-6 text-center text-sm">
-          <Link href="/" className="text-white/40 hover:text-white/70 transition-colors">
+          <Link href="/" className="text-white/50 hover:text-white/70 transition-colors">
             Back to home
           </Link>
         </p>

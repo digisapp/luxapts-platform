@@ -118,7 +118,7 @@ export default async function NeighborhoodsPage() {
           </div>
 
           {groups.length === 0 && (
-            <p className="mt-12 text-zinc-500">No neighborhoods available yet.</p>
+            <p className="mt-12 text-zinc-400">No neighborhoods available yet.</p>
           )}
         </div>
       </main>

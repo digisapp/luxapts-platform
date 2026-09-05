@@ -3,6 +3,7 @@ import { searchRequestSchema } from "@/lib/validations";
 import { apiError } from "@/lib/api-helpers";
 import { cachedSearch } from "@/lib/search/cache";
 import { rateLimit, getClientIp, RATE_LIMITS, isInternalRequest } from "@/lib/rate-limit";
+import { normalizeCitySlug } from "@/lib/constants/cities";
 
 export async function POST(req: Request) {
   try {
@@ -15,7 +16,11 @@ export async function POST(req: Request) {
 
     const rawBody = await req.json();
 
-    const parsed = searchRequestSchema.safeParse(rawBody);
+    const parsed = searchRequestSchema.safeParse(
+      rawBody && typeof rawBody === "object"
+        ? { ...rawBody, city_slug: normalizeCitySlug((rawBody as { city_slug?: unknown }).city_slug) }
+        : rawBody
+    );
     if (!parsed.success) {
       return apiError(parsed.error.issues[0]?.message || "Invalid request");
     }

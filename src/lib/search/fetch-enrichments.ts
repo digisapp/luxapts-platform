@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { fetchAllRows } from "@/lib/db-helpers";
 
 interface ImageRecord {
   id: string;
@@ -8,6 +9,7 @@ interface ImageRecord {
 }
 
 interface PriceSnapshot {
+  unit_id: string;
   rent: number;
   net_effective_rent: number | null;
   lease_term_months: number | null;
@@ -24,9 +26,9 @@ interface FloorplanRecord {
 // the URL gets long enough that the fetch fails outright ("fetch failed"),
 // which 500'd every search the UI issued (limit 200 → 400 unit ids).
 // Query in chunks and merge.
-const IN_CHUNK_SIZE = 100;
+export const IN_CHUNK_SIZE = 100;
 
-function chunk<T>(items: T[], size: number): T[][] {
+export function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < items.length; i += size) {
     out.push(items.slice(i, i + size));
@@ -34,15 +36,11 @@ function chunk<T>(items: T[], size: number): T[][] {
   return out;
 }
 
-/** Fetch latest price snapshot per unit. */
+/** Fetch latest price snapshot per unit (one row per unit via the latest_unit_prices view). */
 export async function fetchPriceSnapshots(
   supabase: SupabaseClient,
   unitIds: string[],
 ): Promise<{ snapByUnit: Map<string, PriceSnapshot>; capturedAtMax: string | null }> {
-  // latest_unit_prices returns exactly one row per unit. The old query
-  // fetched FULL snapshot history and kept the first row per unit in JS —
-  // silently truncated at PostgREST's 1000-row cap, which dropped units
-  // from search results as daily snapshots accumulated.
   const results = await Promise.all(
     chunk(unitIds, IN_CHUNK_SIZE).map((ids) =>
       supabase
@@ -55,16 +53,8 @@ export async function fetchPriceSnapshots(
   const snapByUnit = new Map<string, PriceSnapshot>();
   let capturedAtMax: string | null = null;
   for (const res of results) {
-    if (res.error) {
-      // 42P01 = view missing (migration 023 not applied yet). Fall back to
-      // the legacy history scan so a deploy ahead of the migration can't
-      // take down search. Remove once 023 is confirmed in production.
-      if (res.error.code === "42P01") {
-        return fetchPriceSnapshotsLegacy(supabase, unitIds);
-      }
-      throw new Error(res.error.message);
-    }
-    for (const s of res.data || []) {
+    if (res.error) throw new Error(res.error.message);
+    for (const s of (res.data || []) as PriceSnapshot[]) {
       snapByUnit.set(s.unit_id, s);
       if (!capturedAtMax || s.captured_at > capturedAtMax) {
         capturedAtMax = s.captured_at;
@@ -75,85 +65,63 @@ export async function fetchPriceSnapshots(
   return { snapByUnit, capturedAtMax };
 }
 
-async function fetchPriceSnapshotsLegacy(
-  supabase: SupabaseClient,
-  unitIds: string[],
-): Promise<{ snapByUnit: Map<string, PriceSnapshot>; capturedAtMax: string | null }> {
-  const results = await Promise.all(
-    chunk(unitIds, IN_CHUNK_SIZE).map((ids) =>
-      supabase
-        .from("unit_price_snapshots")
-        .select("unit_id, rent, net_effective_rent, lease_term_months, captured_at")
-        .in("unit_id", ids)
-        .order("captured_at", { ascending: false })
-    )
-  );
+type UnitImageRow = ImageRecord & { unit_id: string; is_primary: boolean | null; sort_order: number | null };
+type BuildingImageRow = ImageRecord & { building_id: string; is_primary: boolean | null; sort_order: number | null };
 
-  const snapByUnit = new Map<string, PriceSnapshot>();
-  let capturedAtMax: string | null = null;
-  for (const res of results) {
-    if (res.error) throw new Error(res.error.message);
-    for (const s of res.data || []) {
-      if (!snapByUnit.has(s.unit_id)) {
-        snapByUnit.set(s.unit_id, s);
-      }
-      if (!capturedAtMax || s.captured_at > capturedAtMax) {
-        capturedAtMax = s.captured_at;
-      }
-    }
-  }
-
-  return { snapByUnit, capturedAtMax };
-}
-
-/** Fetch unit images grouped by unit_id. */
+/** Fetch unit images grouped by unit_id (chunked + paged past the 1000-row cap). */
 export async function fetchUnitImages(
   supabase: SupabaseClient,
   unitIds: string[],
 ): Promise<Map<string, ImageRecord[]>> {
-  const results = await Promise.all(
+  const pages = await Promise.all(
     chunk(unitIds, IN_CHUNK_SIZE).map((ids) =>
-      supabase
-        .from("unit_images")
-        .select("id, unit_id, url, alt_text, category, is_primary, sort_order")
-        .in("unit_id", ids)
-        .order("is_primary", { ascending: false })
-        .order("sort_order", { ascending: true })
+      fetchAllRows<UnitImageRow>((from, to) =>
+        supabase
+          .from("unit_images")
+          .select("id, unit_id, url, alt_text, category, is_primary, sort_order")
+          .in("unit_id", ids)
+          .order("unit_id")
+          .order("is_primary", { ascending: false })
+          .order("sort_order", { ascending: true })
+          .order("id")
+          .range(from, to)
+      )
     )
   );
 
   const map = new Map<string, ImageRecord[]>();
-  for (const res of results) {
-    for (const img of res.data || []) {
-      if (!map.has(img.unit_id)) map.set(img.unit_id, []);
-      map.get(img.unit_id)!.push(img);
-    }
+  for (const img of pages.flat()) {
+    if (!map.has(img.unit_id)) map.set(img.unit_id, []);
+    map.get(img.unit_id)!.push(img);
   }
   return map;
 }
 
-/** Fetch building images grouped by building_id. */
+/** Fetch building images grouped by building_id (chunked + paged past the 1000-row cap). */
 export async function fetchBuildingImages(
   supabase: SupabaseClient,
   buildingIds: string[],
 ): Promise<Map<string, ImageRecord[]>> {
-  const results = await Promise.all(
+  const pages = await Promise.all(
     chunk(buildingIds, IN_CHUNK_SIZE).map((ids) =>
-      supabase
-        .from("building_images")
-        .select("id, building_id, url, alt_text, category, is_primary, sort_order")
-        .in("building_id", ids)
-        .order("is_primary", { ascending: false })
-        .order("sort_order", { ascending: true })
+      fetchAllRows<BuildingImageRow>((from, to) =>
+        supabase
+          .from("building_images")
+          .select("id, building_id, url, alt_text, category, is_primary, sort_order")
+          .in("building_id", ids)
+          .order("building_id")
+          .order("is_primary", { ascending: false })
+          .order("sort_order", { ascending: true })
+          .order("id")
+          .range(from, to)
+      )
     )
   );
 
   const map = new Map<string, ImageRecord[]>();
-  for (const res of results) {
-    for (const img of res.data || []) {
-      if (!map.has(img.building_id)) map.set(img.building_id, []);
-      map.get(img.building_id)!.push(img);
-    }
+  for (const img of pages.flat()) {
+    if (!map.has(img.building_id)) map.set(img.building_id, []);
+    map.get(img.building_id)!.push(img);
   }
   return map;
 }
@@ -181,7 +149,7 @@ export async function fetchFloorplans(
   );
 
   const floorplansById = new Map(
-    results.flatMap((res) => res.data || []).map(fp => [fp.id, fp])
+    results.flatMap((res) => (res.data || []) as FloorplanRecord[]).map(fp => [fp.id, fp])
   );
 
   for (const unit of units) {

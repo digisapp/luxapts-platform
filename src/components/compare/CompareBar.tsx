@@ -43,6 +43,7 @@ export function CompareBar() {
                         src={building.image}
                         alt={building.name}
                         fill
+                        sizes="32px"
                         className="object-cover"
                       />
                     ) : (

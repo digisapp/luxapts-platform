@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { scrapeStatusOf } from "@/lib/scraper/db";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { apiError } from "@/lib/api-helpers";
@@ -71,7 +72,7 @@ export async function GET(req: Request) {
 
     // Process and filter buildings
     const processed = (buildings || []).map((b) => {
-      const scrapeStatus = b.building_scrape_status?.[0];
+      const scrapeStatus = scrapeStatusOf(b);
       const city = getFirstRelation(b.cities);
       const neighborhood = getFirstRelation(b.neighborhoods);
 

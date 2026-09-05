@@ -153,6 +153,7 @@ export default function ComparePage() {
                         src={building.image}
                         alt={building.name}
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                         className="object-cover rounded-t-lg"
                       />
                     ) : (

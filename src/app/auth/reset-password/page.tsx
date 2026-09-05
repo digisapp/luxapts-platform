@@ -180,7 +180,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <p className="mt-6 text-center text-sm">
-          <Link href="/" className="text-white/40 hover:text-white/70 transition-colors">
+          <Link href="/" className="text-white/50 hover:text-white/70 transition-colors">
             Back to home
           </Link>
         </p>

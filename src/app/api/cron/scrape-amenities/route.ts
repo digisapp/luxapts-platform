@@ -9,6 +9,7 @@ import {
   saveScrapedAmenities,
   createScrapeJob,
   updateScrapeJob,
+  scrapeStatusOf,
 } from "@/lib/scraper";
 
 // This endpoint scrapes amenities for buildings that haven't been scraped yet
@@ -77,7 +78,7 @@ export async function GET(req: Request) {
 
     // Filter to buildings that haven't had amenities scraped (or force rescrape)
     const buildings = (allBuildings || []).filter((b) => {
-      const status = b.building_scrape_status?.[0];
+      const status = scrapeStatusOf(b);
       if (!status) return true;
       if (status.scrape_enabled === false) return false;
       if (forceRescrape) return true;
@@ -110,7 +111,7 @@ export async function GET(req: Request) {
     for (const building of buildings) {
       // Scraper-internal override first: building_scrape_status.website_url points at the
       // best scrape target (portal/API/manager page) without changing the user-facing link
-      const websiteUrl = building.building_scrape_status?.[0]?.website_url || building.website_url;
+      const websiteUrl = scrapeStatusOf(building)?.website_url || building.website_url;
 
       if (!websiteUrl) {
         results.failed++;

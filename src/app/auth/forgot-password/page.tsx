@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
             </>
           )}
 
-          <p className="mt-6 text-center text-sm text-white/40">
+          <p className="mt-6 text-center text-sm text-white/50">
             Remembered your password?{" "}
             <Link href="/auth/login" className="text-white/70 hover:text-white transition-colors">
               Sign in
@@ -94,7 +94,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         <p className="mt-6 text-center text-sm">
-          <Link href="/" className="text-white/40 hover:text-white/70 transition-colors">
+          <Link href="/" className="text-white/50 hover:text-white/70 transition-colors">
             Back to home
           </Link>
         </p>
