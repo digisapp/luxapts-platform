@@ -4,11 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Sparkles, Mic, Video, MapPin } from "lucide-react";
+import { ArrowRight, Sparkles, Mic, MapPin } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ListingPlaceholder } from "@/components/ui/ListingPlaceholder";
-import { SimliAvatar } from "@/components/simli";
 import { HomeLeadCapture } from "@/components/leads/HomeLeadCapture";
 import { formatPrice } from "@/lib/utils";
 import { useAnalytics } from "@/hooks/useAnalytics";
@@ -85,8 +84,8 @@ const FEATURED_CITIES: HomeCity[] = [
 // Three, not five. Every extra option in the hero is another way to not use
 // the search box, and these only have to demonstrate the phrasing.
 const EXAMPLE_SEARCHES = [
-  "2-bedroom in Miami under $3,500",
-  "Dog-friendly apartment in Austin under $2,400",
+  "2 bed in Miami under $3,500",
+  "Dog-friendly in Austin under $2,400",
   "Studio in Williamsburg under $2,800",
 ];
 
@@ -111,15 +110,6 @@ type HeroVariant = keyof typeof HERO_VARIANTS;
 // Versioned key: the old assignments were for a test that no longer exists, so
 // they must not carry over and skew the new one.
 const HERO_VARIANT_KEY = "staycio_hero_variant_v2";
-
-// What Stacy handles, as plain claims rather than a second set of tappable
-// example chips — the hero already teaches the phrasing, and repeating it here
-// under the same "Try asking" label just said the same thing twice.
-const STACY_CAPABILITIES = [
-  "Budgets, fees and what's actually included",
-  "Neighborhoods, commute times and what's nearby",
-  "Pets, amenities and the dealbreakers you forget to ask about",
-];
 
 // Type for SpeechRecognition
 interface SpeechRecognitionEvent extends Event {
@@ -146,6 +136,9 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
   // Real rows when the query succeeded, curated list when it didn't — the
   // picker must never render empty or the form cannot be submitted.
   const leadCities = cities.length > 0 ? cities : FEATURED_CITIES;
+  // The same buildings the featured grid renders, reused as the hero backdrop
+  // so the first screen shows real inventory without a second image payload.
+  const heroImages = featured.slice(0, 6);
 
   // Check for speech recognition support + cleanup on unmount
   useEffect(() => {
@@ -269,17 +262,49 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
             `pt-28` is load-bearing, not spacing taste — the header is
             `fixed top-0 h-16`, so centered hero content taller than the
             viewport slides up underneath it and clips the badge on a phone. */}
-        <section className="relative flex min-h-[76svh] items-center justify-center px-6 pt-28 pb-16 overflow-hidden">
-          {/* Premium gradient background with aurora effect */}
-          <div className="absolute inset-0">
-            {/* Primary glow */}
+        <section className="relative flex min-h-[64svh] items-center justify-center px-6 pt-28 pb-14 overflow-hidden">
+          {/* Real inventory as the backdrop. This page sells apartments, so the
+              first screen has to contain some — the aurora on its own was a
+              black rectangle with a paragraph on it, and the first photograph
+              did not appear until 1,000px down. Scrimmed hard so it reads as
+              texture behind the headline, never as content competing with it. */}
+          <div className="absolute inset-0" aria-hidden="true">
+            {heroImages.length > 0 && (
+              <div className="absolute inset-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 blur-[5px] scale-[1.06]">
+                {heroImages.map((building, i) => (
+                  <div
+                    key={building.id}
+                    className={`relative h-full ${
+                      i < 2 ? "" : i === 2 ? "hidden sm:block" : "hidden lg:block"
+                    }`}
+                  >
+                    {/* Blurred to 5px and sitting under three scrims, so it
+                        is fetched small and cheap — asking for the full tile
+                        width and quality here would cost real bytes on the
+                        critical path for pixels nobody can resolve. */}
+                    <Image
+                      src={building.image}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 25vw, 15vw"
+                      quality={40}
+                      priority={i < 2}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Scrim stack: flat wash to drop the photos to texture, radial to
+                clear the centre for type, then top and bottom fades so the
+                header and the featured band below both meet pure black. */}
+            <div className="absolute inset-0 bg-black/[0.6]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_45%,rgba(0,0,0,0.86)_0%,rgba(0,0,0,0.66)_55%,rgba(0,0,0,0.4)_100%)]" />
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-black" />
+            {/* Aurora, now over the photography rather than instead of it */}
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-cyan-500/10 rounded-full blur-[120px]" />
-            {/* Secondary glow */}
-            <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-gradient-to-r from-rose-500/5 to-orange-500/5 rounded-full blur-[100px]" />
-            {/* Accent glow */}
             <div className="absolute top-1/2 right-1/4 w-[300px] h-[300px] bg-cyan-500/5 rounded-full blur-[80px]" />
-            {/* Grid overlay */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100px_100px]" />
           </div>
 
           <div className="relative z-10 max-w-4xl mx-auto text-center">
@@ -289,7 +314,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
               <span className="text-sm text-white/70">{proofLine}</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-white mb-5 sm:mb-6 animate-fade-in [animation-delay:100ms]">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-balance text-white mb-5 sm:mb-6 animate-fade-in [animation-delay:100ms]">
               {hero.headline}
               <br />
               <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
@@ -313,7 +338,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="2-bedroom in Miami under $3,500"
-                    className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-48 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white text-base placeholder:text-white/40 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all duration-300"
+                    className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-48 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/[0.14] text-white text-base placeholder:text-white/50 focus:outline-none focus:border-white/30 focus:bg-white/[0.09] transition-all duration-300"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2">
                     {/* Voice Search Button */}
@@ -330,18 +355,29 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                         <Mic className="h-4 w-4" />
                       </button>
                     )}
-                    {/* Search Button */}
+                    {/* Search button — inline from sm up, where there is room
+                        for it to keep its label. On a phone it used to be a
+                        36px unlabelled circle that the placeholder ran
+                        underneath (pr-14 could not clear mic + button), so
+                        below it becomes a full-width labelled CTA instead. */}
                     <button
                       onClick={handleSearch}
-                      aria-label="Ask Stacy"
-                      className="h-9 w-9 sm:h-10 sm:w-auto sm:px-5 rounded-full bg-white text-black font-medium text-sm flex items-center justify-center gap-2 hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all duration-300"
+                      className="hidden sm:flex h-10 px-5 rounded-full bg-white text-black font-medium text-sm items-center justify-center gap-2 hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all duration-300"
                     >
                       <ArrowRight className="h-4 w-4" />
-                      <span className="hidden sm:inline whitespace-nowrap">Ask Stacy</span>
+                      <span className="whitespace-nowrap">Ask Stacy</span>
                     </button>
                   </div>
                 </div>
               </div>
+
+              <button
+                onClick={handleSearch}
+                className="sm:hidden mt-3 w-full h-12 rounded-full bg-white text-black font-medium text-base flex items-center justify-center gap-2 active:bg-white/90 transition-colors duration-300"
+              >
+                Ask Stacy
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </div>
 
             {/* One quiet escape hatch, kept because the header links to
@@ -367,34 +403,31 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                     trackHeroEngagement("example");
                     router.push(`/search?q=${encodeURIComponent(example)}`);
                   }}
-                  className="px-3 py-1.5 rounded-full text-xs text-white/50 border border-transparent hover:text-white hover:bg-white/[0.05] hover:border-white/[0.1] transition-colors duration-300 cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-full text-xs sm:text-sm text-white/70 bg-white/[0.04] border border-white/[0.12] hover:text-white hover:bg-white/[0.1] hover:border-white/[0.22] transition-colors duration-300 cursor-pointer"
                 >
-                  &ldquo;{example}&rdquo;
+                  {example}
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-            <div className="w-px h-12 bg-gradient-to-b from-white/20 to-transparent" />
           </div>
         </section>
 
         {/* Featured Residences — kept directly under the hero so the first
             thing past the gradient is an actual apartment. */}
         {featured.length > 0 && (
-          <section className="py-24 px-6 relative overflow-hidden">
+          <section className="py-16 sm:py-20 px-6 relative overflow-hidden">
             {/* Background effect */}
             <div className="absolute inset-0">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-gradient-to-r from-cyan-500/5 to-blue-500/5 rounded-full blur-[100px]" />
             </div>
 
             <div className="relative z-10 max-w-6xl mx-auto">
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 sm:mb-10">
                 <div>
+                  {/* Solid, not gradient. The gradient belongs to the h1; when
+                      every heading has it, it stops reading as an accent. */}
                   <h2 className="text-3xl md:text-4xl font-medium text-white mb-3">
-                    Featured <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">residences</span>
+                    Featured residences
                   </h2>
                   <p className="text-white/60">
                     Buildings with the most open units right now, so there&apos;s more to choose from.
@@ -416,7 +449,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                     href={`/buildings/${building.id}`}
                     className="group rounded-2xl overflow-hidden bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.18] hover:bg-white/[0.05] transition-colors duration-300"
                   >
-                    <div className="relative h-52 overflow-hidden">
+                    <div className="relative h-44 sm:h-52 overflow-hidden">
                       <BuildingImage
                         src={building.image}
                         seed={building.id}
@@ -429,7 +462,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                         </span>
                       )}
                       {building.availableUnits > 0 && (
-                        <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-500/80 backdrop-blur-sm text-xs text-white font-medium">
+                        <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/60 ring-1 ring-emerald-400/30 backdrop-blur-sm text-xs text-emerald-300 font-medium">
                           {building.availableUnits} available
                         </span>
                       )}
@@ -461,68 +494,44 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
           </section>
         )}
 
-        {/* Meet Stacy — moved up from the bottom of the page. She is the whole
-            pitch in the hero, so she cannot be the last thing on it. */}
-        <section className="py-24 px-6 relative overflow-hidden">
-          {/* Background effects */}
-          <div className="absolute inset-0">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-cyan-500/5 rounded-full blur-[100px]" />
-          </div>
-
-          <div className="relative z-10 max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
-                <Video className="h-4 w-4 text-cyan-400" />
-                <span className="text-sm text-cyan-300">AI Video Assistant</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-medium text-white mb-4">
-                Talk to <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">Stacy</span>
-              </h2>
-              <p className="text-lg text-white/60 max-w-xl mx-auto">
-                Type it or say it out loud. Stacy answers like a person who has already read every listing.
-              </p>
-            </div>
-
-            {/* Avatar Card */}
-            <div className="max-w-md mx-auto">
-              <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-8 hover:border-cyan-500/30 transition-all duration-500">
-                <SimliAvatar
-                  autoStart={false}
-                  className="mb-6"
-                />
-
-                <ul className="space-y-2.5">
-                  {STACY_CAPABILITIES.map((capability) => (
-                    <li key={capability} className="flex items-start gap-2.5 text-sm text-white/60">
-                      <Sparkles className="h-4 w-4 text-cyan-400/70 shrink-0 mt-0.5" />
-                      <span>{capability}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Browse — the city and neighborhood pills, together in one band
             instead of as two near-identical sections. These are the site's
             main internal links, so they stay on the page, just not in the
             hero competing with the search box. */}
-        <section className="py-16 px-6 relative">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl md:text-3xl font-medium text-white mb-3">
-              Or browse by city
-            </h2>
-            <p className="text-white/60 mb-8">
-              Prefer to look around yourself? Start here.
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+        <section className="py-14 sm:py-16 px-6 relative">
+          <div className="max-w-6xl mx-auto">
+            {/* Grids, not a centred wrap. Ten and twelve chips justified to the
+                centre broke into an 8+2 and a 5/4/3 pyramid that read as a
+                layout accident; an even grid is the same links, deliberate. */}
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-medium text-white mb-2">
+                  Or browse by city
+                </h2>
+                <p className="text-white/60">
+                  Prefer to look around yourself? Start here.
+                </p>
+              </div>
+              {/* The hero badge counts every market we have; this band is the
+                  ten with the most inventory. Without this link the two
+                  numbers just looked like one of them was wrong. */}
+              <Link
+                href="/cities"
+                onClick={() => trackHeroEngagement("browse_link")}
+                className="inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors shrink-0"
+              >
+                All cities
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
               {FEATURED_CITIES.map((city) => (
                 <Link
                   key={city.slug}
                   href={`/cities/${city.slug}`}
                   onClick={() => trackHeroEngagement("browse_link")}
-                  className="px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-sm text-white/60 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] transition-colors duration-300"
+                  className="px-4 py-2.5 rounded-full text-center bg-white/[0.03] border border-white/[0.08] text-sm text-white/70 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.18] transition-colors duration-300"
                 >
                   {city.name}
                 </Link>
@@ -531,10 +540,10 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
 
             {neighborhoods.length > 0 && (
               <>
-                <h3 className="mt-14 mb-6 text-sm uppercase tracking-wider text-white/40">
+                <h3 className="mt-12 mb-5 text-sm uppercase tracking-wider text-white/50">
                   Popular neighborhoods
                 </h3>
-                <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                   {neighborhoods.map((n) => (
                     <Link
                       key={`${n.citySlug ?? ""}/${n.slug}`}
@@ -544,10 +553,12 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                           : `/neighborhoods/${n.slug}`
                       }
                       onClick={() => trackHeroEngagement("browse_link")}
-                      className="px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-sm text-white/60 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] transition-colors duration-300"
+                      className="px-4 py-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-sm text-white/70 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.18] transition-colors duration-300"
                     >
-                      {n.name}
-                      {n.cityName && <span className="text-white/50"> · {n.cityName}</span>}
+                      <span className="block truncate">{n.name}</span>
+                      {n.cityName && (
+                        <span className="block truncate text-xs text-white/50">{n.cityName}</span>
+                      )}
                     </Link>
                   ))}
                 </div>
@@ -558,15 +569,15 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
 
         {/* Lead capture — the homepage previously had no way to catch anyone
             who did not click straight through to search. */}
-        <section className="py-24 px-6 relative overflow-hidden">
+        <section className="py-16 sm:py-20 px-6 relative overflow-hidden">
           <div className="absolute inset-0">
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-r from-blue-500/10 to-cyan-500/5 rounded-full blur-[110px]" />
           </div>
 
           <div className="relative z-10 max-w-xl mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-medium text-white mb-4">
-                Not seeing it? <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">Let Stacy keep looking.</span>
+              <h2 className="text-3xl md:text-4xl font-medium text-balance text-white mb-4">
+                Not seeing it? Let Stacy keep looking.
               </h2>
               <p className="text-white/60">
                 Tell us what you&apos;re after and we&apos;ll come back to you when something fits — new listings, price drops, buildings that just opened up.

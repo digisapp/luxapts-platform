@@ -61,7 +61,7 @@ export function Header() {
   return (
     <header className="fixed top-0 z-50 w-full safe-area-pt">
       {/* Glass background with subtle gradient */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-xl border-b border-white/[0.05]" />
+      <div className="absolute inset-0 bg-black/85 backdrop-blur-xl border-b border-white/[0.05]" />
       <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">

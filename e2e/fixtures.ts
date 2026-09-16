@@ -19,13 +19,6 @@ export const test = base.extend({
         body: JSON.stringify({ blocked_by_e2e: true }),
       })
     );
-    await context.route("**/api/simli/session", (route) =>
-      route.fulfill({
-        status: 503,
-        contentType: "application/json",
-        body: JSON.stringify({ error: "blocked in e2e" }),
-      })
-    );
     await provide(context);
   },
 });

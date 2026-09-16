@@ -7,7 +7,6 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { CompareBar } from "@/components/compare/CompareBar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
-import { SimliWidget } from "@/components/simli";
 import { WebsiteJsonLd } from "@/components/seo/JsonLd";
 
 const geistSans = Geist({
@@ -78,7 +77,6 @@ export default function RootLayout({
             {children}
             <MobileBottomNav />
             <CompareBar />
-            <SimliWidget />
             <ChatWidget />
           </ToastProvider>
         </AuthProvider>

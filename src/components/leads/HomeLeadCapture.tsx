@@ -98,7 +98,7 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@email.com"
-            className="w-full h-12 px-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-white/25 focus:bg-white/[0.06] transition-colors"
+            className="w-full h-12 px-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/50 focus:outline-none focus:border-white/25 focus:bg-white/[0.06] transition-colors"
           />
         </div>
         <div>
@@ -136,7 +136,7 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
           value={notes}
           onChange={(e) => setNotesDraft(e.target.value)}
           placeholder="2 bed under $3,500, dog-friendly, walkable to the train, moving in June"
-          className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-white/25 focus:bg-white/[0.06] transition-colors resize-none"
+          className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/50 focus:outline-none focus:border-white/25 focus:bg-white/[0.06] transition-colors resize-none"
         />
       </div>
 
@@ -160,7 +160,7 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
         )}
       </button>
 
-      <p className="mt-3 text-center text-xs text-white/40">
+      <p className="mt-3 text-center text-xs text-white/55">
         One email when something fits. Unsubscribe any time.
       </p>
     </form>

@@ -17,9 +17,6 @@ export const env = {
   RESEND_WEBHOOK_SECRET: process.env.RESEND_WEBHOOK_SECRET || "",
   FROM_EMAIL: process.env.FROM_EMAIL || "Staycio <hello@staycio.com>",
 
-  // Simli avatar + ElevenLabs voice (optional, server-side only)
-  SIMLI_API_KEY: process.env.SIMLI_API_KEY || "",
-  ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY || "",
 
   // Cron (optional - only needed for scheduled jobs)
   CRON_SECRET: process.env.CRON_SECRET || "",
@@ -71,8 +68,6 @@ export function assertEnv() {
       { key: "RESEND_API_KEY", feature: "Email notifications" },
       { key: "RESEND_WEBHOOK_SECRET", feature: "Inbound email webhook (fails closed without it)" },
       { key: "NEXT_PUBLIC_MAPBOX_TOKEN", feature: "Map display" },
-      { key: "SIMLI_API_KEY", feature: "Simli avatar" },
-      { key: "ELEVENLABS_API_KEY", feature: "Simli avatar voice" },
       { key: "CRON_SECRET", feature: "Cron job authentication" },
     ];
 

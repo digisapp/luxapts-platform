@@ -122,7 +122,6 @@ function daysAgoIso(days: number): string {
 
 // Window covered by the price-history chart
 const PRICE_HISTORY_DAYS = 30;
-import { BuildingVoiceButton } from "@/components/simli";
 
 interface BuildingPageProps {
   params: Promise<{ id: string }>;
@@ -471,11 +470,6 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   buildingName={building.name}
                   citySlug={building.cities?.slug || ""}
                   leasingEmail={building.leasing_email}
-                />
-
-                <BuildingVoiceButton
-                  buildingId={building.id}
-                  buildingName={building.name}
                 />
 
                 {/* Contact Info */}

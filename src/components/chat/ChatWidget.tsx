@@ -193,10 +193,11 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Floating Chat Button.
-          When the compare bar is showing, the Simli trigger (SimliWidget)
-          occupies bottom-36 right-4 / lg:bottom-24 lg:right-6, so stack the
-          chat button above it instead of landing on the same spot. */}
+      {/* Floating Chat Button — now the only assistant entry point.
+          The raised compare-bar offsets below were originally picked to clear
+          a second FAB (the Simli mic trigger) that no longer exists, so they
+          sit a little higher than they need to when the compare bar is up.
+          Harmless — it never overlaps — but it is why the numbers look odd. */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
