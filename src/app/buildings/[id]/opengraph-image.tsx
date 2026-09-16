@@ -1,6 +1,5 @@
 import { ImageResponse } from "next/og";
 import { createAdminClient } from "@/lib/supabase/server";
-import { getBuildingFallbackImage } from "@/lib/images/fallback";
 
 export const runtime = "nodejs";
 export const revalidate = 86400; // 24h
@@ -59,7 +58,7 @@ export default async function BuildingOgImage({
     if (!a.is_primary && b.is_primary) return 1;
     return a.sort_order - b.sort_order;
   });
-  const photoUrl = sorted[0]?.url || getBuildingFallbackImage(building.id, building.name).url;
+  const photoUrl = sorted[0]?.url ?? null;
 
   const location = [
     neighborhood?.name,
@@ -78,19 +77,31 @@ export default async function BuildingOgImage({
         fontFamily: "sans-serif",
       }}
     >
-      {/* Background photo */}
+      {/* Background photo, or a neutral panel when the building has none —
+          never stock photography of somewhere else. */}
       { }
-      <img
-        src={photoUrl}
-        alt=""
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-        }}
-      />
+      {photoUrl ? (
+        <img
+          src={photoUrl}
+          alt=""
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            background: "linear-gradient(135deg, #0b1220 0%, #0f1b2d 55%, #07131f 100%)",
+          }}
+        />
+      )}
 
       {/* Gradient overlay */}
       <div

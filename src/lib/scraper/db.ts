@@ -4,7 +4,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
 import { chunk, IN_CHUNK_SIZE } from "@/lib/search/fetch-enrichments";
 import { ScrapedUnit, ScrapedAmenity, ScrapedImage } from "./types";
-import { isJunkImageUrl } from "@/lib/images/quality";
+import { isJunkImageUrl, isPropertySpecificUrl } from "@/lib/images/quality";
 
 export interface ScrapeStatusRelation {
   website_url: string | null;
@@ -702,11 +702,25 @@ export async function saveScrapedBuildingImages(
   supabase: SupabaseClient,
   buildingId: string,
   images: ScrapedImage[],
-  options: { replaceExisting?: boolean } = {}
+  options: {
+    replaceExisting?: boolean;
+    /** The page these images came from, with the building it is supposed to depict. */
+    source?: { websiteUrl: string; buildingName: string };
+  } = {}
 ) {
-  const { replaceExisting = true } = options;
+  const { replaceExisting = true, source } = options;
 
   if (images.length === 0) return 0;
+
+  // A management-company homepage depicts the portfolio, not this building —
+  // saving its hero shot gives every property under that company the same
+  // thumbnail. Better to show nothing than to show someone else's building.
+  if (source && !isPropertySpecificUrl(source.websiteUrl, source.buildingName)) {
+    console.warn(
+      `Skipping images for "${source.buildingName}": ${source.websiteUrl} is not a property-specific page`
+    );
+    return 0;
+  }
 
   // Building image categories
   const buildingCategories = new Set(['exterior', 'lobby', 'amenity', 'pool', 'gym', 'rooftop', 'common', 'other']);
@@ -752,6 +766,18 @@ export async function saveScrapedBuildingImages(
     .eq("building_id", buildingId);
 
   const existingUrlSet = new Set(existingUrls?.map((r) => r.url) || []);
+
+  // A photo already attached to a different building cannot also be this
+  // building. Sites that share a CMS hand out the same asset to every property
+  // on them, which is how five Glenwood towers ended up with one lobby shot.
+  for (const urls of chunk(buildingImages.map((img) => img.url), IN_CHUNK_SIZE)) {
+    const { data: claimed } = await supabase
+      .from("building_images")
+      .select("url")
+      .in("url", urls)
+      .neq("building_id", buildingId);
+    for (const row of claimed ?? []) existingUrlSet.add(row.url);
+  }
 
   // Only the images we are actually inserting get indexes — primaryIdx used
   // to be computed over the unfiltered array, so once any earlier image was

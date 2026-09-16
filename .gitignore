@@ -52,3 +52,7 @@ voice-agent/__pycache__/
 # playwright
 /test-results/
 /playwright-report/
+
+# Recovery snapshots written by the data-repair scripts
+deactivated-seed-buildings-*.json
+merged-duplicate-buildings-*.json

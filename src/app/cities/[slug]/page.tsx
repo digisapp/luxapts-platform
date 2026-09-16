@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
-import { getBuildingFallbackImage } from "@/lib/images/fallback";
+import { ListingPlaceholder } from "@/components/ui/ListingPlaceholder";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 import { fetchAllRows } from "@/lib/db-helpers";
 import { CITY_COPY } from "@/lib/seo/city-copy";
@@ -84,13 +84,22 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
   const supabase = createAdminClient();
   const { data: city } = await supabase
     .from("cities")
-    .select("name, slug, state")
+    .select("id, name, slug, state")
     .eq("slug", slug)
     .single();
 
   if (!city) return { title: "City Not Found - Staycio" };
 
+  // A city with no listings is a thin page. Keep the URL reachable for anyone
+  // holding a link, but keep it out of the index until it has inventory.
+  const { count: listingCount } = await supabase
+    .from("buildings")
+    .select("id", { count: "exact", head: true })
+    .eq("city_id", city.id)
+    .eq("status", "active");
+
   return {
+    robots: listingCount ? undefined : { index: false, follow: true },
     title: `Luxury Apartments in ${city.name}, ${city.state} | Staycio`,
     description: `Browse the finest luxury apartments in ${city.name}. Curated listings with verified pricing, photos, and amenities.`,
     alternates: { canonical: `/cities/${slug}` },
@@ -246,8 +255,9 @@ export default async function CityPage({ params }: CityPageProps) {
         </div>
 
         <div className="container mx-auto px-4 py-12 space-y-12">
-          {/* City intro copy */}
-          {CITY_COPY[slug] && (
+          {/* City intro copy. Suppressed when the city has nothing to show —
+              prose about a market we have no listings for is worse than none. */}
+          {CITY_COPY[slug] && totalBuildings > 0 && (
             <section className="max-w-3xl">
               <h2 className="text-2xl font-bold mb-4">
                 Luxury Apartments in {city.name}
@@ -255,7 +265,7 @@ export default async function CityPage({ params }: CityPageProps) {
               <div className="space-y-4">
                 {CITY_COPY[slug].map((paragraph, i) => (
                   <p key={i} className="text-muted-foreground leading-relaxed">
-                    {paragraph}
+                    {paragraph.replace(/\{count\}/g, String(totalBuildings))}
                   </p>
                 ))}
               </div>
@@ -318,7 +328,7 @@ export default async function CityPage({ params }: CityPageProps) {
                     if (!a.is_primary && b.is_primary) return 1;
                     return a.sort_order - b.sort_order;
                   });
-                  const heroImg = sortedImgs[0]?.url || getBuildingFallbackImage(building.id, building.name).url;
+                  const heroImg = sortedImgs[0]?.url ?? null;
 
                   const neighborhood = Array.isArray(building.neighborhoods)
                     ? building.neighborhoods[0]
@@ -332,6 +342,7 @@ export default async function CityPage({ params }: CityPageProps) {
                       <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full">
                         {/* Image */}
                         <div className="relative h-52 overflow-hidden">
+                          {heroImg ? (
                           <Image
                             src={heroImg}
                             alt={building.name}
@@ -339,6 +350,9 @@ export default async function CityPage({ params }: CityPageProps) {
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           />
+                          ) : (
+                            <ListingPlaceholder seed={building.id} name={building.name} />
+                          )}
                           {neighborhood && (
                             <Badge className="absolute top-3 left-3 bg-black/60 text-white border-0">
                               {(neighborhood as { name: string }).name}

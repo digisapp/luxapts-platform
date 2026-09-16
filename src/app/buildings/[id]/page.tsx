@@ -10,7 +10,8 @@ import {
   chunk,
   IN_CHUNK_SIZE,
 } from "@/lib/search/fetch-enrichments";
-import { getBuildingGalleryFallbacks } from "@/lib/images/fallback";
+import { ListingPlaceholder } from "@/components/ui/ListingPlaceholder";
+import { isJunkImageUrl } from "@/lib/images/quality";
 
 // Revalidate every hour instead of force-dynamic — reduces DB load ~90%
 export const revalidate = 3600;
@@ -338,18 +339,21 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     });
   }
 
-  // Add exterior image from building_facts if not already in building_images
-  if (buildingFacts.image_exterior && !allImages.some(img => img.url === buildingFacts.image_exterior)) {
+  // Add exterior image from building_facts if not already in building_images.
+  // This one goes to the FRONT, so it becomes the hero — hold it to the same
+  // bar as a scraped photo, or a stale import puts a favicon at the top of the
+  // page (which is exactly what 420 Kent was showing).
+  const factImage = buildingFacts.image_exterior as string | undefined;
+  if (
+    factImage &&
+    !isJunkImageUrl(factImage) &&
+    !allImages.some((img) => img.url === factImage)
+  ) {
     allImages.unshift({
-      url: buildingFacts.image_exterior as string,
+      url: factImage,
       alt: `${building.name} exterior`,
       category: "exterior",
     });
-  }
-
-  // If still no images, use deterministic Unsplash fallbacks
-  if (allImages.length === 0) {
-    allImages.push(...getBuildingGalleryFallbacks(building.id, building.name));
   }
 
   // Gather amenity names for JSON-LD
@@ -399,10 +403,8 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 {allImages.length > 0 ? (
                   <ImageGallery images={allImages} buildingName={building.name} />
                 ) : (
-                  <div className="relative h-64 md:h-96 rounded-xl bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Building2 className="h-24 w-24 text-muted-foreground/30" />
-                    </div>
+                  <div className="relative h-64 md:h-96 rounded-xl overflow-hidden border border-white/[0.06]">
+                    <ListingPlaceholder seed={building.id} name={building.name} />
                   </div>
                 )}
                 {buildingFacts.move_in_specials && (

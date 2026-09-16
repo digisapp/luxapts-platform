@@ -13,7 +13,7 @@ import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { StickyMobileCTA } from "@/components/ui/StickyMobileCTA";
 import { BuildingContactButtons } from "../../BuildingContactButtons";
 import { formatPrice, formatDate } from "@/lib/utils";
-import { getUnitFallbackImages } from "@/lib/images/fallback";
+import { ListingPlaceholder } from "@/components/ui/ListingPlaceholder";
 import {
   ArrowLeft,
   Bed,
@@ -112,21 +112,8 @@ export default async function UnitPage({
       .limit(90),
   ]);
 
-  let images = imagesRes.data || [];
+  const images = imagesRes.data || [];
   const priceSnapshots = pricesRes.data || [];
-
-  // Use fallbacks if no images
-  if (images.length === 0) {
-    const fallbacks = getUnitFallbackImages(unitId, building?.name ?? "", unit.unit_number);
-    images = fallbacks.map((f) => ({
-      id: f.id,
-      url: f.url,
-      alt_text: f.alt_text,
-      category: f.category,
-      is_primary: f.id.endsWith("-0"),
-      sort_order: 0,
-    }));
-  }
 
   const latestPrice = priceSnapshots[0]?.rent;
 
@@ -161,7 +148,16 @@ export default async function UnitPage({
             <div className="grid gap-8 lg:grid-cols-3">
               {/* Gallery */}
               <div className="lg:col-span-2">
-                <UnitGallery images={images} unitLabel={unit.unit_number ? `Unit ${unit.unit_number}` : "Unit"} />
+                {images.length > 0 ? (
+                  <UnitGallery images={images} unitLabel={unit.unit_number ? `Unit ${unit.unit_number}` : "Unit"} />
+                ) : (
+                  <div className="relative h-64 md:h-96 rounded-xl overflow-hidden border border-white/[0.06]">
+                    <ListingPlaceholder
+                      seed={unitId}
+                      name={unit.unit_number ? `${building?.name ?? ""} · Unit ${unit.unit_number}` : building?.name}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Quick Info */}

@@ -17,6 +17,19 @@ try {
   console.log("Could not load .env.local, using existing env vars");
 }
 
+// WARNING: this seeds STOCK Unsplash photography into real listings. Stock
+// photos are indistinguishable from scraped ones once written, which is how
+// half the site ended up showing pictures of buildings that were not the
+// listing. Listings without a photo render a neutral placeholder instead —
+// see src/components/ui/ListingPlaceholder.tsx. Pass --allow-stock-photos to
+// run anyway.
+if (!process.argv.includes("--allow-stock-photos")) {
+  console.error(
+    "Refusing to seed stock photography into listings. Re-run with --allow-stock-photos if you really mean it."
+  );
+  process.exit(1);
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 

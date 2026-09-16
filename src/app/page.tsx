@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import HomeClient, {
   type FeaturedBuilding,
+  type HomeCity,
   type HomeStats,
   type TopNeighborhood,
 } from "./HomeClient";
 import { createAdminClient } from "@/lib/supabase/server";
-import { getBuildingFallbackImage } from "@/lib/images/fallback";
+import { buildingFamilyKey } from "@/lib/images/quality";
 import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 
@@ -66,6 +67,7 @@ async function getHomeData(): Promise<{
   stats: HomeStats;
   featured: FeaturedBuilding[];
   neighborhoods: TopNeighborhood[];
+  cities: HomeCity[];
 } | null> {
   try {
     const supabase = createAdminClient();
@@ -93,10 +95,17 @@ async function getHomeData(): Promise<{
           .order("id")
           .range(from, to)
       ),
-      supabase.from("cities").select("id", { count: "exact", head: true }),
+      // Rows, not just a count: the lead form's city picker has to submit a
+      // slug `/api/leads` will resolve, so it uses the real table rather than
+      // the curated marketing list.
+      supabase.from("cities").select("name, slug", { count: "exact" }).order("name"),
     ]);
 
     const cityCount = citiesRes.count ?? 0;
+    const cities: HomeCity[] = (citiesRes.data ?? []).map((c) => ({
+      name: c.name,
+      slug: c.slug,
+    }));
 
     const unitCount: Record<string, number> = {};
     for (const u of units) {
@@ -117,16 +126,6 @@ async function getHomeData(): Promise<{
       });
       return images[0]?.url ?? null;
     };
-    // "Three Waterline Square" / "Waterline Square" are one complex sharing a
-    // website and photos; collapse them to a family key so the grid never
-    // shows the same hero twice.
-    const familyKey = (name: string) =>
-      name
-        .toLowerCase()
-        .replace(/^(one|two|three|four|five|1|2|3|4|5)\s+/, "")
-        .replace(/\s+(tower|towers|north|south|east|west|i{1,3})$/, "")
-        .trim();
-
     const perCity: Record<string, number> = {};
     const seenImages = new Set<string>();
     const seenFamilies = new Set<string>();
@@ -134,7 +133,7 @@ async function getHomeData(): Promise<{
     const take = (b: HomeBuildingRow, citySlug: string, image: string) => {
       perCity[citySlug] = (perCity[citySlug] || 0) + 1;
       seenImages.add(image);
-      seenFamilies.add(familyKey(b.name));
+      seenFamilies.add(buildingFamilyKey(b.name));
       picked.push(b);
     };
     // A featured card must have a real photo — the stock fallback pool is
@@ -144,7 +143,7 @@ async function getHomeData(): Promise<{
       if ((perCity[citySlug] || 0) >= MAX_PER_CITY) return null;
       const image = primaryImageUrl(b);
       if (!image || seenImages.has(image)) return null;
-      if (seenFamilies.has(familyKey(b.name))) return null;
+      if (seenFamilies.has(buildingFamilyKey(b.name))) return null;
       return image;
     };
     // Pass 1: sales-coverage cities claim the first slots
@@ -184,14 +183,13 @@ async function getHomeData(): Promise<{
       const city = getFirstRelation(b.cities);
       const neighborhood = getFirstRelation(b.neighborhoods);
 
-      const fallbackImage = getBuildingFallbackImage(b.id, b.name).url;
       return {
         id: b.id,
         name: b.name,
         cityName: city?.name ?? null,
         neighborhood: neighborhood?.name ?? null,
-        image: images[0]?.url || fallbackImage,
-        fallbackImage,
+        // `eligible()` already guaranteed a real photo for every featured card.
+        image: images[0]!.url,
         availableUnits: unitCount[b.id] || 0,
         minPrice: minPrice[b.id] ?? null,
       };
@@ -233,6 +231,7 @@ async function getHomeData(): Promise<{
       },
       featured,
       neighborhoods,
+      cities,
     };
   } catch {
     // Homepage must never hard-fail on a data hiccup — render without the
@@ -279,6 +278,7 @@ export default async function HomePage() {
         stats={data?.stats ?? null}
         featured={featured}
         neighborhoods={data?.neighborhoods ?? []}
+        cities={data?.cities ?? []}
       />
     </>
   );

@@ -195,7 +195,8 @@ export async function POST(req: Request) {
         const buildingImagesSaved = await saveScrapedBuildingImages(
           supabase,
           building.id,
-          imageResult.data.building_images
+          imageResult.data.building_images,
+          { source: { websiteUrl: building.website_url!, buildingName: building.name } }
         );
 
         const unitImagesSaved = await saveScrapedUnitImages(

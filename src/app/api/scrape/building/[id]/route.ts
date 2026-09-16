@@ -88,7 +88,8 @@ export async function POST(req: Request, context: RouteContext) {
       const buildingImagesSaved = await saveScrapedBuildingImages(
         supabase,
         buildingId,
-        imageResult.data.building_images
+        imageResult.data.building_images,
+        { source: { websiteUrl: scrapeUrl, buildingName: building.name } }
       );
 
       const unitImagesSaved = await saveScrapedUnitImages(

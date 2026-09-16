@@ -1,7 +1,20 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { isJunkImageUrl } from "@/lib/images/quality";
 import { apiError } from "@/lib/api-helpers";
 import { safeParseInt } from "@/lib/utils";
+
+/**
+ * `image_exterior` is imported data, not scraped, so it never passed the
+ * scraper's quality gate — several rows are favicons or dead hotlinks. Stacy
+ * surfaces whatever this returns, so filter the obvious junk out here.
+ */
+function usableImage(value: unknown): string | null {
+  const url = typeof value === "string" ? value : null;
+  if (!url || isJunkImageUrl(url)) return null;
+  return url;
+}
+
 
 interface BrowseBody {
   city_slug?: string;
@@ -85,7 +98,7 @@ export async function POST(req: Request) {
       neighborhood: b.neighborhoods,
       rent_min: factsMap[b.id]?.rent_min || null,
       rent_max: factsMap[b.id]?.rent_max || null,
-      image: factsMap[b.id]?.image_exterior || null,
+      image: usableImage(factsMap[b.id]?.image_exterior),
       move_in_specials: factsMap[b.id]?.move_in_specials || null,
       total_units: factsMap[b.id]?.total_units || null,
     }));
@@ -178,7 +191,7 @@ export async function GET(req: Request) {
     neighborhood: b.neighborhoods,
     rent_min: factsMap[b.id]?.rent_min || null,
     rent_max: factsMap[b.id]?.rent_max || null,
-    image: factsMap[b.id]?.image_exterior || null,
+    image: usableImage(factsMap[b.id]?.image_exterior),
   }));
 
   return NextResponse.json(

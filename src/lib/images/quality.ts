@@ -61,6 +61,12 @@ export interface ImageProbe {
   height?: number;
   /** Set when the image is unusable; suitable for logging. */
   reason?: string;
+  /**
+   * The check failed for a reason that says nothing about the photo — a rate
+   * limit, a 5xx, a timeout. Callers pruning rows must leave these alone, or a
+   * flaky origin costs a building its whole gallery.
+   */
+  transient?: boolean;
 }
 
 /** Width/height from the header bytes of the common raster formats. */
@@ -135,11 +141,13 @@ export async function probeImage(url: string, timeoutMs = 15_000): Promise<Image
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (e) {
-    return { ok: false, reason: `fetch-failed: ${(e as Error).message}` };
+    return { ok: false, transient: true, reason: `fetch-failed: ${(e as Error).message}` };
   }
 
   if (!res.ok && res.status !== 206) {
-    return { ok: false, status: res.status, reason: `http-${res.status}` };
+    // 429 and 5xx mean "ask again later", not "this photo is gone".
+    const transient = res.status === 429 || res.status >= 500;
+    return { ok: false, status: res.status, transient, reason: `http-${res.status}` };
   }
 
   const contentType = res.headers.get("content-type") ?? "";
@@ -176,7 +184,27 @@ const NAME_STOPWORDS = new Set([
   "living", "luxury", "lofts", "loft", "homes", "rentals",
 ]);
 
+/** Grammatical filler that never contributes an initial. */
+const ARTICLES = new Set(["the", "at", "of", "and", "a", "an", "by", "on"]);
+
+/**
+ * Property-type nouns. They can corroborate a match but never carry one on
+ * their own — "parkwayproperties.com" must not look like a match for
+ * "Ascent Victory Park".
+ */
+const LOW_SIGNAL_TOKENS = new Set([
+  "tower", "towers", "place", "plaza", "house", "square", "park",
+  "club", "point", "court", "commons", "flats", "suites", "villas",
+]);
+
 const alnum = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/** Spelled-out numbers a domain may render as digits. */
+const NUMBER_WORDS: Record<string, string> = {
+  one: "1", two: "2", three: "3", four: "4", five: "5", six: "6",
+  seven: "7", eight: "8", nine: "9", ten: "10", eleven: "11", twelve: "12",
+  first: "1st", second: "2nd", third: "3rd", fifth: "5th",
+};
 
 /**
  * Does this URL point at *this* building, or at its management company?
@@ -185,8 +213,11 @@ const alnum = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
  * Scraping that page yields Greystar's corporate hero shot, which then becomes
  * the thumbnail for ten unrelated listings. A property-specific target names
  * the building somewhere in its host or path — `420kent.com`, or
- * `relatedrentals.com/.../the-westminster` — so require that before trusting
- * anything scraped from it to be a photo of this building.
+ * `relatedrentals.com/.../the-westminster`.
+ *
+ * Matching is deliberately loose on the URL side, because property domains
+ * abbreviate freely (`thecrownweho.com` for The Crown West Hollywood): one
+ * distinctive word from the name has to survive into the host or path.
  */
 export function isPropertySpecificUrl(websiteUrl: string, buildingName: string): boolean {
   let haystack: string;
@@ -197,19 +228,41 @@ export function isPropertySpecificUrl(websiteUrl: string, buildingName: string):
     return false;
   }
 
-  const tokens = buildingName
+  const words = buildingName
     .split(/[^A-Za-z0-9]+/)
     .filter(Boolean)
     .map((t) => t.toLowerCase())
     .filter((t) => !NAME_STOPWORDS.has(t));
 
-  if (tokens.length === 0) return false;
+  const distinctive = words.filter((t) => t.length >= 2 && !LOW_SIGNAL_TOKENS.has(t));
 
-  const matched = tokens.filter((t) => haystack.includes(t));
-  // The most distinctive word has to be there — "square" or "tower" alone is
-  // not evidence, and a bare majority of generic words is not either.
-  const longest = tokens.reduce((a, b) => (b.length > a.length ? b : a));
-  if (!haystack.includes(longest)) return false;
+  // A domain may spell a number either way: "Twelve Twelve" -> 1212nashville.com.
+  const forms = (t: string) => (NUMBER_WORDS[t] ? [t, NUMBER_WORDS[t]] : [t]);
+  if (distinctive.some((t) => forms(t).some((f) => haystack.includes(f)))) return true;
 
-  return matched.length / tokens.length >= 0.5;
+  // Single-property sites often contract to initials: South Park Lofts ->
+  // splofts.com. Built from every word but the articles — "Lofts" is dropped
+  // as a name token yet still contributes its letter. Three or more required,
+  // so a two-word name cannot match by luck.
+  const initials = buildingName
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean)
+    .filter((w) => !ARTICLES.has(w.toLowerCase()))
+    .map((w) => w[0].toLowerCase())
+    .join("");
+  return initials.length >= 3 && haystack.includes(initials);
+}
+
+/**
+ * Collapses the towers of one complex to a single key: "Three Waterline
+ * Square", "Waterline Square" and "One Waterline Square" are one property
+ * sharing a website and a photo library, so they are allowed to share photos.
+ * Two unrelated buildings are not.
+ */
+export function buildingFamilyKey(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/^(one|two|three|four|five|1|2|3|4|5)\s+/, "")
+    .replace(/\s+(tower|towers|north|south|east|west|i{1,3})$/, "")
+    .trim();
 }
