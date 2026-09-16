@@ -31,8 +31,14 @@ export default function SignUpPage() {
     // catches SIGNED_IN even when it fires during the signUp call (email
     // confirmation disabled). /api/auth/welcome requires a session and sends
     // to the session user's own email, so it can only fire once one exists.
+    // Record who/when: the listener only sends when the signed-in email
+    // matches and the flag is still fresh, so an abandoned signup can't
+    // trigger a welcome email for whoever signs in next on this browser.
     try {
-      localStorage.setItem("staycio:welcome-pending", "1");
+      localStorage.setItem(
+        "staycio:welcome-pending",
+        JSON.stringify({ email, at: Date.now() })
+      );
     } catch {}
 
     const { error } = await signUp(email, password, name);

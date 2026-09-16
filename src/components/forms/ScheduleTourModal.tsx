@@ -122,6 +122,9 @@ export function ScheduleTourModal({
     }
     setLoading(true);
     setError(null);
+    // A previous instant booking's slot must not leak into this submission's
+    // result view — a plain tour request would show "Tour Booked!" for it.
+    setBookedSlot(null);
 
     const tourDate = instant ? selectedDate! : formData.preferredDate || undefined;
     const tourTime = instant
@@ -174,10 +177,18 @@ export function ScheduleTourModal({
     }
   };
 
+  // Clear the result view once the dialog has animated out, so reopening
+  // starts from the form instead of the previous submission's confirmation.
+  const resetResult = () => {
+    setTimeout(() => {
+      setSuccess(false);
+      setBookedSlot(null);
+    }, 300);
+  };
+
   const handleClose = () => {
     setOpen(false);
-    // Reset success state after modal closes
-    setTimeout(() => setSuccess(false), 300);
+    resetResult();
   };
 
   return (
@@ -185,7 +196,7 @@ export function ScheduleTourModal({
       open={open}
       onOpenChange={(o) => {
         setOpen(o);
-        if (!o) setTimeout(() => setSuccess(false), 300);
+        if (!o) resetResult();
       }}
     >
       <DialogTrigger asChild>

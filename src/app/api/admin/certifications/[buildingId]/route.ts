@@ -35,7 +35,7 @@ export async function GET(
 
     const { data: building } = await adminClient
       .from("buildings")
-      .select("id, name, address")
+      .select("id, name, address:address_1")
       .eq("id", buildingId)
       .single();
 

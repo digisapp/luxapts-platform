@@ -145,7 +145,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(response);
   } catch (error) {
+    // String(error) leaked stack/driver detail to the client.
     console.error("Import error:", error);
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    return NextResponse.json({ error: "Import failed" }, { status: 500 });
   }
 }

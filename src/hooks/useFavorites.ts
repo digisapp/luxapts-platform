@@ -18,6 +18,21 @@ export interface FavoriteItem {
   addedAt: number;
 }
 
+/** A favorite as the API returns it: identity plus whatever building fields
+ *  the join produced. Display fields (image/price/beds/baths) are never in it. */
+type DbFavorite = Pick<FavoriteItem, "id" | "type" | "addedAt"> &
+  Partial<Pick<FavoriteItem, "name" | "address" | "neighborhood" | "citySlug">>;
+
+/** Drop undefined/empty values so spreading a DB row over a local one never
+ *  blanks out a field the local copy actually has. */
+function definedFields(item: DbFavorite): Partial<FavoriteItem> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(item)) {
+    if (value !== undefined && value !== null && value !== "") out[key] = value;
+  }
+  return out as Partial<FavoriteItem>;
+}
+
 const STORAGE_KEY = "staycio_favorites";
 
 // Shared store: all FavoriteButtons, the Header badge, and the favorites
@@ -84,13 +99,16 @@ export function useFavorites() {
               cities?: { slug: string } | { slug: string }[];
             };
           }
-          const dbItems: FavoriteItem[] = favorites.map((f: FavoriteRecord) => {
+          // The DB row only carries identity + building basics — never the
+          // image/price/beds/baths the cards render — so leave anything it
+          // lacks undefined and let the local copy fill it in below.
+          const dbItems: DbFavorite[] = favorites.map((f: FavoriteRecord) => {
             const building = f.buildings;
             return {
               id: f.building_id || f.unit_id || "",
               type: (f.building_id ? "building" : "unit") as "building" | "unit",
-              name: building?.name || "Unknown",
-              address: building?.address_1 || "",
+              name: building?.name || undefined,
+              address: building?.address_1 || undefined,
               neighborhood: Array.isArray(building?.neighborhoods)
                 ? building.neighborhoods[0]?.name
                 : building?.neighborhoods?.name,
@@ -101,9 +119,23 @@ export function useFavorites() {
             };
           });
 
-          // Merge: keep all from DB, add local items not in DB
+          // Merge: DB rows win for the fields they actually carry, but the
+          // local copy keeps image/price/beds/baths (and its name/address
+          // when the DB row has none) — otherwise logging in replaced every
+          // saved card with a placeholder.
           favoritesStore.set((current) => {
-            const merged = [...dbItems];
+            const merged: FavoriteItem[] = dbItems.map((dbItem) => {
+              const localItem = current.find((i) => i.id === dbItem.id);
+              const combined = { ...(localItem ?? {}), ...definedFields(dbItem) };
+              return {
+                ...combined,
+                id: dbItem.id,
+                type: dbItem.type,
+                name: combined.name || "Unknown",
+                address: combined.address || "",
+                addedAt: combined.addedAt ?? dbItem.addedAt,
+              };
+            });
             for (const localItem of current) {
               if (!dbItems.some((db) => db.id === localItem.id)) {
                 merged.push(localItem);

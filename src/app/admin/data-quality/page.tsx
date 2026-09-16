@@ -1,83 +1,123 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { DataQualityDashboard } from "@/components/admin/data-quality/DataQualityDashboard";
+import { fetchAllRows } from "@/lib/db-helpers";
 
 export const dynamic = "force-dynamic";
+
+type CityRel = { name: string; slug: string };
+
+type DataQualityBuilding = {
+  id: string;
+  name: string;
+  address_1: string;
+  zip: string | null;
+  status: string | null;
+  description: string | null;
+  website_url: string | null;
+  leasing_phone: string | null;
+  leasing_email: string | null;
+  pet_policy: string | null;
+  parking_policy: string | null;
+  deposit_policy: string | null;
+  year_built: number | null;
+  stories: number | null;
+  lat: number | null;
+  lng: number | null;
+  hero_image_url: string | null;
+  city_id: string;
+  cities: CityRel | CityRel[] | null;
+};
+
+const BUILDING_COLUMNS = `
+  id, name, address_1, zip, status, description, website_url,
+  leasing_phone, leasing_email, pet_policy, parking_policy, deposit_policy,
+  year_built, stories, lat, lng, hero_image_url,
+  city_id,
+  cities:city_id (name, slug)
+`;
 
 export default async function DataQualityPage() {
   const supabase = createAdminClient();
 
-  // Fetch all data needed for quality scoring in parallel
-  const [
-    buildingsRes,
-    imagesRes,
-    unitsRes,
-    pricesRes,
-    amenitiesRes,
-  ] = await Promise.all([
-    supabase
-      .from("buildings")
-      .select(`
-        id, name, address_1, zip, status, description, website_url,
-        leasing_phone, leasing_email, pet_policy, parking_policy, deposit_policy,
-        year_built, stories, lat, lng, hero_image_url,
-        city_id,
-        cities:city_id (name, slug)
-      `)
-      .eq("status", "active")
-      .order("name"),
-    supabase
-      .from("building_images")
-      .select("building_id"),
-    supabase
-      .from("units")
-      .select("building_id, is_available"),
-    supabase
-      .from("unit_price_snapshots")
-      .select("unit_id, units:unit_id (building_id)")
-      .order("captured_at", { ascending: false }),
-    supabase
-      .from("building_amenities")
-      .select("building_id"),
+  // Paged reads: unpaged selects stopped at PostgREST's 1000-row cap, which
+  // silently zeroed the image/unit/amenity counts for every building past the
+  // cap. Price coverage now comes from one row per unit
+  // (units_with_latest_price) rather than the whole snapshot history.
+  // Property mutation, not reassignment: react-hooks/immutability forbids
+  // reassigning a captured binding inside an async callback.
+  const buildingsError: { message: string | null } = { message: null };
+
+  const [buildingRows, imageRows, unitRows, amenityRows] = await Promise.all([
+    fetchAllRows<DataQualityBuilding>(async (from, to) => {
+      const res = await supabase
+        .from("buildings")
+        .select(BUILDING_COLUMNS)
+        .eq("status", "active")
+        .order("name")
+        .order("id")
+        .range(from, to);
+      if (res.error) buildingsError.message = res.error.message ?? "Unknown error";
+      return res as unknown as { data: DataQualityBuilding[] | null; error: unknown };
+    }),
+    fetchAllRows<{ building_id: string }>((from, to) =>
+      supabase
+        .from("building_images")
+        .select("building_id")
+        .order("building_id")
+        .order("id")
+        .range(from, to)
+    ),
+    fetchAllRows<{ id: string; building_id: string; is_available: boolean | null; latest_rent: number | null }>(
+      (from, to) =>
+        supabase
+          .from("units_with_latest_price")
+          .select("id, building_id, is_available, latest_rent")
+          .order("id")
+          .range(from, to)
+    ),
+    fetchAllRows<{ building_id: string }>((from, to) =>
+      supabase
+        .from("building_amenities")
+        .select("building_id")
+        .order("building_id")
+        .order("amenity_id")
+        .range(from, to)
+    ),
   ]);
 
-  if (buildingsRes.error) {
+  if (buildingsError.message) {
     return (
       <div className="space-y-8">
         <h1 className="text-3xl font-bold">Data Quality</h1>
-        <p className="text-red-500">Error: {buildingsRes.error.message}</p>
+        <p className="text-red-500">Error: {buildingsError.message}</p>
       </div>
     );
   }
 
   // Aggregate counts
   const imageCountMap: Record<string, number> = {};
-  for (const img of imagesRes.data || []) {
+  for (const img of imageRows) {
     imageCountMap[img.building_id] = (imageCountMap[img.building_id] || 0) + 1;
   }
 
   const unitCountMap: Record<string, { total: number; available: number }> = {};
-  for (const unit of unitsRes.data || []) {
+  const buildingsWithPrices = new Set<string>();
+  for (const unit of unitRows) {
     if (!unitCountMap[unit.building_id]) {
       unitCountMap[unit.building_id] = { total: 0, available: 0 };
     }
     unitCountMap[unit.building_id].total++;
     if (unit.is_available) unitCountMap[unit.building_id].available++;
-  }
-
-  const buildingsWithPrices = new Set<string>();
-  for (const price of pricesRes.data || []) {
-    const units = price.units as { building_id: string } | { building_id: string }[] | null;
-    const unit = Array.isArray(units) ? units[0] : units;
-    if (unit?.building_id) buildingsWithPrices.add(unit.building_id);
+    if (unit.latest_rent != null) buildingsWithPrices.add(unit.building_id);
   }
 
   const amenityCountMap: Record<string, number> = {};
-  for (const a of amenitiesRes.data || []) {
+  for (const a of amenityRows) {
     amenityCountMap[a.building_id] = (amenityCountMap[a.building_id] || 0) + 1;
   }
 
   // Score each building
-  const buildings = (buildingsRes.data || []).map((b) => {
+  const buildings = buildingRows.map((b) => {
     const issues: string[] = [];
     let score = 0;
     const maxScore = 10;
@@ -110,7 +150,7 @@ export default async function DataQualityPage() {
     if (b.website_url) score += 1;
     else issues.push("no_website");
 
-    const city = b.cities as { name: string; slug: string } | { name: string; slug: string }[] | null;
+    const city = b.cities;
     const cityData = Array.isArray(city) ? city[0] : city;
 
     return {

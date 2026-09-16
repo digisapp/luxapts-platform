@@ -4,6 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/db-helpers";
+import {
+  fetchAvailableUnitPrices,
+  chunk,
+  IN_CHUNK_SIZE,
+} from "@/lib/search/fetch-enrichments";
 import { getBuildingGalleryFallbacks } from "@/lib/images/fallback";
 
 // Revalidate every hour instead of force-dynamic — reduces DB load ~90%
@@ -106,6 +112,15 @@ import { ApartmentComplexJsonLd } from "@/components/seo/JsonLd";
 function isWithinDays(isoDate: string, days: number): boolean {
   return Date.now() - new Date(isoDate).getTime() < days * 24 * 60 * 60 * 1000;
 }
+
+// Module-scope so the impure Date.now() call stays out of server-component
+// render (react-hooks/purity), same as isWithinDays above.
+function daysAgoIso(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+// Window covered by the price-history chart
+const PRICE_HISTORY_DAYS = 30;
 import { BuildingVoiceButton } from "@/components/simli";
 
 interface BuildingPageProps {
@@ -120,6 +135,18 @@ interface UnitImage {
   category: string | null;
   is_primary: boolean;
   sort_order: number;
+}
+
+interface UnitPriceRow {
+  id: string;
+  building_id: string;
+  latest_rent: number | null;
+  price_captured_at: string | null;
+}
+
+interface PriceSnapshotRow {
+  rent: number;
+  captured_at: string;
 }
 
 interface Floorplan {
@@ -179,35 +206,55 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
 
   const emptyRes = Promise.resolve({ data: null });
 
+  // Snapshots older than this are ignored by the price chart
+  const historyCutoff = daysAgoIso(PRICE_HISTORY_DAYS);
+
   // Phase 2: unit-scoped queries (all depend only on phase-1 results)
-  const [latestPricesRes, historyRes, unitImagesRes, floorplansRes, debriefRes] =
+  const [unitPriceRows, historyRows, unitImageRows, floorplansRes, debriefRes] =
     await Promise.all([
-      // Latest price per unit — the view guarantees one row per unit, so no
-      // dedup loop and no risk of the 1000-row cap hiding older units
+      // Latest price per available unit, chunked by building and paged. A
+      // single `.in("unit_id", unitIds)` put every unit id in the request URL,
+      // which PostgREST rejects past ~150 — large buildings rendered every
+      // unit as "Contact for pricing".
+      fetchAvailableUnitPrices<UnitPriceRow>(supabase, [id], ["price_captured_at"]),
+      // Recent history for the price chart, bounded by DATE rather than by
+      // row count: the old `.limit(90)` took the 90 newest rows across ALL
+      // units, so on a building with more than a handful of units the whole
+      // chart covered a day or two and its earliest point was noise.
       unitIds.length
-        ? supabase
-            .from("latest_unit_prices")
-            .select("unit_id, rent, captured_at")
-            .in("unit_id", unitIds)
-        : emptyRes,
-      // Bounded recent history for the price chart (full history scans get
-      // silently capped at 1000 rows)
+        ? Promise.all(
+            chunk(unitIds, IN_CHUNK_SIZE).map((ids) =>
+              fetchAllRows<PriceSnapshotRow>((from, to) =>
+                supabase
+                  .from("unit_price_snapshots")
+                  .select("rent, captured_at")
+                  .in("unit_id", ids)
+                  .gte("captured_at", historyCutoff)
+                  .order("captured_at", { ascending: false })
+                  .order("id")
+                  .range(from, to)
+              )
+            )
+          ).then((pages) => pages.flat())
+        : Promise.resolve<PriceSnapshotRow[]>([]),
+      // Same chunking for unit photos — unpaged, large buildings showed none.
       unitIds.length
-        ? supabase
-            .from("unit_price_snapshots")
-            .select("rent, captured_at")
-            .in("unit_id", unitIds)
-            .order("captured_at", { ascending: false })
-            .limit(90)
-        : emptyRes,
-      unitIds.length
-        ? supabase
-            .from("unit_images")
-            .select("id, unit_id, url, alt_text, category, is_primary, sort_order")
-            .in("unit_id", unitIds)
-            .order("is_primary", { ascending: false })
-            .order("sort_order", { ascending: true })
-        : emptyRes,
+        ? Promise.all(
+            chunk(unitIds, IN_CHUNK_SIZE).map((ids) =>
+              fetchAllRows<UnitImage>((from, to) =>
+                supabase
+                  .from("unit_images")
+                  .select("id, unit_id, url, alt_text, category, is_primary, sort_order")
+                  .in("unit_id", ids)
+                  .order("unit_id")
+                  .order("is_primary", { ascending: false })
+                  .order("sort_order", { ascending: true })
+                  .order("id")
+                  .range(from, to)
+              )
+            )
+          ).then((pages) => pages.flat())
+        : Promise.resolve<UnitImage[]>([]),
       floorplanIds.length
         ? supabase
             .from("floorplans")
@@ -226,8 +273,9 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
 
   // Latest price per unit
   const unitPrices: Record<string, { rent: number; captured_at: string }> = {};
-  for (const p of latestPricesRes.data || []) {
-    unitPrices[p.unit_id] = { rent: p.rent, captured_at: p.captured_at };
+  for (const p of unitPriceRows) {
+    if (p.latest_rent == null || !p.price_captured_at) continue;
+    unitPrices[p.id] = { rent: p.latest_rent, captured_at: p.price_captured_at };
   }
 
   // Trust badges: freshest price snapshot + most recent completed Staycio tour
@@ -241,7 +289,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
 
   // Aggregate price history by date (average rent per date)
   const priceByDate: Record<string, { total: number; count: number }> = {};
-  for (const snap of historyRes.data || []) {
+  for (const snap of historyRows) {
     const dateKey = snap.captured_at.split("T")[0];
     if (!priceByDate[dateKey]) {
       priceByDate[dateKey] = { total: 0, count: 0 };
@@ -259,7 +307,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
 
   // Group unit images by unit
   const unitImages: Record<string, UnitImage[]> = {};
-  for (const img of unitImagesRes.data || []) {
+  for (const img of unitImageRows) {
     if (!unitImages[img.unit_id]) {
       unitImages[img.unit_id] = [];
     }

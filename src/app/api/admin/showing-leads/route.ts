@@ -3,6 +3,7 @@ import { apiError, apiSuccess } from "@/lib/api-helpers";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { notifyCertifiedShowers } from "@/lib/shower/notify";
+import { safeParseInt } from "@/lib/utils";
 import { z } from "zod";
 
 const postLeadSchema = z.object({
@@ -96,8 +97,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const buildingId = searchParams.get("building_id");
-    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
-    const offset = Math.max(parseInt(searchParams.get("offset") || "0"), 0);
+    // Clamped: `parseInt("abc")` is NaN, which made range(NaN, NaN) return an
+    // empty page, and a negative offset was accepted as-is.
+    const limit = safeParseInt(searchParams.get("limit"), 50, 1, 100);
+    const offset = safeParseInt(searchParams.get("offset"), 0, 0, 1_000_000);
 
     const adminClient = createAdminClient();
 
@@ -108,7 +111,7 @@ export async function GET(req: Request) {
         preferred_date, preferred_time, unit_type, notes, status,
         lease_signed, lease_signed_at, monthly_rent,
         created_at, expires_at, posted_by, source_lead_id,
-        buildings:building_id (id, name, address),
+        buildings:building_id (id, name, address:address_1),
         showing_claims (
           id, claimed_at, status,
           showers:shower_id (id, display_name, phone, tier)
@@ -137,17 +140,27 @@ export async function GET(req: Request) {
       return apiError("Failed to load showing leads", 500);
     }
 
-    // Status counts for pipeline view
-    const { data: statusRows } = await adminClient
-      .from("showing_leads")
-      .select("status");
+    // Status counts for the pipeline view. Counted in Postgres — selecting
+    // every showing lead's status and tallying in JS was capped at
+    // PostgREST's 1000 rows, so the pipeline numbers stalled there.
+    const SHOWING_STATUSES = [
+      "open", "claimed", "in_progress", "completed", "cancelled", "no_show",
+    ] as const;
 
-    const status_counts: Record<string, number> = {
-      open: 0, claimed: 0, in_progress: 0, completed: 0, cancelled: 0, no_show: 0,
-    };
-    statusRows?.forEach((r) => {
-      const s = r.status as string;
-      if (s in status_counts) status_counts[s]++;
+    const countResults = await Promise.all(
+      SHOWING_STATUSES.map((s) =>
+        adminClient
+          .from("showing_leads")
+          .select("id", { count: "exact", head: true })
+          .eq("status", s)
+      )
+    );
+
+    const status_counts: Record<string, number> = {};
+    SHOWING_STATUSES.forEach((s, i) => {
+      const res = countResults[i];
+      if (res.error) console.error(`Showing lead status count error (${s}):`, res.error.message);
+      status_counts[s] = res.count ?? 0;
     });
 
     return apiSuccess({ leads: data || [], total: count, status_counts, limit, offset });

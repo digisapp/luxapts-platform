@@ -82,12 +82,46 @@ export async function POST(req: Request) {
       })),
     ];
 
-    // Create a readable stream for the response
+    // Create a readable stream for the response.
+    //
+    // A client that disconnects mid-answer (tab closed, navigation, an
+    // AbortController in the widget) shows up here as cancel() on the stream
+    // and/or req.signal aborting. Either one aborts the upstream completion
+    // (no more billed tokens), skips any pending tool execution (no orphaned
+    // create_lead → email) and turns send() into a no-op so a late enqueue
+    // can't throw into an unhandled rejection.
     const encoder = new TextEncoder();
-    const stream = new ReadableStream({
+    const abort = new AbortController();
+    let closed = false;
+    let streamController: ReadableStreamDefaultController<Uint8Array> | null = null;
+
+    const closeStream = () => {
+      if (closed) return;
+      closed = true;
+      try {
+        streamController?.close();
+      } catch {
+        // Already closed or cancelled by the consumer
+      }
+    };
+    const onRequestAbort = () => {
+      abort.abort();
+      closeStream();
+    };
+    req.signal.addEventListener("abort", onRequestAbort, { once: true });
+
+    const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
+        streamController = controller;
         const send = (event: { type: string; content?: string }) => {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+          if (closed) return;
+          try {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+          } catch {
+            // Consumer is gone — stop everything downstream
+            closed = true;
+            abort.abort();
+          }
         };
 
         try {
@@ -100,19 +134,25 @@ export async function POST(req: Request) {
           // After MAX_TOOL_ITERATIONS tool rounds, one final pass runs without
           // tools so the model must answer in text.
           for (let iteration = 0; iteration <= MAX_TOOL_ITERATIONS; iteration++) {
+            if (abort.signal.aborted) break;
+
             const allowTools = iteration < MAX_TOOL_ITERATIONS;
-            const completion = await client.chat.completions.create({
-              model: "grok-4.3",
-              messages,
-              ...(allowTools ? { tools: AI_TOOLS, tool_choice: "auto" as const } : {}),
-              max_tokens: 2048,
-              stream: true,
-            });
+            const completion = await client.chat.completions.create(
+              {
+                model: "grok-4.3",
+                messages,
+                ...(allowTools ? { tools: AI_TOOLS, tool_choice: "auto" as const } : {}),
+                max_tokens: 2048,
+                stream: true,
+              },
+              { signal: abort.signal }
+            );
 
             let content = "";
             const partialToolCalls: AccumulatedToolCall[] = [];
 
             for await (const chunk of completion) {
+              if (abort.signal.aborted) break;
               const delta = chunk.choices[0]?.delta;
               if (!delta) continue;
 
@@ -128,6 +168,7 @@ export async function POST(req: Request) {
                 if (tc.function?.arguments) acc.arguments += tc.function.arguments;
               }
             }
+            if (abort.signal.aborted) break;
 
             const toolCalls = partialToolCalls.filter((tc) => tc?.id && tc.name);
             if (toolCalls.length === 0) break;
@@ -146,9 +187,13 @@ export async function POST(req: Request) {
             });
 
             // Execute all tool calls in parallel, preserving the
-            // result-to-tool_call_id mapping.
+            // result-to-tool_call_id mapping. Nothing runs once the client
+            // has gone away.
             const toolResults = await Promise.all(
               toolCalls.map(async (tc) => {
+                if (abort.signal.aborted) {
+                  return { tool_call_id: tc.id, result: { error: "Request cancelled" } };
+                }
                 let result: unknown;
                 try {
                   const args = JSON.parse(tc.arguments || "{}");
@@ -159,6 +204,7 @@ export async function POST(req: Request) {
                 return { tool_call_id: tc.id, result };
               })
             );
+            if (abort.signal.aborted) break;
 
             for (const { tool_call_id, result } of toolResults) {
               messages.push({
@@ -171,12 +217,21 @@ export async function POST(req: Request) {
 
           // Send done signal
           send({ type: "done" });
-          controller.close();
         } catch (error) {
-          console.error("Stream error:", error);
-          send({ type: "error", content: "Failed to process message" });
-          controller.close();
+          // An abort surfaces as an APIUserAbortError from the SDK — expected
+          if (!abort.signal.aborted && !closed) {
+            console.error("Stream error:", error);
+            send({ type: "error", content: "Failed to process message" });
+          }
+        } finally {
+          req.signal.removeEventListener("abort", onRequestAbort);
+          closeStream();
         }
+      },
+      cancel() {
+        // Consumer disconnected: stop the completion and pending tool calls
+        closed = true;
+        abort.abort();
       },
     });
 

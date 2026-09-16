@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import DOMPurify from "isomorphic-dompurify";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
 import { createAdminClient } from "@/lib/supabase/server";
+import { getReplyToAddress } from "@/lib/email/recipients";
 import { escapeHtml } from "@/lib/utils";
 
 /**
@@ -208,6 +209,9 @@ export async function sendAutoReply(
     const { data: sendResult, error: sendError } = await resend.emails.send({
       from: fromEmail,
       to: [toEmail],
+      // Replies to FROM_EMAIL bounce (no MX on staycio.com) — this is a reply
+      // to a real person, so it has to land in a monitored inbox.
+      replyTo: getReplyToAddress(),
       subject: replySubject,
       html: brandedHtml,
       text: draftText,

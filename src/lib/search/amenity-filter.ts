@@ -27,9 +27,9 @@ export async function filterBuildingsByAmenities(
 
   if (!amenities.length) return buildingIds;
 
-  // Build a map of amenity ID to its lowercase name
+  // Build a map of amenity ID to its normalized name ("Washer/Dryer" → "washer dryer")
   const amenityIdToName = new Map(
-    amenities.map(a => [a.id, a.name.toLowerCase()])
+    amenities.map(a => [a.id, normalizeAmenityTerm(a.name)])
   );
 
   // Get building_amenities for the current buildings
@@ -53,7 +53,7 @@ export async function filterBuildingsByAmenities(
     )
   ).flat();
 
-  // Build a map of building -> amenity names (lowercase)
+  // Build a map of building -> normalized amenity names
   const buildingToAmenityNames = new Map<string, string[]>();
   for (const ba of buildingAmenities) {
     if (!buildingToAmenityNames.has(ba.building_id)) {
@@ -78,22 +78,64 @@ export async function filterBuildingsByAmenities(
   });
 }
 
+/**
+ * Canonical form for amenity comparison: lowercase, with `-`, `/` and `_`
+ * treated as word separators and whitespace collapsed. Requested keys arrive
+ * from the UI ("Washer Dryer"), the LLM parser ("washer-dryer", "bike_room")
+ * and the DB ("Washer/Dryer"); without this the parser's slugs matched nothing.
+ */
+export function normalizeAmenityTerm(term: string): string {
+  return term
+    .toLowerCase()
+    .replace(/[-/_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// AMENITY_KEYWORDS with both the display keys and their keyword lists
+// normalized, computed once.
+const NORMALIZED_AMENITY_KEYWORDS = new Map<string, string[]>(
+  Object.entries(AMENITY_KEYWORDS).map(([key, keywords]) => [
+    normalizeAmenityTerm(key),
+    keywords.map(normalizeAmenityTerm),
+  ])
+);
+
+/**
+ * Map any spelling of a catalog amenity ("washer-dryer", "Washer/Dryer") onto
+ * its canonical AMENITY_KEYWORDS key ("Washer Dryer"); unknown terms are
+ * returned unchanged so they can still be matched literally.
+ */
+export function canonicalAmenityKey(term: string): string {
+  const normalized = normalizeAmenityTerm(term);
+  return Object.keys(AMENITY_KEYWORDS).find((k) => normalizeAmenityTerm(k) === normalized) ?? term;
+}
+
+/**
+ * Whether a list of amenity names (raw DB spellings are fine) satisfies a
+ * requested amenity term, via the shared AMENITY_KEYWORDS config. Exported so
+ * the matching rules can be unit-tested without a database.
+ */
+export function amenityNamesMatch(amenityNames: string[], searchTerm: string): boolean {
+  const normalizedTerm = normalizeAmenityTerm(searchTerm);
+  if (!normalizedTerm) return false;
+  const keywords = NORMALIZED_AMENITY_KEYWORDS.get(normalizedTerm) || [normalizedTerm];
+
+  const patterns = keywords.map(
+    (keyword) => new RegExp(`(^|\\W)${keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\W|$)`, "i")
+  );
+
+  return amenityNames.some((amenityName) => {
+    const normalizedName = normalizeAmenityTerm(amenityName);
+    return patterns.some((pattern) => pattern.test(normalizedName));
+  });
+}
+
 /** Check if a building has an amenity by keyword matching against the shared AMENITY_KEYWORDS config. */
 function buildingHasAmenity(
   buildingToAmenityNames: Map<string, string[]>,
   buildingId: string,
   searchTerm: string,
 ): boolean {
-  const buildingAmenities = buildingToAmenityNames.get(buildingId) || [];
-  const lowerTerm = searchTerm.toLowerCase();
-  const keywords = Object.entries(AMENITY_KEYWORDS).find(
-    ([k]) => k.toLowerCase() === lowerTerm
-  )?.[1] || [lowerTerm];
-
-  return buildingAmenities.some(amenityName =>
-    keywords.some(keyword => {
-      const pattern = new RegExp(`(^|\\W)${keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\W|$)`, "i");
-      return pattern.test(amenityName);
-    })
-  );
+  return amenityNamesMatch(buildingToAmenityNames.get(buildingId) || [], searchTerm);
 }

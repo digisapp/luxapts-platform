@@ -61,7 +61,7 @@ export default async function AdminShowingLeadsPage() {
         id, client_name, client_email, client_phone,
         preferred_date, preferred_time, unit_type, notes, status,
         lease_signed, monthly_rent, created_at,
-        buildings:building_id (id, name, address),
+        buildings:building_id (id, name, address:address_1),
         showing_claims (
           id, claimed_at, status,
           showers:shower_id (id, display_name, phone, tier)

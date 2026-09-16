@@ -5,9 +5,16 @@ import { apiError } from "@/lib/api-helpers";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { CITY_SLUGS, isKnownCitySlug, normalizeCitySlug } from "@/lib/constants/cities";
 import { getNeighborhoodCatalog, resolveNeighborhoods } from "@/lib/search/neighborhood-resolver";
+import { AMENITY_KEYWORDS } from "@/lib/constants/amenities";
+import { canonicalAmenityKey } from "@/lib/search/amenity-filter";
 
 const PARSE_MODEL = process.env.XAI_PARSE_MODEL || "grok-4.20-0309-non-reasoning";
 const PARSE_FALLBACK_MODEL = "grok-4.3";
+
+// The amenity vocabulary the search filter actually understands. The prompt
+// used to list invented slugs ("washer-dryer", "bike-room") that matched
+// nothing in the catalog.
+const AMENITY_KEY_LIST = Object.keys(AMENITY_KEYWORDS).join(", ");
 
 const RequestSchema = z.object({
   query: z.string().min(1).max(500),
@@ -25,7 +32,7 @@ Return a JSON object with ONLY these keys (omit any key you cannot fill):
   "baths_min": number,
   "budget_min": integer, "budget_max": integer,   // monthly USD
   "pet_friendly": boolean, "parking_required": boolean,
-  "amenities": string[],        // from: pool, gym, rooftop, doorman, concierge, parking, washer-dryer, balcony, fireplace, elevator, storage, bike-room, package-room
+  "amenities": string[],        // use these exact names only: ${AMENITY_KEY_LIST}
   "sort": "best_match" | "price_low" | "price_high" | "newest" | "sqft_high",
   "summary": string             // brief human-readable confirmation, e.g. "2BR in Miami under $3,500, pet-friendly, with pool"
 }
@@ -112,7 +119,16 @@ export async function POST(req: Request) {
     if (parsed_json.pet_friendly === true) filters.pet_friendly = true;
     if (parsed_json.parking_required === true) filters.parking_required = true;
     if (Array.isArray(parsed_json.amenities) && parsed_json.amenities.length > 0) {
-      filters.amenities = parsed_json.amenities.filter((a): a is string => typeof a === "string").slice(0, 10);
+      // Canonicalize to the display keys so the UI's amenity badges and the
+      // keyword matcher both recognise them ("washer-dryer" → "Washer Dryer").
+      const amenities = [
+        ...new Set(
+          parsed_json.amenities
+            .filter((a): a is string => typeof a === "string" && a.trim().length > 0)
+            .map((a) => canonicalAmenityKey(a.trim()).slice(0, 100))
+        ),
+      ].slice(0, 10);
+      if (amenities.length) filters.amenities = amenities;
     }
     const validSorts = ["best_match", "price_low", "price_high", "newest", "sqft_high"];
     if (typeof parsed_json.sort === "string" && validSorts.includes(parsed_json.sort)) {

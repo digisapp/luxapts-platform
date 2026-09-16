@@ -70,7 +70,9 @@ export async function POST(req: Request) {
       .eq("id", item.id);
 
     if (error) {
-      results.push({ id: item.id, success: false, error: error.message });
+      // Log the driver message; return a generic one.
+      console.error("Bulk update error:", item.id, error);
+      results.push({ id: item.id, success: false, error: "Update failed" });
     } else {
       results.push({ id: item.id, success: true });
     }

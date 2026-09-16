@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { apiError } from "@/lib/api-helpers";
 import { getFirstRelation } from "@/lib/db-helpers";
+import { isValidUUID } from "@/lib/utils";
+import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 
 interface CompareBody {
   building_a_id: string;
@@ -9,13 +11,30 @@ interface CompareBody {
   beds?: number;
 }
 
+interface PricedUnit {
+  id: string;
+  building_id: string;
+  latest_rent: number | null;
+  beds: number | null;
+  price_captured_at: string | null;
+}
+
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as CompareBody;
+    const body = (await req.json().catch(() => null)) as CompareBody | null;
 
-    if (!body.building_a_id || !body.building_b_id) {
+    if (!body?.building_a_id || !body.building_b_id) {
       return apiError("building_a_id and building_b_id are required");
     }
+    if (!isValidUUID(body.building_a_id) || !isValidUUID(body.building_b_id)) {
+      return apiError("Invalid building ID");
+    }
+
+    // Optional bed-count filter advertised in the chat tool schema
+    const bedsFilter =
+      typeof body.beds === "number" && Number.isInteger(body.beds) && body.beds >= 0 && body.beds <= 10
+        ? body.beds
+        : null;
 
     const supabase = createAdminClient();
 
@@ -65,41 +84,31 @@ export async function POST(req: Request) {
         .filter(Boolean) as string[]
     );
 
-    // Calculate price stats for each building
+    // Calculate price stats for each building from its currently available
+    // units only (chunked + paged by building — no unit-id list in any URL).
+    // Previously every unit ever scraped was counted, including long-leased
+    // ones, and the id list was sent unchunked.
     async function getPriceStats(buildingId: string) {
-      const unitsRes = await supabase
-        .from("units")
-        .select("id, beds")
-        .eq("building_id", buildingId);
-
-      if (unitsRes.error || !unitsRes.data?.length) {
-        return { by_beds: {}, captured_at_max: null };
+      let units: PricedUnit[];
+      try {
+        units = await fetchAvailableUnitPrices<PricedUnit>(supabase, [buildingId], ["beds", "price_captured_at"]);
+      } catch (error) {
+        console.error("Compare price stats error:", error);
+        return { by_beds: {}, captured_at_max: null as string | null };
       }
 
-      const unitIds = unitsRes.data.map((u) => u.id);
-
-      const snapsRes = await supabase
-        .from("latest_unit_prices")
-        .select("unit_id, rent, captured_at")
-        .in("unit_id", unitIds);
-
-      if (snapsRes.error) {
-        return { by_beds: {}, captured_at_max: null };
-      }
-
-      const latestByUnit = new Map<string, { rent: number; captured_at: string }>();
-      for (const s of snapsRes.data || []) {
-        latestByUnit.set(s.unit_id, { rent: s.rent, captured_at: s.captured_at });
-      }
-
-      // Group by beds
+      // Group by beds, tracking the newest capture with a real comparison
       const rentsByBeds: Record<string, number[]> = {};
-      for (const u of unitsRes.data) {
-        const snap = latestByUnit.get(u.id);
-        if (!snap || u.beds == null) continue;
+      let captured_at_max: string | null = null;
+      for (const u of units) {
+        if (u.latest_rent == null || u.beds == null) continue;
+        if (bedsFilter !== null && u.beds !== bedsFilter) continue;
         const key = String(u.beds);
         if (!rentsByBeds[key]) rentsByBeds[key] = [];
-        rentsByBeds[key].push(snap.rent);
+        rentsByBeds[key].push(u.latest_rent);
+        if (u.price_captured_at && (!captured_at_max || u.price_captured_at > captured_at_max)) {
+          captured_at_max = u.price_captured_at;
+        }
       }
 
       // Calculate stats
@@ -115,7 +124,6 @@ export async function POST(req: Request) {
         stats[beds] = { min, median, max };
       }
 
-      const captured_at_max = snapsRes.data?.[0]?.captured_at || null;
       return { by_beds: stats, captured_at_max };
     }
 

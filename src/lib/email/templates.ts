@@ -345,3 +345,59 @@ export function priceDropAlertEmail(data: {
 
   return layout(content, `Price drop at ${data.buildingName}`);
 }
+
+/**
+ * Waitlist confirmation sent to the person who filled in a building microsite
+ * form. Until this existed, a microsite lead saw "You're on the list!" in the
+ * browser and then heard nothing at all — 65 people signed up with no reply.
+ */
+export function micrositeWaitlistEmail(data: {
+  name: string;
+  buildingName: string;
+  city: string;
+  domain: string;
+  moveIn?: string | null;
+  unitType?: string | null;
+  citySlug?: string | null;
+}): string {
+  const browseUrl = data.citySlug
+    ? `https://staycio.com/cities/${encodeURIComponent(data.citySlug)}`
+    : "https://staycio.com";
+
+  const content = `
+    <div style="margin-bottom:24px;">
+      ${badge("Waitlist Confirmed")}
+      <h2 style="color:#ffffff;font-size:24px;font-weight:700;margin:16px 0 4px 0;">
+        You&rsquo;re on the list, ${escHtml(data.name)}.
+      </h2>
+      <p style="color:#777;font-size:14px;margin:0;">
+        We&rsquo;ll email you the moment pricing and availability for ${escHtml(data.buildingName)} go live.
+      </p>
+    </div>
+
+    <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px 24px;margin:24px 0;">
+      <p style="color:#aaa;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin:0 0 12px 0;">What you asked about</p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        ${row("Building", escHtml(data.buildingName))}
+        ${row("City", escHtml(data.city))}
+        ${data.unitType ? row("Looking for", escHtml(data.unitType)) : ""}
+        ${data.moveIn ? row("Move-in", escHtml(data.moveIn)) : ""}
+      </table>
+    </div>
+
+    <p style="color:#aaa;font-size:14px;line-height:1.6;margin:0 0 24px 0;">
+      ${escHtml(data.buildingName)} isn&rsquo;t leasing yet, so while you wait you can browse
+      apartments in ${escHtml(data.city)} that are available right now, with pricing we verify
+      against each building&rsquo;s own site.
+    </p>
+
+    ${primaryButton(`Browse ${data.city} apartments →`, browseUrl)}
+
+    <p style="color:#555;font-size:12px;line-height:1.6;margin:24px 0 0 0;">
+      You received this because you joined the waitlist at ${escHtml(data.domain)}, operated by Staycio.
+      Reply to this email if you&rsquo;d rather not hear from us.
+    </p>
+  `;
+
+  return layout(content, `You're on the waitlist for ${data.buildingName}`);
+}

@@ -10,6 +10,11 @@ const submitQuizSchema = z.object({
 
 const PASSING_SCORE = 70; // percent
 
+// Minimum wait between a failed attempt and the next one. Without it the quiz
+// could be brute-forced in a tight loop (and, before this route stopped
+// returning the answer key on failures, harvested in a single attempt).
+const RETRY_COOLDOWN_MS = 10 * 60 * 1000;
+
 // GET /api/shower/certifications/[buildingId]/quiz — load questions to take
 // the quiz. Never returns correct_index (that would defeat the cert gate).
 export async function GET(
@@ -112,6 +117,45 @@ export async function POST(
       }
     }
 
+    // Load the certification record BEFORE grading so a cooldown can be
+    // enforced without revealing anything about this submission.
+    const { data: existing } = await adminClient
+      .from("shower_certifications")
+      .select("id, knowledge_attempts, knowledge_best_score, status, knowledge_passed_at, expires_at")
+      .eq("shower_id", auth.showerId)
+      .eq("building_id", buildingId)
+      .maybeSingle();
+
+    // A shower can re-certify if they haven't passed before OR if their cert has expired
+    const isExpired = existing?.expires_at ? new Date(existing.expires_at) < new Date() : false;
+    const needsKnowledgePass = !existing?.knowledge_passed_at || isExpired;
+
+    // Rate-limit retries after a failed attempt. Read separately and
+    // tolerantly: knowledge_last_attempt_at arrives in migration 024, and a
+    // missing column must not take the whole quiz down.
+    if (existing && needsKnowledgePass) {
+      const { data: lastAttempt } = await adminClient
+        .from("shower_certifications")
+        .select("knowledge_last_attempt_at")
+        .eq("id", existing.id)
+        .maybeSingle();
+
+      const lastAt = lastAttempt?.knowledge_last_attempt_at
+        ? new Date(lastAttempt.knowledge_last_attempt_at).getTime()
+        : null;
+
+      if (lastAt !== null && Number.isFinite(lastAt)) {
+        const elapsed = Date.now() - lastAt;
+        if (elapsed >= 0 && elapsed < RETRY_COOLDOWN_MS) {
+          const retryAfter = Math.ceil((RETRY_COOLDOWN_MS - elapsed) / 1000);
+          return apiError(
+            `Please wait ${Math.ceil(retryAfter / 60)} minute(s) before retrying this quiz.`,
+            429
+          );
+        }
+      }
+    }
+
     // Grade the quiz
     const correctCount = answers.filter(
       (answer, i) => answer === questions[i].correct_index
@@ -119,20 +163,8 @@ export async function POST(
     const score = Math.round((correctCount / questions.length) * 100);
     const passed = score >= PASSING_SCORE;
 
-    // Get or create certification record
-    const { data: existing } = await adminClient
-      .from("shower_certifications")
-      .select("id, knowledge_attempts, knowledge_best_score, status, knowledge_passed_at, expires_at")
-      .eq("shower_id", auth.showerId)
-      .eq("building_id", buildingId)
-      .single();
-
     const newAttempts = (existing?.knowledge_attempts || 0) + 1;
     const bestScore = Math.max(score, existing?.knowledge_best_score || 0);
-
-    // A shower can re-certify if they haven't passed before OR if their cert has expired
-    const isExpired = existing?.expires_at ? new Date(existing.expires_at) < new Date() : false;
-    const needsKnowledgePass = !existing?.knowledge_passed_at || isExpired;
 
     let newStatus = isExpired ? "in_progress" : (existing?.status || "in_progress");
     let knowledgePassedAt = null;
@@ -142,8 +174,10 @@ export async function POST(
       newStatus = content.shadows_required > 0 ? "shadow_pending" : "certified";
     }
 
+    let certificationId = existing?.id ?? null;
+
     if (existing) {
-      await adminClient
+      const { error: updateError } = await adminClient
         .from("shower_certifications")
         .update({
           knowledge_attempts: newAttempts,
@@ -155,8 +189,12 @@ export async function POST(
           } : {}),
         })
         .eq("id", existing.id);
+      if (updateError) {
+        console.error("Quiz attempt update error:", updateError);
+        return apiError("Failed to record quiz attempt", 500);
+      }
     } else {
-      await adminClient
+      const { data: inserted, error: insertError } = await adminClient
         .from("shower_certifications")
         .insert({
           shower_id: auth.showerId,
@@ -170,14 +208,36 @@ export async function POST(
             certified_at: new Date().toISOString(),
             expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
           } : {}),
-        });
+        })
+        .select("id")
+        .single();
+      if (insertError || !inserted) {
+        console.error("Quiz attempt insert error:", insertError);
+        return apiError("Failed to record quiz attempt", 500);
+      }
+      certificationId = inserted.id;
     }
 
-    // Return score + question breakdown
+    // Stamp the attempt time for the retry cooldown. Written separately and
+    // tolerantly so a pre-migration-024 database still records the attempt
+    // itself above.
+    if (certificationId) {
+      const { error: stampError } = await adminClient
+        .from("shower_certifications")
+        .update({ knowledge_last_attempt_at: new Date().toISOString() })
+        .eq("id", certificationId);
+      if (stampError) {
+        console.error("Quiz attempt timestamp not recorded:", stampError.message);
+      }
+    }
+
+    // Return score + question breakdown. The answer key is only disclosed once
+    // the shower has actually passed — returning correct_answer on every
+    // failed attempt let anyone harvest the full key in a single submission.
     const breakdown = questions.map((q, i) => ({
       question: q.question,
       your_answer: q.options[answers[i]] || "No answer",
-      correct_answer: q.options[q.correct_index],
+      ...(passed ? { correct_answer: q.options[q.correct_index] } : {}),
       correct: answers[i] === q.correct_index,
     }));
 

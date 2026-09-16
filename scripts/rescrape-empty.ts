@@ -12,8 +12,14 @@ import { createClient } from "@supabase/supabase-js";
 
 async function main() {
   // Import after env is loaded so lib modules see the keys
-  const { scrapeUnitsOnly, saveScrapedUnits, markUnitsUnavailable, updateScrapeStatus } =
-    await import("../src/lib/scraper");
+  const {
+    scrapeUnitsOnly,
+    saveScrapedUnits,
+    markUnitsUnavailable,
+    updateScrapeStatus,
+    shouldRetireUnseenUnits,
+    normalizeUnitNumber,
+  } = await import("../src/lib/scraper");
 
   const limit = parseInt(process.argv[2] || "15", 10);
 
@@ -56,12 +62,25 @@ async function main() {
       const result = await scrapeUnitsOnly(row.website_url!);
 
       if (result.success && result.data && result.data.units.length > 0) {
-        await saveScrapedUnits(supabase, b.id, result.data.units);
-        const scrapedUnitNumbers = result.data.units
-          .map((u) => u.unit_number)
-          .filter((n): n is string => !!n);
-        if (scrapedUnitNumbers.length > 0) {
-          await markUnitsUnavailable(supabase, b.id, scrapedUnitNumbers);
+        const saved = await saveScrapedUnits(supabase, b.id, result.data.units);
+
+        // markUnitsUnavailable takes unit UUIDs. Passing the scraped unit
+        // NUMBERS meant nothing matched, so every unit this script had just
+        // saved was immediately retired. Same guard as the cron: a
+        // floorplan-level or bot-walled result is not evidence of an empty
+        // building.
+        const scrapedNumbered = result.data.units.filter(
+          (u) => normalizeUnitNumber(u.unit_number) !== null
+        ).length;
+
+        if (
+          shouldRetireUnseenUnits({
+            unitsPageFetchFailed: result.units_page_fetch_failed,
+            scrapedNumbered,
+            existingNumberedAvailable: saved.existingNumberedAvailable,
+          })
+        ) {
+          await markUnitsUnavailable(supabase, b.id, saved.seenUnitIds);
         }
         await updateScrapeStatus(supabase, b.id, {
           type: "units",

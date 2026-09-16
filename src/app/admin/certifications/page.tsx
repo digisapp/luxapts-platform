@@ -16,7 +16,7 @@ export default async function AdminCertificationsPage() {
   const adminClient = createAdminClient();
 
   const [buildingsRes, contentRes] = await Promise.all([
-    adminClient.from("buildings").select("id, name, address").order("name"),
+    adminClient.from("buildings").select("id, name, address:address_1").order("name"),
     adminClient.from("building_certification_content").select("building_id, quiz_questions, shadows_required, updated_at"),
   ]);
 

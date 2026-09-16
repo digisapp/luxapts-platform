@@ -4,6 +4,8 @@ import { semanticSearchSchema } from "@/lib/validations";
 import { searchDocuments } from "@/lib/xai/collections";
 import { createAdminClient } from "@/lib/supabase/server";
 import { apiError } from "@/lib/api-helpers";
+import { getFirstRelation } from "@/lib/db-helpers";
+import { normalizeCitySlug } from "@/lib/constants/cities";
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +26,8 @@ export async function POST(req: Request) {
       return apiError(firstError);
     }
 
-    const { query, city_slug, limit = 10 } = parsed.data;
+    const { query, limit = 10 } = parsed.data;
+    const city_slug = normalizeCitySlug(parsed.data.city_slug);
 
     const collectionId = process.env.XAI_COLLECTION_ID;
     if (!collectionId) {
@@ -64,11 +67,13 @@ export async function POST(req: Request) {
         `
         id, name, slug, address_1, description, hero_image_url,
         cities:city_id (name, slug, state),
-        neighborhoods:neighborhood_id (name, slug)
+        neighborhoods:neighborhood_id (name, slug),
+        building_images!left (url, is_primary, sort_order)
       `
       )
-      .in("id", buildingIds.slice(0, limit))
-      .eq("status", "active");
+      .in("id", buildingIds.slice(0, limit * 2))
+      .eq("status", "active")
+      .limit(limit);
 
     if (error) {
       console.error("Semantic search DB error:", error);
@@ -84,10 +89,24 @@ export async function POST(req: Request) {
       }
     }
 
-    const enriched = (buildings || []).map((b) => ({
-      ...b,
-      relevance_score: scoreMap.get(b.id) ?? 0,
-    }));
+    // buildings.hero_image_url is unpopulated in production (null for every
+    // row) — derive the card image from the primary building photo instead so
+    // Smart Search results don't all render as placeholders.
+    type ImageRow = { url: string; is_primary: boolean; sort_order: number };
+    const enriched = (buildings || []).map((b) => {
+      const { building_images, ...rest } = b as typeof b & { building_images: ImageRow[] | null };
+      const primary = [...(building_images ?? [])].sort((x, y) => {
+        if (x.is_primary !== y.is_primary) return x.is_primary ? -1 : 1;
+        return x.sort_order - y.sort_order;
+      })[0];
+      return {
+        ...rest,
+        cities: getFirstRelation(rest.cities),
+        neighborhoods: getFirstRelation(rest.neighborhoods),
+        hero_image_url: rest.hero_image_url || primary?.url || null,
+        relevance_score: scoreMap.get(b.id) ?? 0,
+      };
+    });
 
     // Sort by relevance score descending
     enriched.sort((a, b) => b.relevance_score - a.relevance_score);

@@ -4,7 +4,12 @@
 import { createXAIClient } from "@/lib/xai/client";
 import { ScrapedBuildingData, ScrapedUnit, ScrapedAmenity, ScrapedImage, ImageScrapeResult } from "./types";
 
-const UNITS_EXTRACTION_PROMPT = `You are an expert at extracting apartment listing data from HTML.
+// A timed-out scrape used to keep burning the function's remaining window:
+// the OpenAI-compatible client defaults to a 10-minute request timeout with
+// retries, so withTimeout() returned but the call did not stop.
+const XAI_REQUEST_OPTIONS = { timeout: 90_000, maxRetries: 1 } as const;
+
+const unitsExtractionPrompt = () => `You are an expert at extracting apartment listing data from HTML.
 
 Extract all available rental units from this apartment building's website HTML.
 
@@ -23,7 +28,7 @@ For each unit, extract:
 Return a JSON object with this structure:
 {
   "units": [
-    {"unit_number": "1204", "beds": 2, "baths": 2, "sqft": 1100, "rent": 3500, "available_on": "2024-02-01", "lease_term_months": 12},
+    {"unit_number": "1204", "beds": 2, "baths": 2, "sqft": 1100, "rent": 3500, "available_on": "${new Date().getFullYear()}-02-01", "lease_term_months": 12},
     ...
   ],
   "total_available": 15,
@@ -83,45 +88,62 @@ export function condenseHtml(html: string): string {
     .replace(/\n{3,}/g, "\n");
 }
 
+export interface UnitsExtraction {
+  units: ScrapedUnit[];
+  total_available: number;
+  move_in_specials: string[];
+  /**
+   * Set when the extraction itself failed — model outage, 429, unparseable
+   * response, no API key. NOT the same as "the page lists no units", and the
+   * difference decides whether the caller may retire a building's inventory.
+   */
+  error?: string;
+}
+
 export async function extractUnitsWithAI(
   html: string,
   sourceUrl: string
-): Promise<{ units: ScrapedUnit[]; total_available: number; move_in_specials: string[] }> {
+): Promise<UnitsExtraction> {
   // Condense first, then truncate (keep first 100k chars for context)
   const condensed = condenseHtml(html);
   const truncatedHtml = condensed.length > 100000 ? condensed.slice(0, 100000) + "\n... [truncated]" : condensed;
+
+  const empty = { units: [] as ScrapedUnit[], total_available: 0, move_in_specials: [] as string[] };
 
   try {
     // Try xAI first
     if (process.env.XAI_API_KEY) {
       const client = createXAIClient();
-      const response = await client.chat.completions.create({
-        model: "grok-4.3",
-        messages: [
-          { role: "system", content: UNITS_EXTRACTION_PROMPT },
-          { role: "user", content: `URL: ${sourceUrl}\n\nHTML:\n${truncatedHtml}` },
-        ],
-        temperature: 0.1,
-      });
+      const response = await client.chat.completions.create(
+        {
+          model: "grok-4.3",
+          messages: [
+            { role: "system", content: unitsExtractionPrompt() },
+            { role: "user", content: `URL: ${sourceUrl}\n\nHTML:\n${truncatedHtml}` },
+          ],
+          temperature: 0.1,
+        },
+        XAI_REQUEST_OPTIONS,
+      );
 
       const content = response.choices[0].message.content || "{}";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          units: parsed.units || [],
-          total_available: parsed.total_available || parsed.units?.length || 0,
-          move_in_specials: parsed.move_in_specials || [],
-        };
+      if (!jsonMatch) {
+        return { ...empty, error: "Model response contained no JSON object" };
       }
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        units: parsed.units || [],
+        total_available: parsed.total_available || parsed.units?.length || 0,
+        move_in_specials: parsed.move_in_specials || [],
+      };
     }
 
-    // Fallback: return empty if no AI available
     console.warn("No AI service configured for unit extraction");
-    return { units: [], total_available: 0, move_in_specials: [] };
+    return { ...empty, error: "No AI service configured (XAI_API_KEY missing)" };
   } catch (error) {
     console.error("AI unit extraction error:", error);
-    return { units: [], total_available: 0, move_in_specials: [] };
+    return { ...empty, error: error instanceof Error ? error.message : "Unknown AI error" };
   }
 }
 
@@ -137,14 +159,17 @@ export async function extractAmenitiesWithAI(
     // Try xAI first
     if (process.env.XAI_API_KEY) {
       const client = createXAIClient();
-      const response = await client.chat.completions.create({
-        model: "grok-4.3",
-        messages: [
-          { role: "system", content: AMENITIES_EXTRACTION_PROMPT },
-          { role: "user", content: `URL: ${sourceUrl}\n\nHTML:\n${truncatedHtml}` },
-        ],
-        temperature: 0.1,
-      });
+      const response = await client.chat.completions.create(
+        {
+          model: "grok-4.3",
+          messages: [
+            { role: "system", content: AMENITIES_EXTRACTION_PROMPT },
+            { role: "user", content: `URL: ${sourceUrl}\n\nHTML:\n${truncatedHtml}` },
+          ],
+          temperature: 0.1,
+        },
+        XAI_REQUEST_OPTIONS,
+      );
 
       const content = response.choices[0].message.content || "{}";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -239,14 +264,17 @@ export async function extractImagesWithAI(
   try {
     if (process.env.XAI_API_KEY) {
       const client = createXAIClient();
-      const response = await client.chat.completions.create({
-        model: "grok-4.3",
-        messages: [
-          { role: "system", content: IMAGES_EXTRACTION_PROMPT },
-          { role: "user", content: `Website URL: ${sourceUrl}\n\nHTML:\n${truncatedHtml}` },
-        ],
-        temperature: 0.1,
-      });
+      const response = await client.chat.completions.create(
+        {
+          model: "grok-4.3",
+          messages: [
+            { role: "system", content: IMAGES_EXTRACTION_PROMPT },
+            { role: "user", content: `Website URL: ${sourceUrl}\n\nHTML:\n${truncatedHtml}` },
+          ],
+          temperature: 0.1,
+        },
+        XAI_REQUEST_OPTIONS,
+      );
 
       const content = response.choices[0].message.content || "{}";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -325,6 +353,7 @@ export async function extractFullBuildingData(
   return {
     units: unitsResult.units,
     total_available: unitsResult.total_available,
+    units_error: unitsResult.error,
     move_in_specials: unitsResult.move_in_specials,
     amenities: amenitiesResult.amenities,
     pet_policy: amenitiesResult.pet_policy,

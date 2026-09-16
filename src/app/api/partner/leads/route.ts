@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkPartnerAuth } from "@/lib/partner/auth";
 import { apiError } from "@/lib/api-helpers";
+import { safeParseInt } from "@/lib/utils";
 
 // GET /api/partner/leads — inquiries/leads for this partner's buildings
 export async function GET(req: Request) {
@@ -11,8 +12,10 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
-    const limit = Math.min(parseInt(searchParams.get("limit") || "25"), 100);
-    const offset = Math.max(parseInt(searchParams.get("offset") || "0"), 0);
+    // Clamped: parseInt("abc") is NaN, which made range(NaN, NaN) return
+    // nothing, and a negative limit was passed straight through.
+    const limit = safeParseInt(searchParams.get("limit"), 25, 1, 100);
+    const offset = safeParseInt(searchParams.get("offset"), 0, 0, 1_000_000);
 
     const supabase = createAdminClient();
 

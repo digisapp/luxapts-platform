@@ -110,27 +110,57 @@ async function getHomeData(): Promise<{
       return diff !== 0 ? diff : a.name.localeCompare(b.name);
     });
 
+    const primaryImageUrl = (b: HomeBuildingRow): string | null => {
+      const images = [...((b.building_images ?? []) as BuildingImageRow[])].sort((a, c) => {
+        if (a.is_primary !== c.is_primary) return a.is_primary ? -1 : 1;
+        return a.sort_order - c.sort_order;
+      });
+      return images[0]?.url ?? null;
+    };
+    // "Three Waterline Square" / "Waterline Square" are one complex sharing a
+    // website and photos; collapse them to a family key so the grid never
+    // shows the same hero twice.
+    const familyKey = (name: string) =>
+      name
+        .toLowerCase()
+        .replace(/^(one|two|three|four|five|1|2|3|4|5)\s+/, "")
+        .replace(/\s+(tower|towers|north|south|east|west|i{1,3})$/, "")
+        .trim();
+
     const perCity: Record<string, number> = {};
+    const seenImages = new Set<string>();
+    const seenFamilies = new Set<string>();
     const picked: typeof sorted = [];
-    const take = (b: HomeBuildingRow, citySlug: string) => {
+    const take = (b: HomeBuildingRow, citySlug: string, image: string) => {
       perCity[citySlug] = (perCity[citySlug] || 0) + 1;
+      seenImages.add(image);
+      seenFamilies.add(familyKey(b.name));
       picked.push(b);
+    };
+    // A featured card must have a real photo — the stock fallback pool is
+    // fine deep in search results but not in the hero grid.
+    const eligible = (b: HomeBuildingRow, citySlug: string): string | null => {
+      if (picked.includes(b)) return null;
+      if ((perCity[citySlug] || 0) >= MAX_PER_CITY) return null;
+      const image = primaryImageUrl(b);
+      if (!image || seenImages.has(image)) return null;
+      if (seenFamilies.has(familyKey(b.name))) return null;
+      return image;
     };
     // Pass 1: sales-coverage cities claim the first slots
     for (const b of sorted) {
       if (picked.length >= SALES_CITY_SLOTS) break;
       const citySlug = getFirstRelation(b.cities)?.slug ?? "unknown";
       if (!SALES_CITY_SLUGS.has(citySlug)) continue;
-      if ((perCity[citySlug] || 0) >= MAX_PER_CITY) continue;
-      take(b, citySlug);
+      const image = eligible(b, citySlug);
+      if (image) take(b, citySlug, image);
     }
     // Pass 2: fill the rest from the whole fleet for breadth
     for (const b of sorted) {
       if (picked.length >= FEATURED_COUNT) break;
-      if (picked.includes(b)) continue;
       const citySlug = getFirstRelation(b.cities)?.slug ?? "unknown";
-      if ((perCity[citySlug] || 0) >= MAX_PER_CITY) continue;
-      take(b, citySlug);
+      const image = eligible(b, citySlug);
+      if (image) take(b, citySlug, image);
     }
 
     // Latest rent per unit, then min per featured building
@@ -176,7 +206,10 @@ async function getHomeData(): Promise<{
       const n = getFirstRelation(b.neighborhoods);
       if (!n?.slug) continue;
       const city = getFirstRelation(b.cities);
-      const entry = neighborhoodAgg.get(n.slug) ?? {
+      // Slugs collide across cities ("midtown" exists in NYC, Miami and
+      // Atlanta), so aggregate per city or the chip sums three markets.
+      const key = `${city?.slug ?? ""}/${n.slug}`;
+      const entry = neighborhoodAgg.get(key) ?? {
         name: n.name,
         slug: n.slug,
         cityName: city?.name ?? null,
@@ -184,13 +217,13 @@ async function getHomeData(): Promise<{
         units: 0,
       };
       entry.units += unitCount[b.id] || 0;
-      neighborhoodAgg.set(n.slug, entry);
+      neighborhoodAgg.set(key, entry);
     }
     const neighborhoods: TopNeighborhood[] = [...neighborhoodAgg.values()]
       .filter((n) => n.units > 0)
       .sort((a, b) => b.units - a.units)
       .slice(0, TOP_NEIGHBORHOODS)
-      .map(({ name, slug, cityName }) => ({ name, slug, cityName }));
+      .map(({ name, slug, cityName, citySlug }) => ({ name, slug, cityName, citySlug }));
 
     return {
       stats: {

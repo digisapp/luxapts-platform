@@ -18,7 +18,7 @@ export async function GET() {
         id, status, knowledge_attempts, knowledge_best_score, knowledge_passed_at,
         shadow_count, shadow_completed_at, certified_at, expires_at,
         buildings:building_id (
-          id, name, address,
+          id, name, address:address_1,
           building_certification_content (
             id, key_selling_points, amenity_notes,
             pet_policy_notes, parking_notes, pricing_notes, shadows_required

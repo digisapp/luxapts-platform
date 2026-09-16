@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { MessageCircle, X, Send, Loader2, Sparkles, Building2, Minus } from "lucide-react";
 import { parseSSEStream } from "@/lib/chat/stream-parser";
 import { useCompare } from "@/hooks/useCompare";
+import { isPortalRoute } from "@/hooks/portal-routes";
 
 interface Message {
   role: "user" | "assistant";
@@ -96,7 +97,17 @@ export function ChatWidget() {
         signal: controller.signal,
       });
 
-      if (!res.ok) throw new Error("Failed to get response");
+      if (!res.ok) {
+        // Surface what the server actually said (rate limit, not configured,
+        // bad request) instead of a generic failure the user can't act on.
+        const errorBody = (await res.json().catch(() => ({}))) as { error?: string };
+        serverErrorMessage =
+          errorBody.error ||
+          (res.status === 429
+            ? "Too many messages right now. Please wait a moment and try again."
+            : `Sorry, I couldn't reach the assistant (error ${res.status}). Please try again.`);
+        throw new Error(serverErrorMessage);
+      }
 
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No response body");
@@ -161,8 +172,9 @@ export function ChatWidget() {
     }
   };
 
-  // Don't show on admin pages
-  if (pathname.startsWith("/admin")) {
+  // Don't show on portal pages (admin/shower/partner/agent) — the bubble
+  // covers their content on mobile and consumers never see those routes.
+  if (isPortalRoute(pathname)) {
     return null;
   }
 

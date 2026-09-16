@@ -1,14 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Building2, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Building2, CheckCircle, AlertCircle, Award, Clock,
+  Loader2, Star, User,
+} from "lucide-react";
+
+type ShowerProfile = {
+  id: string;
+  status: string;
+  tier: string | null;
+  display_name: string;
+  total_showings: number | null;
+  avg_rating: number | null;
+  created_at: string;
+};
+
+const statusConfig: Record<string, { label: string; color: string; note: string }> = {
+  pending: {
+    label: "Pending Review",
+    color: "bg-yellow-100 text-yellow-700",
+    note: "Your application is under review. Approval typically takes 1–2 business days.",
+  },
+  approved: {
+    label: "Approved",
+    color: "bg-green-100 text-green-700",
+    note: "You're active. Get certified for buildings to unlock their leads.",
+  },
+  suspended: {
+    label: "Suspended",
+    color: "bg-red-100 text-red-700",
+    note: "Your account is suspended. Contact your manager for next steps.",
+  },
+  rejected: {
+    label: "Not Approved",
+    color: "bg-gray-100 text-gray-600",
+    note: "Your application wasn't approved. Contact your manager for next steps.",
+  },
+};
 
 export default function ShowerProfilePage() {
   const router = useRouter();
@@ -16,12 +54,46 @@ export default function ShowerProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
+  // Registered showers must never see the registration form — submitting it
+  // again just 409s. Resolve the current user's profile first.
+  const [checking, setChecking] = useState(true);
+  const [profile, setProfile] = useState<ShowerProfile | null>(null);
+
   const [form, setForm] = useState({
     display_name: "",
     phone: "",
     bio: "",
     agreement_accepted: false,
   });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProfile() {
+      try {
+        const res = await fetch("/api/showers/register");
+        if (res.status === 401) {
+          router.replace("/auth/login?redirect=/shower/profile");
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (res.ok && data.registered && data.shower) {
+          setProfile(data.shower as ShowerProfile);
+        }
+      } catch {
+        // Offline or a transient failure — fall through to the form, which
+        // surfaces the 409 if a profile does in fact exist.
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    }
+
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,6 +125,115 @@ export default function ShowerProfilePage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (checking) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Already registered: read-only status view instead of the signup form.
+  if (profile && !submitted) {
+    const status = statusConfig[profile.status] || {
+      label: profile.status,
+      color: "bg-gray-100 text-gray-600",
+      note: "",
+    };
+
+    // Rendered inside the /shower sidebar shell, so match the dashboard pages
+    // instead of the standalone centered registration form below.
+    return (
+      <div className="max-w-2xl space-y-8">
+        <div className="space-y-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <User className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">My Profile</h1>
+              <p className="text-muted-foreground">Your Shower account details</p>
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-lg">{profile.display_name}</CardTitle>
+                  <CardDescription className="mt-0.5">
+                    Shower since{" "}
+                    {new Date(profile.created_at).toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </CardDescription>
+                </div>
+                <Badge className={status.color}>{status.label}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {status.note && (
+                <div className="flex gap-2 rounded-md bg-muted/60 p-3 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{status.note}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">Tier</p>
+                  <p className="font-medium capitalize mt-0.5">{profile.tier || "—"}</p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">Showings</p>
+                  <p className="font-medium mt-0.5">{profile.total_showings ?? 0}</p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">Rating</p>
+                  <p className="font-medium mt-0.5 flex items-center justify-center gap-1">
+                    {profile.avg_rating != null && profile.avg_rating > 0 ? (
+                      <>
+                        <Star className="h-3.5 w-3.5 text-yellow-500" />
+                        {profile.avg_rating.toFixed(1)}
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Need to change your name, phone, or bio? Contact your manager —
+                profile details are updated by admin.
+              </p>
+
+              {profile.status === "approved" && (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Button className="w-full" asChild>
+                    <Link href="/shower/certifications">
+                      <Award className="mr-2 h-4 w-4" />
+                      My Certifications
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href="/shower">Back to Dashboard</Link>
+                  </Button>
+                </div>
+              )}
+              {profile.status !== "approved" && (
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/">Back to Home</Link>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   if (submitted) {

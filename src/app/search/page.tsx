@@ -93,6 +93,8 @@ interface ParsedFilters {
   budget_min?: number;
   budget_max?: number;
   pet_friendly?: boolean;
+  baths_min?: number;
+  parking_required?: boolean;
   amenities?: string[];
   sort?: string;
   summary?: string;
@@ -162,7 +164,17 @@ function SearchContent() {
   const bedsMaxParam = searchParams.get("beds_max");
   const budgetMinParam = searchParams.get("budget_min");
   const budgetMaxParam = searchParams.get("budget_max");
-  const hasUrlFilters = Boolean(cityParam || bedsMinParam || bedsMaxParam || budgetMinParam || budgetMaxParam);
+  // City/neighborhood pages and saved-search "Run" links deep-link these too
+  const neighborhoodParam = searchParams.get("neighborhood");
+  const petFriendlyParam = searchParams.get("pet_friendly");
+  const initialNeighborhoods = neighborhoodParam
+    ? neighborhoodParam.split(",").map((n) => n.trim()).filter(Boolean)
+    : [];
+  const initialPetFriendly = petFriendlyParam === "1" || petFriendlyParam === "true";
+  const hasUrlFilters = Boolean(
+    cityParam || bedsMinParam || bedsMaxParam || budgetMinParam || budgetMaxParam ||
+    initialNeighborhoods.length || initialPetFriendly
+  );
 
   // Seed filter state from URL params (hydration-safe — identical on server
   // and client). Saved filters from localStorage are restored in a
@@ -178,12 +190,15 @@ function SearchContent() {
 
   // Advanced filter states
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
-  const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
+  const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>(initialNeighborhoods);
   // Neighborhoods chosen by the AI parser together with a city change; the
   // city-change effect below would otherwise reset them to [] immediately.
-  const pendingNeighborhoodsRef = useRef<string[] | null>(null);
+  // Seeded from the URL so the city effect's mount-time reset keeps them
+  const pendingNeighborhoodsRef = useRef<string[] | null>(
+    initialNeighborhoods.length ? initialNeighborhoods : null
+  );
   const [bathsMin, setBathsMin] = useState("");
-  const [petFriendly, setPetFriendly] = useState(false);
+  const [petFriendly, setPetFriendly] = useState(initialPetFriendly);
   const [parkingRequired, setParkingRequired] = useState(false);
   const [moveInDate, setMoveInDate] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -237,6 +252,9 @@ function SearchContent() {
   // Commute filter: destination + mode + cap; commuteTimes maps building_id -> minutes
   const [commute, setCommute] = useState<CommuteTarget | null>(null);
   const [commuteTimes, setCommuteTimes] = useState<Record<string, number> | null>(null);
+  // True when the Matrix API failed for some/all listings — those listings
+  // stay visible rather than being hidden as "outside the commute".
+  const [commutePartial, setCommutePartial] = useState(false);
   const commuteRequestIdRef = useRef(0);
 
   // AI search state
@@ -342,7 +360,7 @@ function SearchContent() {
     ].slice(0, 200);
 
     if (points.length === 0) {
-      setCommuteTimes({});
+      { setCommuteTimes({}); setCommutePartial(true); }
       return;
     }
 
@@ -362,11 +380,12 @@ function SearchContent() {
         if (res.ok) {
           const data = await res.json();
           setCommuteTimes(data.durations || {});
+          setCommutePartial(Boolean(data.partial));
         } else {
-          setCommuteTimes({});
+          { setCommuteTimes({}); setCommutePartial(true); }
         }
       } catch {
-        if (requestId === commuteRequestIdRef.current) setCommuteTimes({});
+        if (requestId === commuteRequestIdRef.current) { setCommuteTimes({}); setCommutePartial(true); }
       }
     })();
   }, [commute, results]);
@@ -376,7 +395,8 @@ function SearchContent() {
     commute && commuteTimes
       ? results.filter((r) => {
           const minutes = commuteTimes[r.building.id];
-          return minutes !== undefined && minutes <= commute.maxMinutes;
+          if (minutes === undefined) return commutePartial;
+          return minutes <= commute.maxMinutes;
         })
       : results;
 
@@ -420,9 +440,10 @@ function SearchContent() {
       // Advanced filters
       const neighborhoodSlugs = filters?.neighborhood_slugs ?? selectedNeighborhoods;
       if (neighborhoodSlugs.length > 0) body.neighborhood_slugs = neighborhoodSlugs;
-      if (bathsMin) body.baths_min = parseInt(bathsMin);
+      const bathsMinVal = filters?.baths_min !== undefined ? filters.baths_min : (bathsMin ? parseInt(bathsMin) : undefined);
+      if (bathsMinVal !== undefined) body.baths_min = bathsMinVal;
       if (filters?.pet_friendly || petFriendly) body.pet_friendly = true;
-      if (parkingRequired) body.parking_required = true;
+      if (filters?.parking_required || parkingRequired) body.parking_required = true;
       if (moveInDate) body.move_in_date = moveInDate;
 
       // Amenities - use AI parsed amenities or selected amenities
@@ -512,22 +533,37 @@ function SearchContent() {
         const data = await res.json();
         const filters: ParsedFilters = data.filters;
 
-        // Update UI state with parsed filters
+        // A fresh natural-language query defines the whole search: anything
+        // it doesn't mention is cleared, so filters restored from a previous
+        // session (e.g. "under $2,000") can't silently narrow "3BR in Miami".
+        const fresh: SearchFilterOverrides = {
+          beds_min: null,
+          beds_max: null,
+          budget_min: null,
+          budget_max: null,
+          amenities: [],
+          ...filters,
+        };
         if (filters.city_slug) setCity(filters.city_slug);
         if (filters.neighborhood_slugs?.length) {
           pendingNeighborhoodsRef.current = filters.neighborhood_slugs;
           setSelectedNeighborhoods(filters.neighborhood_slugs);
         }
-        if (filters.beds_min !== undefined) setBedsMin(filters.beds_min.toString());
-        if (filters.beds_max !== undefined) setBedsMax(filters.beds_max.toString());
-        if (filters.budget_min !== undefined) setBudgetMin(filters.budget_min.toString());
-        if (filters.budget_max !== undefined) setBudgetMax(filters.budget_max.toString());
-        if (filters.amenities?.length) setSelectedAmenities(filters.amenities);
+        setBedsMin(filters.beds_min !== undefined ? filters.beds_min.toString() : "");
+        setBedsMax(filters.beds_max !== undefined ? filters.beds_max.toString() : "");
+        setBudgetMin(filters.budget_min !== undefined ? filters.budget_min.toString() : "");
+        setBudgetMax(filters.budget_max !== undefined ? filters.budget_max.toString() : "");
+        setBathsMin(filters.baths_min !== undefined ? filters.baths_min.toString() : "");
+        setPetFriendly(Boolean(filters.pet_friendly));
+        setParkingRequired(Boolean(filters.parking_required));
+        setSelectedAmenities(filters.amenities ?? []);
         if (filters.sort) setSort(filters.sort);
-        if (filters.summary) setAiSummary(filters.summary);
+        // The route returns { filters, summary } — summary sits at the top level
+        const summary = typeof data.summary === "string" ? data.summary : filters.summary;
+        if (summary) setAiSummary(summary);
 
         // Search with the parsed filters (supersedes the default search)
-        await handleSearch(filters);
+        await handleSearch(fresh);
       }
       // On a failed parse the concurrent default search already covers us
     } catch (error) {
@@ -860,7 +896,7 @@ function SearchContent() {
                           <SelectItem value="0">Studio</SelectItem>
                           <SelectItem value="1">1</SelectItem>
                           <SelectItem value="2">2</SelectItem>
-                          <SelectItem value="3">3+</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1132,6 +1168,7 @@ function SearchContent() {
                       Prices updated {new Date(capturedAt).toLocaleDateString()}
                       {commute && commuteTimes && visibleResults.length < results.length &&
                         ` · ${results.length - visibleResults.length} hidden by commute filter`}
+                      {commute && commutePartial && " · commute times unavailable right now"}
                     </p>
                   )}
                 </>

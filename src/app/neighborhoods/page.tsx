@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/db-helpers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,19 +21,25 @@ type CityInfo = { id: string; name: string; slug: string; state: string };
 export default async function NeighborhoodsPage() {
   const supabase = createAdminClient();
 
-  const [{ data: neighborhoods }, { data: buildings }] = await Promise.all([
+  const [{ data: neighborhoods }, buildings] = await Promise.all([
     supabase
       .from("neighborhoods")
       .select(`id, name, slug, cities:city_id (id, name, slug, state)`)
       .order("name"),
-    supabase
-      .from("buildings")
-      .select("id, neighborhood_id")
-      .eq("status", "active"),
+    // Paged: past 1000 active buildings the counts on this page were wrong
+    // (and whole neighborhoods showed no badge at all).
+    fetchAllRows<{ id: string; neighborhood_id: string | null }>((from, to) =>
+      supabase
+        .from("buildings")
+        .select("id, neighborhood_id")
+        .eq("status", "active")
+        .order("id")
+        .range(from, to)
+    ),
   ]);
 
   const buildingCounts: Record<string, number> = {};
-  for (const b of buildings || []) {
+  for (const b of buildings) {
     if (b.neighborhood_id) {
       buildingCounts[b.neighborhood_id] = (buildingCounts[b.neighborhood_id] || 0) + 1;
     }

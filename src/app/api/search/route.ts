@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { searchRequestSchema } from "@/lib/validations";
 import { apiError } from "@/lib/api-helpers";
 import { cachedSearch } from "@/lib/search/cache";
@@ -30,8 +30,10 @@ export async function POST(req: Request) {
 
     // Search analytics: no writer has existed since migration 017 dropped the
     // public insert policy, so the admin analytics dashboard read an empty
-    // table. Service-role insert, fire-and-forget — never blocks the response.
-    void (async () => {
+    // table. Service-role insert, deferred with after() — a bare floating
+    // promise is frozen the moment the response is sent on Vercel, so most of
+    // these inserts never actually ran.
+    after(async () => {
       try {
         const { createAdminClient } = await import("@/lib/supabase/server");
         await createAdminClient().from("search_events").insert({
@@ -43,7 +45,7 @@ export async function POST(req: Request) {
       } catch (err) {
         console.error("search_events insert failed:", err);
       }
-    })();
+    });
 
     return NextResponse.json(result);
   } catch (error) {

@@ -35,6 +35,7 @@ const sourceLabels: Record<string, string> = {
   web_form: "Web Form",
   chat: "Chat",
   voice: "Voice",
+  microsite: "Microsite",
 };
 
 interface LeadRowProps {

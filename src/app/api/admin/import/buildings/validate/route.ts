@@ -132,9 +132,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(response);
   } catch (error) {
+    // String(error) leaked stack/driver detail to the client.
     console.error("Validation error:", error);
     return NextResponse.json(
-      { error: String(error) },
+      { error: "Validation failed" },
       { status: 500 }
     );
   }

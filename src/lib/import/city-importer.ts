@@ -1,6 +1,7 @@
 // Shared city import utility
 
 import { SupabaseClient } from "@supabase/supabase-js";
+import { upsertImportedUnitWithPrice } from "./units";
 
 interface CityConfig {
   name: string;
@@ -336,32 +337,19 @@ export async function importCityBuildings(
 
           // If specific unit number provided, create that unit
           if (fp.unit && floorplan) {
-            const { data: unit } = await supabase
-              .from("units")
-              .upsert(
-                {
-                  building_id: buildingId,
-                  floorplan_id: floorplan.id,
-                  unit_number: fp.unit,
-                  beds: fp.beds,
-                  baths: fp.baths || 1,
-                  sqft: fp.sqft || null,
-                  is_available: true,
-                  available_on: fp.available_date || null,
-                },
-                { onConflict: "building_id,unit_number" }
-              )
-              .select("id")
-              .single();
+            const { priced } = await upsertImportedUnitWithPrice(supabase, {
+              building_id: buildingId,
+              floorplan_id: floorplan.id,
+              unit_number: fp.unit,
+              beds: fp.beds,
+              baths: fp.baths || 1,
+              sqft: fp.sqft || null,
+              is_available: true,
+              available_on: fp.available_date || null,
+              rent: fp.rent,
+            });
 
-            if (unit && fp.rent) {
-              await supabase.from("unit_price_snapshots").insert({
-                unit_id: unit.id,
-                rent: fp.rent,
-                captured_at: new Date().toISOString(),
-              });
-              results.units_created++;
-            }
+            if (priced) results.units_created++;
           }
           // Otherwise, optionally auto-generate sample units (2-4 per type).
           // Gated behind generateSampleUnits: the generated rents/availability

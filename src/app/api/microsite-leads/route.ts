@@ -4,7 +4,8 @@ import { Resend } from "resend";
 import { micrositeLeadSchema, MICROSITE_DOMAINS } from "@/lib/validations";
 import { apiError } from "@/lib/api-helpers";
 import { autoAssignAgent } from "@/lib/leads/routing";
-import { newLeadEmail } from "@/lib/email/templates";
+import { newLeadEmail, micrositeWaitlistEmail } from "@/lib/email/templates";
+import { getLeadNotificationRecipients, getReplyToAddress } from "@/lib/email/recipients";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 // Cross-origin lead capture from the building microsites. Each microsite is a
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
 
     const cityRes = await supabase
       .from("cities")
-      .select("id, name")
+      .select("id, name, slug")
       .eq("slug", "miami")
       .single();
     if (cityRes.error || !cityRes.data) {
@@ -128,11 +129,18 @@ export async function POST(req: Request) {
     const leadId = leadInsert.data.id;
 
     // Link to the building record when it exists in the catalog (e.g. Jade Brickell).
+    // `building` is free text from the microsite form. `%` and `_` are LIKE
+    // wildcards and PostgREST rewrites `*` to `%`, so an unescaped value could
+    // match (and link the lead to) an arbitrary building.
+    const buildingPattern = body.building
+      .replace(/[\\%_]/g, "\\$&")
+      .replace(/\*/g, "");
+
     const buildingRes = await supabase
       .from("buildings")
       .select("id")
       .eq("city_id", cityRes.data.id)
-      .ilike("name", body.building)
+      .ilike("name", buildingPattern)
       .limit(1)
       .maybeSingle();
     if (buildingRes.data) {
@@ -154,26 +162,57 @@ export async function POST(req: Request) {
       },
     });
 
+    // Internal notification. Recipients come from LEAD_NOTIFY_EMAIL / admin
+    // accounts — never from FROM_EMAIL, which is a send-only address that
+    // bounced every microsite lead alert. Resend v6 reports API failures via
+    // the returned `error`, not by throwing.
     if (process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const fromEmail = process.env.FROM_EMAIL || "Staycio <hello@staycio.com>";
-        const toEmail = fromEmail.includes("<")
-          ? fromEmail.split("<")[1].replace(">", "")
-          : fromEmail;
-        await resend.emails.send({
+        const recipients = await getLeadNotificationRecipients(supabase);
+        if (recipients.length > 0) {
+          const { error: notifyError } = await resend.emails.send({
+            from: fromEmail,
+            to: recipients,
+            replyTo: body.email,
+            subject: `New Microsite Lead: ${body.name} · ${body.building}`,
+            html: newLeadEmail({
+              leadId,
+              city: cityRes.data.name,
+              source: `microsite (${body.domain})`,
+              name: body.name,
+              email: body.email,
+              notes,
+              buildingName: body.building,
+            }),
+          });
+          if (notifyError) {
+            console.error("Microsite lead notification failed:", leadId, notifyError);
+          }
+        }
+
+        // Confirmation to the person who signed up. The microsite shows
+        // "You're on the list!" client-side and, until now, nothing ever
+        // followed it — every waitlist signup went unacknowledged.
+        const { error: confirmError } = await resend.emails.send({
           from: fromEmail,
-          to: [toEmail],
-          subject: `New Microsite Lead: ${body.name} · ${body.building}`,
-          html: newLeadEmail({
-            leadId,
-            city: cityRes.data.name,
-            source: `microsite (${body.domain})`,
+          to: [body.email],
+          replyTo: getReplyToAddress(),
+          subject: `You're on the waitlist for ${body.building}`,
+          html: micrositeWaitlistEmail({
             name: body.name,
-            email: body.email,
-            notes,
+            buildingName: body.building,
+            city: cityRes.data.name,
+            citySlug: cityRes.data.slug ?? null,
+            domain: body.domain,
+            moveIn: body.move_in ?? null,
+            unitType: body.unit_type ?? null,
           }),
         });
+        if (confirmError) {
+          console.error("Microsite waitlist confirmation failed:", leadId, confirmError);
+        }
       } catch (emailError) {
         console.error("Microsite lead email failed:", emailError);
       }

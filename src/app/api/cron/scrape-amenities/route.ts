@@ -17,8 +17,13 @@ import {
   saveScrapedAmenities,
   createScrapeJob,
   updateScrapeJob,
+  getBuildingsToScrape,
   scrapeStatusOf,
 } from "@/lib/scraper";
+
+// Amenities change rarely, so a scraped building waits ~6 months before it is
+// eligible again; `force=true` puts the whole fleet back in the running.
+const DEFAULT_AMENITIES_DAYS_STALE = 180;
 
 // This endpoint scrapes amenities for buildings that haven't been scraped yet
 // Amenities rarely change, so this only needs to run once per building
@@ -61,37 +66,18 @@ export async function GET(req: Request) {
       await updateScrapeJob(supabase, jobId, { status: "running" });
     }
 
-    // Get buildings that need amenities scraping
-    let buildingsQuery = supabase
-      .from("buildings")
-      .select(`
-        id,
-        name,
-        website_url,
-        city_id,
-        building_scrape_status (
-          website_url,
-          scrape_enabled,
-          amenities_scraped_at
-        )
-      `)
-      .eq("status", "active")
-      .not("website_url", "is", null);
-
-    if (cityId) {
-      buildingsQuery = buildingsQuery.eq("city_id", cityId);
-    }
-
-    const { data: allBuildings } = await buildingsQuery.limit(limit * 3);
-
-    // Filter to buildings that haven't had amenities scraped (or force rescrape)
-    const buildings = (allBuildings || []).filter((b) => {
-      const status = scrapeStatusOf(b);
-      if (!status) return true;
-      if (status.scrape_enabled === false) return false;
-      if (forceRescrape) return true;
-      return !status.amenities_scraped_at;
-    }).slice(0, limit);
+    // Get buildings that need amenities scraping. The old query took an
+    // unordered `limit * 3` window and filtered client-side, so the same ~45
+    // rows came back every run: once those were done the job reported "no
+    // buildings need amenity scraping" while ~190 were never reached. This is
+    // the same never-scraped-first / stalest-first pass over the FULL fleet
+    // the unit scraper uses.
+    const buildings = await getBuildingsToScrape(supabase, {
+      cityId,
+      mode: "amenities",
+      limit,
+      daysStale: forceRescrape ? 0 : DEFAULT_AMENITIES_DAYS_STALE,
+    });
 
     if (buildings.length === 0) {
       if (jobId) {

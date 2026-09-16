@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, Heart, Building2 } from "lucide-react";
+import { isPortalRoute } from "@/hooks/portal-routes";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -15,8 +16,10 @@ const navItems = [
 export function MobileBottomNav() {
   const pathname = usePathname() ?? "";
 
-  // Don't show on admin pages or building/unit detail pages (which have sticky CTAs)
-  const shouldHide = pathname.startsWith("/admin") || pathname.match(/^\/buildings\/[^/]+/);
+  // Don't show on portal pages (admin/shower/partner/agent — they have their
+  // own nav and this bar paints over their content on mobile) or on
+  // building/unit detail pages (which have sticky CTAs)
+  const shouldHide = isPortalRoute(pathname) || pathname.match(/^\/buildings\/[^/]+/);
 
   if (shouldHide) {
     return null;

@@ -49,6 +49,7 @@ export interface TopNeighborhood {
   name: string;
   slug: string;
   cityName: string | null;
+  citySlug: string | null;
 }
 
 interface HomeClientProps {
@@ -447,8 +448,12 @@ export default function HomeClient({ stats, featured, neighborhoods }: HomeClien
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                 {neighborhoods.map((n) => (
                   <Link
-                    key={n.slug}
-                    href={`/neighborhoods/${n.slug}`}
+                    key={`${n.citySlug ?? ""}/${n.slug}`}
+                    href={
+                      n.citySlug
+                        ? `/neighborhoods/${n.slug}?city=${encodeURIComponent(n.citySlug)}`
+                        : `/neighborhoods/${n.slug}`
+                    }
                     className="px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-sm text-white/60 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] transition-colors duration-300"
                   >
                     {n.name}

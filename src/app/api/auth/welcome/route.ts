@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Resend } from "resend";
 import { getFromEmail } from "@/lib/resend/client";
 import { welcomeEmail } from "@/lib/email/templates";
+import { getReplyToAddress } from "@/lib/email/recipients";
 import { apiError } from "@/lib/api-helpers";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
@@ -42,12 +43,20 @@ export async function POST(req: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
-    await resend.emails.send({
+    // Resend v6 returns { data, error } and does NOT throw on API errors, so
+    // the error has to be read off the result or every failure looks like a
+    // success. Replies to FROM_EMAIL bounce (no MX), hence the explicit
+    // reply-to.
+    const { error: sendError } = await resend.emails.send({
       from: getFromEmail(),
       to: [user.email],
+      replyTo: getReplyToAddress(),
       subject: "Welcome to Staycio 🏢",
       html: welcomeEmail({ name, email: user.email }),
     });
+    if (sendError) {
+      console.error("Welcome email failed:", user.id, sendError);
+    }
   } catch (err) {
     console.error("Welcome email failed:", err);
     // Don't fail — not critical

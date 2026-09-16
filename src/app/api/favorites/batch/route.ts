@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Batch favorites insert error:", error);
-      return apiError(error.message, 500);
+      return apiError("Failed to save favorites", 500);
     }
 
     return NextResponse.json({ added: newFavorites.length }, { status: 201 });

@@ -4,6 +4,8 @@ import { checkAdminAuth } from "@/lib/admin/auth";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
 import { buildBrandedTemplate } from "@/lib/ai-email";
 import { apiError } from "@/lib/api-helpers";
+import { isValidUUID, safeParseInt } from "@/lib/utils";
+import { getReplyToAddress } from "@/lib/email/recipients";
 import crypto from "crypto";
 
 const PAGE_SIZE = 30;
@@ -24,7 +26,9 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || "";
     const starred = searchParams.get("starred") === "true";
     const category = searchParams.get("category") || "";
-    const page = parseInt(searchParams.get("page") || "1");
+    // Clamped: ?page=0 produced range(-30, -1) and ?page=abc produced NaN,
+    // both of which PostgREST rejects or answers with the wrong slice.
+    const page = safeParseInt(searchParams.get("page"), 1, 1, 100_000);
     const limit = PAGE_SIZE;
     const offset = (page - 1) * limit;
 
@@ -119,6 +123,8 @@ export async function POST(req: NextRequest) {
     const { data: sendResult, error: sendError } = await resend.emails.send({
       from: fromEmail,
       to: [to],
+      // Replies to FROM_EMAIL bounce (staycio.com has no MX record).
+      replyTo: getReplyToAddress(),
       subject,
       html: brandedHtml,
       text: bodyHtml.replace(/<[^>]*>/g, ""),
@@ -210,49 +216,82 @@ export async function PATCH(req: NextRequest) {
       action: "mark_read" | "mark_unread" | "star" | "unstar" | "delete";
     };
 
-    if (!ids?.length || !action) {
+    const ACTIONS = ["mark_read", "mark_unread", "star", "unstar", "delete"] as const;
+
+    if (!Array.isArray(ids) || ids.length === 0 || !action) {
       return apiError("ids and action are required");
+    }
+
+    if (!ACTIONS.includes(action)) {
+      return apiError("Unknown action");
+    }
+
+    // Validate every id: a non-UUID string made PostgREST reject the whole
+    // statement, and the route reported success regardless.
+    if (ids.length > 500) {
+      return apiError("Too many ids (max 500)");
+    }
+    if (!ids.every((id) => typeof id === "string" && isValidUUID(id))) {
+      return apiError("ids must be UUIDs");
     }
 
     const supabase = createAdminClient();
 
+    // Every branch below used to ignore the Supabase error and answer
+    // { success: true }, so a failed bulk action looked like a successful one.
     if (action === "delete") {
-      await supabase.from("emails").delete().in("id", ids);
-      return NextResponse.json({ success: true, deleted: ids.length });
+      const { error, count } = await supabase
+        .from("emails")
+        .delete({ count: "exact" })
+        .in("id", ids);
+      if (error) {
+        console.error("Bulk delete emails error:", error);
+        return apiError("Failed to delete emails", 500);
+      }
+      return NextResponse.json({ success: true, deleted: count ?? 0 });
     }
 
     if (action === "mark_read") {
       // Only mark inbound emails with status 'received' as read
-      await supabase
+      const { error, count } = await supabase
         .from("emails")
-        .update({ status: "read", read_at: new Date().toISOString() })
+        .update({ status: "read", read_at: new Date().toISOString() }, { count: "exact" })
         .in("id", ids)
         .eq("direction", "inbound")
         .eq("status", "received");
-      return NextResponse.json({ success: true, updated: ids.length });
+      if (error) {
+        console.error("Bulk mark_read error:", error);
+        return apiError("Failed to update emails", 500);
+      }
+      return NextResponse.json({ success: true, updated: count ?? 0 });
     }
 
     if (action === "mark_unread") {
       // Only revert inbound emails to 'received'
-      await supabase
+      const { error, count } = await supabase
         .from("emails")
-        .update({ status: "received", read_at: null })
+        .update({ status: "received", read_at: null }, { count: "exact" })
         .in("id", ids)
         .eq("direction", "inbound")
         .in("status", ["read", "replied"]);
-      return NextResponse.json({ success: true, updated: ids.length });
+      if (error) {
+        console.error("Bulk mark_unread error:", error);
+        return apiError("Failed to update emails", 500);
+      }
+      return NextResponse.json({ success: true, updated: count ?? 0 });
     }
 
-    const updates: Record<string, unknown> = {};
-    if (action === "star") {
-      updates.is_starred = true;
-    } else if (action === "unstar") {
-      updates.is_starred = false;
+    const { error, count } = await supabase
+      .from("emails")
+      .update({ is_starred: action === "star" }, { count: "exact" })
+      .in("id", ids);
+
+    if (error) {
+      console.error(`Bulk ${action} error:`, error);
+      return apiError("Failed to update emails", 500);
     }
 
-    await supabase.from("emails").update(updates).in("id", ids);
-
-    return NextResponse.json({ success: true, updated: ids.length });
+    return NextResponse.json({ success: true, updated: count ?? 0 });
   } catch (error) {
     console.error("Bulk action error:", error);
     return apiError("Internal server error", 500);

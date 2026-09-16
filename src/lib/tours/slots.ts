@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getFirstRelation } from "@/lib/db-helpers";
+import { chunk, IN_CHUNK_SIZE } from "@/lib/search/fetch-enrichments";
 
 // Real bookable tour slots for a building.
 //
@@ -27,6 +29,15 @@ export interface AvailabilityWindow {
 export interface SlotBooking {
   date: string; // "YYYY-MM-DD"
   time: string; // "HH:MM" or "HH:MM:SS"
+  /**
+   * The shower this booking consumes. A shower certified at two buildings
+   * can only be in one place at a time, so a booking at building A must
+   * remove that shower from building B's capacity too.
+   *
+   * Omitted (or null) for an unclaimed lead at THIS building: it will be
+   * taken by one of these showers, we just don't know which yet.
+   */
+  showerId?: string | null;
 }
 
 export interface DaySlots {
@@ -83,13 +94,20 @@ export function computeSlots(opts: {
 
   if (windows.length === 0) return [];
 
-  // Booked count per "date|HH:MM"
-  const booked = new Map<string, number>();
+  // Per "date|HH:MM": which specific showers are already committed, and how
+  // many unassigned bookings are outstanding.
+  const bookedShowers = new Map<string, Set<string>>();
+  const bookedAny = new Map<string, number>();
   for (const b of bookings) {
     const mins = timeToMinutes(b.time);
     if (mins === null) continue;
     const key = `${b.date}|${minutesToTime(mins)}`;
-    booked.set(key, (booked.get(key) ?? 0) + 1);
+    if (b.showerId) {
+      if (!bookedShowers.has(key)) bookedShowers.set(key, new Set());
+      bookedShowers.get(key)!.add(b.showerId);
+    } else {
+      bookedAny.set(key, (bookedAny.get(key) ?? 0) + 1);
+    }
   }
 
   const cutoff = new Date(now.getTime() + minLeadHours * 60 * 60 * 1000);
@@ -119,7 +137,12 @@ export function computeSlots(opts: {
       const time = minutesToTime(t);
       const slotStart = new Date(`${date}T${time}:00Z`);
       if (slotStart < cutoff) continue;
-      const available = showers.size - (booked.get(`${date}|${time}`) ?? 0);
+
+      const key = `${date}|${time}`;
+      const committed = bookedShowers.get(key);
+      // Only showers who aren't already booked somewhere at this hour count.
+      const free = committed ? [...showers].filter((id) => !committed.has(id)).length : showers.size;
+      const available = free - (bookedAny.get(key) ?? 0);
       if (available > 0) slots.push({ time, available });
     }
 
@@ -158,31 +181,73 @@ export async function getBuildingTourSlots(
   if (showerIds.length === 0) return [];
 
   const lastDate = addDaysUTC(now, TOUR_DAYS_AHEAD);
-  const [{ data: availability }, { data: existing }] = await Promise.all([
-    supabase
-      .from("shower_availability")
-      .select("shower_id, day_of_week, start_time, end_time")
-      .in("shower_id", showerIds),
+  const today = nowIso.slice(0, 10);
+  const idChunks = chunk(showerIds, IN_CHUNK_SIZE);
+
+  const [availabilityPages, claimPages, unclaimedResult] = await Promise.all([
+    Promise.all(
+      idChunks.map((ids) =>
+        supabase
+          .from("shower_availability")
+          .select("shower_id, day_of_week, start_time, end_time")
+          .in("shower_id", ids)
+      )
+    ),
+    // Bookings these showers already hold ANYWHERE. Capacity used to be
+    // counted per building only, so a shower certified at A and B was offered
+    // at B for an hour they were already showing A — and double-booked.
+    Promise.all(
+      idChunks.map((ids) =>
+        supabase
+          .from("showing_claims")
+          .select("shower_id, showing_leads:showing_lead_id!inner (preferred_date, preferred_time, status)")
+          .in("shower_id", ids)
+          .eq("status", "active")
+          .in("showing_leads.status", ["open", "claimed", "in_progress"])
+          .gte("showing_leads.preferred_date", today)
+          .lte("showing_leads.preferred_date", lastDate)
+      )
+    ),
+    // Unclaimed leads at THIS building: not yet tied to a shower, but one of
+    // these showers will take it. (Claimed ones are covered above — counting
+    // them here as well would subtract the same booking twice.)
     supabase
       .from("showing_leads")
       .select("preferred_date, preferred_time")
       .eq("building_id", buildingId)
-      .in("status", ["open", "claimed", "in_progress"])
-      .gte("preferred_date", nowIso.slice(0, 10))
+      .eq("status", "open")
+      .gte("preferred_date", today)
       .lte("preferred_date", lastDate),
   ]);
 
+  const availability = availabilityPages.flatMap((page) => page.data ?? []);
+
+  const bookings: SlotBooking[] = [];
+  for (const page of claimPages) {
+    for (const claim of page.data ?? []) {
+      const lead = getFirstRelation(
+        claim.showing_leads as { preferred_date: string; preferred_time: string } | { preferred_date: string; preferred_time: string }[] | null
+      );
+      if (!lead?.preferred_date || !lead?.preferred_time) continue;
+      bookings.push({
+        date: lead.preferred_date,
+        time: lead.preferred_time,
+        showerId: claim.shower_id as string,
+      });
+    }
+  }
+  for (const lead of unclaimedResult.data ?? []) {
+    bookings.push({ date: lead.preferred_date as string, time: lead.preferred_time as string });
+  }
+
   return computeSlots({
-    windows: (availability ?? []).map((a) => ({
+    windows: availability.map((a) => ({
       showerId: a.shower_id as string,
       dayOfWeek: a.day_of_week as number,
       startTime: a.start_time as string,
       endTime: a.end_time as string,
     })),
-    bookings: (existing ?? []).map((b) => ({
-      date: b.preferred_date as string,
-      time: b.preferred_time as string,
-    })),
+    bookings,
     now,
   });
 }

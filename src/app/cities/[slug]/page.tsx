@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { getBuildingFallbackImage } from "@/lib/images/fallback";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
+import { fetchAllRows } from "@/lib/db-helpers";
 import { CITY_COPY } from "@/lib/seo/city-copy";
 import { formatPrice } from "@/lib/utils";
 import { Building2, MapPin, Search, ArrowRight, Star, TrendingUp } from "lucide-react";
@@ -61,6 +62,19 @@ const CITY_TAGLINES: Record<string, string> = {
   "san-francisco": "Bay Area living, elevated",
 };
 
+type NeighborhoodRef = { id: string; name: string; slug: string };
+
+interface CityBuilding {
+  id: string;
+  name: string;
+  address_1: string | null;
+  zip: string | null;
+  description: string | null;
+  year_built: number | null;
+  neighborhoods: NeighborhoodRef | NeighborhoodRef[] | null;
+  building_images: Array<{ url: string; is_primary: boolean | null; sort_order: number | null }> | null;
+}
+
 interface CityPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -102,17 +116,23 @@ export default async function CityPage({ params }: CityPageProps) {
   if (!city) notFound();
 
   // Fetch in parallel: buildings, neighborhoods
-  const [buildingsRes, neighborhoodsRes] = await Promise.all([
-    supabase
-      .from("buildings")
-      .select(`
-        id, name, address_1, zip, description, year_built,
-        neighborhoods:neighborhood_id (id, name, slug),
-        building_images!left (url, is_primary, sort_order)
-      `)
-      .eq("city_id", city.id)
-      .eq("status", "active")
-      .order("name"),
+  const [buildings, neighborhoodsRes] = await Promise.all([
+    // Paged: the biggest cities have more than 1000 active buildings and the
+    // unpaged select silently truncated the listing grid (and the stats).
+    fetchAllRows<CityBuilding>((from, to) =>
+      supabase
+        .from("buildings")
+        .select(`
+          id, name, address_1, zip, description, year_built,
+          neighborhoods:neighborhood_id (id, name, slug),
+          building_images!left (url, is_primary, sort_order)
+        `)
+        .eq("city_id", city.id)
+        .eq("status", "active")
+        .order("name")
+        .order("id")
+        .range(from, to) as unknown as PromiseLike<{ data: CityBuilding[] | null; error: unknown }>
+    ),
     supabase
       .from("neighborhoods")
       .select("id, name, slug")
@@ -120,7 +140,6 @@ export default async function CityPage({ params }: CityPageProps) {
       .order("name"),
   ]);
 
-  const buildings = buildingsRes.data || [];
   const neighborhoods = neighborhoodsRes.data || [];
 
   // Get building IDs for unit + price queries

@@ -83,12 +83,12 @@ export function RecentlyViewed({ currentBuildingId, className = "" }: RecentlyVi
                 </p>
               )}
               <div className="flex items-center gap-2 mt-1">
-                {item.price && (
+                {item.price != null && item.price > 0 && (
                   <span className="text-xs font-medium">
                     {formatPrice(item.price)}/mo
                   </span>
                 )}
-                {item.beds !== undefined && (
+                {item.beds != null && (
                   <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                     <Bed className="h-3 w-3" />
                     {item.beds === 0 ? "Studio" : item.beds}

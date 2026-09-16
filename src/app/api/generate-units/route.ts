@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { devRoutesEnabled, notFound } from "@/lib/api-helpers";
 
 export async function POST() {
+  // Fabricates units / prices / stock imagery that is indistinguishable from
+  // scraped data once written. Disabled in production unless explicitly
+  // enabled with ENABLE_DEV_ROUTES=1.
+  if (!devRoutesEnabled()) return notFound();
+
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
     return NextResponse.json({ error: authResult.error }, { status: authResult.status });

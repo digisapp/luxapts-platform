@@ -2,9 +2,41 @@ import { NextResponse } from "next/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { apiError } from "@/lib/api-helpers";
-import { getFirstRelation } from "@/lib/db-helpers";
+import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
 
 export const dynamic = "force-dynamic";
+
+type CityRel = { name: string; slug: string };
+
+type DataQualityBuilding = {
+  id: string;
+  name: string;
+  address_1: string | null;
+  zip: string | null;
+  status: string | null;
+  description: string | null;
+  website_url: string | null;
+  leasing_phone: string | null;
+  leasing_email: string | null;
+  pet_policy: string | null;
+  parking_policy: string | null;
+  deposit_policy: string | null;
+  year_built: number | null;
+  stories: number | null;
+  lat: number | null;
+  lng: number | null;
+  hero_image_url: string | null;
+  city_id: string | null;
+  cities: CityRel | CityRel[] | null;
+};
+
+const BUILDING_COLUMNS = `
+  id, name, address_1, zip, status, description, website_url,
+  leasing_phone, leasing_email, pet_policy, parking_policy, deposit_policy,
+  year_built, stories, lat, lng, hero_image_url,
+  city_id,
+  cities:city_id (name, slug)
+`;
 
 export async function GET() {
   const authResult = await checkAdminAuth();
@@ -14,73 +46,81 @@ export async function GET() {
 
   const supabase = createAdminClient();
 
-  // Fetch all data needed for quality scoring in parallel
-  const [
-    buildingsRes,
-    imagesRes,
-    unitsRes,
-    pricesRes,
-    amenitiesRes,
-  ] = await Promise.all([
-    supabase
-      .from("buildings")
-      .select(`
-        id, name, address_1, zip, status, description, website_url,
-        leasing_phone, leasing_email, pet_policy, parking_policy, deposit_policy,
-        year_built, stories, lat, lng, hero_image_url,
-        city_id,
-        cities:city_id (name, slug)
-      `)
-      .eq("status", "active")
-      .order("name"),
-    supabase
-      .from("building_images")
-      .select("building_id"),
-    supabase
-      .from("units")
-      .select("building_id, is_available"),
-    supabase
-      .from("unit_price_snapshots")
-      .select("unit_id, rent, captured_at, units:unit_id (building_id)")
-      .order("captured_at", { ascending: false }),
-    supabase
-      .from("building_amenities")
-      .select("building_id"),
+  // Every one of these reads used to stop at PostgREST's 1000-row cap, so the
+  // per-building image/unit/amenity counts (and therefore every score and the
+  // whole summary) were wrong the moment a table passed 1000 rows —
+  // unit_price_snapshots is already 8k+. They are paged now, and the snapshot
+  // history is read as one row per unit from units_with_latest_price instead
+  // of the full history.
+  let buildingsError: unknown = null;
+
+  const [buildingRows, imageRows, unitRows, amenityRows] = await Promise.all([
+    fetchAllRows<DataQualityBuilding>(async (from, to) => {
+      const res = await supabase
+        .from("buildings")
+        .select(BUILDING_COLUMNS)
+        .eq("status", "active")
+        .order("name")
+        .order("id")
+        .range(from, to);
+      if (res.error) buildingsError = res.error;
+      return res as unknown as { data: DataQualityBuilding[] | null; error: unknown };
+    }),
+    fetchAllRows<{ building_id: string }>((from, to) =>
+      supabase
+        .from("building_images")
+        .select("building_id")
+        .order("building_id")
+        .order("id")
+        .range(from, to)
+    ),
+    fetchAllRows<{ id: string; building_id: string; is_available: boolean | null; latest_rent: number | null }>(
+      (from, to) =>
+        supabase
+          .from("units_with_latest_price")
+          .select("id, building_id, is_available, latest_rent")
+          .order("id")
+          .range(from, to)
+    ),
+    fetchAllRows<{ building_id: string }>((from, to) =>
+      supabase
+        .from("building_amenities")
+        .select("building_id")
+        .order("building_id")
+        .order("amenity_id")
+        .range(from, to)
+    ),
   ]);
 
-  if (buildingsRes.error) {
+  if (buildingsError) {
+    console.error("Data quality buildings query error:", buildingsError);
     return apiError("Failed to fetch buildings", 500);
   }
 
   // Aggregate counts
   const imageCountMap: Record<string, number> = {};
-  for (const img of imagesRes.data || []) {
+  for (const img of imageRows) {
     imageCountMap[img.building_id] = (imageCountMap[img.building_id] || 0) + 1;
   }
 
   const unitCountMap: Record<string, { total: number; available: number }> = {};
-  for (const unit of unitsRes.data || []) {
+  const buildingsWithPrices = new Set<string>();
+  for (const unit of unitRows) {
     if (!unitCountMap[unit.building_id]) {
       unitCountMap[unit.building_id] = { total: 0, available: 0 };
     }
     unitCountMap[unit.building_id].total++;
     if (unit.is_available) unitCountMap[unit.building_id].available++;
-  }
-
-  // Buildings with at least one price snapshot
-  const buildingsWithPrices = new Set<string>();
-  for (const price of pricesRes.data || []) {
-    const unit = getFirstRelation(price.units as { building_id: string } | { building_id: string }[] | null);
-    if (unit?.building_id) buildingsWithPrices.add(unit.building_id);
+    if (unit.latest_rent != null) buildingsWithPrices.add(unit.building_id);
   }
 
   const amenityCountMap: Record<string, number> = {};
-  for (const a of amenitiesRes.data || []) {
+  for (const a of amenityRows) {
     amenityCountMap[a.building_id] = (amenityCountMap[a.building_id] || 0) + 1;
   }
 
   // Score each building
-  const buildings = (buildingsRes.data || []).map((b) => {
+  const buildings = buildingRows.map((b) => {
     const issues: string[] = [];
     let score = 0;
     const maxScore = 10;
@@ -149,7 +189,7 @@ export async function GET() {
       issues.push("no_website");
     }
 
-    const cityData = getFirstRelation(b.cities as { name: string; slug: string } | { name: string; slug: string }[] | null);
+    const cityData = getFirstRelation(b.cities);
 
     return {
       id: b.id,

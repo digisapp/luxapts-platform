@@ -15,16 +15,23 @@ export const maxDuration = 300;
  * reversible, nothing is deleted.
  */
 async function retireDuplicateFloorplanUnits(supabase: SupabaseClient): Promise<number> {
+  // Read through units_with_latest_price, not units: floorplanKey prefers
+  // floorplan_id and otherwise folds rent into the identity when sqft is
+  // missing (see src/lib/scraper/db.ts), and the base table has no rent.
+  // Keying on the bare (beds, baths) here would retire real, differently
+  // priced plans that the scraper deliberately keeps apart.
   const rows = await fetchAllRows<{
     id: string;
     building_id: string;
+    floorplan_id: string | null;
     beds: number | null;
     baths: number | null;
     sqft: number | null;
+    latest_rent: number | null;
   }>((from, to) =>
     supabase
-      .from("units")
-      .select("id, building_id, beds, baths, sqft")
+      .from("units_with_latest_price")
+      .select("id, building_id, floorplan_id, beds, baths, sqft, latest_rent")
       .eq("is_available", true)
       .is("unit_number", null)
       .order("building_id")
@@ -36,7 +43,7 @@ async function retireDuplicateFloorplanUnits(supabase: SupabaseClient): Promise<
   const seen = new Set<string>();
   const retire: string[] = [];
   for (const u of rows) {
-    const key = `${u.building_id}|${floorplanKey(u)}`;
+    const key = `${u.building_id}|${floorplanKey({ ...u, rent: u.latest_rent })}`;
     if (seen.has(key)) retire.push(u.id);
     else seen.add(key);
   }

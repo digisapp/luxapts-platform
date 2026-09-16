@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { apiError } from "@/lib/api-helpers";
-import { getFirstRelation } from "@/lib/db-helpers";
+import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
+import { isValidUUID, safeParseInt } from "@/lib/utils";
+import { chunk, IN_CHUNK_SIZE } from "@/lib/search/fetch-enrichments";
+
+const DEFAULT_DAYS = 90;
+const MIN_DAYS = 7;
+const MAX_DAYS = 365;
 
 interface UnitInfo {
   beds: number;
@@ -38,9 +44,16 @@ export async function GET(
 ) {
   try {
     const { id: buildingId } = await params;
+    if (!isValidUUID(buildingId)) {
+      return apiError("Invalid building ID");
+    }
+
     const { searchParams } = new URL(req.url);
-    const days = parseInt(searchParams.get("days") || "90");
-    const beds = searchParams.get("beds");
+    // `days=abc` used to reach `new Date().setDate(NaN)` and 500 with a
+    // RangeError; clamp to a sane window instead.
+    const days = safeParseInt(searchParams.get("days"), DEFAULT_DAYS, MIN_DAYS, MAX_DAYS);
+    const bedsParam = searchParams.get("beds");
+    const bedsFilter = bedsParam !== null ? safeParseInt(bedsParam, -1, 0, 10) : -1;
 
     const supabase = createAdminClient();
 
@@ -55,51 +68,61 @@ export async function GET(
       return apiError("Building not found", 404);
     }
 
-    // Get units for this building
-    let unitsQuery = supabase
-      .from("units")
-      .select("id, beds, baths, sqft")
-      .eq("building_id", buildingId);
-
-    if (beds !== null && beds !== undefined) {
-      unitsQuery = unitsQuery.eq("beds", parseInt(beds));
-    }
-
-    const { data: units } = await unitsQuery;
-    const unitIds = units?.map((u) => u.id) || [];
+    // Get units for this building (paged — never silently capped at 1000)
+    const units = await fetchAllRows<{ id: string }>((from, to) => {
+      let q = supabase
+        .from("units")
+        .select("id")
+        .eq("building_id", buildingId);
+      if (bedsFilter >= 0) q = q.eq("beds", bedsFilter);
+      return q.order("id").range(from, to);
+    });
+    const unitIds = units.map((u) => u.id);
 
     if (!unitIds.length) {
       return NextResponse.json({
         building: building.name,
+        building_id: building.id,
         days,
         history: [],
         summary: null,
+        by_bedroom: [],
       });
     }
 
     // Calculate date range
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
+    const startIso = startDate.toISOString();
 
-    // Get price snapshots
-    const { data: snapshots, error: snapshotsError } = await supabase
-      .from("unit_price_snapshots")
-      .select(`
-        unit_id,
-        rent,
-        captured_at,
-        units:unit_id (beds, baths, sqft)
-      `)
-      .in("unit_id", unitIds)
-      .gte("captured_at", startDate.toISOString())
-      .order("captured_at", { ascending: true });
+    // Price snapshots: unit ids are chunked (long `.in()` URLs fail) and each
+    // chunk is paged newest-first so a busy building's 1000-row cap trims the
+    // oldest captures, not the newest.
+    const snapshotPages = await Promise.all(
+      chunk(unitIds, IN_CHUNK_SIZE).map((ids) =>
+        fetchAllRows<RawPriceSnapshot>((from, to) =>
+          supabase
+            .from("unit_price_snapshots")
+            .select(`
+              unit_id,
+              rent,
+              captured_at,
+              units:unit_id (beds, baths, sqft)
+            `)
+            .in("unit_id", ids)
+            .gte("captured_at", startIso)
+            .order("captured_at", { ascending: false })
+            .order("id", { ascending: true })
+            .range(from, to) as unknown as PromiseLike<{ data: RawPriceSnapshot[] | null; error: unknown }>
+        )
+      )
+    );
 
-    if (snapshotsError) {
-      return apiError(snapshotsError.message, 500);
-    }
-
-    // Normalize snapshots to handle Supabase array/object differences
-    const normalizedSnapshots = (snapshots as RawPriceSnapshot[] || []).map(normalizeSnapshot);
+    // Normalize snapshots to handle Supabase array/object differences, oldest first
+    const normalizedSnapshots = snapshotPages
+      .flat()
+      .map(normalizeSnapshot)
+      .sort((a, b) => a.captured_at.localeCompare(b.captured_at));
 
     // Group by date and calculate averages
     const dailyPrices: Record<string, { total: number; count: number; min: number; max: number }> = {};
@@ -128,10 +151,18 @@ export async function GET(
 
     // Calculate summary
     const allRents = normalizedSnapshots.map((s) => s.rent);
+    let minRent = Infinity;
+    let maxRent = -Infinity;
+    let totalRent = 0;
+    for (const rent of allRents) {
+      if (rent < minRent) minRent = rent;
+      if (rent > maxRent) maxRent = rent;
+      totalRent += rent;
+    }
     const summary = allRents.length > 0 ? {
-      current_avg: Math.round(allRents.reduce((a, b) => a + b, 0) / allRents.length),
-      current_min: Math.min(...allRents),
-      current_max: Math.max(...allRents),
+      current_avg: Math.round(totalRent / allRents.length),
+      current_min: minRent,
+      current_max: maxRent,
       total_snapshots: allRents.length,
       // Price change (if we have history)
       change_30d: history.length >= 2

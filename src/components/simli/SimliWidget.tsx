@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { X, Mic, Sparkles } from "lucide-react";
+import { isPortalRoute } from "@/hooks/portal-routes";
 import { SimliAvatar } from "./SimliAvatar";
 
 export function SimliWidget() {
@@ -31,8 +32,9 @@ export function SimliWidget() {
     };
   }, []);
 
-  // Hide on admin and partner pages
-  if (pathname.startsWith("/admin") || pathname.startsWith("/partner")) {
+  // Hide on portal pages (admin/shower/partner/agent) — the floating trigger
+  // sits on top of their content on mobile.
+  if (isPortalRoute(pathname)) {
     return null;
   }
 

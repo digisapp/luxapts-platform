@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { upsertImportedUnitWithPrice } from "@/lib/import/units";
 import miamiListings from "../../../../../data/miami_listings.json";
 
 interface MiamiBuilding {
@@ -297,31 +298,19 @@ export async function POST() {
 
             // Create unit if we have unit number
             if (fp.unit && floorplan) {
-              const { data: unit } = await supabase
-                .from("units")
-                .upsert({
-                  building_id: buildingId,
-                  floorplan_id: floorplan.id,
-                  unit_number: fp.unit,
-                  beds: fp.beds,
-                  baths: fp.baths || 1,
-                  sqft: fp.sqft || null,
-                  is_available: true,
-                  available_on: fp.available_date || null,
-                }, { onConflict: "building_id,unit_number" })
-                .select("id")
-                .single();
+              const { priced } = await upsertImportedUnitWithPrice(supabase, {
+                building_id: buildingId,
+                floorplan_id: floorplan.id,
+                unit_number: fp.unit,
+                beds: fp.beds,
+                baths: fp.baths || 1,
+                sqft: fp.sqft || null,
+                is_available: true,
+                available_on: fp.available_date || null,
+                rent: fp.rent,
+              });
 
-              if (unit && fp.rent) {
-                await supabase
-                  .from("unit_price_snapshots")
-                  .insert({
-                    unit_id: unit.id,
-                    rent: fp.rent,
-                    captured_at: new Date().toISOString(),
-                  });
-                results.units_created++;
-              }
+              if (priced) results.units_created++;
             }
           }
         }

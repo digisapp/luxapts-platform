@@ -66,7 +66,7 @@ export const AI_TOOLS: OpenAI.ChatCompletionTool[] = [
           },
           limit: {
             type: "integer",
-            description: "Maximum number of results (default 10)",
+            description: "Maximum number of results (default 10, max 25)",
           },
         },
         required: ["city_slug"],
@@ -135,19 +135,14 @@ export const AI_TOOLS: OpenAI.ChatCompletionTool[] = [
     function: {
       name: "create_lead",
       description:
-        "Create a lead record when user wants to schedule a tour, get more info, or connect with an agent.",
+        "Create a lead record when user wants to schedule a tour, get more info, or connect with an agent. Requires at least one contact method (email or phone) — ask the user for it before calling.",
       parameters: {
         type: "object",
         properties: {
-          source: {
-            type: "string",
-            enum: ["web_form", "chat", "voice"],
-            description: "Where the lead came from",
-          },
           city_slug: { type: "string", description: `City slug — one of: ${CITY_SLUG_LIST}` },
           name: { type: "string", description: "User's name" },
-          email: { type: "string", description: "User's email" },
-          phone: { type: "string", description: "User's phone number" },
+          email: { type: "string", description: "User's email (required unless phone is provided)" },
+          phone: { type: "string", description: "User's phone number (required unless email is provided)" },
           budget_min: { type: "integer" },
           budget_max: { type: "integer" },
           beds: { type: "integer" },
@@ -176,7 +171,7 @@ export const AI_TOOLS: OpenAI.ChatCompletionTool[] = [
             description: "Summary of chat/voice conversation",
           },
         },
-        required: ["source", "city_slug"],
+        required: ["city_slug"],
       },
     },
   },

@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 export const maxDuration = 300;
 import { createAdminClient } from "@/lib/supabase/server";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
+import { getReplyToAddress } from "@/lib/email/recipients";
 import { priceDropAlertEmail } from "@/lib/email/templates";
+import { chunk, IN_CHUNK_SIZE } from "@/lib/search/fetch-enrichments";
+import { fetchAllRows } from "@/lib/db-helpers";
 
 /**
  * GET /api/cron/price-drop-alerts
@@ -23,6 +26,28 @@ interface Drop {
   unitLabel: string;
   oldRent: number;
   newRent: number;
+}
+
+interface BuildingRel {
+  id: string;
+  name: string;
+  status: string;
+  neighborhoods: { name: string } | { name: string }[] | null;
+}
+
+interface UnitRow {
+  id: string;
+  beds: number | null;
+  unit_number: string | null;
+  is_available: boolean;
+  building_id: string;
+  buildings: BuildingRel | BuildingRel[] | null;
+}
+
+interface FavoriteRow {
+  user_id: string;
+  building_id?: string | null;
+  unit_id?: string | null;
 }
 
 export async function GET(req: Request) {
@@ -59,16 +84,30 @@ export async function GET(req: Request) {
   }
   const droppedUnitIds = [...latestByUnit.keys()];
 
-  const { data: units } = await supabase
-    .from("units")
-    .select("id, beds, unit_number, is_available, building_id, buildings:building_id (id, name, status, neighborhoods:neighborhood_id (name))")
-    .in("id", droppedUnitIds)
-    .eq("is_available", true);
+  // PostgREST encodes `.in()` in the URL: past ~150 ids the fetch fails
+  // outright, so a day with more than ~150 drops sent zero alerts. Chunk the
+  // id list and page each chunk.
+  const unitChunks = await Promise.all(
+    chunk(droppedUnitIds, IN_CHUNK_SIZE).map((ids) =>
+      fetchAllRows<UnitRow>((from, to) =>
+        supabase
+          .from("units")
+          .select(
+            "id, beds, unit_number, is_available, building_id, buildings:building_id (id, name, status, neighborhoods:neighborhood_id (name))"
+          )
+          .in("id", ids)
+          .eq("is_available", true)
+          .order("id")
+          .range(from, to)
+      )
+    )
+  );
+  const units = unitChunks.flat();
 
   const drops: Drop[] = [];
   const buildingMeta = new Map<string, { name: string; neighborhood: string | null }>();
 
-  for (const u of units || []) {
+  for (const u of units) {
     const building = Array.isArray(u.buildings) ? u.buildings[0] : u.buildings;
     if (!building || building.status !== "active") continue;
     const hood = Array.isArray(building.neighborhoods)
@@ -97,20 +136,38 @@ export async function GET(req: Request) {
   const dropBuildingIds = [...new Set(drops.map((d) => d.buildingId))];
   const dropUnitIds = drops.map((d) => d.unitId);
 
-  const [{ data: buildingFavs }, { data: unitFavs }] = await Promise.all([
-    supabase.from("user_favorites").select("user_id, building_id").in("building_id", dropBuildingIds),
-    supabase.from("user_favorites").select("user_id, unit_id").in("unit_id", dropUnitIds),
+  // Chunked + paged for the same reason as the units read above: a popular
+  // building can have more favoriters than one PostgREST page holds.
+  const fetchFavorites = async (column: "building_id" | "unit_id", ids: string[]) => {
+    const pages = await Promise.all(
+      chunk(ids, IN_CHUNK_SIZE).map((slice) =>
+        fetchAllRows<FavoriteRow>((from, to) =>
+          supabase
+            .from("user_favorites")
+            .select(`user_id, ${column}`)
+            .in(column, slice)
+            .order("id")
+            .range(from, to)
+        )
+      )
+    );
+    return pages.flat();
+  };
+
+  const [buildingFavs, unitFavs] = await Promise.all([
+    fetchFavorites("building_id", dropBuildingIds),
+    fetchFavorites("unit_id", dropUnitIds),
   ]);
 
   const unitToBuilding = new Map(drops.map((d) => [d.unitId, d.buildingId]));
 
   // user -> set of building ids they should hear about
   const userBuildings = new Map<string, Set<string>>();
-  for (const f of buildingFavs || []) {
+  for (const f of buildingFavs) {
     if (!f.building_id) continue;
     (userBuildings.get(f.user_id) ?? userBuildings.set(f.user_id, new Set()).get(f.user_id)!).add(f.building_id);
   }
-  for (const f of unitFavs || []) {
+  for (const f of unitFavs) {
     const bId = f.unit_id ? unitToBuilding.get(f.unit_id) : undefined;
     if (!bId) continue;
     (userBuildings.get(f.user_id) ?? userBuildings.set(f.user_id, new Set()).get(f.user_id)!).add(bId);
@@ -127,6 +184,7 @@ export async function GET(req: Request) {
   // 5. Send one email per (user, building)
   const resend = getResendClient();
   const fromEmail = getFromEmail();
+  const replyTo = getReplyToAddress();
   let sent = 0;
   let failed = 0;
 
@@ -151,9 +209,12 @@ export async function GET(req: Request) {
       if (!meta || buildingDrops.length === 0) continue;
 
       try {
-        await resend.emails.send({
+        // Resend v6 reports API failures in `error` and does NOT throw, so the
+        // old try/catch counted every rejected send as delivered.
+        const { error } = await resend.emails.send({
           from: fromEmail,
           to: [email],
+          replyTo,
           subject: `Price drop at ${meta.name}`,
           html: priceDropAlertEmail({
             name,
@@ -167,7 +228,13 @@ export async function GET(req: Request) {
             })),
           }),
         });
-        sent++;
+
+        if (error) {
+          console.error(`Price drop email rejected for ${email}:`, error);
+          failed++;
+        } else {
+          sent++;
+        }
       } catch (err) {
         console.error(`Price drop email failed for ${email}:`, err);
         failed++;

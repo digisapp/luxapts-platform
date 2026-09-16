@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isValidUUID } from "@/lib/utils";
 import { apiError } from "@/lib/api-helpers";
+import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 
 export async function GET(
   req: Request,
@@ -60,19 +61,25 @@ export async function GET(
     if (unitsRes.error) console.error("Units query error:", unitsRes.error.message);
     if (factsRes.error) console.error("Facts query error:", factsRes.error.message);
 
-    // Get latest prices for units (depends on unitsRes)
+    // Get latest prices for units (depends on unitsRes).
+    // Reads one row per unit from units_with_latest_price instead of pulling
+    // the whole unit_price_snapshots history through an unbounded `.in()`:
+    // that URL 400'd past ~150 unit ids and was truncated at the 1000-row cap.
     const unitPrices: Record<string, { rent: number; captured_at: string }> = {};
     if (unitsRes.data?.length) {
-      const unitIds = unitsRes.data.map((u) => u.id);
-      const pricesRes = await supabase
-        .from("unit_price_snapshots")
-        .select("unit_id, rent, net_effective_rent, lease_term_months, captured_at")
-        .in("unit_id", unitIds)
-        .order("captured_at", { ascending: false });
+      const priced = await fetchAvailableUnitPrices<{
+        id: string;
+        building_id: string;
+        latest_rent: number | null;
+        price_captured_at: string | null;
+      }>(supabase, [id], ["price_captured_at"]);
 
-      for (const p of pricesRes.data || []) {
-        if (!unitPrices[p.unit_id]) {
-          unitPrices[p.unit_id] = { rent: p.rent, captured_at: p.captured_at };
+      for (const p of priced) {
+        if (p.latest_rent != null) {
+          unitPrices[p.id] = {
+            rent: p.latest_rent,
+            captured_at: p.price_captured_at ?? "",
+          };
         }
       }
     }

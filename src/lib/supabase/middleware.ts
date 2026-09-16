@@ -42,10 +42,16 @@ export async function updateSession(request: NextRequest) {
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
   const isAgentRoute = request.nextUrl.pathname.startsWith("/agent");
   const isPartnerRoute = request.nextUrl.pathname.startsWith("/partner");
+  // /shower/* needs a session: every page under it calls an API that returns
+  // 401 without one, so anonymous visitors used to reach the shower
+  // registration form and only find out after submitting. It is deliberately
+  // NOT role-gated below — a logged-in renter must still be able to open
+  // /shower/profile to apply.
+  const isShowerRoute = request.nextUrl.pathname.startsWith("/shower");
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
 
   // If trying to access protected routes without being logged in
-  if (!user && (isAdminRoute || isAgentRoute || isPartnerRoute)) {
+  if (!user && (isAdminRoute || isAgentRoute || isPartnerRoute || isShowerRoute)) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     url.searchParams.set("redirect", request.nextUrl.pathname);

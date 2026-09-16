@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites, type FavoriteItem } from "@/hooks/useFavorites";
 import { useSavedSearches } from "@/hooks/useSavedSearches";
+import { buildSavedSearchUrl } from "@/hooks/buildSavedSearchUrl";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -138,16 +139,6 @@ export default function AccountPage() {
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
-  };
-
-  const buildSearchUrl = (filters: (typeof searches)[0]["filters"]) => {
-    const params = new URLSearchParams();
-    if (filters.city) params.set("city", filters.city);
-    if (filters.bedsMin !== undefined) params.set("beds_min", filters.bedsMin.toString());
-    if (filters.bedsMax !== undefined) params.set("beds_max", filters.bedsMax.toString());
-    if (filters.budgetMin !== undefined) params.set("budget_min", filters.budgetMin.toString());
-    if (filters.budgetMax !== undefined) params.set("budget_max", filters.budgetMax.toString());
-    return `/search?${params.toString()}`;
   };
 
   // While auth is still resolving, show a spinner instead of a blank page
@@ -352,7 +343,7 @@ export default function AccountPage() {
                           >
                             {search.emailAlerts ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
                           </button>
-                          <Link href={buildSearchUrl(search.filters)}>
+                          <Link href={buildSavedSearchUrl(search.filters)}>
                             <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors">
                               <ExternalLink className="h-3.5 w-3.5" />
                             </button>

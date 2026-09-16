@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { apiError } from "@/lib/api-helpers";
+import { safeParseInt } from "@/lib/utils";
 
 interface BrowseBody {
   city_slug?: string;
@@ -47,7 +48,9 @@ export async function POST(req: Request) {
     const { data: buildings, error } = await query;
 
     if (error) {
-      return apiError(error.message, 500);
+      // Log the driver message; never hand PostgREST internals to a caller.
+      console.error("Browse buildings query error:", error);
+      return apiError("Failed to load buildings", 500);
     }
 
     // Get building facts for all buildings (rent ranges, images)
@@ -102,7 +105,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const citySlug = searchParams.get("city");
   const neighborhoodSlug = searchParams.get("neighborhood");
-  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "50"), 1), 100);
+  const limit = safeParseInt(searchParams.get("limit"), 50, 1, 100);
 
   const supabase = createAdminClient();
 
@@ -146,7 +149,8 @@ export async function GET(req: Request) {
   const { data: buildings, error } = await query.limit(limit);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Browse buildings query error:", error);
+    return apiError("Failed to load buildings", 500);
   }
 
   // Get building facts

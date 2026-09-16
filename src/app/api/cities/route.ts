@@ -12,7 +12,8 @@ export async function GET() {
       .order("name");
 
     if (error) {
-      return apiError(error.message, 500);
+      console.error("List cities query error:", error);
+      return apiError("Failed to load cities", 500);
     }
 
     return NextResponse.json(

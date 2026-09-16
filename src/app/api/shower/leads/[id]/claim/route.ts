@@ -43,14 +43,17 @@ export async function POST(
       return apiError("You are not certified for this building", 403);
     }
 
-    // Check shower has no existing active claim (can only hold one at a time)
+    // Check shower has no existing active claim (can only hold one at a time).
+    // This is advisory only — two concurrent claims both pass it; the partial
+    // unique index from migration 024 is what actually enforces it (see the
+    // 23505 handling below).
     const { data: activeClaim } = await adminClient
       .from("showing_claims")
       .select("id, showing_lead_id")
       .eq("shower_id", auth.showerId)
       .eq("status", "active")
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (activeClaim) {
       return apiError("You already have an active showing. Complete or cancel it before claiming another.", 409);
@@ -86,6 +89,23 @@ export async function POST(
         .from("showing_leads")
         .update({ status: "open" })
         .eq("id", leadId);
+
+      // 23505 = unique_violation. showing_claims_one_active_per_shower
+      // (migration 024) means this shower already holds an active claim —
+      // the advisory check above misses that when two claims race. The other
+      // unique constraint on the table is showing_lead_id, i.e. this lead was
+      // claimed before.
+      if (claimError?.code === "23505") {
+        const detail = `${claimError.message} ${claimError.details ?? ""}`;
+        if (detail.includes("one_active_per_shower")) {
+          return apiError(
+            "You already have an active claim. Complete or cancel it before claiming another.",
+            409
+          );
+        }
+        return apiError("This lead has already been claimed", 409);
+      }
+
       console.error("Claim insert error:", claimError);
       return apiError("Failed to claim lead", 500);
     }

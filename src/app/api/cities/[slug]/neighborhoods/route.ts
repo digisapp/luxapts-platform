@@ -29,7 +29,8 @@ export async function GET(
       .order("name");
 
     if (error) {
-      return apiError(error.message, 500);
+      console.error("List neighborhoods query error:", error);
+      return apiError("Failed to load neighborhoods", 500);
     }
 
     return NextResponse.json(

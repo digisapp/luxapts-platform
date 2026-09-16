@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { newShowingLeadEmail } from "@/lib/email/templates";
+import { getReplyToAddress } from "@/lib/email/recipients";
 
 // Email every certified, approved shower for a building when a new showing
 // lead opens. Client PII is deliberately excluded — it unlocks on claim.
@@ -30,11 +31,18 @@ export async function notifyCertifiedShowers(
         .select("name, neighborhoods:neighborhood_id (name)")
         .eq("id", notification.buildingId)
         .single(),
+      // The approved-shower filter used to run in JS AFTER .limit(20), so a
+      // building whose first 20 certifications were pending/suspended notified
+      // nobody. Filter (and drop expired certifications) in the query, then
+      // limit. `!inner` is what makes the embedded status filter actually
+      // restrict the parent rows.
       supabase
         .from("shower_certifications")
-        .select("shower_id, showers:shower_id (id, user_id, display_name, status)")
+        .select("shower_id, showers:shower_id!inner (id, user_id, display_name, status)")
         .eq("building_id", notification.buildingId)
         .eq("status", "certified")
+        .eq("showers.status", "approved")
+        .gt("expires_at", new Date().toISOString())
         .limit(MAX_NOTIFICATIONS),
     ]);
 
@@ -64,9 +72,12 @@ export async function notifyCertifiedShowers(
       if (!email) continue;
 
       try {
-        await resend.emails.send({
+        // Resend v6 returns { data, error } and never throws for API errors,
+        // so the old catch-only path counted rejected mail as sent.
+        const { error } = await resend.emails.send({
           from: fromEmail,
           to: [email],
+          replyTo: getReplyToAddress(),
           subject: `New showing available — ${building.name}, ${notification.preferredDate}`,
           html: newShowingLeadEmail({
             displayName: shower.display_name,
@@ -78,7 +89,12 @@ export async function notifyCertifiedShowers(
             expiresAt: notification.expiresAt,
           }),
         });
-        sent++;
+
+        if (error) {
+          console.error(`Shower notification rejected for ${shower.id}:`, error);
+        } else {
+          sent++;
+        }
       } catch (err) {
         console.error(`Shower notification failed for ${shower.id}:`, err);
       }

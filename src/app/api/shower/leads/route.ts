@@ -31,9 +31,11 @@ export async function GET() {
     const now = new Date().toISOString();
     const { data: openLeads, error: openError } = await adminClient
       .from("showing_leads")
+      // `notes` is a private admin field on showing_leads — never expose it in
+      // the open (unclaimed) feed.
       .select(`
-        id, preferred_date, preferred_time, unit_type, notes, created_at, expires_at,
-        buildings:building_id (id, name, address)
+        id, preferred_date, preferred_time, unit_type, created_at, expires_at,
+        buildings:building_id (id, name, address:address_1)
       `)
       .in("building_id", buildingIds)
       .eq("status", "open")
@@ -55,7 +57,7 @@ export async function GET() {
         showing_leads:showing_lead_id (
           id, client_name, client_email, client_phone,
           preferred_date, preferred_time, unit_type, special_instructions, status,
-          buildings:building_id (id, name, address)
+          buildings:building_id (id, name, address:address_1)
         )
       `)
       .eq("shower_id", auth.showerId)

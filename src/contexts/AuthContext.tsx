@@ -16,6 +16,40 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Signup flags a pending welcome email in localStorage; the SIGNED_IN handler
+// below sends it once a session exists. The flag stores who it was set for and
+// when, so a signup that never confirms can't make the NEXT person to sign in
+// on this browser (possibly a different account) receive the welcome email.
+const WELCOME_PENDING_KEY = "staycio:welcome-pending";
+const WELCOME_PENDING_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+type WelcomePending = { email: string; at: number };
+
+function clearWelcomePending() {
+  try {
+    localStorage.removeItem(WELCOME_PENDING_KEY);
+  } catch {}
+}
+
+/** Read the flag, discarding anything malformed or written by an older build. */
+function readWelcomePending(): WelcomePending | null {
+  try {
+    const raw = localStorage.getItem(WELCOME_PENDING_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      typeof (parsed as WelcomePending).email === "string" &&
+      typeof (parsed as WelcomePending).at === "number"
+    ) {
+      return parsed as WelcomePending;
+    }
+  } catch {}
+  clearWelcomePending();
+  return null;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -42,12 +76,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fires immediately when email confirmation is off, or after the user
       // clicks the confirmation link when it's on.
       if (event === "SIGNED_IN" && session) {
-        try {
-          if (localStorage.getItem("staycio:welcome-pending")) {
-            localStorage.removeItem("staycio:welcome-pending");
+        const pending = readWelcomePending();
+        if (pending) {
+          const expired = Date.now() - pending.at > WELCOME_PENDING_MAX_AGE_MS;
+          const sameUser =
+            pending.email.toLowerCase() === (session.user.email ?? "").toLowerCase();
+          if (expired) {
+            clearWelcomePending();
+          } else if (sameUser) {
+            clearWelcomePending();
             fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
           }
-        } catch {}
+        }
+      }
+
+      // A stale flag must never survive into the next person's session.
+      if (event === "SIGNED_OUT") {
+        clearWelcomePending();
       }
     });
 

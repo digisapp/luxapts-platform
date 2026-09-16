@@ -1,7 +1,7 @@
 // HTML fetcher for building websites
 // Handles different website types and anti-bot measures
 
-import { ScrapeResult, ImageScrapeResult } from "./types";
+import { ScrapeResult, ImageScrapeResult, UnitsExtractionSource } from "./types";
 import { extractUnitsWithAI, extractAmenitiesWithAI, extractFullBuildingData, extractImagesWithAI } from "./ai-extractor";
 import { needsJsRendering, renderPage } from "./renderer";
 
@@ -124,36 +124,80 @@ export async function fetchBuildingHTML(websiteUrl: string): Promise<{ html: str
   return fetched;
 }
 
-// Try to find the amenities page from the main website
-export async function findAmenitiesPage(websiteUrl: string, mainHtml: string): Promise<string | null> {
-  // Common amenities page patterns
-  const patterns = [
-    /href=["']([^"']*(?:amenities|features|lifestyle)[^"']*)["']/gi,
-    /href=["']([^"']*(?:community|about)[^"']*)["']/gi,
-  ];
+/**
+ * Hosts compared for "same site" purposes. foo.com and www.foo.com are one
+ * site: the main fetch follows the redirect between them, so comparing the
+ * raw hostnames rejected every deep link on a site that canonicalises to www.
+ */
+export function normalizeHost(hostname: string): string {
+  return hostname.toLowerCase().replace(/^www\./, "");
+}
+
+const AMENITIES_LINK_PATTERNS = [
+  /href=["']([^"']*(?:amenities|features|lifestyle)[^"']*)["']/gi,
+  /href=["']([^"']*(?:community|about)[^"']*)["']/gi,
+];
+const AMENITIES_KEYWORDS = /amenities|features|lifestyle/i;
+
+const UNITS_LINK_PATTERNS = [
+  /href=["']([^"']*(?:floor[-_]?plans?|availability|apartments|units|pricing)[^"']*)["']/gi,
+  /href=["']([^"']*(?:rent|apply|schedule)[^"']*)["']/gi,
+];
+const UNITS_KEYWORDS = /floor[-_]?plans?|availability|apartments|units|pricing/i;
+
+const GALLERY_LINK_PATTERNS = [
+  /href=["']([^"']*(?:gallery|photos|photo-gallery|images|media|virtual-tour)[^"']*)["']/gi,
+  /href=["']([^"']*(?:gallery|photos)[^"']*)["']/gi,
+];
+const GALLERY_KEYWORDS = /gallery|photos|photo-gallery|images|media|virtual/i;
+
+/**
+ * Find the first same-site link whose PATH (never the hostname) matches a
+ * section keyword. Pure and exported for tests.
+ *
+ * `baseUrl` must be the page's FINAL url — the one the main fetch actually
+ * landed on after redirects — or every resolved link looks cross-host.
+ */
+export function findLinkedPage(
+  mainHtml: string,
+  baseUrl: string,
+  patterns: RegExp[],
+  keywords: RegExp,
+): string | null {
+  let base: URL;
+  try {
+    base = new URL(baseUrl);
+  } catch {
+    return null;
+  }
 
   for (const pattern of patterns) {
-    const matches = mainHtml.matchAll(pattern);
-    for (const match of matches) {
-      const amenitiesPath = match[1];
+    for (const match of mainHtml.matchAll(pattern)) {
+      const path = match[1];
+      if (!path || path.startsWith("#")) continue;
 
-      // Skip if it's an anchor link
-      if (amenitiesPath.startsWith("#")) continue;
-
-      // Build full URL
+      let candidate: URL;
       try {
-        const baseUrl = new URL(websiteUrl);
-        const amenitiesUrl = new URL(amenitiesPath, baseUrl);
-
-        // Same-host only — see findUnitsPage
-        if (amenitiesUrl.hostname !== baseUrl.hostname) continue;
-
-        // Check if the URL contains likely amenities keywords
-        if (/amenities|features|lifestyle/i.test(amenitiesUrl.href)) {
-          return amenitiesUrl.href;
-        }
+        candidate = new URL(path, base);
       } catch {
         continue;
+      }
+
+      if (candidate.protocol !== "http:" && candidate.protocol !== "https:") continue;
+
+      // Never leave the building's own site — nav pages link out to Google
+      // Maps, Instagram, portfolio sites etc., and "apartments" in those
+      // URLs would send the scraper off to render the wrong site entirely.
+      if (normalizeHost(candidate.hostname) !== normalizeHost(base.hostname)) continue;
+
+      // Match the PATH only. Testing the whole href meant any building on a
+      // domain containing "apartments"/"units"/"pricing" matched its own
+      // canonical/home link first and the real /floorplans page was never
+      // fetched — the marketing page got scraped instead, every night.
+      if (candidate.pathname === "" || candidate.pathname === "/") continue;
+
+      if (keywords.test(candidate.pathname + candidate.search)) {
+        return candidate.href;
       }
     }
   }
@@ -161,43 +205,29 @@ export async function findAmenitiesPage(websiteUrl: string, mainHtml: string): P
   return null;
 }
 
+/** Amenities page finder (pure). */
+export function findAmenitiesPageIn(mainHtml: string, baseUrl: string): string | null {
+  return findLinkedPage(mainHtml, baseUrl, AMENITIES_LINK_PATTERNS, AMENITIES_KEYWORDS);
+}
+
+/** Floor plans/availability page finder (pure). */
+export function findUnitsPageIn(mainHtml: string, baseUrl: string): string | null {
+  return findLinkedPage(mainHtml, baseUrl, UNITS_LINK_PATTERNS, UNITS_KEYWORDS);
+}
+
+/** Photo gallery page finder (pure). */
+export function findGalleryPageIn(mainHtml: string, baseUrl: string): string | null {
+  return findLinkedPage(mainHtml, baseUrl, GALLERY_LINK_PATTERNS, GALLERY_KEYWORDS);
+}
+
+// Try to find the amenities page from the main website
+export async function findAmenitiesPage(websiteUrl: string, mainHtml: string): Promise<string | null> {
+  return findAmenitiesPageIn(mainHtml, websiteUrl);
+}
+
 // Try to find the floor plans/availability page
 export async function findUnitsPage(websiteUrl: string, mainHtml: string): Promise<string | null> {
-  // Common floor plans/availability page patterns
-  const patterns = [
-    /href=["']([^"']*(?:floor[-_]?plans?|availability|apartments|units|pricing)[^"']*)["']/gi,
-    /href=["']([^"']*(?:rent|apply|schedule)[^"']*)["']/gi,
-  ];
-
-  for (const pattern of patterns) {
-    const matches = mainHtml.matchAll(pattern);
-    for (const match of matches) {
-      const unitsPath = match[1];
-
-      // Skip if it's an anchor link
-      if (unitsPath.startsWith("#")) continue;
-
-      // Build full URL
-      try {
-        const baseUrl = new URL(websiteUrl);
-        const unitsUrl = new URL(unitsPath, baseUrl);
-
-        // Never leave the building's own site — nav pages link out to Google
-        // Maps, Instagram, portfolio sites etc., and "apartments" in those
-        // URLs would send the scraper off to render the wrong site entirely
-        if (unitsUrl.hostname !== baseUrl.hostname) continue;
-
-        // Check if the URL contains likely units keywords
-        if (/floor[-_]?plans?|availability|apartments|units|pricing/i.test(unitsUrl.href)) {
-          return unitsUrl.href;
-        }
-      } catch {
-        continue;
-      }
-    }
-  }
-
-  return null;
+  return findUnitsPageIn(mainHtml, websiteUrl);
 }
 
 export async function scrapeUnitsOnly(websiteUrl: string): Promise<ScrapeResult> {
@@ -208,22 +238,32 @@ export async function scrapeUnitsOnly(websiteUrl: string): Promise<ScrapeResult>
       return { success: false, error: "Failed to fetch main page" };
     }
 
-    // Try to find dedicated units/floor plans page
-    const unitsPageUrl = await findUnitsPage(websiteUrl, mainResult.html);
+    // Try to find dedicated units/floor plans page. The finder keys off the
+    // page we actually landed on, not the configured URL.
+    const unitsPageUrl = findUnitsPageIn(mainResult.html, mainResult.finalUrl);
 
     let htmlToProcess = mainResult.html;
     let sourceUrl = mainResult.finalUrl;
+    let source: UnitsExtractionSource = "main_page_fallback";
+    let unitsPageFetchFailed = false;
 
     if (unitsPageUrl) {
       const unitsResult = await fetchBuildingHTML(unitsPageUrl);
       if (unitsResult) {
         htmlToProcess = unitsResult.html;
         sourceUrl = unitsResult.finalUrl;
+        source = "units_page";
+      } else {
+        // Bot wall or timeout on the availability page. Anything we extract
+        // below comes off the marketing page — the caller MUST NOT read it
+        // as "the building's numbered units are gone".
+        unitsPageFetchFailed = true;
       }
     }
 
     // Extract units with AI
     let unitsData = await extractUnitsWithAI(htmlToProcess, sourceUrl);
+    let extractionError = unitsData.error;
 
     // Zero units from a dedicated availability page usually means a JS
     // widget whose shell carried enough nav text to defeat the
@@ -232,10 +272,14 @@ export async function scrapeUnitsOnly(websiteUrl: string): Promise<ScrapeResult>
       const rendered = await renderPage(unitsPageUrl);
       if (rendered) {
         const rerun = await extractUnitsWithAI(rendered.html, rendered.finalUrl);
+        extractionError = rerun.error ?? extractionError;
         if (rerun.units.length > 0) {
           console.log(`Recovered ${rerun.units.length} units from force-rendered ${unitsPageUrl}`);
           unitsData = rerun;
           sourceUrl = rendered.finalUrl;
+          source = "units_page";
+          unitsPageFetchFailed = false;
+          extractionError = undefined;
         }
       }
 
@@ -243,12 +287,29 @@ export async function scrapeUnitsOnly(websiteUrl: string): Promise<ScrapeResult>
       // availability directly (condo towers with marketing-page pricing)
       if (unitsData.units.length === 0 && htmlToProcess !== mainResult.html) {
         const fromMain = await extractUnitsWithAI(mainResult.html, mainResult.finalUrl);
+        extractionError = fromMain.error ?? extractionError;
         if (fromMain.units.length > 0) {
           console.log(`Recovered ${fromMain.units.length} units from main page for ${websiteUrl}`);
           unitsData = fromMain;
           sourceUrl = mainResult.finalUrl;
+          source = "main_page_fallback";
+          extractionError = undefined;
         }
       }
+    }
+
+    // An AI outage / 429 / unparseable response is NOT "this building has no
+    // units". Reporting it as success recorded units_found=0 and deferred the
+    // building for another 7 days.
+    if (unitsData.units.length === 0 && extractionError) {
+      return {
+        success: false,
+        error: `Unit extraction failed: ${extractionError}`,
+        raw_html_length: htmlToProcess.length,
+        source,
+        units_page_fetch_failed: unitsPageFetchFailed,
+        units_page_url: unitsPageUrl || undefined,
+      };
     }
 
     return {
@@ -262,6 +323,9 @@ export async function scrapeUnitsOnly(websiteUrl: string): Promise<ScrapeResult>
         source_url: sourceUrl,
       },
       raw_html_length: htmlToProcess.length,
+      source,
+      units_page_fetch_failed: unitsPageFetchFailed,
+      units_page_url: unitsPageUrl || undefined,
     };
   } catch (error) {
     return {
@@ -279,8 +343,8 @@ export async function scrapeAmenitiesOnly(websiteUrl: string): Promise<ScrapeRes
       return { success: false, error: "Failed to fetch main page" };
     }
 
-    // Try to find dedicated amenities page
-    const amenitiesPageUrl = await findAmenitiesPage(websiteUrl, mainResult.html);
+    // Try to find dedicated amenities page (relative to the URL we landed on)
+    const amenitiesPageUrl = findAmenitiesPageIn(mainResult.html, mainResult.finalUrl);
 
     let htmlToProcess = mainResult.html;
     let sourceUrl = mainResult.finalUrl;
@@ -317,33 +381,11 @@ export async function scrapeAmenitiesOnly(websiteUrl: string): Promise<ScrapeRes
   }
 }
 
-// Try to find the photo gallery page from the main website
+// Try to find the photo gallery page from the main website.
+// Same-host guarded like the other finders — without it an Instagram or
+// Google-Maps link in the nav was fetched and "extracted" as the gallery.
 export async function findGalleryPage(websiteUrl: string, mainHtml: string): Promise<string | null> {
-  const patterns = [
-    /href=["']([^"']*(?:gallery|photos|photo-gallery|images|media|virtual-tour)[^"']*)["']/gi,
-    /href=["']([^"']*(?:gallery|photos)[^"']*)["']/gi,
-  ];
-
-  for (const pattern of patterns) {
-    const matches = mainHtml.matchAll(pattern);
-    for (const match of matches) {
-      const galleryPath = match[1];
-      if (galleryPath.startsWith("#")) continue;
-
-      try {
-        const baseUrl = new URL(websiteUrl);
-        const galleryUrl = new URL(galleryPath, baseUrl).href;
-
-        if (/gallery|photos|photo-gallery|images|media|virtual/i.test(galleryUrl)) {
-          return galleryUrl;
-        }
-      } catch {
-        continue;
-      }
-    }
-  }
-
-  return null;
+  return findGalleryPageIn(mainHtml, websiteUrl);
 }
 
 export async function scrapeImagesOnly(websiteUrl: string): Promise<{ success: boolean; data?: ImageScrapeResult; error?: string; raw_html_length?: number }> {
@@ -355,10 +397,10 @@ export async function scrapeImagesOnly(websiteUrl: string): Promise<{ success: b
     }
 
     // Look for gallery/photos page
-    const galleryPageUrl = await findGalleryPage(websiteUrl, mainResult.html);
+    const galleryPageUrl = findGalleryPageIn(mainResult.html, mainResult.finalUrl);
 
     // Also look for amenities page (often has pool/gym photos)
-    const amenitiesPageUrl = await findAmenitiesPage(websiteUrl, mainResult.html);
+    const amenitiesPageUrl = findAmenitiesPageIn(mainResult.html, mainResult.finalUrl);
 
     // Combine HTML from all relevant pages
     const pages: string[] = [mainResult.html];
@@ -378,7 +420,7 @@ export async function scrapeImagesOnly(websiteUrl: string): Promise<{ success: b
     }
 
     // Also try floor plans page for floorplan images
-    const unitsPageUrl = await findUnitsPage(websiteUrl, mainResult.html);
+    const unitsPageUrl = findUnitsPageIn(mainResult.html, mainResult.finalUrl);
     if (unitsPageUrl) {
       const unitsResult = await fetchBuildingHTML(unitsPageUrl);
       if (unitsResult) {
@@ -415,11 +457,9 @@ export async function scrapeFullBuilding(websiteUrl: string): Promise<ScrapeResu
       return { success: false, error: "Failed to fetch main page" };
     }
 
-    // Find and fetch additional pages in parallel
-    const [amenitiesPageUrl, unitsPageUrl] = await Promise.all([
-      findAmenitiesPage(websiteUrl, mainResult.html),
-      findUnitsPage(websiteUrl, mainResult.html),
-    ]);
+    // Find additional pages (relative to the URL we landed on)
+    const amenitiesPageUrl = findAmenitiesPageIn(mainResult.html, mainResult.finalUrl);
+    const unitsPageUrl = findUnitsPageIn(mainResult.html, mainResult.finalUrl);
 
     // Fetch additional pages
     const additionalPages: string[] = [];
@@ -431,10 +471,16 @@ export async function scrapeFullBuilding(websiteUrl: string): Promise<ScrapeResu
       }
     }
 
+    let source: UnitsExtractionSource = "main_page_fallback";
+    let unitsPageFetchFailed = false;
+
     if (unitsPageUrl) {
       const unitsResult = await fetchBuildingHTML(unitsPageUrl);
       if (unitsResult) {
         additionalPages.push(`<!-- UNITS PAGE: ${unitsResult.finalUrl} -->\n${unitsResult.html}`);
+        source = "units_page";
+      } else {
+        unitsPageFetchFailed = true;
       }
     }
 
@@ -444,10 +490,24 @@ export async function scrapeFullBuilding(websiteUrl: string): Promise<ScrapeResu
     // Extract all data with AI
     const data = await extractFullBuildingData(fullHtml, mainResult.finalUrl);
 
+    if (data.units.length === 0 && data.units_error) {
+      return {
+        success: false,
+        error: `Unit extraction failed: ${data.units_error}`,
+        raw_html_length: fullHtml.length,
+        source,
+        units_page_fetch_failed: unitsPageFetchFailed,
+        units_page_url: unitsPageUrl || undefined,
+      };
+    }
+
     return {
       success: true,
       data,
       raw_html_length: fullHtml.length,
+      source,
+      units_page_fetch_failed: unitsPageFetchFailed,
+      units_page_url: unitsPageUrl || undefined,
     };
   } catch (error) {
     return {

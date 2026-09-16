@@ -4,6 +4,10 @@ import { checkAdminAuth } from "@/lib/admin/auth";
 import { logAuditEvent, AuditAction } from "@/lib/admin/audit";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
 import { apiError } from "@/lib/api-helpers";
+import { fetchAllRows } from "@/lib/db-helpers";
+import { escapeHtml } from "@/lib/utils";
+import { getReplyToAddress } from "@/lib/email/recipients";
+import { unsubscribeFooterHtml, unsubscribeToken } from "@/lib/email/unsubscribe";
 
 export async function POST(req: Request) {
   try {
@@ -25,32 +29,74 @@ export async function POST(req: Request) {
 
     const supabase = createAdminClient();
 
-    // Query matching leads with emails
-    let query = supabase
+    // Query matching leads with emails. Paged — the unpaged version silently
+    // stopped at PostgREST's 1000-row cap, so large campaigns only ever
+    // reached the first 1000 leads while reporting success for all of them.
+    // Unsubscribed leads are excluded (CAN-SPAM).
+    // `unsubscribed_at` arrives with migration 024. If the code is deployed
+    // before the migration is applied, PostgREST answers 42703 for the whole
+    // query; refusing to send is safer than mailing everyone, so the
+    // unfiltered retry is only taken when the column genuinely does not exist.
+    const selectLeads = (withUnsubscribeFilter: boolean) =>
+      fetchAllRows<{ id: string; user_email: string | null; name: string | null }>((from, to) => {
+        let query = supabase
+          .from("leads")
+          .select("id, user_email, name")
+          .not("user_email", "is", null);
+
+        if (withUnsubscribeFilter) {
+          query = query.is("unsubscribed_at", null);
+        }
+        if (filter?.status) {
+          query = query.eq("status", filter.status);
+        }
+        if (filter?.source) {
+          query = query.eq("source", filter.source);
+        }
+        if (filter?.city_id) {
+          query = query.eq("city_id", filter.city_id);
+        }
+
+        return query.order("id").range(from, to);
+      });
+
+    // fetchAllRows swallows query errors (it stops paging and returns what it
+    // has), so probe for the column first rather than silently mailing nobody.
+    const probe = await supabase
       .from("leads")
-      .select("id, user_email, name")
-      .not("user_email", "is", null);
-
-    if (filter?.status) {
-      query = query.eq("status", filter.status);
-    }
-    if (filter?.source) {
-      query = query.eq("source", filter.source);
-    }
-    if (filter?.city_id) {
-      query = query.eq("city_id", filter.city_id);
+      .select("id")
+      .is("unsubscribed_at", null)
+      .limit(1);
+    const hasUnsubscribeColumn = probe.error?.code !== "42703";
+    if (!hasUnsubscribeColumn) {
+      console.error(
+        "leads.unsubscribed_at is missing — apply migration 024; sending without the opt-out filter"
+      );
     }
 
-    const { data: leads, error: leadsError } = await query;
+    const leads = await selectLeads(hasUnsubscribeColumn);
 
-    if (leadsError) {
-      console.error("Query leads error:", leadsError);
-      return apiError("Failed to query leads", 500);
+    // One send per address: the same person often has several lead rows
+    // (one per enquiry), which meant duplicate copies of every campaign.
+    const byEmail = new Map<string, { id: string; user_email: string; name: string | null }>();
+    for (const lead of leads) {
+      const email = lead.user_email?.trim().toLowerCase();
+      if (!email) continue;
+      if (!byEmail.has(email)) {
+        byEmail.set(email, { id: lead.id, user_email: email, name: lead.name });
+      }
     }
+    const recipients = [...byEmail.values()];
 
-    const recipients = (leads || []).filter((l) => l.user_email);
     if (recipients.length === 0) {
       return apiError("No recipients match the filter");
+    }
+
+    // CAN-SPAM: bulk mail must carry a working unsubscribe link, which is
+    // signed with CRON_SECRET. Refuse to send rather than mail without one.
+    if (!unsubscribeToken(recipients[0].id)) {
+      console.error("Campaign send blocked: CRON_SECRET is not configured (no unsubscribe link)");
+      return apiError("Email sending is not configured (missing unsubscribe signing secret)", 500);
     }
 
     // Create the campaign record upfront so we can update delivery counts on it
@@ -74,9 +120,12 @@ export async function POST(req: Request) {
       return apiError("Failed to create campaign record", 500);
     }
 
-    // Send via Resend batch (chunks of 100), tracking delivery counts
+    // Send via Resend batch (chunks of 100), tracking delivery counts.
+    // Resend v6 reports API failures through the returned `error` and does NOT
+    // throw, so the old try/catch counted every rejected batch as delivered.
     const resend = getResendClient();
     const fromEmail = getFromEmail();
+    const replyTo = getReplyToAddress();
     const CHUNK_SIZE = 100;
     let sentCount = 0;
     let failedCount = 0;
@@ -85,24 +134,31 @@ export async function POST(req: Request) {
       const chunk = recipients.slice(i, i + CHUNK_SIZE);
       const emails = chunk.map((lead) => ({
         from: fromEmail,
-        to: [lead.user_email!],
+        to: [lead.user_email],
+        ...(replyTo ? { replyTo } : {}),
         subject,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-            ${lead.name ? `<p>Hi ${lead.name},</p>` : ""}
+            ${lead.name ? `<p>Hi ${escapeHtml(lead.name)},</p>` : ""}
             <div>${body_html}</div>
             <p style="margin-top: 24px; color: #666; font-size: 12px;">
               — The Staycio Team
             </p>
+            ${unsubscribeFooterHtml(lead.id)}
           </div>
         `,
       }));
 
       try {
-        await resend.batch.send(emails);
-        sentCount += chunk.length;
+        const { error: batchError } = await resend.batch.send(emails);
+        if (batchError) {
+          console.error(`Batch send error (chunk ${i}):`, batchError);
+          failedCount += chunk.length;
+        } else {
+          sentCount += chunk.length;
+        }
       } catch (batchError) {
-        console.error(`Batch send error (chunk ${i}):`, batchError);
+        console.error(`Batch send threw (chunk ${i}):`, batchError);
         failedCount += chunk.length;
       }
     }

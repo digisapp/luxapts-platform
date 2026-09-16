@@ -12,12 +12,20 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api (route handlers do their own auth; see below)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
-     * - api routes (handled separately)
+     *
+     * /api really is excluded now — the comment claimed it was, but the regex
+     * did not, so every API request paid an extra supabase.auth.getUser()
+     * round trip. Nothing in updateSession applies to /api: it only gates the
+     * /admin, /agent, /partner and /shower page paths, and route handlers
+     * refresh the session cookie themselves (createClient() in
+     * lib/supabase/server can write cookies from a Route Handler; the
+     * try/catch there only swallows writes attempted from Server Components).
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

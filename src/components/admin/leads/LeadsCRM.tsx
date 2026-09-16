@@ -189,6 +189,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
           <option value="web_form">Web Form</option>
           <option value="chat">Chat</option>
           <option value="voice">Voice</option>
+          <option value="microsite">Microsite</option>
         </select>
       </div>
 

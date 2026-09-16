@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 export const maxDuration = 300;
 import { createAdminClient } from "@/lib/supabase/server";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
+import { getReplyToAddress } from "@/lib/email/recipients";
 import { cachedSearch, type SearchResponse } from "@/lib/search/cache";
 import { normalizeCitySlug } from "@/lib/constants/cities";
 import { escapeHtml } from "@/lib/utils";
@@ -206,13 +207,22 @@ export async function GET(req: Request) {
     `;
 
     try {
-      await resend.emails.send({
+      // Resend v6 reports API failures in `error` and does NOT throw — relying
+      // on a throw counted every rejected digest as delivered.
+      const { error } = await resend.emails.send({
         from: fromEmail,
         to: [email],
+        replyTo: getReplyToAddress(),
         subject: `Your Staycio Apartment Digest — ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" })}`,
         html,
       });
-      alertsSent++;
+
+      if (error) {
+        console.error(`Alert rejected for ${email}:`, error);
+        alertsFailed++;
+      } else {
+        alertsSent++;
+      }
     } catch (err) {
       console.error(`Failed to send alert to ${email}:`, err);
       alertsFailed++;

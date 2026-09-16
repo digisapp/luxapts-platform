@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { getFirstRelation } from "@/lib/db-helpers";
+import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
 import type { ActivityEvent } from "@/components/admin/dashboard/ActivityFeed";
 
 export async function fetchQuickActionCounts(supabase: ReturnType<typeof createAdminClient>) {
@@ -7,38 +7,61 @@ export async function fetchQuickActionCounts(supabase: ReturnType<typeof createA
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const [newLeadsRes, allBuildingsRes, buildingImagesRes, scrapeStatusRes, leadsRes, assignmentsRes] =
+    // Every list read here is paged. Unpaged, each stopped at PostgREST's
+    // 1000-row cap, so "buildings needing images", "stale scrapes" and
+    // "unassigned leads" were all computed from a truncated slice — a building
+    // whose images sat past row 1000 was reported as having none.
+    const [newLeadsRes, allBuildings, buildingImages, scrapeStatus, openLeads, assignments] =
       await Promise.all([
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("status", "new"),
-        supabase.from("buildings").select("id").eq("status", "active"),
-        supabase.from("building_images").select("building_id"),
-        supabase.from("building_scrape_status").select("building_id, units_scraped_at"),
-        supabase.from("leads").select("id").neq("status", "lost").neq("status", "leased"),
-        supabase.from("agent_assignments").select("lead_id"),
+        fetchAllRows<{ id: string }>((from, to) =>
+          supabase.from("buildings").select("id").eq("status", "active").order("id").range(from, to)
+        ),
+        fetchAllRows<{ building_id: string }>((from, to) =>
+          supabase
+            .from("building_images")
+            .select("building_id")
+            .order("building_id")
+            .order("id")
+            .range(from, to)
+        ),
+        fetchAllRows<{ building_id: string; units_scraped_at: string | null }>((from, to) =>
+          supabase
+            .from("building_scrape_status")
+            .select("building_id, units_scraped_at")
+            .order("building_id")
+            .range(from, to)
+        ),
+        fetchAllRows<{ id: string }>((from, to) =>
+          supabase
+            .from("leads")
+            .select("id")
+            .neq("status", "lost")
+            .neq("status", "leased")
+            .order("id")
+            .range(from, to)
+        ),
+        fetchAllRows<{ lead_id: string }>((from, to) =>
+          supabase.from("agent_assignments").select("id, lead_id").order("id").range(from, to)
+        ),
       ]);
 
     const newLeadsCount = newLeadsRes.count || 0;
 
-    const buildingIdsWithImages = new Set(
-      (buildingImagesRes.data || []).map(img => img.building_id)
-    );
-    const buildingsNeedImages = (allBuildingsRes.data || []).filter(
+    const buildingIdsWithImages = new Set(buildingImages.map(img => img.building_id));
+    const buildingsNeedImages = allBuildings.filter(
       b => !buildingIdsWithImages.has(b.id)
     ).length;
 
-    const scrapedMap = new Map(
-      (scrapeStatusRes.data || []).map(s => [s.building_id, s.units_scraped_at])
-    );
-    const staleScrapes = (allBuildingsRes.data || []).filter(b => {
+    const scrapedMap = new Map(scrapeStatus.map(s => [s.building_id, s.units_scraped_at]));
+    const staleScrapes = allBuildings.filter(b => {
       const scrapedAt = scrapedMap.get(b.id);
       if (!scrapedAt) return true;
       return new Date(scrapedAt).getTime() < sevenDaysAgo.getTime();
     }).length;
 
-    const assignedLeadIds = new Set(
-      (assignmentsRes.data || []).map(a => a.lead_id)
-    );
-    const unassignedLeads = (leadsRes.data || []).filter(
+    const assignedLeadIds = new Set(assignments.map(a => a.lead_id));
+    const unassignedLeads = openLeads.filter(
       l => !assignedLeadIds.has(l.id)
     ).length;
 

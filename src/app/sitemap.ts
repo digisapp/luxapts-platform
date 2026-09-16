@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { createAdminClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/db-helpers";
 
 export const revalidate = 3600; // Rebuild sitemap every hour
 
@@ -8,12 +9,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createAdminClient();
 
   // Fetch all data in parallel
-  const [citiesRes, buildingsRes, neighborhoodsRes] = await Promise.all([
+  const [citiesRes, buildings, neighborhoodsRes] = await Promise.all([
     supabase.from("cities").select("slug, created_at").order("slug"),
-    supabase
-      .from("buildings")
-      .select("id, created_at")
-      .eq("status", "active"),
+    // Active buildings exceed Supabase's 1000-row response cap — an unpaged
+    // select silently dropped every building past the first 1000 from the
+    // sitemap, so those pages were never submitted for indexing.
+    fetchAllRows<{ id: string; created_at: string | null }>((from, to) =>
+      supabase
+        .from("buildings")
+        .select("id, created_at")
+        .eq("status", "active")
+        .order("id")
+        .range(from, to)
+    ),
     supabase
       .from("neighborhoods")
       .select("slug, created_at")
@@ -21,7 +29,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const cities = citiesRes.data || [];
-  const buildings = buildingsRes.data || [];
   const neighborhoods = neighborhoodsRes.data || [];
 
   const now = new Date().toISOString();

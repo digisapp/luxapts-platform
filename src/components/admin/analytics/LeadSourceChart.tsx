@@ -14,16 +14,18 @@ interface LeadSourceChartProps {
   data: LeadSourceMetrics[];
 }
 
-const COLORS = {
+const COLORS: Record<LeadSourceMetrics["source"], string> = {
   web_form: "#3b82f6",
   chat: "#8b5cf6",
   voice: "#22c55e",
+  microsite: "#f59e0b",
 };
 
-const LABELS = {
+const LABELS: Record<LeadSourceMetrics["source"], string> = {
   web_form: "Web Form",
   chat: "AI Chat",
   voice: "Voice",
+  microsite: "Microsite",
 };
 
 export function LeadSourceChart({ data }: LeadSourceChartProps) {

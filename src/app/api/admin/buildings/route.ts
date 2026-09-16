@@ -2,7 +2,27 @@ import { NextResponse } from "next/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { apiError } from "@/lib/api-helpers";
+import { fetchAllRows } from "@/lib/db-helpers";
 import { z } from "zod";
+
+type AdminBuildingRow = {
+  id: string;
+  name: string;
+  address_1: string;
+  zip: string | null;
+  status: string | null;
+  website_url: string | null;
+  year_built: number | null;
+  stories: number | null;
+  city_id: string;
+  cities: { id: string; name: string; slug: string } | { id: string; name: string; slug: string }[] | null;
+};
+
+const BUILDING_LIST_COLUMNS = `
+  id, name, address_1, zip, status, website_url, year_built, stories,
+  city_id,
+  cities:city_id (id, name, slug)
+`;
 
 const createBuildingSchema = z.object({
   name: z.string().min(1).max(200),
@@ -94,42 +114,53 @@ export async function GET() {
     return apiError("Failed to fetch cities", 500);
   }
 
-  // Fetch all buildings with city info
-  const { data: buildings, error: buildingsError } = await supabase
-    .from("buildings")
-    .select(`
-      id, name, address_1, zip, status, website_url, year_built, stories,
-      city_id,
-      cities:city_id (id, name, slug)
-    `)
-    .order("name");
+  // Fetch all buildings with city info. Every read here is paged — unpaged
+  // selects stopped at PostgREST's 1000-row cap, so past 1000 building_images
+  // or units rows the per-building counts shown in the admin table were wrong
+  // (and buildings themselves would silently disappear from the list).
+  let buildingsError: unknown = null;
+  const buildings = await fetchAllRows<AdminBuildingRow>(async (from, to) => {
+    const res = await supabase
+      .from("buildings")
+      .select(BUILDING_LIST_COLUMNS)
+      .order("name")
+      .order("id")
+      .range(from, to);
+    if (res.error) buildingsError = res.error;
+    return res as unknown as { data: AdminBuildingRow[] | null; error: unknown };
+  });
 
   if (buildingsError) {
+    console.error("Admin buildings query error:", buildingsError);
     return apiError("Failed to fetch buildings", 500);
   }
 
-  // Fetch image counts per building
-  const { data: imageCounts, error: imageError } = await supabase
-    .from("building_images")
-    .select("building_id");
-
-  // Fetch unit counts per building
-  const { data: units, error: unitsError } = await supabase
-    .from("units")
-    .select("building_id, is_available");
-
-  if (imageError || unitsError) {
-    return apiError("Failed to fetch counts", 500);
-  }
+  const [imageCounts, units] = await Promise.all([
+    fetchAllRows<{ building_id: string }>((from, to) =>
+      supabase
+        .from("building_images")
+        .select("building_id")
+        .order("building_id")
+        .order("id")
+        .range(from, to)
+    ),
+    fetchAllRows<{ building_id: string; is_available: boolean | null }>((from, to) =>
+      supabase
+        .from("units")
+        .select("id, building_id, is_available")
+        .order("id")
+        .range(from, to)
+    ),
+  ]);
 
   // Aggregate counts
   const imageCountMap: Record<string, number> = {};
-  for (const img of imageCounts || []) {
+  for (const img of imageCounts) {
     imageCountMap[img.building_id] = (imageCountMap[img.building_id] || 0) + 1;
   }
 
   const unitCountMap: Record<string, { total: number; available: number }> = {};
-  for (const unit of units || []) {
+  for (const unit of units) {
     if (!unitCountMap[unit.building_id]) {
       unitCountMap[unit.building_id] = { total: 0, available: 0 };
     }
@@ -140,7 +171,7 @@ export async function GET() {
   }
 
   // Merge data
-  const enrichedBuildings = (buildings || []).map((b) => ({
+  const enrichedBuildings = buildings.map((b) => ({
     ...b,
     image_count: imageCountMap[b.id] || 0,
     unit_count: unitCountMap[b.id]?.total || 0,

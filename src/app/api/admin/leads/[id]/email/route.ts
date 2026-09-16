@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
 import { isValidUUID, escapeHtml } from "@/lib/utils";
+import { getReplyToAddress } from "@/lib/email/recipients";
 import { apiError } from "@/lib/api-helpers";
 
 export async function POST(
@@ -49,6 +50,8 @@ export async function POST(
     const { error: sendError } = await resend.emails.send({
       from: getFromEmail(),
       to: [lead.user_email],
+      // Replies to FROM_EMAIL bounce (staycio.com has no MX record).
+      replyTo: getReplyToAddress(),
       subject,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">

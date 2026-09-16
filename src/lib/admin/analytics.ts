@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { getFirstRelation, aggregateByProperty } from "@/lib/db-helpers";
+import { fetchAllRows, getFirstRelation, aggregateByProperty } from "@/lib/db-helpers";
 import type {
   AnalyticsDashboardData,
   LeadFunnelMetrics,
@@ -10,10 +10,41 @@ import type {
   NeighborhoodLeadMetrics,
 } from "@/types/analytics";
 
-// Get lead funnel counts by status
-export async function getLeadFunnelMetrics(): Promise<LeadFunnelMetrics> {
+const LEAD_STATUSES = [
+  "new",
+  "contacted",
+  "touring",
+  "applied",
+  "leased",
+  "lost",
+] as const satisfies readonly (keyof LeadFunnelMetrics)[];
+
+// 'microsite' has existed since migration 021 and is now the source of
+// essentially every production lead; leaving it out of this list reported the
+// funnel as empty on the analytics dashboard.
+const LEAD_SOURCES = ["web_form", "chat", "voice", "microsite"] as const;
+
+/** Exact row count for a single-column equality filter (head:true sends no rows). */
+async function countLeads(column: string, value: string): Promise<number> {
   const supabase = createAdminClient();
-  const { data } = await supabase.from("leads").select("status");
+  const { count, error } = await supabase
+    .from("leads")
+    .select("id", { count: "exact", head: true })
+    .eq(column, value);
+  if (error) {
+    console.error(`Lead count error (${column}=${value}):`, error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+// Get lead funnel counts by status.
+// Counted in Postgres — selecting every lead's status and tallying in JS was
+// silently capped at PostgREST's 1000 rows, freezing the funnel totals.
+export async function getLeadFunnelMetrics(): Promise<LeadFunnelMetrics> {
+  const counts = await Promise.all(
+    LEAD_STATUSES.map((status) => countLeads("status", status))
+  );
 
   const funnel: LeadFunnelMetrics = {
     new: 0,
@@ -23,53 +54,26 @@ export async function getLeadFunnelMetrics(): Promise<LeadFunnelMetrics> {
     leased: 0,
     lost: 0,
   };
-
-  data?.forEach((lead) => {
-    const status = lead.status as keyof LeadFunnelMetrics;
-    if (status in funnel) {
-      funnel[status]++;
-    }
+  LEAD_STATUSES.forEach((status, i) => {
+    funnel[status] = counts[i];
   });
 
   return funnel;
 }
 
-// Get lead source breakdown with percentages
+// Get lead source breakdown with percentages (counted in Postgres, see above)
 export async function getLeadSourceMetrics(): Promise<LeadSourceMetrics[]> {
-  const supabase = createAdminClient();
-  const { data } = await supabase.from("leads").select("source");
+  const counts = await Promise.all(
+    LEAD_SOURCES.map((source) => countLeads("source", source))
+  );
 
-  const counts: Record<string, number> = {
-    web_form: 0,
-    chat: 0,
-    voice: 0,
-  };
+  const total = counts.reduce((a, b) => a + b, 0);
 
-  data?.forEach((lead) => {
-    if (lead.source in counts) {
-      counts[lead.source]++;
-    }
-  });
-
-  const total = Object.values(counts).reduce((a, b) => a + b, 0);
-
-  return [
-    {
-      source: "web_form",
-      count: counts.web_form,
-      percentage: total > 0 ? Math.round((counts.web_form / total) * 100) : 0,
-    },
-    {
-      source: "chat",
-      count: counts.chat,
-      percentage: total > 0 ? Math.round((counts.chat / total) * 100) : 0,
-    },
-    {
-      source: "voice",
-      count: counts.voice,
-      percentage: total > 0 ? Math.round((counts.voice / total) * 100) : 0,
-    },
-  ];
+  return LEAD_SOURCES.map((source, i) => ({
+    source,
+    count: counts[i],
+    percentage: total > 0 ? Math.round((counts[i] / total) * 100) : 0,
+  }));
 }
 
 // Get leads created in the last N days
@@ -80,11 +84,15 @@ export async function getLeadsOverTime(
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
-  const { data } = await supabase
-    .from("leads")
-    .select("created_at")
-    .gte("created_at", startDate.toISOString())
-    .order("created_at", { ascending: true });
+  const data = await fetchAllRows<{ created_at: string }>((from, to) =>
+    supabase
+      .from("leads")
+      .select("id, created_at")
+      .gte("created_at", startDate.toISOString())
+      .order("created_at", { ascending: true })
+      .order("id")
+      .range(from, to)
+  );
 
   // Group by date
   const countsByDate: Record<string, number> = {};
@@ -98,7 +106,7 @@ export async function getLeadsOverTime(
   }
 
   // Count leads per date
-  data?.forEach((lead) => {
+  data.forEach((lead) => {
     const dateStr = lead.created_at.split("T")[0];
     if (dateStr in countsByDate) {
       countsByDate[dateStr]++;
@@ -120,15 +128,22 @@ async function getTopBuildingsByMetric(
 ): Promise<BuildingPerformance[]> {
   const supabase = createAdminClient();
 
-  let query = supabase.from(table).select("building_id");
-  if (filter) {
-    query = query.eq(filter.column, filter.value);
-  }
-  const { data: items } = await query;
+  // Paged: an unpaged select stopped at 1000 rows, so "top buildings" was
+  // really "top buildings among the first 1000 rows of the table".
+  const items = await fetchAllRows<{ building_id: string | null }>((from, to) => {
+    let query = supabase.from(table).select("id, building_id");
+    if (filter) {
+      query = query.eq(filter.column, filter.value);
+    }
+    return query.order("id").range(from, to) as unknown as PromiseLike<{
+      data: { building_id: string | null }[] | null;
+      error: unknown;
+    }>;
+  });
 
   const { counts, topIds } = aggregateByProperty(
-    items || [],
-    (item) => (item as { building_id: string | null }).building_id,
+    items,
+    (item) => item.building_id,
     limit,
   );
 
@@ -170,15 +185,24 @@ export function getBuildingsWithMostAvailable(limit: number = 10): Promise<Build
 export async function getLeadsByCity(): Promise<CityLeadMetrics[]> {
   const supabase = createAdminClient();
 
-  const { data: leads } = await supabase
-    .from("leads")
-    .select("city_id, cities(id, name)");
+  type CityRel = { id: string; name: string };
+  const leads = await fetchAllRows<{ city_id: string | null; cities: CityRel | CityRel[] | null }>(
+    (from, to) =>
+      supabase
+        .from("leads")
+        .select("id, city_id, cities(id, name)")
+        .order("id")
+        .range(from, to) as unknown as PromiseLike<{
+        data: { city_id: string | null; cities: CityRel | CityRel[] | null }[] | null;
+        error: unknown;
+      }>
+  );
 
   const cityCounts: Record<string, { name: string; count: number }> = {};
 
-  leads?.forEach((lead) => {
+  leads.forEach((lead) => {
     if (lead.city_id && lead.cities) {
-      const city = getFirstRelation(lead.cities as { id: string; name: string } | { id: string; name: string }[] | null);
+      const city = getFirstRelation(lead.cities);
       if (city && !cityCounts[city.id]) {
         cityCounts[city.id] = { name: city.name, count: 0 };
       }
@@ -203,22 +227,36 @@ export async function getTopNeighborhoods(
 ): Promise<NeighborhoodLeadMetrics[]> {
   const supabase = createAdminClient();
 
-  // Get lead_targets with building neighborhoods
-  const { data: targets } = await supabase
-    .from("lead_targets")
-    .select("buildings(neighborhood_id, neighborhoods(id, name, cities(name)))");
+  type NeighborhoodRel = {
+    id: string;
+    name: string;
+    cities: { name: string } | { name: string }[] | null;
+  };
+  type BuildingType = {
+    neighborhood_id: string | null;
+    neighborhoods: NeighborhoodRel | NeighborhoodRel[] | null;
+  };
+
+  // Get lead_targets with building neighborhoods (paged past the 1000-row cap)
+  const targets = await fetchAllRows<{ buildings: BuildingType | BuildingType[] | null }>(
+    (from, to) =>
+      supabase
+        .from("lead_targets")
+        .select("id, buildings(neighborhood_id, neighborhoods(id, name, cities(name)))")
+        .order("id")
+        .range(from, to) as unknown as PromiseLike<{
+        data: { buildings: BuildingType | BuildingType[] | null }[] | null;
+        error: unknown;
+      }>
+  );
 
   const neighborhoodCounts: Record<
     string,
     { name: string; cityName: string; count: number }
   > = {};
 
-  targets?.forEach((t) => {
-    type BuildingType = {
-      neighborhood_id: string | null;
-      neighborhoods: { id: string; name: string; cities: { name: string } | { name: string }[] | null } | { id: string; name: string; cities: { name: string } | { name: string }[] | null }[] | null;
-    };
-    const building = getFirstRelation(t.buildings as BuildingType | BuildingType[] | null);
+  targets.forEach((t) => {
+    const building = getFirstRelation(t.buildings);
 
     if (building?.neighborhoods) {
       const n = getFirstRelation(building.neighborhoods);

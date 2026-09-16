@@ -63,7 +63,14 @@ export const createLeadSchema = z.object({
     .max(20)
     .optional(),
   conversation_summary: z.string().max(10000).optional(),
-});
+})
+  // leads carries a CHECK (user_email is not null or user_phone is not null);
+  // without this refine an email-less, phone-less lead reached Postgres and
+  // came back as an opaque 500 instead of a 400 the caller can act on.
+  .refine((d) => Boolean(d.email || d.phone), {
+    message: "Email or phone is required",
+    path: ["email"],
+  });
 
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
 
@@ -120,6 +127,61 @@ export const micrositeAnalyticsSchema = z.discriminatedUnion("type", [
 ]);
 
 export type MicrositeAnalyticsInput = z.infer<typeof micrositeAnalyticsSchema>;
+
+// ---- First-party analytics (/api/analytics/track) ----
+// `data` used to be destructured straight off an unvalidated body, so any
+// payload without it (or with a non-object) threw a TypeError → 500.
+
+const sessionIdSchema = z.string().min(6).max(128);
+
+export const analyticsTrackSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("page_view"),
+    session_id: sessionIdSchema,
+    data: z.object({
+      path: z.string().min(1).max(500),
+      referrer: z.string().max(1000).nullish(),
+      duration_ms: z.number().int().min(0).max(86_400_000).nullish(),
+      city_slug: z.string().max(100).nullish(),
+    }),
+  }),
+  z.object({
+    type: z.literal("building_view"),
+    session_id: sessionIdSchema,
+    data: z.object({
+      building_id: uuidSchema,
+      source: z.string().max(100).nullish(),
+      time_on_page_ms: z.number().int().min(0).max(86_400_000).nullish(),
+      scrolled_to_bottom: z.boolean().nullish(),
+      viewed_gallery: z.boolean().nullish(),
+      clicked_contact: z.boolean().nullish(),
+      clicked_schedule_tour: z.boolean().nullish(),
+    }),
+  }),
+  z.object({
+    type: z.literal("event"),
+    session_id: sessionIdSchema,
+    data: z.object({
+      event_name: z.string().min(1).max(100),
+      event_category: z.string().max(100).nullish(),
+      properties: z.record(z.string(), z.unknown()).optional(),
+    }),
+  }),
+  z.object({
+    type: z.literal("session"),
+    session_id: sessionIdSchema,
+    data: z
+      .object({
+        landing_page: z.string().max(500).nullish(),
+        utm_source: z.string().max(200).nullish(),
+        utm_medium: z.string().max(200).nullish(),
+        utm_campaign: z.string().max(200).nullish(),
+      })
+      .default({}),
+  }),
+]);
+
+export type AnalyticsTrackInput = z.infer<typeof analyticsTrackSchema>;
 
 // ---- Chat ----
 

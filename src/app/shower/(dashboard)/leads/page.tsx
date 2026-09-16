@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ export default function LeadFeedPage() {
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Debrief dialog state
@@ -78,11 +80,24 @@ export default function LeadFeedPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/shower/leads");
-      const data = await res.json();
-      if (res.ok) {
-        setOpenLeads(data.open_leads || []);
-        setClaimedLeads(data.claimed_leads || []);
+      // A non-JSON error response (502 HTML, empty body) used to reject here
+      // with nothing catching it — the feed just sat there empty and silent.
+      const data = await res.json().catch(() => ({} as { error?: string }));
+      if (!res.ok) {
+        setLoadError(
+          data.error ||
+            (res.status === 403
+              ? "Your Shower account isn't approved for leads yet."
+              : `Couldn't load leads (error ${res.status}).`)
+        );
+        return;
       }
+      setLoadError(null);
+      setOpenLeads(data.open_leads || []);
+      setClaimedLeads(data.claimed_leads || []);
+    } catch (err) {
+      console.error("Load leads error:", err);
+      setLoadError("Couldn't load leads. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -173,6 +188,18 @@ export default function LeadFeedPage() {
       </div>
 
       {/* Messages */}
+      {loadError && (
+        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {loadError}
+          <button
+            onClick={() => loadLeads()}
+            className="ml-auto text-xs underline"
+          >
+            retry
+          </button>
+        </div>
+      )}
       {error && (
         <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
@@ -286,7 +313,7 @@ export default function LeadFeedPage() {
                 Get certified for more buildings to see more leads.
               </p>
               <Button variant="outline" asChild>
-                <a href="/shower/certifications">View Certifications</a>
+                <Link href="/shower/certifications">View Certifications</Link>
               </Button>
             </CardContent>
           </Card>

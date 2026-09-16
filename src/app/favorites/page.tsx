@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useSavedSearches } from "@/hooks/useSavedSearches";
+import { buildSavedSearchUrl } from "@/hooks/buildSavedSearchUrl";
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -29,16 +30,6 @@ export default function FavoritesPage() {
   const { user } = useAuth();
   const { items: favorites, removeItem: removeFavorite, clearAll: clearFavorites, isLoaded: favoritesLoaded, isSyncing: favoritesSyncing } = useFavorites();
   const { searches, removeSearch, toggleEmailAlerts, clearAll: clearSearches, isLoaded: searchesLoaded, isSyncing: searchesSyncing } = useSavedSearches();
-
-  const buildSearchUrl = (filters: typeof searches[0]["filters"]) => {
-    const params = new URLSearchParams();
-    if (filters.city) params.set("city", filters.city);
-    if (filters.bedsMin !== undefined) params.set("beds_min", filters.bedsMin.toString());
-    if (filters.bedsMax !== undefined) params.set("beds_max", filters.bedsMax.toString());
-    if (filters.budgetMin !== undefined) params.set("budget_min", filters.budgetMin.toString());
-    if (filters.budgetMax !== undefined) params.set("budget_max", filters.budgetMax.toString());
-    return `/search?${params.toString()}`;
-  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -136,12 +127,12 @@ export default function FavoritesPage() {
                               </p>
                             )}
                             <div className="flex items-center gap-3 mt-1">
-                              {item.price && (
+                              {item.price != null && item.price > 0 && (
                                 <span className="text-sm font-medium">
                                   {formatPrice(item.price)}/mo
                                 </span>
                               )}
-                              {item.beds !== undefined && (
+                              {item.beds != null && (
                                 <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                                   <Bed className="h-3 w-3" />
                                   {item.beds === 0 ? "Studio" : `${item.beds} bed`}
@@ -279,7 +270,7 @@ export default function FavoritesPage() {
                                 )}
                               </Button>
                             )}
-                            <Link href={buildSearchUrl(search.filters)}>
+                            <Link href={buildSavedSearchUrl(search.filters)}>
                               <Button size="sm" variant="outline" className="gap-1">
                                 Run
                                 <ArrowRight className="h-3 w-3" />

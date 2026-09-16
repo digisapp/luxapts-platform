@@ -5,6 +5,8 @@ import { scrapeStatusOf } from "@/lib/scraper/db";
 export const maxDuration = 300;
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { fetchAllRows } from "@/lib/db-helpers";
+import { withTimeout } from "@/lib/with-timeout";
 import {
   scrapeImagesOnly,
   updateScrapeStatus,
@@ -13,6 +15,25 @@ import {
   createScrapeJob,
   updateScrapeJob,
 } from "@/lib/scraper";
+
+// Same guard as cron/scrape-units: a per-building deadline plus a loop budget,
+// so the job's final status is always written inside the function window
+// instead of the platform killing the invocation and stranding it in "running".
+const PER_BUILDING_TIMEOUT_MS = 120_000;
+const FINALIZE_HEADROOM_MS = 30_000;
+const MIN_USEFUL_REMAINING_MS = 20_000;
+const TIME_BUDGET_MS = maxDuration * 1000 - FINALIZE_HEADROOM_MS;
+
+interface ImageScrapeCandidate {
+  id: string;
+  name: string;
+  website_url: string | null;
+  city_id: string | null;
+  building_scrape_status:
+    | { images_scraped_at: string | null; images_scrape_success: boolean | null }
+    | { images_scraped_at: string | null; images_scrape_success: boolean | null }[]
+    | null;
+}
 
 // POST: Batch scrape images for multiple buildings
 // Body: { city_slug?, building_ids?, limit?, skip_already_scraped? }
@@ -40,24 +61,7 @@ export async function POST(req: Request) {
 
     const supabase = createAdminClient();
 
-    // Build query for buildings with websites
-    let query = supabase
-      .from("buildings")
-      .select(`
-        id,
-        name,
-        website_url,
-        city_id,
-        cities:city_id (slug, name),
-        building_scrape_status (
-          images_scraped_at,
-          images_scrape_success
-        )
-      `)
-      .eq("status", "active")
-      .not("website_url", "is", null);
-
-    // Filter by city
+    let cityId: string | undefined;
     if (city_slug) {
       const { data: city } = await supabase
         .from("cities")
@@ -68,35 +72,56 @@ export async function POST(req: Request) {
       if (!city) {
         return NextResponse.json({ error: `City not found: ${city_slug}` }, { status: 404 });
       }
-
-      query = query.eq("city_id", city.id);
+      cityId = city.id;
     }
 
-    // Filter by specific building IDs
-    if (building_ids?.length) {
-      query = query.in("id", building_ids);
-    }
+    // Fetch the ENTIRE eligible fleet (paged past the 1000-row cap). The old
+    // `.limit(limit * 2)` had no ORDER BY, so the same arbitrary window was
+    // filtered every run and buildings outside it were never imaged at all.
+    const buildings = await fetchAllRows<ImageScrapeCandidate>((from, to) => {
+      let query = supabase
+        .from("buildings")
+        .select(`
+          id,
+          name,
+          website_url,
+          city_id,
+          building_scrape_status (
+            images_scraped_at,
+            images_scrape_success
+          )
+        `)
+        .eq("status", "active")
+        .not("website_url", "is", null);
 
-    const { data: buildings, error: queryError } = await query.limit(limit * 2);
+      if (cityId) query = query.eq("city_id", cityId);
+      if (building_ids?.length) query = query.in("id", building_ids);
 
-    if (queryError) {
-      return NextResponse.json({ error: queryError.message }, { status: 500 });
-    }
+      return query.order("id").range(from, to);
+    });
 
-    if (!buildings?.length) {
+    if (!buildings.length) {
       return NextResponse.json({ error: "No buildings found" }, { status: 404 });
     }
 
     // Filter out already-scraped buildings if requested
-    let toScrape = buildings;
+    let eligible = buildings;
     if (skip_already_scraped) {
-      toScrape = buildings.filter((b) => {
+      eligible = buildings.filter((b) => {
         const status = scrapeStatusOf(b);
         return !status?.images_scraped_at || !status?.images_scrape_success;
       });
     }
 
-    toScrape = toScrape.slice(0, limit);
+    // Never-imaged first, then stalest — a fair round-robin over the fleet.
+    const imagedAt = (b: ImageScrapeCandidate): number | null => {
+      const at = scrapeStatusOf(b)?.images_scraped_at;
+      return at ? new Date(at).getTime() : null;
+    };
+
+    const toScrape = [...eligible]
+      .sort((a, b) => (imagedAt(a) ?? -Infinity) - (imagedAt(b) ?? -Infinity))
+      .slice(0, limit);
 
     if (toScrape.length === 0) {
       return NextResponse.json({
@@ -108,9 +133,7 @@ export async function POST(req: Request) {
     }
 
     // Create a scrape job for tracking
-    const jobId = await createScrapeJob(supabase, "images", {
-      cityId: city_slug ? buildings[0]?.city_id : undefined,
-    });
+    const jobId = await createScrapeJob(supabase, "images", { cityId });
 
     if (jobId) {
       await updateScrapeJob(supabase, jobId, { status: "running" });
@@ -128,10 +151,27 @@ export async function POST(req: Request) {
     let totalSuccess = 0;
     let totalFailed = 0;
     let totalImages = 0;
+    let skippedForTime = 0;
+    let processed = 0;
+
+    const startedAt = Date.now();
 
     for (const building of toScrape) {
+      const remainingMs = TIME_BUDGET_MS - (Date.now() - startedAt);
+      if (remainingMs < MIN_USEFUL_REMAINING_MS) {
+        // Untouched buildings keep their old images_scraped_at, so the
+        // never-imaged-first ordering picks them up first next run.
+        skippedForTime = toScrape.length - processed;
+        break;
+      }
+      processed++;
+
       try {
-        const imageResult = await scrapeImagesOnly(building.website_url!);
+        const imageResult = await withTimeout(
+          scrapeImagesOnly(building.website_url!),
+          Math.min(PER_BUILDING_TIMEOUT_MS, remainingMs),
+          "Image scrape timed out",
+        );
 
         if (!imageResult.success || !imageResult.data) {
           await updateScrapeStatus(supabase, building.id, {
@@ -184,6 +224,16 @@ export async function POST(req: Request) {
         totalSuccess++;
       } catch (error) {
         const errMsg = error instanceof Error ? error.message : "Unknown error";
+
+        // Record the failure so a permanently broken building doesn't sit at
+        // the front of the never-imaged queue forever.
+        await updateScrapeStatus(supabase, building.id, {
+          type: "images",
+          success: false,
+          error: errMsg,
+          websiteUrl: building.website_url!,
+        });
+
         results.push({
           building_id: building.id,
           building_name: building.name,
@@ -199,7 +249,7 @@ export async function POST(req: Request) {
     if (jobId) {
       await updateScrapeJob(supabase, jobId, {
         status: "completed",
-        buildingsProcessed: toScrape.length,
+        buildingsProcessed: processed,
         buildingsSuccess: totalSuccess,
         buildingsFailed: totalFailed,
       });
@@ -209,10 +259,12 @@ export async function POST(req: Request) {
       success: true,
       job_id: jobId,
       summary: {
-        total_buildings: toScrape.length,
+        total_buildings: processed,
         success: totalSuccess,
         failed: totalFailed,
+        skipped_for_time: skippedForTime,
         total_images_saved: totalImages,
+        elapsed_ms: Date.now() - startedAt,
       },
       results,
     });

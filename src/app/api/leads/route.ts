@@ -7,6 +7,7 @@ import { apiError } from "@/lib/api-helpers";
 import { autoAssignAgent } from "@/lib/leads/routing";
 import { bridgeLeadToShowing } from "@/lib/leads/bridge";
 import { newLeadEmail, tourConfirmationEmail } from "@/lib/email/templates";
+import { getLeadNotificationRecipients, getReplyToAddress } from "@/lib/email/recipients";
 import { rateLimit, getClientIp, RATE_LIMITS, isInternalRequest } from "@/lib/rate-limit";
 import type { CreateLeadResponse } from "@/types/database";
 
@@ -66,7 +67,8 @@ export async function POST(req: Request) {
         user_phone: body.phone || null,
         budget_min: body.budget_min || null,
         budget_max: body.budget_max || null,
-        beds: body.beds || null,
+        // `??` not `||`: beds === 0 is a studio, which `||` turned into null.
+        beds: body.beds ?? null,
         move_in_date: body.move_in_date || null,
         tour_date: body.tour_date || null,
         tour_time: body.tour_time || null,
@@ -114,18 +116,21 @@ export async function POST(req: Request) {
       },
     });
 
-    // Send notification email (only if Resend is configured)
+    // Internal notification. Recipients come from LEAD_NOTIFY_EMAIL / admin
+    // accounts — never from FROM_EMAIL, which is a send-only address that
+    // bounced every notification for months. Resend v6 reports API failures
+    // via the returned `error`, not by throwing.
     if (process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const fromEmail = process.env.FROM_EMAIL || "Staycio <hello@staycio.com>";
-        const toEmail = fromEmail.includes("<")
-          ? fromEmail.split("<")[1].replace(">", "")
-          : fromEmail;
+        const recipients = await getLeadNotificationRecipients(supabase);
 
-        await resend.emails.send({
+        const { error: notifyError } = recipients.length
+          ? await resend.emails.send({
           from: fromEmail,
-          to: [toEmail],
+          to: recipients,
+          replyTo: body.email || undefined,
           subject: `New Lead: ${body.name || "Anonymous"} · ${cityRes.data.name}`,
           html: newLeadEmail({
             leadId,
@@ -140,7 +145,11 @@ export async function POST(req: Request) {
             moveInDate: body.move_in_date,
             notes: body.notes,
           }),
-        });
+        })
+          : { error: { message: "no recipients configured" } };
+        if (notifyError) {
+          console.error("Lead notification failed:", leadId, notifyError);
+        }
       } catch (emailError) {
         console.error("Email notification failed:", emailError);
         // Don't fail the request if email fails
@@ -166,9 +175,13 @@ export async function POST(req: Request) {
           .single();
 
         if (bld && body.name) {
-          await resend.emails.send({
+          // Resend v6 surfaces API failures on `error` and never throws, so a
+          // rejected confirmation used to disappear silently.
+          const { error: confirmError } = await resend.emails.send({
             from: fromEmail,
             to: [body.email],
+            // Replies to FROM_EMAIL bounce (staycio.com has no MX record).
+            replyTo: getReplyToAddress(),
             subject: `Tour request received — ${bld.name}`,
             html: tourConfirmationEmail({
               name: body.name,
@@ -179,6 +192,9 @@ export async function POST(req: Request) {
               buildingId: bld.id,
             }),
           });
+          if (confirmError) {
+            console.error("Tour confirmation email failed:", leadId, confirmError);
+          }
         }
       } catch (confirmErr) {
         console.error("Tour confirmation email failed:", confirmErr);
@@ -260,17 +276,28 @@ export async function GET(req: Request) {
     }
 
     if (search) {
-      // Sanitize search input to prevent wildcard injection
-      const sanitized = search.replace(/[%_\\]/g, "");
+      // Sanitize search input: `%_\` are PostgREST LIKE wildcards, and
+      // `,()"` are the separators of the .or() filter grammar itself — leaving
+      // them in let a crafted search term rewrite the filter expression.
+      const sanitized = search.replace(/[%_\\,()"]/g, "");
       if (sanitized.length > 0) {
         query = query.or(`name.ilike.%${sanitized}%,user_email.ilike.%${sanitized}%,user_phone.ilike.%${sanitized}%`);
       }
     }
 
-    // Fetch leads and status counts in parallel
-    const [leadsResult, statusCountsResult] = await Promise.all([
+    // Status counts come from head counts, one per status. Selecting every
+    // lead's status and tallying in JS was capped at 1000 rows by PostgREST,
+    // so the dashboard totals froze once the table grew past that.
+    const STATUSES = ["new", "contacted", "touring", "applied", "leased", "lost"] as const;
+
+    const [leadsResult, ...countResults] = await Promise.all([
       query,
-      supabase.from("leads").select("status"),
+      ...STATUSES.map((s) =>
+        supabase
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("status", s)
+      ),
     ]);
 
     if (leadsResult.error) {
@@ -278,20 +305,11 @@ export async function GET(req: Request) {
       return apiError("Internal server error", 500);
     }
 
-    // Aggregate status counts
-    const status_counts: Record<string, number> = {
-      new: 0,
-      contacted: 0,
-      touring: 0,
-      applied: 0,
-      leased: 0,
-      lost: 0,
-    };
-    statusCountsResult.data?.forEach((row) => {
-      const s = row.status as string;
-      if (s in status_counts) {
-        status_counts[s]++;
-      }
+    const status_counts: Record<string, number> = {};
+    STATUSES.forEach((s, i) => {
+      const res = countResults[i];
+      if (res.error) console.error(`Lead status count error (${s}):`, res.error.message);
+      status_counts[s] = res.count ?? 0;
     });
 
     return NextResponse.json({

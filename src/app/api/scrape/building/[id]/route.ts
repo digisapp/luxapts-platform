@@ -15,6 +15,8 @@ import {
   saveScrapedBuildingImages,
   saveScrapedUnitImages,
   markUnitsUnavailable,
+  shouldRetireUnseenUnits,
+  normalizeUnitNumber,
 } from "@/lib/scraper";
 
 interface RouteContext {
@@ -123,14 +125,16 @@ export async function POST(req: Request, context: RouteContext) {
       });
     }
 
-    // Perform scrape based on type (units/amenities/full)
+    // Perform scrape based on type (units/amenities/full).
+    // Every branch uses the resolved scrapeUrl — the scraper-internal override
+    // exists precisely because building.website_url is often unscrapable.
     let result;
     if (scrapeType === "units") {
-      result = await scrapeUnitsOnly(building.website_url);
+      result = await scrapeUnitsOnly(scrapeUrl);
     } else if (scrapeType === "amenities") {
-      result = await scrapeAmenitiesOnly(building.website_url);
+      result = await scrapeAmenitiesOnly(scrapeUrl);
     } else {
-      result = await scrapeFullBuilding(building.website_url);
+      result = await scrapeFullBuilding(scrapeUrl);
     }
 
     if (!result.success || !result.data) {
@@ -156,8 +160,22 @@ export async function POST(req: Request, context: RouteContext) {
       if (result.data.units.length > 0) {
         const saved = await saveScrapedUnits(supabase, buildingId, result.data.units);
         unitsResult = { unitsCreated: saved.unitsCreated, unitsUpdated: saved.unitsUpdated };
-        // Anything still listed that this scrape didn't see is no longer available
-        await markUnitsUnavailable(supabase, buildingId, saved.seenUnitIds);
+
+        // Same retirement guard as the cron: floorplan-level or bot-walled
+        // results are not evidence that numbered units are gone.
+        const scrapedNumbered = result.data.units.filter(
+          (u) => normalizeUnitNumber(u.unit_number) !== null
+        ).length;
+
+        if (
+          shouldRetireUnseenUnits({
+            unitsPageFetchFailed: result.units_page_fetch_failed,
+            scrapedNumbered,
+            existingNumberedAvailable: saved.existingNumberedAvailable,
+          })
+        ) {
+          await markUnitsUnavailable(supabase, buildingId, saved.seenUnitIds);
+        }
       }
     }
 

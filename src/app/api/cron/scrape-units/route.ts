@@ -11,6 +11,8 @@ import {
   updateScrapeStatus,
   saveScrapedUnits,
   markUnitsUnavailable,
+  shouldRetireUnseenUnits,
+  normalizeUnitNumber,
   createScrapeJob,
   updateScrapeJob,
 } from "@/lib/scraper";
@@ -148,8 +150,31 @@ export async function GET(req: Request) {
           // Save units
           if (scrapeResult.data.units.length > 0) {
             const saved = await saveScrapedUnits(supabase, building.id, scrapeResult.data.units);
-            // Anything still listed that this scrape didn't see is no longer available
-            await markUnitsUnavailable(supabase, building.id, saved.seenUnitIds);
+
+            // Anything still listed that this scrape didn't see is no longer
+            // available — but only when the scrape is evidence of that. A
+            // bot-walled availability page or a marketing page's floorplan
+            // "from" prices used to retire every real numbered unit purely
+            // because units.length > 0.
+            const scrapedNumbered = scrapeResult.data.units.filter(
+              (u) => normalizeUnitNumber(u.unit_number) !== null
+            ).length;
+
+            if (
+              shouldRetireUnseenUnits({
+                unitsPageFetchFailed: scrapeResult.units_page_fetch_failed,
+                scrapedNumbered,
+                existingNumberedAvailable: saved.existingNumberedAvailable,
+              })
+            ) {
+              await markUnitsUnavailable(supabase, building.id, saved.seenUnitIds);
+            } else {
+              console.warn(
+                `Skipping retirement for ${building.name}: source=${scrapeResult.source}, ` +
+                  `units_page_fetch_failed=${scrapeResult.units_page_fetch_failed}, ` +
+                  `scraped_numbered=${scrapedNumbered}, existing_numbered=${saved.existingNumberedAvailable}`
+              );
+            }
           }
 
           await updateScrapeStatus(supabase, building.id, {

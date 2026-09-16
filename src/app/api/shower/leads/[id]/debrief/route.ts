@@ -111,16 +111,11 @@ export async function POST(
       .update({ status: isNoShow ? "no_show" : "completed" })
       .eq("id", leadId);
 
-    // If client no-showed, log a strike
-    if (isNoShow) {
-      await adminClient.from("shower_strikes").insert({
-        shower_id: auth.showerId,
-        showing_lead_id: leadId,
-        type: "no_show",
-        description: "Client no-show reported by shower",
-        created_by: auth.userId,
-      });
-    }
+    // NOTE: a CLIENT no-show is not the shower's fault, so it must never write
+    // a row into shower_strikes — check_shower_strikes auto-suspends a shower
+    // at 3 strikes, which previously punished showers for renters who never
+    // turned up. The no-show is already recorded on the claim, on the showing
+    // lead, and as a `tour_no_show` lead_event below.
 
     // Flow the tour outcome back to the source renter lead (if auto-bridged)
     const { data: showingLead } = await adminClient

@@ -95,8 +95,15 @@ export async function POST(req: Request) {
       for (const toolCall of assistantMessage.tool_calls) {
         // Handle both function tool calls and custom tool calls
         if (toolCall.type === "function") {
-          const args = JSON.parse(toolCall.function.arguments);
-          const result = await executeTool(toolCall.function.name, args, baseUrl, toolCtx);
+          // Malformed tool arguments are a model error, not a server error —
+          // feed it back to the model instead of 500ing the whole request.
+          let result: unknown;
+          try {
+            const args = JSON.parse(toolCall.function.arguments || "{}");
+            result = await executeTool(toolCall.function.name, args, baseUrl, toolCtx);
+          } catch {
+            result = { error: `Invalid arguments for ${toolCall.function.name}` };
+          }
 
           toolResults.push({
             role: "tool",

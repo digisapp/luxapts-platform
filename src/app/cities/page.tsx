@@ -21,9 +21,18 @@ export default async function CitiesPage() {
   const supabase = createAdminClient();
 
   // Flat queries instead of 3-per-city (N+1) — counts are aggregated in JS
-  const [citiesRes, buildingsRes, units, neighborhoodsRes] = await Promise.all([
+  const [citiesRes, buildings, units, neighborhoodsRes] = await Promise.all([
     supabase.from("cities").select("id, name, slug, state").order("name"),
-    supabase.from("buildings").select("id, city_id").eq("status", "active"),
+    // Active buildings also exceed the 1000-row cap — unpaged, every city's
+    // building/unit counts were undercounted.
+    fetchAllRows<{ id: string; city_id: string }>((from, to) =>
+      supabase
+        .from("buildings")
+        .select("id, city_id")
+        .eq("status", "active")
+        .order("id")
+        .range(from, to)
+    ),
     // Available units can exceed Supabase's 1000-row response cap
     fetchAllRows<{ id: string; building_id: string }>((from, to) =>
       supabase
@@ -43,7 +52,7 @@ export default async function CitiesPage() {
   const cityStats: Record<string, { buildingCount: number; unitCount: number }> = {};
   const cityByBuilding: Record<string, string> = {};
 
-  for (const b of buildingsRes.data || []) {
+  for (const b of buildings) {
     cityByBuilding[b.id] = b.city_id;
     if (!cityStats[b.city_id]) {
       cityStats[b.city_id] = { buildingCount: 0, unitCount: 0 };

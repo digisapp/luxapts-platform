@@ -17,6 +17,8 @@ const CACHE_TTL_SECONDS = 300;
 
 // PostgREST caps any single response at 1000 rows.
 const MAX_FETCH_ROWS = 1000;
+// Strict YYYY-MM-DD — the only shape allowed into the `.or()` filter string.
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 // Upper bound on candidate pages per building-chunk (pages are 3× the
 // requested limit, so a limit-200 search can examine up to 4,800 units).
 const MAX_PAGE_ROUNDS = 8;
@@ -202,9 +204,11 @@ async function executeSearch(params: SearchParams): Promise<SearchResponse> {
       .select("id")
       .eq("city_id", cityId)
       .in("slug", params.neighborhood_slugs);
-    if (neighborhoodRes.data?.length) {
-      neighborhoodIds = neighborhoodRes.data.map((n) => n.id as string);
-    }
+    // Requested neighborhoods that don't exist in this city mean "no match",
+    // not "search the whole city" — silently dropping the filter returned
+    // every Miami unit for a Brooklyn neighborhood.
+    if (neighborhoodRes.error || !neighborhoodRes.data?.length) return empty;
+    neighborhoodIds = neighborhoodRes.data.map((n) => n.id as string);
   }
 
   const buildings = await fetchAllRows<{ id: string }>((from, to) => {
@@ -262,7 +266,13 @@ async function executeSearch(params: SearchParams): Promise<SearchResponse> {
     if (typeof params.beds_min === "number") q = q.gte("beds", params.beds_min);
     if (typeof params.beds_max === "number") q = q.lte("beds", params.beds_max);
     if (typeof params.baths_min === "number") q = q.gte("baths", params.baths_min);
-    if (params.move_in_date) q = q.lte("available_on", params.move_in_date);
+    // The scraper stores NULL when a listing prints no availability date;
+    // a plain `lte` would drop those units entirely. The date is validated
+    // by zod upstream, but it is interpolated into a PostgREST filter string
+    // so it is re-checked here before use.
+    if (params.move_in_date && ISO_DATE_RE.test(params.move_in_date)) {
+      q = q.or(`available_on.is.null,available_on.lte.${params.move_in_date}`);
+    }
     if (typeof params.budget_min === "number") q = q.gte("latest_rent", params.budget_min);
     if (typeof params.budget_max === "number") q = q.lte("latest_rent", params.budget_max);
 

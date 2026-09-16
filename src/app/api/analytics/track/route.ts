@@ -2,17 +2,11 @@ import { NextResponse } from "next/server";
 import { apiError } from "@/lib/api-helpers";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+import { analyticsTrackSchema } from "@/lib/validations";
 
 // Analytics tables no longer have public RLS insert policies (they were
 // spoofable/spammable via direct PostgREST calls) — all writes go through
 // this route with the service-role client.
-
-interface TrackingPayload {
-  type: "page_view" | "building_view" | "event" | "session";
-  session_id: string;
-  user_id?: string;
-  data: Record<string, unknown>;
-}
 
 function getDeviceType(userAgent: string): "desktop" | "tablet" | "mobile" {
   if (/tablet|ipad|playbook|silk/i.test(userAgent)) return "tablet";
@@ -49,13 +43,18 @@ export async function POST(req: Request) {
     }
 
     const supabase = createAdminClient();
-    const body = (await req.json()) as TrackingPayload;
+
+    // Validate before touching `body.data` — an absent or non-object `data`
+    // used to throw a TypeError and surface as a 500.
+    const rawBody = await req.json().catch(() => null);
+    const parsed = analyticsTrackSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return apiError(parsed.error.issues[0]?.message || "Invalid payload");
+    }
+    const body = parsed.data;
+
     const userAgent = req.headers.get("user-agent") || "";
     const deviceType = getDeviceType(userAgent);
-
-    if (!body.session_id || !body.type) {
-      return apiError("Missing required fields");
-    }
 
     // Never trust a client-supplied user_id — it can be used to attribute
     // events/sessions to arbitrary real users. Resolve it from the session
@@ -68,12 +67,7 @@ export async function POST(req: Request) {
 
     switch (body.type) {
       case "page_view": {
-        const { path, referrer, duration_ms, city_slug } = body.data as {
-          path: string;
-          referrer?: string;
-          duration_ms?: number;
-          city_slug?: string;
-        };
+        const { path, referrer, duration_ms, city_slug } = body.data;
 
         await supabase.from("page_views").insert({
           session_id: body.session_id,
@@ -97,15 +91,7 @@ export async function POST(req: Request) {
           viewed_gallery,
           clicked_contact,
           clicked_schedule_tour,
-        } = body.data as {
-          building_id: string;
-          source?: string;
-          time_on_page_ms?: number;
-          scrolled_to_bottom?: boolean;
-          viewed_gallery?: boolean;
-          clicked_contact?: boolean;
-          clicked_schedule_tour?: boolean;
-        };
+        } = body.data;
 
         await supabase.from("building_views").insert({
           session_id: body.session_id,
@@ -122,11 +108,7 @@ export async function POST(req: Request) {
       }
 
       case "event": {
-        const { event_name, event_category, properties } = body.data as {
-          event_name: string;
-          event_category?: string;
-          properties?: Record<string, unknown>;
-        };
+        const { event_name, event_category, properties } = body.data;
 
         await supabase.from("analytics_events").insert({
           session_id: body.session_id,
@@ -145,12 +127,7 @@ export async function POST(req: Request) {
           utm_source,
           utm_medium,
           utm_campaign,
-        } = body.data as {
-          landing_page?: string;
-          utm_source?: string;
-          utm_medium?: string;
-          utm_campaign?: string;
-        };
+        } = body.data;
 
         // Upsert session - create new or update existing
         const { error } = await supabase

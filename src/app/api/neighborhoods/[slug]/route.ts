@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { getFirstRelation } from "@/lib/db-helpers";
+import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
+import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 
 export async function GET(
   req: NextRequest,
@@ -8,10 +9,14 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+    const citySlug = req.nextUrl.searchParams.get("city");
     const supabase = createAdminClient();
 
-    // Get neighborhood with city info
-    const { data: neighborhood, error } = await supabase
+    // neighborhoods.slug is unique per (city_id, slug), not globally: shared
+    // names like "downtown" / "midtown" exist in several cities, and .single()
+    // turned that into a PGRST116 error → a bogus 404. Scope by ?city=<slug>
+    // when supplied, otherwise take the first match by name.
+    let neighborhoodQuery = supabase
       .from("neighborhoods")
       .select(`
         id,
@@ -20,8 +25,24 @@ export async function GET(
         description,
         cities:city_id (id, name, slug, state)
       `)
-      .eq("slug", slug)
-      .single();
+      .eq("slug", slug);
+
+    if (citySlug) {
+      const { data: city } = await supabase
+        .from("cities")
+        .select("id")
+        .eq("slug", citySlug)
+        .maybeSingle();
+      if (!city) {
+        return NextResponse.json({ error: "Neighborhood not found" }, { status: 404 });
+      }
+      neighborhoodQuery = neighborhoodQuery.eq("city_id", city.id);
+    }
+
+    const { data: neighborhood, error } = await neighborhoodQuery
+      .order("name")
+      .limit(1)
+      .maybeSingle();
 
     if (error || !neighborhood) {
       return NextResponse.json(
@@ -30,56 +51,52 @@ export async function GET(
       );
     }
 
-    // Get buildings in this neighborhood
-    const { data: buildings } = await supabase
-      .from("buildings")
-      .select("id, name")
-      .eq("neighborhood_id", neighborhood.id)
-      .eq("status", "active");
+    // Get buildings in this neighborhood (paged past the 1000-row cap)
+    const buildings = await fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase
+        .from("buildings")
+        .select("id, name")
+        .eq("neighborhood_id", neighborhood.id)
+        .eq("status", "active")
+        .order("name")
+        .order("id")
+        .range(from, to)
+    );
 
-    const buildingIds = buildings?.map((b) => b.id) || [];
+    const buildingIds = buildings.map((b) => b.id);
     const buildingCount = buildingIds.length;
 
-    // Get available units
-    const { data: units } = await supabase
-      .from("units")
-      .select("id, beds, baths, sqft")
-      .in("building_id", buildingIds)
-      .eq("is_available", true);
+    // Available units + their latest rent in one chunked, paged read of
+    // units_with_latest_price. The old version fetched the full
+    // unit_price_snapshots history through an unbounded `.in(unitIds)`, which
+    // failed past ~150 units and was capped at 1000 rows long before that.
+    const units = await fetchAvailableUnitPrices<{
+      id: string;
+      building_id: string;
+      latest_rent: number | null;
+      beds: number | null;
+      baths: number | null;
+      sqft: number | null;
+    }>(supabase, buildingIds, ["beds", "baths", "sqft"]);
 
-    const unitIds = units?.map((u) => u.id) || [];
-    const unitCount = unitIds.length;
+    const unitCount = units.length;
 
     // Get price stats
     let priceStats = { min: 0, max: 0, avg: 0 };
-    if (unitIds.length > 0) {
-      const { data: prices } = await supabase
-        .from("unit_price_snapshots")
-        .select("unit_id, rent")
-        .in("unit_id", unitIds)
-        .order("captured_at", { ascending: false });
-
-      // Get latest price per unit
-      const latestPrices: Record<string, number> = {};
-      for (const p of prices || []) {
-        if (!latestPrices[p.unit_id]) {
-          latestPrices[p.unit_id] = p.rent;
-        }
-      }
-
-      const priceValues = Object.values(latestPrices);
-      if (priceValues.length > 0) {
-        priceStats = {
-          min: Math.min(...priceValues),
-          max: Math.max(...priceValues),
-          avg: Math.round(priceValues.reduce((a, b) => a + b, 0) / priceValues.length),
-        };
-      }
+    const priceValues = units
+      .map((u) => u.latest_rent)
+      .filter((rent): rent is number => rent != null);
+    if (priceValues.length > 0) {
+      priceStats = {
+        min: Math.min(...priceValues),
+        max: Math.max(...priceValues),
+        avg: Math.round(priceValues.reduce((a, b) => a + b, 0) / priceValues.length),
+      };
     }
 
     // Get bed distribution
     const bedCounts: Record<number, number> = {};
-    for (const unit of units || []) {
+    for (const unit of units) {
       const beds = unit.beds ?? 0;
       bedCounts[beds] = (bedCounts[beds] || 0) + 1;
     }
@@ -107,7 +124,7 @@ export async function GET(
         priceStats,
         bedDistribution: bedCounts,
       },
-      buildings: buildings?.slice(0, 10) || [],
+      buildings: buildings.slice(0, 10),
     });
   } catch (error) {
     console.error("Neighborhood API error:", error);

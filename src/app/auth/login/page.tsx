@@ -8,11 +8,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Sparkles } from "lucide-react";
 
+/**
+ * Resolve a ?redirect= value to a same-origin path.
+ *
+ * A startsWith("/") check is not enough: URL parsing treats a backslash like a
+ * slash, so a redirect of slash-backslash-evil.com passes that check and then
+ * resolves to https://evil.com — an open redirect straight off the login page.
+ * Resolving against the real origin and comparing origins is the only reliable
+ * test. Called from the submit handler, never during render, so `window` is
+ * always defined.
+ */
+function safeRedirectPath(raw: string | null): string {
+  if (!raw) return "/";
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (url.origin !== window.location.origin) return "/";
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return "/";
+  }
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const raw = searchParams.get("redirect") || "/";
-  const redirectTo = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+  const rawRedirect = searchParams.get("redirect");
   const errorParam = searchParams.get("error");
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
@@ -33,7 +53,7 @@ function LoginForm() {
       return;
     }
 
-    router.push(redirectTo);
+    router.push(safeRedirectPath(rawRedirect));
     router.refresh();
   };
 

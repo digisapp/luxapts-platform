@@ -32,6 +32,11 @@ export interface ScrapedBuildingData {
   // Units
   units: ScrapedUnit[];
   total_available?: number;
+  /**
+   * Set when the unit extraction itself failed (model error / unparseable
+   * response) rather than the page genuinely listing nothing.
+   */
+  units_error?: string;
 
   // Amenities
   amenities: ScrapedAmenity[];
@@ -49,12 +54,25 @@ export interface ScrapedBuildingData {
   source_url: string;
 }
 
+/** Which page the units in a ScrapeResult actually came from. */
+export type UnitsExtractionSource = "units_page" | "main_page_fallback";
+
 export interface ScrapeResult {
   success: boolean;
   data?: ScrapedBuildingData;
   error?: string;
   raw_html_length?: number;
   ai_tokens_used?: number;
+  /**
+   * Where the units were extracted from. A "main_page_fallback" result is
+   * marketing copy ("from $2,400") — never evidence that the numbered units
+   * on the real availability page are gone.
+   */
+  source?: UnitsExtractionSource;
+  /** A dedicated units page was found but every attempt to fetch it failed (bot wall / timeout). */
+  units_page_fetch_failed?: boolean;
+  /** The units/floor-plans page URL that was discovered, if any. */
+  units_page_url?: string;
 }
 
 export interface ScrapedImage {

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Webhook } from "svix";
 import { classifyAndDraftReply, sendAutoReply } from "@/lib/ai-email";
@@ -235,8 +235,18 @@ export async function POST(req: Request) {
       const emailId = inserted.id;
 
       // ── Async AI classification + auto-reply (non-blocking) ──
-      processAIClassification(emailId, fromName, fromEmail, subject, bodyText || bodyHtml, threadId).catch(
-        (err) => console.error("AI classification pipeline error:", err)
+      // after() keeps the work alive past the response: a floating promise is
+      // frozen as soon as the webhook is acknowledged on Vercel, so
+      // classification and auto-replies were being dropped mid-flight.
+      after(() =>
+        processAIClassification(
+          emailId,
+          fromName,
+          fromEmail,
+          subject,
+          bodyText || bodyHtml,
+          threadId
+        ).catch((err) => console.error("AI classification pipeline error:", err))
       );
 
       return NextResponse.json({ success: true, thread_id: threadId, email_id: emailId });

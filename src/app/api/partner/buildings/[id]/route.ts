@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkPartnerAuth } from "@/lib/partner/auth";
 import { apiError } from "@/lib/api-helpers";
+import { chunk, IN_CHUNK_SIZE } from "@/lib/search/fetch-enrichments";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -56,17 +57,29 @@ export async function GET(
         .eq("building_id", id),
     ]);
 
-    // Latest price per unit
+    // Latest price per unit. One row per unit from latest_unit_prices, queried
+    // in <=100-id chunks: the previous unbounded `.in()` over the full
+    // unit_price_snapshots history failed outright past ~150 units and was
+    // truncated at PostgREST's 1000-row cap well before that.
     const unitIds = (unitsRes.data || []).map((u) => u.id);
     const priceByUnit: Record<string, number> = {};
     if (unitIds.length > 0) {
-      const { data: prices } = await supabase
-        .from("unit_price_snapshots")
-        .select("unit_id, rent, captured_at")
-        .in("unit_id", unitIds)
-        .order("captured_at", { ascending: false });
-      for (const p of prices || []) {
-        if (!priceByUnit[p.unit_id]) priceByUnit[p.unit_id] = p.rent;
+      const priceChunks = await Promise.all(
+        chunk(unitIds, IN_CHUNK_SIZE).map((ids) =>
+          supabase
+            .from("latest_unit_prices")
+            .select("unit_id, rent")
+            .in("unit_id", ids)
+        )
+      );
+      for (const res of priceChunks) {
+        if (res.error) {
+          console.error("Partner unit price query error:", res.error.message);
+          continue;
+        }
+        for (const p of res.data || []) {
+          if (p.rent != null) priceByUnit[p.unit_id] = p.rent;
+        }
       }
     }
 

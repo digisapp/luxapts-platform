@@ -59,7 +59,9 @@ export async function POST(req: Request) {
 
   try {
     // All Matrix batches in parallel — each keeps its own 10s timeout, and
-    // results are keyed back to their batch by index so ordering is preserved
+    // results are keyed back to their batch by index so ordering is preserved.
+    // A failed batch (Mapbox 403 when the token/billing lapses, a timeout)
+    // yields null rather than rejecting the whole request.
     const batchResults = await Promise.all(
       batches.map(async (batch) => {
         const coords = [
@@ -74,18 +76,26 @@ export async function POST(req: Request) {
           `&destinations=${destIndex}` +
           `&annotations=duration&access_token=${token}`;
 
-        const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
-        if (!res.ok) {
-          console.error(`Matrix API error ${res.status}:`, await res.text());
+        try {
+          const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+          if (!res.ok) {
+            console.error(`Matrix API error ${res.status}:`, await res.text());
+            return null;
+          }
+          return (await res.json()) as { durations?: (number | null)[][] };
+        } catch (batchError) {
+          console.error("Matrix API batch failed:", batchError);
           return null;
         }
-
-        return (await res.json()) as { durations?: (number | null)[][] };
       })
     );
 
+    let failedBatches = 0;
     batchResults.forEach((data, batchIdx) => {
-      if (!data) return;
+      if (!data) {
+        failedBatches++;
+        return;
+      }
       batches[batchIdx].forEach((p, idx) => {
         const seconds = data.durations?.[idx]?.[0];
         if (typeof seconds === "number") {
@@ -94,7 +104,21 @@ export async function POST(req: Request) {
       });
     });
 
-    return NextResponse.json({ mode, durations });
+    // Still 200: the client must not hide every listing just because travel
+    // times are unavailable. `partial` tells it some/all durations are missing.
+    if (failedBatches > 0) {
+      return NextResponse.json({
+        mode,
+        durations,
+        partial: true,
+        error:
+          failedBatches === batches.length
+            ? "Commute times are currently unavailable"
+            : "Commute times are unavailable for some listings",
+      });
+    }
+
+    return NextResponse.json({ mode, durations, partial: false });
   } catch (error) {
     console.error("Commute matrix error:", error);
     return apiError("Failed to compute commute times", 500);
