@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { Mail, X } from "lucide-react";
 
 interface Agent {
   user_id: string;
@@ -14,10 +14,17 @@ interface BulkActionBarProps {
   selectedIds: string[];
   agents: Agent[];
   onApply: (action: "status" | "assign", value: string) => void;
+  onEmail: () => void;
   onClear: () => void;
 }
 
-export function BulkActionBar({ selectedCount, agents, onApply, onClear }: BulkActionBarProps) {
+export function BulkActionBar({
+  selectedCount,
+  agents,
+  onApply,
+  onEmail,
+  onClear,
+}: BulkActionBarProps) {
   const [bulkStatus, setBulkStatus] = useState("contacted");
   const [bulkAgent, setBulkAgent] = useState(agents[0]?.user_id || "");
 
@@ -27,6 +34,11 @@ export function BulkActionBar({ selectedCount, agents, onApply, onClear }: BulkA
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur px-6 py-3 shadow-lg">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4">
         <span className="text-sm font-medium">{selectedCount} selected</span>
+
+        <Button size="sm" onClick={onEmail}>
+          <Mail className="mr-1 h-3 w-3" />
+          Email {selectedCount}
+        </Button>
 
         <div className="flex items-center gap-2">
           <select

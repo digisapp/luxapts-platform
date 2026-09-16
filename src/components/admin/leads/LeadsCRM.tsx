@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { LeadRow, type LeadRowData } from "./LeadRow";
 import { BulkActionBar } from "./BulkActionBar";
+import { BulkEmailDialog } from "./BulkEmailDialog";
 import { SendEmailDialog } from "./SendEmailDialog";
 
 interface Agent {
@@ -50,6 +51,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
   // Email dialog state
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [emailTarget, setEmailTarget] = useState<LeadRowData | null>(null);
+  const [bulkEmailOpen, setBulkEmailOpen] = useState(false);
 
   const requestIdRef = useRef(0);
 
@@ -294,7 +296,18 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
         selectedIds={Array.from(selectedIds)}
         agents={agents}
         onApply={handleBulkAction}
+        onEmail={() => setBulkEmailOpen(true)}
         onClear={() => setSelectedIds(new Set())}
+      />
+
+      <BulkEmailDialog
+        open={bulkEmailOpen}
+        onOpenChange={setBulkEmailOpen}
+        leadIds={Array.from(selectedIds)}
+        onSent={() => {
+          setSelectedIds(new Set());
+          fetchLeads(offset);
+        }}
       />
 
       {/* Email Dialog */}
