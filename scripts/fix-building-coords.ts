@@ -124,7 +124,8 @@ async function main() {
 
     const zipNote = hit.zip && hit.zip !== b.zip ? `  zip ${b.zip ?? "-"}→${hit.zip}` : "";
     console.log(
-      `  ✓ ${b.name.padEnd(28)} moved ${now.toFixed(1)}km to ${hit.matched}${zipNote}`
+      `  ✓ ${b.name.padEnd(28)} moved ${now.toFixed(1)}km to ${hit.matched}${zipNote}` +
+        `  (was ${from.toFixed(0)}km from its neighborhood)`
     );
 
     if (APPLY) {
