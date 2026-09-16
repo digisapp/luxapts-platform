@@ -4,6 +4,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
 import { chunk, IN_CHUNK_SIZE } from "@/lib/search/fetch-enrichments";
 import { ScrapedUnit, ScrapedAmenity, ScrapedImage } from "./types";
+import { isJunkImageUrl } from "@/lib/images/quality";
 
 export interface ScrapeStatusRelation {
   website_url: string | null;
@@ -714,6 +715,9 @@ export async function saveScrapedBuildingImages(
     (img) =>
       // Only https URLs — image URLs come from untrusted scraped HTML
       typeof img.url === "string" && img.url.startsWith("https://") &&
+      // Favicons, brand logos and Open Graph share cards read as photos to the
+      // extractor but render as an obviously wrong thumbnail on the listing
+      !isJunkImageUrl(img.url) &&
       (buildingCategories.has(img.category) || !img.category)
   );
 
@@ -805,6 +809,8 @@ export async function saveScrapedUnitImages(
   const unitImages = images.filter(
     (img) =>
       typeof img.url === "string" && img.url.startsWith("https://") &&
+      // Same site-furniture gate as the building images
+      !isJunkImageUrl(img.url) &&
       unitCategories.has(img.category)
   );
 

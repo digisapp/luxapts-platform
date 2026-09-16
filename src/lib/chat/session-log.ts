@@ -185,7 +185,7 @@ export async function logChatTurn(turn: ChatTurn): Promise<void> {
       }
     }
 
-    await supabase
+    const { error: counterError } = await supabase
       .from("chat_sessions")
       .update({
         messages_count: (existing?.messages_count ?? 0) + rows.length,
@@ -198,6 +198,12 @@ export async function logChatTurn(turn: ChatTurn): Promise<void> {
         ...(turn.userId ? { user_id: turn.userId } : {}),
       })
       .eq("id", sessionId);
+    // Counters drive the Needs-review filter, so a silent failure here would
+    // hide exactly the sessions worth reading. The transcript is already
+    // safely stored at this point; only the rollup is affected.
+    if (counterError) {
+      reportWriteFailure(`Chat session counter update failed (${sessionId}):`, counterError);
+    }
   } catch (err) {
     reportWriteFailure("logChatTurn threw:", err);
   }
