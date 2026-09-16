@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { MICROSITE_DOMAINS, micrositeLeadSchema, micrositeAnalyticsSchema } from "@/lib/validations";
+import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
 
 const ROOT = join(process.cwd(), "microsites");
 
@@ -58,13 +59,17 @@ describe("microsite lead schema", () => {
     expect(r.success).toBe(false);
   });
 
-  it("rejects a tripped honeypot", () => {
+  // The honeypot is handled by the route, not the schema: validation has to
+  // pass so the handler can return a normal-looking success without storing
+  // anything. A schema rejection would 400 the bot and reveal the trap.
+  it("lets a tripped honeypot through validation for the route to discard", () => {
     const r = micrositeLeadSchema.safeParse({
       ...base,
       domain: MICROSITE_DOMAINS[0],
       website: "http://spam.example",
     });
-    expect(r.success).toBe(false);
+    expect(r.success).toBe(true);
+    expect(r.success && r.data.website).toBe("http://spam.example");
   });
 
   it.each(MICROSITE_DOMAINS as readonly string[])("accepts a pageview from %s", (domain) => {
@@ -76,5 +81,42 @@ describe("microsite lead schema", () => {
       referrer: null,
     });
     expect(r.success).toBe(true);
+  });
+});
+
+describe("microsite origin guard", () => {
+  const req = (origin?: string) =>
+    new Request("https://staycio.com/api/microsite-leads", {
+      method: "POST",
+      headers: origin ? { origin } : {},
+    });
+
+  it("accepts every registered microsite origin", () => {
+    for (const d of MICROSITE_DOMAINS) {
+      expect(isAllowedOrigin(req(`https://${d}`)), d).toBe(true);
+      expect(isAllowedOrigin(req(`https://www.${d}`)), `www.${d}`).toBe(true);
+    }
+  });
+
+  it("rejects an unknown origin", () => {
+    expect(isAllowedOrigin(req("https://not-ours.example"))).toBe(false);
+  });
+
+  // CORS is browser-side only, so a script with no Origin header would
+  // otherwise reach the handler and write a lead.
+  it("rejects a request with no Origin header", () => {
+    expect(isAllowedOrigin(req())).toBe(false);
+  });
+
+  it("rejects a lookalike origin", () => {
+    expect(isAllowedOrigin(req("https://biscayne18.com.evil.example"))).toBe(false);
+    expect(isAllowedOrigin(req("http://biscayne18.com"))).toBe(false);
+  });
+
+  it("emits CORS headers only for allowed origins", () => {
+    expect(corsHeaders(req("https://biscayne18.com"))["Access-Control-Allow-Origin"]).toBe(
+      "https://biscayne18.com"
+    );
+    expect(corsHeaders(req("https://not-ours.example"))).toEqual({});
   });
 });

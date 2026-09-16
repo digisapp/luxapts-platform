@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
-import { micrositeLeadSchema, MICROSITE_DOMAINS } from "@/lib/validations";
+import { micrositeLeadSchema } from "@/lib/validations";
+import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
 import { apiError } from "@/lib/api-helpers";
 import { autoAssignAgent } from "@/lib/leads/routing";
 import { newLeadEmail, micrositeWaitlistEmail } from "@/lib/email/templates";
@@ -16,33 +17,15 @@ import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 // static page on its own domain, so this route must answer CORS preflights and
 // echo back allowed origins.
 
-const ALLOWED_ORIGINS = new Set(
-  MICROSITE_DOMAINS.flatMap((d) => [
-    `https://${d}`,
-    `https://www.${d}`,
-    // Stable Vercel alias (pre-DNS testing), e.g. namdartowerscom.vercel.app
-    `https://${d.replace(/\./g, "")}.vercel.app`,
-  ])
-);
-
-function corsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get("origin") || "";
-  if (!ALLOWED_ORIGINS.has(origin)) return {};
-  return {
-    "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Max-Age": "86400",
-    Vary: "Origin",
-  };
-}
-
 export async function OPTIONS(req: Request) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
 }
 
 export async function POST(req: Request) {
   const cors = corsHeaders(req);
+  if (!isAllowedOrigin(req)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   try {
     const clientIp = getClientIp(req);
     const rateLimitResult = rateLimit(`microsite-leads:${clientIp}`, RATE_LIMITS.leads);

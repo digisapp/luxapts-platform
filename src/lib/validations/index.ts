@@ -109,8 +109,10 @@ export const micrositeLeadSchema = z.object({
   intent: z.string().max(100).optional(),
   bedrooms: z.string().max(100).optional(),
   stay_type: z.string().max(100).optional(),
-  // Honeypot — real users never fill this; bots do.
-  website: z.string().max(0, "Invalid submission").optional(),
+  // Honeypot — real users never fill this; bots do. Deliberately permissive:
+  // rejecting here would 400 the bot and tell it the field is a trap. The route
+  // accepts the request and returns success without storing anything instead.
+  website: z.string().max(500).optional(),
 });
 
 export type MicrositeLeadInput = z.infer<typeof micrositeLeadSchema>;

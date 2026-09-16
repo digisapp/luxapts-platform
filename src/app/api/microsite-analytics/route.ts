@@ -1,32 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { micrositeAnalyticsSchema, MICROSITE_DOMAINS } from "@/lib/validations";
+import { micrositeAnalyticsSchema } from "@/lib/validations";
+import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 // Traffic tracking for the standalone building microsites. Writes into the
 // platform's own page_views / analytics_events tables tagged with
 // source_domain (migration 022), so microsite traffic and microsite leads
 // (leads.source_detail, migration 021) report on the same key.
-
-const ALLOWED_ORIGINS = new Set(
-  MICROSITE_DOMAINS.flatMap((d) => [
-    `https://${d}`,
-    `https://www.${d}`,
-    `https://${d.replace(/\./g, "")}.vercel.app`,
-  ])
-);
-
-function corsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get("origin") || "";
-  if (!ALLOWED_ORIGINS.has(origin)) return {};
-  return {
-    "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Max-Age": "86400",
-    Vary: "Origin",
-  };
-}
 
 function deviceType(ua: string): "desktop" | "tablet" | "mobile" {
   if (/tablet|ipad|playbook|silk/i.test(ua)) return "tablet";
@@ -40,6 +21,9 @@ export async function OPTIONS(req: Request) {
 
 export async function POST(req: Request) {
   const cors = corsHeaders(req);
+  if (!isAllowedOrigin(req)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   try {
     const clientIp = getClientIp(req);
     const limit = rateLimit(`microsite-analytics:${clientIp}`, RATE_LIMITS.api);
