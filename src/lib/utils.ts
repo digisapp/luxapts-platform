@@ -83,3 +83,21 @@ export function telHref(phone: string): string {
   const cleaned = phone.replace(/[^\d+]/g, "");
   return cleaned.startsWith("+") ? cleaned : cleaned.replace(/\+/g, "");
 }
+
+/**
+ * Builds a wa.me link. WhatsApp wants a full international number with no "+",
+ * spaces or trunk prefix. A bare 10-digit entry on a Miami form is almost
+ * certainly US/Canada, so assume +1 rather than producing a dead link — anyone
+ * outside NANP will have typed their country code.
+ */
+export function whatsappHref(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  const withCountry =
+    !phone.trim().startsWith("+") && digits.length === 10 ? `1${digits}` : digits;
+  return `https://wa.me/${withCountry}`;
+}
+
+/** Digits only — used to sanity-check a number without caring about format. */
+export function phoneDigitCount(phone: string): number {
+  return phone.replace(/\D/g, "").length;
+}

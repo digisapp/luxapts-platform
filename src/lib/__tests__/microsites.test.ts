@@ -3,7 +3,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { MICROSITE_DOMAINS, micrositeLeadSchema, micrositeAnalyticsSchema } from "@/lib/validations";
 import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
-import { telHref } from "@/lib/utils";
+import { telHref, whatsappHref } from "@/lib/utils";
 
 const ROOT = join(process.cwd(), "microsites");
 
@@ -43,6 +43,16 @@ describe("microsite registry", () => {
     expect(html, `${domain}: no phone input`).toMatch(
       /<input id="phone" name="phone" type="tel" required/
     );
+  });
+
+  // Miami leads arrive from Latin America, Europe and the Caribbean. A pattern
+  // attribute or a US-shaped placeholder turns those visitors away at the form.
+  it.each(siteDirs)("%s does not constrain phone to a US format", (domain) => {
+    const html = readFileSync(join(ROOT, domain, "index.html"), "utf8");
+    const input = html.match(/<input id="phone"[^>]*>/)?.[0] ?? "";
+    expect(input, `${domain}: phone input has a pattern attribute`).not.toMatch(/pattern=/);
+    expect(input, `${domain}: placeholder implies a US-only number`).toContain("+1");
+    expect(html, `${domain}: label should mention WhatsApp`).toContain("Phone / WhatsApp");
   });
 
   it.each(siteDirs)("%s canonical URL matches its domain", (domain) => {
@@ -173,5 +183,62 @@ describe("tel: link normalisation", () => {
 
   it("drops a stray + that is not leading", () => {
     expect(telHref("305+555+0123")).toBe("3055550123");
+  });
+});
+
+
+describe("international phone handling", () => {
+  const INTL = [
+    "+57 300 123 4567",     // Colombia
+    "+52 55 1234 5678",     // Mexico
+    "+55 11 91234-5678",    // Brazil
+    "+54 9 11 1234-5678",   // Argentina
+    "+58 412-1234567",      // Venezuela
+    "+1 (305) 555-0123",    // US with country code
+    "(305) 555-0123",       // US bare
+    "+44 20 7123 4567",     // UK
+    "+33 6 12 34 56 78",    // France
+    "+509 3412 3456",       // Haiti
+  ];
+
+  it.each(INTL)("accepts %s", (phone) => {
+    const r = micrositeLeadSchema.safeParse({
+      domain: MICROSITE_DOMAINS[0],
+      building: "Test",
+      name: "Test",
+      email: "t@example.com",
+      phone,
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it.each(["abcdefg", "---", "12", "()+ -"])("rejects %s as not a number", (phone) => {
+    const r = micrositeLeadSchema.safeParse({
+      domain: MICROSITE_DOMAINS[0],
+      building: "Test",
+      name: "Test",
+      email: "t@example.com",
+      phone,
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it("builds wa.me links without + or separators", () => {
+    expect(whatsappHref("+57 300 123 4567")).toBe("https://wa.me/573001234567");
+    expect(whatsappHref("+55 11 91234-5678")).toBe("https://wa.me/5511912345678");
+  });
+
+  // A bare 10-digit US number has no country code; wa.me would reject it.
+  it("assumes +1 for a bare 10-digit number", () => {
+    expect(whatsappHref("(305) 555-0123")).toBe("https://wa.me/13055550123");
+  });
+
+  it("does not add +1 when a country code is already present", () => {
+    expect(whatsappHref("+1 (305) 555-0123")).toBe("https://wa.me/13055550123");
+    expect(whatsappHref("+44 20 7123 4567")).toBe("https://wa.me/442071234567");
+  });
+
+  it("keeps the + for tel: on international numbers", () => {
+    expect(telHref("+57 300 123 4567")).toBe("+573001234567");
   });
 });

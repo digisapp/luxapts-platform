@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDate, telHref } from "@/lib/utils";
-import { Eye, Mail, MessageSquare, Phone, PhoneCall, Send } from "lucide-react";
+import { formatDate, telHref, whatsappHref } from "@/lib/utils";
+import { Eye, Mail, MessageCircle, MessageSquare, Phone, PhoneCall, Send } from "lucide-react";
 
 
 export interface LeadRowData {
@@ -116,6 +116,23 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
             <Button size="sm" variant="ghost" asChild title={`Text ${lead.user_phone}`}>
               <a href={`sms:${telHref(lead.user_phone)}`}>
                 <MessageSquare className="h-3 w-3" />
+              </a>
+            </Button>
+            {/* Much of Miami's renter pool is Latin American, where WhatsApp is
+                the default channel and an SMS or voicemail often goes unread. */}
+            <Button
+              size="sm"
+              variant="ghost"
+              asChild
+              title={`WhatsApp ${lead.user_phone}`}
+              className="text-emerald-600 hover:text-emerald-700"
+            >
+              <a
+                href={whatsappHref(lead.user_phone)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="h-3 w-3" />
               </a>
             </Button>
           </>

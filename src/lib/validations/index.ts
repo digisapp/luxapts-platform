@@ -108,7 +108,18 @@ export const micrositeLeadSchema = z.object({
   // Kept optional server-side on purpose: a visitor with a cached copy of the
   // old page would otherwise 400 and lose a lead outright. Flip to required
   // once caches have turned over.
-  phone: z.string().min(7, "Phone number looks too short").max(40).optional(),
+  // Deliberately permissive. Miami leads arrive with Latin American, European
+  // and Caribbean numbers in every imaginable format, so no pattern is enforced
+  // — only that enough digits are present to be a real number. Counting digits
+  // rather than characters means "+57 300 123 4567" passes and "abcdefg" does
+  // not, which a plain length check got backwards.
+  phone: z
+    .string()
+    .max(40)
+    .refine((v) => (v.replace(/\D/g, "").length >= 6), {
+      message: "Phone number looks too short",
+    })
+    .optional(),
   unit_type: z.string().max(100).optional(),
   move_in: z.string().max(100).optional(),
   intent: z.string().max(100).optional(),
