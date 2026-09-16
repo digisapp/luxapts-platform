@@ -145,11 +145,13 @@ async function settleForUnitContent(
   if (looksLikeUnitContent(best) && bestScore >= 3) return best;
 
   const deadline = Date.now() + budgetMs;
+  let rounds = 0;
   while (Date.now() < deadline) {
     await page
       .evaluate(() => window.scrollBy(0, Math.round(window.innerHeight * 0.9)))
       .catch(() => {});
     await page.waitForTimeout(900);
+    rounds++;
 
     const html = await page.content().catch(() => "");
     if (!html) break;
@@ -160,6 +162,12 @@ async function settleForUnitContent(
     }
     // Enough inventory on the page to be worth extracting — stop paying for time.
     if (looksLikeUnitContent(html) && score >= 3) return html;
+
+    // Most of the fleet's stubborn sites (Greystar's property pages, marketing
+    // one-pagers) publish no pricing at all. Once a few scrolls have produced
+    // not one price, more scrolling will not conjure one — and paying the full
+    // budget on every such page is what makes a fleet-wide refresh crawl.
+    if (rounds >= 3 && bestScore === 0) break;
   }
   return best;
 }
