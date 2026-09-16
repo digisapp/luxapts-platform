@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { senderIdentityFor } from "@/lib/microsites";
 import {
   Dialog,
   DialogContent,
@@ -19,9 +20,20 @@ interface SendEmailDialogProps {
   leadId: string;
   leadName: string | null;
   leadEmail: string | null;
+  sourceDetail?: string | null;
 }
 
-export function SendEmailDialog({ open, onOpenChange, leadId, leadName, leadEmail }: SendEmailDialogProps) {
+export function SendEmailDialog({
+  open,
+  onOpenChange,
+  leadId,
+  leadName,
+  leadEmail,
+  sourceDetail,
+}: SendEmailDialogProps) {
+  // Mirrors what the server will actually put in the From header, so the
+  // sender is visible before hitting send rather than a surprise afterwards.
+  const sender = senderIdentityFor(sourceDetail, "Staycio <hello@staycio.com>");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
@@ -66,6 +78,12 @@ export function SendEmailDialog({ open, onOpenChange, leadId, leadName, leadEmai
           <DialogTitle>Send Email</DialogTitle>
           <DialogDescription>
             To: {leadName || "Lead"} ({leadEmail})
+            <span className="mt-1 block text-xs">
+              From: <span className="font-medium text-foreground">{sender.from}</span>
+              {sourceDetail && (
+                <span className="text-muted-foreground"> — they signed up on {sourceDetail}</span>
+              )}
+            </span>
           </DialogDescription>
         </DialogHeader>
 

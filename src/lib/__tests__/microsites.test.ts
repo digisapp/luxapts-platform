@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { MICROSITE_DOMAINS, micrositeLeadSchema, micrositeAnalyticsSchema } from "@/lib/validations";
 import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
 import { telHref, whatsappHref } from "@/lib/utils";
+import { MICROSITE_BUILDINGS, senderIdentityFor } from "@/lib/microsites";
 
 const ROOT = join(process.cwd(), "microsites");
 
@@ -240,5 +241,57 @@ describe("international phone handling", () => {
 
   it("keeps the + for tel: on international numbers", () => {
     expect(telHref("+57 300 123 4567")).toBe("+573001234567");
+  });
+});
+
+describe("per-microsite sender identity", () => {
+  it("presents the building a lead signed up on", () => {
+    expect(senderIdentityFor("downtown6miami.com", "Staycio <hello@staycio.com>")).toEqual({
+      from: '"Downtown 6" <downtown6miami@staycio.com>',
+      label: "Downtown 6",
+    });
+    expect(senderIdentityFor("biscayne18.com", "Staycio <hello@staycio.com>")).toEqual({
+      from: '"Biscayne 18" <biscayne18@staycio.com>',
+      label: "Biscayne 18",
+    });
+  });
+
+  it("covers every registered microsite domain", () => {
+    for (const d of MICROSITE_DOMAINS) {
+      const s = senderIdentityFor(d, "Staycio <hello@staycio.com>");
+      expect(s.label, `${d} has no building name`).not.toBe("Staycio");
+      expect(s.from, `${d} sends off staycio.com`).toContain("@staycio.com");
+    }
+  });
+
+  // Sending stays on the one warmed, DKIM-verified domain; the microsite
+  // domains have no reputation and would land in spam.
+  it("never sends from a microsite domain itself", () => {
+    for (const d of MICROSITE_DOMAINS) {
+      expect(senderIdentityFor(d, "Staycio <hello@staycio.com>").from).not.toContain(`@${d}`);
+    }
+  });
+
+  it("falls back to the default identity for non-microsite leads", () => {
+    const fallback = "Staycio <hello@staycio.com>";
+    expect(senderIdentityFor(null, fallback)).toEqual({ from: fallback, label: "Staycio" });
+    expect(senderIdentityFor("someone-elses-site.com", fallback)).toEqual({
+      from: fallback,
+      label: "Staycio",
+    });
+  });
+
+  // "Mr. C" / "No. 17" contain characters that break an unquoted From header.
+  it("quotes display names so punctuation cannot break the header", () => {
+    for (const d of MICROSITE_DOMAINS) {
+      const { from } = senderIdentityFor(d, "x");
+      expect(from, d).toMatch(/^"[^"]+" <[a-z0-9]+@staycio\.com>$/);
+    }
+  });
+
+  it("keeps a building name for every domain the dashboard lists", () => {
+    for (const d of MICROSITE_DOMAINS) {
+      expect(MICROSITE_BUILDINGS[d], `${d} missing from MICROSITE_BUILDINGS`).toBeTruthy();
+    }
   });
 });

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 import { MICROSITE_DOMAINS } from "@/lib/validations";
+import { MICROSITE_BUILDINGS } from "@/lib/microsites";
 import { ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -11,28 +12,6 @@ type Stat = {
   visitors: number;
   leads: number;
   form_starts: number;
-};
-
-const BUILDING_LABEL: Record<string, string> = {
-  "namdartowers.com": "Namdar Towers",
-  "downtown6miami.com": "Downtown 6",
-  "jadebrickell.com": "Jade Brickell",
-  "sentralbrickell.com": "Sentral Brickell",
-  "perrinbrickell.com": "The Perrin",
-  "midtown5apartments.com": "Midtown 5",
-  "2600biscaynemiami.com": "2600 Biscayne",
-  "jemmiamiapartments.com": "JEM Miami Worldcenter",
-  "kenectmiamiapartments.com": "Kenect Miami",
-  "3333biscaynemiami.com": "3333 Biscayne",
-  "biscayne18.com": "Biscayne 18",
-  "urban22edgewater.com": "Urban 22",
-  "downtown5miami.com": "Downtown 5th",
-  "panoramatowerbrickell.com": "Panorama Tower",
-  "maizonbrickell.com": "Maizon Brickell",
-  "muzemet.com": "Muze at Met",
-  "remitheriver.com": "Remi on the River",
-  "artplazaapartments.com": "Art Plaza",
-  "miamiworldtowerapartments.com": "Miami World Tower",
 };
 
 function pct(n: number, d: number): string {
@@ -166,7 +145,7 @@ export default async function AdminMicrositesPage({
             {rows.map((r) => (
               <tr key={r.domain} className="border-t">
                 <td className="p-3">
-                  <div className="font-medium">{BUILDING_LABEL[r.domain] ?? r.domain}</div>
+                  <div className="font-medium">{MICROSITE_BUILDINGS[r.domain] ?? r.domain}</div>
                   <a
                     href={`https://${r.domain}`}
                     target="_blank"
@@ -209,7 +188,7 @@ export default async function AdminMicrositesPage({
                       {new Date(l.created_at).toLocaleDateString()}
                     </td>
                     <td className="p-3">
-                      {BUILDING_LABEL[l.source_detail as string] ?? l.source_detail}
+                      {MICROSITE_BUILDINGS[l.source_detail as string] ?? l.source_detail}
                     </td>
                     <td className="p-3">{l.name}</td>
                     <td className="p-3">{l.user_email}</td>

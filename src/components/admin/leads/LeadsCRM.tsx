@@ -305,6 +305,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
           leadId={emailTarget.id}
           leadName={emailTarget.name}
           leadEmail={emailTarget.user_email}
+          sourceDetail={emailTarget.source_detail}
         />
       )}
     </div>

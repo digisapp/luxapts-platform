@@ -19,6 +19,8 @@ export interface LeadRowData {
   beds: number | null;
   move_in_date: string | null;
   source: string;
+  /** Originating microsite domain, when the lead came from one. */
+  source_detail?: string | null;
   notes: string | null;
   cities: { name: string; slug: string } | { name: string; slug: string }[] | null;
 }
