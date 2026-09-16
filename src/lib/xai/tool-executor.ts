@@ -10,6 +10,8 @@ import { getFirstRelation } from "@/lib/db-helpers";
 // bounded (e.g. at most one lead created per conversation turn).
 export interface ToolContext {
   leadsCreated: number;
+  /** Conversation this turn belongs to, so a created lead links to its transcript. */
+  sessionKey?: string | null;
 }
 
 const MAX_LEADS_PER_REQUEST = 1;
@@ -253,6 +255,19 @@ export async function executeTool(
         });
         if (ctx && response.ok) {
           ctx.leadsCreated++;
+          // Tie the conversation to the lead it produced so the Chat Log can
+          // show which sessions actually converted.
+          if (ctx.sessionKey) {
+            try {
+              const created = (await response.clone().json()) as { lead_id?: string };
+              if (created?.lead_id) {
+                const { linkSessionToLead } = await import("@/lib/chat/session-log");
+                await linkSessionToLead(ctx.sessionKey, created.lead_id);
+              }
+            } catch (err) {
+              console.error("Linking chat session to lead failed:", err);
+            }
+          }
         }
         break;
       }

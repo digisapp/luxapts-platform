@@ -197,6 +197,12 @@ export const chatRequestSchema = z.object({
     .max(50, "Too many messages. Maximum 50 allowed."),
   city_slug: citySlugSchema.optional(),
   building_id: uuidSchema.optional(),
+  // Client-generated, stable for one conversation, so a multi-turn chat is
+  // stored as one transcript rather than one row per request.
+  session_key: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{8,128}$/, "Invalid session key")
+    .optional(),
 });
 
 export type ChatRequestInput = z.infer<typeof chatRequestSchema>;

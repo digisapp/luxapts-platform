@@ -9,6 +9,14 @@ import { parseSSEStream } from "@/lib/chat/stream-parser";
 import { useCompare } from "@/hooks/useCompare";
 import { isPortalRoute } from "@/hooks/portal-routes";
 
+/** URL-safe conversation id; matches the session_key format the API accepts. */
+function newSessionKey(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID().replace(/-/g, "");
+  }
+  return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -33,6 +41,10 @@ export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  // Stable for one conversation so the admin Chat Log stores a single
+  // transcript instead of one row per request. Regenerated on Clear.
+  const sessionKeyRef = useRef<string>("");
+  if (!sessionKeyRef.current) sessionKeyRef.current = newSessionKey();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -93,6 +105,7 @@ export function ChatWidget() {
         body: JSON.stringify({
           messages: recentMessages,
           building_id: getBuildingId(),
+          session_key: sessionKeyRef.current,
         }),
         signal: controller.signal,
       });

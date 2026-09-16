@@ -1,4 +1,10 @@
+import { after } from "next/server";
 import { createXAIClient, AI_TOOLS, SYSTEM_PROMPT } from "@/lib/xai/client";
+import {
+  logChatTurn,
+  isValidSessionKey,
+  type LoggedToolCall,
+} from "@/lib/chat/session-log";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { executeTool, type ToolContext } from "@/lib/xai/tool-executor";
 import { chatRequestSchema } from "@/lib/validations";
@@ -110,6 +116,14 @@ export async function POST(req: Request) {
     };
     req.signal.addEventListener("abort", onRequestAbort, { once: true });
 
+    // Everything the transcript needs, filled in as the turn runs and written
+    // once at the end via after(), so persistence never delays a token.
+    const sessionKey = isValidSessionKey(body.session_key) ? body.session_key : null;
+    const lastUserMessage =
+      [...body.messages].reverse().find((m) => m.role === "user")?.content ?? "";
+    const loggedTools: LoggedToolCall[] = [];
+    const transcript = { answer: "", error: null as string | null };
+
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
         streamController = controller;
@@ -126,7 +140,7 @@ export async function POST(req: Request) {
 
         try {
           const MAX_TOOL_ITERATIONS = 5;
-          const toolCtx: ToolContext = { leadsCreated: 0 };
+          const toolCtx: ToolContext = { leadsCreated: 0, sessionKey };
 
           // Each pass streams a completion; text deltas are forwarded to the
           // client as they arrive. If the model finishes with tool calls, we
@@ -158,6 +172,7 @@ export async function POST(req: Request) {
 
               if (delta.content) {
                 content += delta.content;
+                transcript.answer += delta.content;
                 send({ type: "content", content: delta.content });
               }
 
@@ -195,12 +210,24 @@ export async function POST(req: Request) {
                   return { tool_call_id: tc.id, result: { error: "Request cancelled" } };
                 }
                 let result: unknown;
+                let parsedArgs: Record<string, unknown> = {};
                 try {
-                  const args = JSON.parse(tc.arguments || "{}");
-                  result = await executeTool(tc.name, args, baseUrl, toolCtx);
+                  parsedArgs = JSON.parse(tc.arguments || "{}") as Record<string, unknown>;
+                  result = await executeTool(tc.name, parsedArgs, baseUrl, toolCtx);
                 } catch {
                   result = { error: `Invalid arguments for ${tc.name}` };
                 }
+                // A tool that returns zero rows is the clearest signal that
+                // Stacy failed the user, so the count is recorded even when
+                // the call itself "succeeded".
+                const asRecord = (result ?? {}) as { error?: unknown; result_count?: unknown };
+                loggedTools.push({
+                  name: tc.name,
+                  args: parsedArgs,
+                  resultCount:
+                    typeof asRecord.result_count === "number" ? asRecord.result_count : null,
+                  error: typeof asRecord.error === "string" ? asRecord.error : null,
+                });
                 return { tool_call_id: tc.id, result };
               })
             );
@@ -221,11 +248,29 @@ export async function POST(req: Request) {
           // An abort surfaces as an APIUserAbortError from the SDK — expected
           if (!abort.signal.aborted && !closed) {
             console.error("Stream error:", error);
+            transcript.error = error instanceof Error ? error.message : String(error);
             send({ type: "error", content: "Failed to process message" });
           }
         } finally {
           req.signal.removeEventListener("abort", onRequestAbort);
           closeStream();
+
+          // Persist the turn after the response is done. after() keeps the
+          // work alive on Vercel, which a bare floating promise does not.
+          if (sessionKey) {
+            after(
+              logChatTurn({
+                sessionKey,
+                surface: "chat",
+                buildingId: body.building_id ?? null,
+                citySlug: body.city_slug ?? null,
+                userMessage: lastUserMessage,
+                assistantMessage: transcript.answer,
+                toolCalls: loggedTools,
+                error: transcript.error,
+              })
+            );
+          }
         }
       },
       cancel() {
