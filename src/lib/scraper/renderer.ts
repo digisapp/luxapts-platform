@@ -12,6 +12,8 @@
 import { isSafeUrl } from "./fetcher";
 
 const RENDER_TIMEOUT_MS = 30000;
+/** Extra time, after network idle, spent coaxing listings onto the page. */
+const SETTLE_BUDGET_MS = 12000;
 const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 
 // Platforms that never ship content in the initial HTML
@@ -106,6 +108,94 @@ async function renderViaBrowserless(url: string): Promise<RenderResult | null> {
   }
 }
 
+/**
+ * Does this HTML actually carry apartment inventory? A price near a bed/bath/
+ * sqft mention, in either order. Used to decide when a page has finished
+ * loading the thing we came for.
+ */
+const UNIT_SIGNAL =
+  /\$\s?[\d,]{3,}[\s\S]{0,400}?\b(?:bed|bath|studio|sq\.?\s?ft)\b|\b(?:bed|bath|studio)\b[\s\S]{0,400}?\$\s?[\d,]{3,}/i;
+
+/** True when the markup carries apartment inventory rather than just chrome. */
+export function looksLikeUnitContent(html: string): boolean {
+  return UNIT_SIGNAL.test(html);
+}
+
+/** How many unit-ish signals a snapshot carries — more is a better snapshot. */
+export function unitSignalCount(html: string): number {
+  return (html.match(/\$\s?[\d,]{3,}/g) ?? []).length;
+}
+
+/**
+ * `networkidle` is not the same as "the listings arrived".
+ *
+ * Availability widgets on these sites fetch their inventory after the network
+ * has already gone quiet, and several only render it once scrolled into view.
+ * Atlas New York was the case that exposed this: identical renders returned 23
+ * prices one run and 9 the next, so the same building extracted seven units or
+ * zero depending on timing. Scroll the page and keep sampling until the markup
+ * actually contains units, then hand back the richest snapshot seen.
+ */
+async function settleForUnitContent(
+  page: import("playwright").Page,
+  budgetMs: number,
+): Promise<string> {
+  let best = await page.content();
+  let bestScore = unitSignalCount(best);
+  if (looksLikeUnitContent(best) && bestScore >= 3) return best;
+
+  const deadline = Date.now() + budgetMs;
+  while (Date.now() < deadline) {
+    await page
+      .evaluate(() => window.scrollBy(0, Math.round(window.innerHeight * 0.9)))
+      .catch(() => {});
+    await page.waitForTimeout(900);
+
+    const html = await page.content().catch(() => "");
+    if (!html) break;
+    const score = unitSignalCount(html);
+    if (score > bestScore) {
+      best = html;
+      bestScore = score;
+    }
+    // Enough inventory on the page to be worth extracting — stop paying for time.
+    if (looksLikeUnitContent(html) && score >= 3) return html;
+  }
+  return best;
+}
+
+/**
+ * Leasing sites routinely embed availability from a separate host — The
+ * Nathaniel's units live in an `availability.rosenyc.com` iframe while its own
+ * page is an 18KB shell. `page.content()` returns the main document only, so
+ * that inventory was invisible to the extractor. Append any frame that carries
+ * units, clearly delimited, so the extractor sees one document.
+ */
+async function appendFrameContent(
+  page: import("playwright").Page,
+  html: string,
+): Promise<string> {
+  const extras: string[] = [];
+  let budget = MAX_RESPONSE_BYTES - html.length;
+
+  for (const frame of page.frames()) {
+    if (frame === page.mainFrame() || budget <= 0) continue;
+    const frameUrl = frame.url();
+    if (!frameUrl || frameUrl === "about:blank" || !isSafeUrl(frameUrl)) continue;
+    try {
+      const content = await frame.content();
+      if (!content || !looksLikeUnitContent(content)) continue;
+      if (content.length > budget) continue;
+      budget -= content.length;
+      extras.push(`\n<!-- embedded availability frame: ${frameUrl} -->\n${content}`);
+    } catch {
+      // Cross-origin frames we cannot read; nothing to recover.
+    }
+  }
+
+  return extras.length ? html + extras.join("") : html;
+}
+
 /** Render via local Playwright (dev path; playwright is a devDependency). */
 async function renderViaPlaywright(url: string): Promise<RenderResult | null> {
   let chromium;
@@ -146,7 +236,10 @@ async function renderViaPlaywright(url: string): Promise<RenderResult | null> {
       return null;
     }
 
-    const html = await page.content();
+    // Network-idle only means the page stopped talking; the listings often
+    // arrive after that, or on scroll. Keep looking for them.
+    let html = await settleForUnitContent(page, SETTLE_BUDGET_MS);
+    html = await appendFrameContent(page, html);
     if (!html || html.length > MAX_RESPONSE_BYTES) return null;
 
     return { html, finalUrl, renderer: "playwright" };
