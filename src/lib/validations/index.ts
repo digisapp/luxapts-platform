@@ -104,6 +104,11 @@ export const micrositeLeadSchema = z.object({
   building: z.string().min(1, "Building is required").max(200),
   name: z.string().min(1, "Name is required").max(200),
   email: z.string().email("Invalid email address").max(320),
+  // Every form now marks this required, so real submissions always carry it.
+  // Kept optional server-side on purpose: a visitor with a cached copy of the
+  // old page would otherwise 400 and lose a lead outright. Flip to required
+  // once caches have turned over.
+  phone: z.string().min(7, "Phone number looks too short").max(40).optional(),
   unit_type: z.string().max(100).optional(),
   move_in: z.string().max(100).optional(),
   intent: z.string().max(100).optional(),

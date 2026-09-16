@@ -84,6 +84,7 @@ export async function POST(req: Request) {
         city_id: cityRes.data.id,
         name: body.name,
         user_email: body.email,
+        user_phone: body.phone || null,
         notes,
         status: "new",
       })
@@ -98,6 +99,7 @@ export async function POST(req: Request) {
           city_id: cityRes.data.id,
           name: body.name,
           user_email: body.email,
+        user_phone: body.phone || null,
           notes,
           status: "new",
         })
@@ -158,6 +160,7 @@ export async function POST(req: Request) {
       source: `microsite (${body.domain})`,
       name: body.name,
       email: body.email,
+      phone: body.phone,
       notes,
       buildingName: body.building,
     });

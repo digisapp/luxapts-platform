@@ -36,6 +36,14 @@ describe("microsite registry", () => {
     expect(m![1]).toBe(domain);
   });
 
+  // 0 of the first 65 leads had a phone number purely because no form asked.
+  it.each(siteDirs)("%s asks for a phone number", (domain) => {
+    const html = readFileSync(join(ROOT, domain, "index.html"), "utf8");
+    expect(html, `${domain}: no phone input`).toMatch(
+      /<input id="phone" name="phone" type="tel" required/
+    );
+  });
+
   it.each(siteDirs)("%s canonical URL matches its domain", (domain) => {
     const html = readFileSync(join(ROOT, domain, "index.html"), "utf8");
     expect(html).toContain(`<link rel="canonical" href="https://${domain}/">`);
@@ -51,6 +59,32 @@ describe("microsite lead schema", () => {
 
   it.each(MICROSITE_DOMAINS as readonly string[])("accepts a lead from %s", (domain) => {
     const r = micrositeLeadSchema.safeParse({ ...base, domain });
+    expect(r.success).toBe(true);
+  });
+
+  it("accepts a lead with a phone number", () => {
+    const r = micrositeLeadSchema.safeParse({
+      ...base,
+      domain: MICROSITE_DOMAINS[0],
+      phone: "(305) 555-0123",
+    });
+    expect(r.success).toBe(true);
+    expect(r.success && r.data.phone).toBe("(305) 555-0123");
+  });
+
+  it("rejects a phone number that is obviously too short", () => {
+    const r = micrositeLeadSchema.safeParse({
+      ...base,
+      domain: MICROSITE_DOMAINS[0],
+      phone: "123",
+    });
+    expect(r.success).toBe(false);
+  });
+
+  // Forms mark phone required, but a cached copy of an older page must still
+  // submit rather than 400 and lose the lead.
+  it("still accepts a lead with no phone", () => {
+    const r = micrositeLeadSchema.safeParse({ ...base, domain: MICROSITE_DOMAINS[0] });
     expect(r.success).toBe(true);
   });
 
