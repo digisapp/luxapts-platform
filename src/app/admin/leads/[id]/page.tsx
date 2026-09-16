@@ -68,7 +68,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
     .select(`
       user_id,
       status,
-      profiles:user_id (full_name)
+      profiles!agents_user_id_fkey (full_name)
     `)
     .eq("status", "active");
 

@@ -22,7 +22,7 @@ export default async function AdminLeadsPage() {
       .range(0, 24),
     supabase
       .from("agents")
-      .select("user_id, status, profiles:user_id (full_name)")
+      .select("user_id, status, profiles!agents_user_id_fkey (full_name)")
       .eq("status", "active"),
     supabase.from("leads").select("status"),
   ]);

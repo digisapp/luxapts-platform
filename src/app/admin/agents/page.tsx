@@ -15,7 +15,7 @@ export default async function AdminAgentsPage() {
         status,
         commission_rate,
         city_id,
-        profiles:user_id (full_name, phone),
+        profiles!agents_user_id_fkey (full_name, phone),
         cities:city_id (name)
       `)
       .order("created_at", { ascending: false }),

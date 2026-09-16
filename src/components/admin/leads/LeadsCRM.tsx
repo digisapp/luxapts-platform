@@ -44,6 +44,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Email dialog state
@@ -70,12 +71,26 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
       params.set("offset", String(newOffset));
 
       const res = await fetch(`/api/leads?${params}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       // Ignore stale responses
       if (requestId !== requestIdRef.current) return;
 
-      setLeads(data.leads || []);
+      // A failed refetch used to overwrite the server-rendered leads with an
+      // empty array, so an auth or query error looked exactly like "you have
+      // no leads". Keep what is on screen and say what went wrong instead.
+      if (!res.ok || !Array.isArray(data.leads)) {
+        setLoadError(
+          data.error ||
+            (res.status === 401 || res.status === 403
+              ? "Your session expired or this account is not an admin. Sign in again."
+              : `Could not load leads (${res.status}).`)
+        );
+        return;
+      }
+
+      setLoadError(null);
+      setLeads(data.leads);
       setTotal(data.total || 0);
       setStatusCounts(data.status_counts || {});
       setOffset(newOffset);
@@ -83,6 +98,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
     } catch (err) {
       if (requestId !== requestIdRef.current) return;
       console.error("Fetch leads error:", err);
+      setLoadError("Could not reach the server. Check your connection and retry.");
     } finally {
       if (requestId === requestIdRef.current) setLoading(false);
     }
@@ -145,6 +161,22 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
 
   return (
     <div className="space-y-6">
+      {loadError && (
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+        >
+          <span>{loadError}</span>
+          <button
+            type="button"
+            onClick={() => fetchLeads(offset)}
+            className="shrink-0 rounded-md border border-red-500/40 px-3 py-1 text-xs font-medium hover:bg-red-500/20"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Status Tabs */}
       <div className="flex flex-wrap gap-2">
         {STATUS_TABS.map((tab) => {
