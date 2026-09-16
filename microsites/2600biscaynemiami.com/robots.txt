@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://2600biscaynemiami.com/sitemap.xml

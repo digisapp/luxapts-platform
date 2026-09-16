@@ -52,3 +52,59 @@ Every page is explicitly labeled an **independent rental information resource** 
 - Midtown 5: 24 stories, 400 units, 538–1,501 sqft, from ~$2,462/mo, 3201 NE 1st Ave, ~29 units available.
 
 Update these when re-verifying — rents and availability move weekly.
+
+## Second wave — 13 generated sites (added 2026-09-16)
+
+Unlike the six hand-built pages above, these are produced from a template by
+`_generator/build.js`. Re-run it after editing `_generator/buildings.js`:
+
+```bash
+node microsites/_generator/build.js
+```
+
+It writes `index.html`, `robots.txt`, `sitemap.xml` and the Search Console
+verification file per domain, and resizes each image to its display width
+(heroes land ~360KB instead of ~1MB — these pages live or die on search
+ranking, so Largest Contentful Paint matters).
+
+| Folder | Building | Page type |
+|---|---|---|
+| `2600biscaynemiami.com/` | 2600 Biscayne (Edgewater, 400 units, Oak Row Equities) | Waitlist |
+| `jemmiamiapartments.com/` | JEM Miami Worldcenter (Miami Worldcenter, 530 units, Naftali Group) | Waitlist |
+| `kenectmiamiapartments.com/` | Kenect Miami (Miami Worldcenter, 450 units, Akara Partners) | Waitlist |
+| `3333biscaynemiami.com/` | 3333 Biscayne (Edgewater, 667 units, Beitel Group) | Waitlist |
+| `biscayne18.com/` | Biscayne 18 (Edgewater, 1,178 units, Melo Group) | Waitlist |
+| `urban22edgewater.com/` | Urban 22 (Edgewater, 441 units, Melo Group) | Waitlist |
+| `downtown5miami.com/` | Downtown 5th (Downtown Miami, 1,042 units, Melo Group) | Availability |
+| `panoramatowerbrickell.com/` | Panorama Tower (Brickell, 821 units, Florida East Coast Realty) | Availability |
+| `maizonbrickell.com/` | Maizon Brickell (Brickell) | Availability |
+| `muzemet.com/` | Muze at Met (Downtown Miami, 391 units) | Availability |
+| `remitheriver.com/` | Remi on the River (Miami River District, 342 units, Greystar) | Availability |
+| `artplazaapartments.com/` | Art Plaza (Arts & Entertainment District, 667 units, Melo Group) | Availability |
+| `miamiworldtowerapartments.com/` | Miami World Tower (Miami Worldcenter, 560 units, Lalezarian Properties) | Availability |
+
+Domains were chosen by screening for two things together: a large market-rate
+rental building, and a weak or absent official website. That pairing is what
+made `downtown6miami.com` work — Melo owns `downtown6.com` but it serves a
+parked Bluehost placeholder, so the microsite became the best page on the web
+for that building and drew 179 Google referrals and 60 of the portfolio's 65 leads.
+Buildings whose exact-match domain resolves to a real leasing site are much
+harder wins and are marked as availability pages rather than waitlists.
+
+Nothing income-restricted is included. Wyn Park was dropped for that reason
+(40% of its units are capped at 120% AMI under the Live Local Act), and
+Grand Station was dropped because its official site places it at 240 N Miami
+Ave downtown, not Wynwood as the catalog claims.
+
+### Adding another site
+
+1. Append an entry to `_generator/buildings.js`.
+2. Run the generator.
+3. Add the domain to `MICROSITE_DOMAINS` in `src/lib/validations/index.ts` —
+   CORS for both API routes derives from that array.
+4. Add a label to `BUILDING_LABEL` in `src/app/admin/microsites/page.tsx`.
+5. **Deploy the platform.** A domain missing from `MICROSITE_DOMAINS` in
+   production fails CORS and every lead the page captures is silently lost.
+
+`src/lib/__tests__/microsites.test.ts` enforces steps 3 and that each page
+posts under its own domain.

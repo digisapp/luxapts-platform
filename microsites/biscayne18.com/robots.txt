@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://biscayne18.com/sitemap.xml

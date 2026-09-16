@@ -20,6 +20,19 @@ const BUILDING_LABEL: Record<string, string> = {
   "sentralbrickell.com": "Sentral Brickell",
   "perrinbrickell.com": "The Perrin",
   "midtown5apartments.com": "Midtown 5",
+  "2600biscaynemiami.com": "2600 Biscayne",
+  "jemmiamiapartments.com": "JEM Miami Worldcenter",
+  "kenectmiamiapartments.com": "Kenect Miami",
+  "3333biscaynemiami.com": "3333 Biscayne",
+  "biscayne18.com": "Biscayne 18",
+  "urban22edgewater.com": "Urban 22",
+  "downtown5miami.com": "Downtown 5th",
+  "panoramatowerbrickell.com": "Panorama Tower",
+  "maizonbrickell.com": "Maizon Brickell",
+  "muzemet.com": "Muze at Met",
+  "remitheriver.com": "Remi on the River",
+  "artplazaapartments.com": "Art Plaza",
+  "miamiworldtowerapartments.com": "Miami World Tower",
 };
 
 function pct(n: number, d: number): string {

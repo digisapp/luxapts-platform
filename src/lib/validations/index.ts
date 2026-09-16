@@ -83,6 +83,20 @@ export const MICROSITE_DOMAINS = [
   "sentralbrickell.com",
   "perrinbrickell.com",
   "midtown5apartments.com",
+  // Added 2026-09-16 — second wave of building microsites.
+  "2600biscaynemiami.com",
+  "jemmiamiapartments.com",
+  "kenectmiamiapartments.com",
+  "3333biscaynemiami.com",
+  "biscayne18.com",
+  "urban22edgewater.com",
+  "downtown5miami.com",
+  "panoramatowerbrickell.com",
+  "maizonbrickell.com",
+  "muzemet.com",
+  "remitheriver.com",
+  "artplazaapartments.com",
+  "miamiworldtowerapartments.com",
 ] as const;
 
 export const micrositeLeadSchema = z.object({
