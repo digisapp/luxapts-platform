@@ -2,10 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, X, Heart, LogOut, Settings } from "lucide-react";
+import { Menu, X, Heart, LogOut, Settings, LayoutDashboard } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
+
+// Staff roles each have their own portal, but nothing in the UI linked to
+// them, so an admin had to type /admin by hand. Cosmetic only: every portal
+// route re-checks the role on the server.
+const PORTAL_BY_ROLE: Record<string, { href: string; label: string }> = {
+  admin: { href: "/admin", label: "Admin Dashboard" },
+  agent: { href: "/agent", label: "Agent Portal" },
+  partner: { href: "/partner", label: "Partner Portal" },
+  shower: { href: "/shower", label: "Shower Portal" },
+};
 
 export function Header() {
   const router = useRouter();
@@ -13,7 +23,7 @@ export function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { count: favoritesCount } = useFavorites();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, role, signOut } = useAuth();
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -106,6 +116,17 @@ export function Header() {
                     <p className="text-sm font-medium text-white truncate">{userName}</p>
                     <p className="text-xs text-white/50 truncate">{user.email}</p>
                   </div>
+                  {role && PORTAL_BY_ROLE[role] && (
+                    <Link
+                      href={PORTAL_BY_ROLE[role].href}
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-4 py-3 text-sm text-white hover:bg-white/[0.06] transition-colors border-b border-white/10"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      {PORTAL_BY_ROLE[role].label}
+                    </Link>
+                  )}
                   <Link
                     href="/favorites"
                     role="menuitem"
@@ -196,6 +217,16 @@ export function Header() {
                       <p className="text-sm text-zinc-400">{user.email}</p>
                     </div>
                   </div>
+                  {role && PORTAL_BY_ROLE[role] && (
+                    <Link
+                      href={PORTAL_BY_ROLE[role].href}
+                      className="flex items-center gap-2 py-3 text-lg text-white hover:text-white transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="h-5 w-5" />
+                      {PORTAL_BY_ROLE[role].label}
+                    </Link>
+                  )}
                   <Link
                     href="/account"
                     className="flex items-center gap-2 py-3 text-lg text-zinc-400 hover:text-white transition-colors"

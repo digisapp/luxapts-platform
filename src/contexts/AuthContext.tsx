@@ -4,10 +4,19 @@ import { createContext, useContext, useEffect, useState, useCallback, useMemo } 
 import { User, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
+/** profiles.role for the signed-in user; null while unknown or signed out. */
+export type UserRole = "admin" | "agent" | "partner" | "shower" | "renter";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  /**
+   * Drives the portal link in the header. Nothing in the UI linked to /admin,
+   * so an admin could only reach it by typing the URL. Read-only and purely
+   * cosmetic: every portal route re-checks the role server-side.
+   */
+  role: UserRole | null;
   signUp: (email: string, password: string, name?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -54,14 +63,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<UserRole | null>(null);
 
   const supabase = useMemo(() => createClient(), []);
+
+  // profiles_read_own (migration 002) lets a signed-in user read their own row.
+  const loadRole = useCallback(
+    async (userId: string | undefined) => {
+      if (!userId) {
+        setRole(null);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .maybeSingle();
+      setRole(error || !data ? null : ((data.role as UserRole) ?? null));
+    },
+    [supabase]
+  );
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      void loadRole(session?.user?.id);
     });
 
     const {
@@ -70,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      void loadRole(session?.user?.id);
 
       // Send the welcome email flagged at signup once a session exists —
       // the API requires auth and emails the session user's own address.
@@ -97,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, [supabase, loadRole]);
 
   const signUp = useCallback(
     async (email: string, password: string, name?: string) => {
@@ -137,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, resetPassword }}>
+    <AuthContext.Provider value={{ user, session, loading, role, signUp, signIn, signOut, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
