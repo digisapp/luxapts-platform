@@ -73,3 +73,13 @@ export function safeParseInt(value: string | null, defaultValue: number, min?: n
   if (max !== undefined && parsed > max) return max;
   return parsed;
 }
+
+/**
+ * Normalises a phone number for a tel: or sms: href. A dialer cannot parse
+ * "(305) 555-0123", so strip to digits, keeping a leading + for international.
+ * Display the original string as the link text.
+ */
+export function telHref(phone: string): string {
+  const cleaned = phone.replace(/[^\d+]/g, "");
+  return cleaned.startsWith("+") ? cleaned : cleaned.replace(/\+/g, "");
+}

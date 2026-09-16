@@ -3,15 +3,9 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils";
+import { formatDate, telHref } from "@/lib/utils";
 import { Eye, Mail, MessageSquare, Phone, PhoneCall, Send } from "lucide-react";
 
-// tel:/sms: need the bare number; a pasted "(305) 555-0123" breaks the handoff
-// to the dialer. Keeps a leading + so international numbers still work.
-function dialable(phone: string): string {
-  const cleaned = phone.replace(/[^\d+]/g, "");
-  return cleaned.startsWith("+") ? cleaned : cleaned.replace(/\+/g, "");
-}
 
 export interface LeadRowData {
   id: string;
@@ -83,7 +77,7 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
           )}
           {lead.user_phone && (
             <a
-              href={`tel:${dialable(lead.user_phone)}`}
+              href={`tel:${telHref(lead.user_phone)}`}
               className="flex items-center gap-1 hover:text-foreground hover:underline"
             >
               <Phone className="h-3 w-3" />
@@ -115,12 +109,12 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
         {lead.user_phone && (
           <>
             <Button size="sm" variant="ghost" asChild title={`Call ${lead.user_phone}`}>
-              <a href={`tel:${dialable(lead.user_phone)}`}>
+              <a href={`tel:${telHref(lead.user_phone)}`}>
                 <PhoneCall className="h-3 w-3" />
               </a>
             </Button>
             <Button size="sm" variant="ghost" asChild title={`Text ${lead.user_phone}`}>
-              <a href={`sms:${dialable(lead.user_phone)}`}>
+              <a href={`sms:${telHref(lead.user_phone)}`}>
                 <MessageSquare className="h-3 w-3" />
               </a>
             </Button>

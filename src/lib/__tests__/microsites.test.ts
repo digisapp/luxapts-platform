@@ -3,6 +3,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { MICROSITE_DOMAINS, micrositeLeadSchema, micrositeAnalyticsSchema } from "@/lib/validations";
 import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
+import { telHref } from "@/lib/utils";
 
 const ROOT = join(process.cwd(), "microsites");
 
@@ -152,5 +153,25 @@ describe("microsite origin guard", () => {
       "https://biscayne18.com"
     );
     expect(corsHeaders(req("https://not-ours.example"))).toEqual({});
+  });
+});
+
+// Both the admin row and the lead-alert email build tel:/sms: links. A dialer
+// cannot parse a formatted number out of the href, so the digits must be
+// stripped while the readable form stays as the link text.
+describe("tel: link normalisation", () => {
+  it("strips formatting from a US number", () => {
+    expect(telHref("(305) 555-0123")).toBe("3055550123");
+    expect(telHref("305.555.0123")).toBe("3055550123");
+    expect(telHref("305 555 0123 ext 4")).toBe("30555501234");
+  });
+
+  it("keeps a leading + for international numbers", () => {
+    expect(telHref("+44 20 7123 4567")).toBe("+442071234567");
+    expect(telHref("+1 (305) 555-0123")).toBe("+13055550123");
+  });
+
+  it("drops a stray + that is not leading", () => {
+    expect(telHref("305+555+0123")).toBe("3055550123");
   });
 });

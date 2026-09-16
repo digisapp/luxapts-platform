@@ -3,6 +3,7 @@
  * All templates use the same dark luxury brand design.
  * Call escHtml() on any user-supplied data before interpolating.
  */
+import { telHref } from "@/lib/utils";
 
 export function escHtml(str: string | null | undefined): string {
   if (!str) return "";
@@ -13,6 +14,7 @@ export function escHtml(str: string | null | undefined): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#x27;");
 }
+
 
 // ─── Shared layout wrapper ────────────────────────────────────────────────────
 
@@ -122,7 +124,7 @@ export function newLeadEmail(data: {
 
     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
       ${data.email ? row("Email", `<a href="mailto:${escHtml(data.email)}" style="color:#60a5fa;">${escHtml(data.email)}</a>`) : ""}
-      ${data.phone ? row("Phone", `<a href="tel:${escHtml(data.phone)}" style="color:#60a5fa;">${escHtml(data.phone)}</a>`) : ""}
+      ${data.phone ? row("Phone", `<a href="tel:${escHtml(telHref(data.phone))}" style="color:#60a5fa;">${escHtml(data.phone)}</a>`) : ""}
       ${divider()}
       ${data.beds !== null && data.beds !== undefined ? row("Bedrooms", data.beds === 0 ? "Studio" : String(data.beds)) : ""}
       ${budgetStr ? row("Budget", escHtml(budgetStr) + "/mo") : ""}
