@@ -5,7 +5,11 @@ import { micrositeLeadSchema, MICROSITE_DOMAINS } from "@/lib/validations";
 import { apiError } from "@/lib/api-helpers";
 import { autoAssignAgent } from "@/lib/leads/routing";
 import { newLeadEmail, micrositeWaitlistEmail } from "@/lib/email/templates";
-import { getLeadNotificationRecipients, getReplyToAddress } from "@/lib/email/recipients";
+import {
+  getLeadNotificationRecipients,
+  getReplyToAddress,
+  recordInternalLeadAlert,
+} from "@/lib/email/recipients";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 // Cross-origin lead capture from the building microsites. Each microsite is a
@@ -162,30 +166,41 @@ export async function POST(req: Request) {
       },
     });
 
-    // Internal notification. Recipients come from LEAD_NOTIFY_EMAIL / admin
-    // accounts — never from FROM_EMAIL, which is a send-only address that
-    // bounced every microsite lead alert. Resend v6 reports API failures via
-    // the returned `error`, not by throwing.
+    // Internal alert lands in the admin inbox first. That write cannot bounce,
+    // which is what mattered here: every microsite lead alert had been mailed
+    // to an address on a domain with no MX record and silently lost.
+    const alertHtml = newLeadEmail({
+      leadId,
+      city: cityRes.data.name,
+      source: `microsite (${body.domain})`,
+      name: body.name,
+      email: body.email,
+      notes,
+      buildingName: body.building,
+    });
+    await recordInternalLeadAlert(supabase, {
+      leadId,
+      name: body.name,
+      email: body.email,
+      subject: `New Microsite Lead: ${body.name} · ${body.building}`,
+      html: alertHtml,
+      sourceLabel: `microsite (${body.domain})`,
+    });
+
+    // Optional push to a mailbox someone actually reads. Skipped entirely when
+    // LEAD_NOTIFY_EMAIL is unset.
     if (process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const fromEmail = process.env.FROM_EMAIL || "Staycio <hello@staycio.com>";
-        const recipients = await getLeadNotificationRecipients(supabase);
+        const recipients = getLeadNotificationRecipients();
         if (recipients.length > 0) {
           const { error: notifyError } = await resend.emails.send({
             from: fromEmail,
             to: recipients,
             replyTo: body.email,
             subject: `New Microsite Lead: ${body.name} · ${body.building}`,
-            html: newLeadEmail({
-              leadId,
-              city: cityRes.data.name,
-              source: `microsite (${body.domain})`,
-              name: body.name,
-              email: body.email,
-              notes,
-              buildingName: body.building,
-            }),
+            html: alertHtml,
           });
           if (notifyError) {
             console.error("Microsite lead notification failed:", leadId, notifyError);

@@ -7,7 +7,11 @@ import { apiError } from "@/lib/api-helpers";
 import { autoAssignAgent } from "@/lib/leads/routing";
 import { bridgeLeadToShowing } from "@/lib/leads/bridge";
 import { newLeadEmail, tourConfirmationEmail } from "@/lib/email/templates";
-import { getLeadNotificationRecipients, getReplyToAddress } from "@/lib/email/recipients";
+import {
+  getLeadNotificationRecipients,
+  getReplyToAddress,
+  recordInternalLeadAlert,
+} from "@/lib/email/recipients";
 import { rateLimit, getClientIp, RATE_LIMITS, isInternalRequest } from "@/lib/rate-limit";
 import type { CreateLeadResponse } from "@/types/database";
 
@@ -116,39 +120,52 @@ export async function POST(req: Request) {
       },
     });
 
-    // Internal notification. Recipients come from LEAD_NOTIFY_EMAIL / admin
-    // accounts — never from FROM_EMAIL, which is a send-only address that
-    // bounced every notification for months. Resend v6 reports API failures
-    // via the returned `error`, not by throwing.
+    // Internal alert lands in the admin inbox first. That write cannot bounce,
+    // so a lead is visible at /admin/email the moment it is created regardless
+    // of mail configuration.
+    const alertHtml = newLeadEmail({
+      leadId,
+      city: cityRes.data.name,
+      source: body.source,
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      budgetMin: body.budget_min,
+      budgetMax: body.budget_max,
+      beds: body.beds,
+      moveInDate: body.move_in_date,
+      notes: body.notes,
+    });
+    await recordInternalLeadAlert(supabase, {
+      leadId,
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      subject: `New Lead: ${body.name || "Anonymous"} · ${cityRes.data.name}`,
+      html: alertHtml,
+      sourceLabel: body.source,
+    });
+
+    // Optional push to a mailbox someone actually reads. Skipped entirely when
+    // LEAD_NOTIFY_EMAIL is unset. Resend v6 reports API failures via the
+    // returned `error`, not by throwing.
     if (process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const fromEmail = process.env.FROM_EMAIL || "Staycio <hello@staycio.com>";
-        const recipients = await getLeadNotificationRecipients(supabase);
+        const recipients = getLeadNotificationRecipients();
 
-        const { error: notifyError } = recipients.length
-          ? await resend.emails.send({
-          from: fromEmail,
-          to: recipients,
-          replyTo: body.email || undefined,
-          subject: `New Lead: ${body.name || "Anonymous"} · ${cityRes.data.name}`,
-          html: newLeadEmail({
-            leadId,
-            city: cityRes.data.name,
-            source: body.source,
-            name: body.name,
-            email: body.email,
-            phone: body.phone,
-            budgetMin: body.budget_min,
-            budgetMax: body.budget_max,
-            beds: body.beds,
-            moveInDate: body.move_in_date,
-            notes: body.notes,
-          }),
-        })
-          : { error: { message: "no recipients configured" } };
-        if (notifyError) {
-          console.error("Lead notification failed:", leadId, notifyError);
+        if (recipients.length > 0) {
+          const { error: notifyError } = await resend.emails.send({
+            from: fromEmail,
+            to: recipients,
+            replyTo: body.email || undefined,
+            subject: `New Lead: ${body.name || "Anonymous"} · ${cityRes.data.name}`,
+            html: alertHtml,
+          });
+          if (notifyError) {
+            console.error("Lead notification failed:", leadId, notifyError);
+          }
         }
       } catch (emailError) {
         console.error("Email notification failed:", emailError);
