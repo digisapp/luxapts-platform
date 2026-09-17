@@ -9,12 +9,14 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { buildingFamilyKey } from "@/lib/images/quality";
 import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
+import { buildingPath } from "@/lib/seo/urls";
+import { OrganizationJsonLd } from "@/components/seo/JsonLd";
 
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Staycio — Your space, found.",
-  description: "Stop searching — just tell Stacy what you want. Describe your ideal apartment and Stacy searches live listings in New York, Miami, Los Angeles, Chicago, Dallas, Austin, Nashville, Atlanta, and Brooklyn, comparing pricing and availability to recommend the ones worth touring.",
+  description: "Stop searching — just tell Stacy what you want. Give her the neighborhood, the budget, your move-in date and your dealbreakers, and she reads every available listing in New York, Miami, Los Angeles, Chicago, Dallas, Austin, Nashville, Atlanta and Brooklyn to find the ones worth touring.",
   openGraph: {
     title: "Staycio — Your space, found.",
     description: "Stop searching. Just tell Stacy what you want.",
@@ -56,6 +58,7 @@ interface BuildingImageRow {
 }
 
 interface HomeBuildingRow {
+  slug?: string | null;
   id: string;
   name: string;
   cities: { name: string; slug: string } | { name: string; slug: string }[] | null;
@@ -78,7 +81,7 @@ async function getHomeData(): Promise<{
         supabase
           .from("buildings")
           .select(`
-            id, name,
+            id, slug, name,
             cities:city_id (name, slug),
             neighborhoods:neighborhood_id (name, slug),
             building_images!left (url, is_primary, sort_order)
@@ -185,6 +188,7 @@ async function getHomeData(): Promise<{
 
       return {
         id: b.id,
+        slug: b.slug ?? null,
         name: b.name,
         cityName: city?.name ?? null,
         neighborhood: neighborhood?.name ?? null,
@@ -256,7 +260,7 @@ export default async function HomePage() {
             item: {
               "@type": "ApartmentComplex",
               name: b.name,
-              url: `https://staycio.com/buildings/${b.id}`,
+              url: `https://staycio.com${buildingPath(b)}`,
               image: b.image,
               ...(b.cityName && {
                 address: { "@type": "PostalAddress", addressLocality: b.cityName },
@@ -268,6 +272,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <OrganizationJsonLd />
       {itemListJsonLd && (
         <script
           type="application/ld+json"

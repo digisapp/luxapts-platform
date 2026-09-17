@@ -95,6 +95,7 @@ interface ParsedFilters {
   pet_friendly?: boolean;
   baths_min?: number;
   parking_required?: boolean;
+  move_in_date?: string;
   amenities?: string[];
   sort?: string;
   summary?: string;
@@ -120,11 +121,15 @@ function priceAgeLabel(capturedAt: string | null | undefined): { label: string; 
 // Filter overrides accepted by handleSearch. For the numeric filters,
 // `null` explicitly clears the filter (ignoring current component state),
 // while `undefined`/absent falls back to current state.
-type SearchFilterOverrides = Omit<ParsedFilters, "beds_min" | "beds_max" | "budget_min" | "budget_max"> & {
+type SearchFilterOverrides = Omit<
+  ParsedFilters,
+  "beds_min" | "beds_max" | "budget_min" | "budget_max" | "move_in_date"
+> & {
   beds_min?: number | null;
   beds_max?: number | null;
   budget_min?: number | null;
   budget_max?: number | null;
+  move_in_date?: string | null;
 };
 
 interface SavedFilters {
@@ -444,7 +449,9 @@ function SearchContent() {
       if (bathsMinVal !== undefined) body.baths_min = bathsMinVal;
       if (filters?.pet_friendly || petFriendly) body.pet_friendly = true;
       if (filters?.parking_required || parkingRequired) body.parking_required = true;
-      if (moveInDate) body.move_in_date = moveInDate;
+      const moveInVal =
+        filters?.move_in_date !== undefined ? filters.move_in_date ?? undefined : moveInDate || undefined;
+      if (moveInVal) body.move_in_date = moveInVal;
 
       // Amenities - use AI parsed amenities or selected amenities
       // Use amenities_all so buildings must have ALL selected amenities
@@ -541,6 +548,7 @@ function SearchContent() {
           beds_max: null,
           budget_min: null,
           budget_max: null,
+          move_in_date: null,
           amenities: [],
           ...filters,
         };
@@ -556,6 +564,7 @@ function SearchContent() {
         setBathsMin(filters.baths_min !== undefined ? filters.baths_min.toString() : "");
         setPetFriendly(Boolean(filters.pet_friendly));
         setParkingRequired(Boolean(filters.parking_required));
+        setMoveInDate(filters.move_in_date ?? "");
         setSelectedAmenities(filters.amenities ?? []);
         if (filters.sort) setSort(filters.sort);
         // The route returns { filters, summary } — summary sits at the top level

@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 export const metadata: Metadata = {
   title: "Terms of Service - Staycio",
   description: "The terms that govern your use of Staycio.",
+  alternates: { canonical: "/terms" },
 };
 
 const LAST_UPDATED = "July 12, 2026";

@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 export const metadata: Metadata = {
   title: "Privacy Policy - Staycio",
   description: "How Staycio collects, uses, and protects your information.",
+  alternates: { canonical: "/privacy" },
 };
 
 const LAST_UPDATED = "July 12, 2026";

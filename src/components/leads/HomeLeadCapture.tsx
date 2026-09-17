@@ -154,7 +154,7 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
           </>
         ) : (
           <>
-            Send me matches
+            Keep looking for me
             <ArrowRight className="h-4 w-4" />
           </>
         )}

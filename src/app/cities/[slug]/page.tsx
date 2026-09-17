@@ -7,12 +7,17 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
-import { ListingPlaceholder } from "@/components/ui/ListingPlaceholder";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 import { fetchAllRows } from "@/lib/db-helpers";
 import { CITY_COPY } from "@/lib/seo/city-copy";
+import { BuildingCard } from "@/components/listings/BuildingCard";
+import {
+  BreadcrumbJsonLd,
+  BuildingItemListJsonLd,
+} from "@/components/seo/JsonLd";
+import { BED_FACETS, MIN_FACET_BUILDINGS, facetPath } from "@/lib/seo/facets";
+import { buildingPath } from "@/lib/seo/urls";
 import { formatPrice } from "@/lib/utils";
 import { Building2, MapPin, Search, ArrowRight, Star, TrendingUp } from "lucide-react";
 
@@ -98,14 +103,31 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
     .eq("city_id", city.id)
     .eq("status", "active");
 
+  // Title leads with the head term ("apartments for rent in <city>") rather
+  // than the brand adjective; the count makes the snippet concrete.
+  const title = `Apartments for Rent in ${city.name}, ${city.state}${
+    listingCount ? ` — ${listingCount} Buildings` : ""
+  } | Staycio`;
+  const description = listingCount
+    ? `Browse ${listingCount} apartment buildings for rent in ${city.name}, ${city.state}. Live availability, verified rents, floor plans, amenities and pet policies — updated daily on Staycio.`
+    : `Apartments for rent in ${city.name}, ${city.state}. Live availability and verified rents on Staycio.`;
+
   return {
     robots: listingCount ? undefined : { index: false, follow: true },
-    title: `Luxury Apartments in ${city.name}, ${city.state} | Staycio`,
-    description: `Browse the finest luxury apartments in ${city.name}. Curated listings with verified pricing, photos, and amenities.`,
+    title,
+    description,
     alternates: { canonical: `/cities/${slug}` },
     openGraph: {
-      title: `Luxury Apartments in ${city.name} | Staycio`,
-      description: `Find your perfect luxury apartment in ${city.name}.`,
+      title,
+      description,
+      url: `/cities/${slug}`,
+      type: "website",
+      images: CITY_HERO_IMAGES[slug] ? [CITY_HERO_IMAGES[slug]] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
       images: CITY_HERO_IMAGES[slug] ? [CITY_HERO_IMAGES[slug]] : [],
     },
   };
@@ -132,7 +154,7 @@ export default async function CityPage({ params }: CityPageProps) {
       supabase
         .from("buildings")
         .select(`
-          id, name, address_1, zip, description, year_built,
+          id, slug, name, address_1, zip, description, year_built,
           neighborhoods:neighborhood_id (id, name, slug),
           building_images!left (url, is_primary, sort_order)
         `)
@@ -158,11 +180,28 @@ export default async function CityPage({ params }: CityPageProps) {
   const unitCountMap: Record<string, number> = {};
   const minPriceMap: Record<string, number> = {};
 
+  // Buildings per bedroom facet, so the city page only links the facet pages
+  // that have real inventory (an empty facet link is a crawl path to a thin
+  // page, and a dead end for the visitor).
+  const facetBuildingCounts: Record<string, number> = {};
+
   if (buildingIds.length > 0) {
     // One chunked + paged query on the price view: unit counts and minimum
     // rents per building without the giant `.in(unitIds)` URL that broke
     // past a few hundred units.
-    const units = await fetchAvailableUnitPrices(supabase, buildingIds);
+    const [units, availableUnits] = await Promise.all([
+      fetchAvailableUnitPrices(supabase, buildingIds),
+      fetchAllRows<{ building_id: string; beds: number | null }>((from, to) =>
+        supabase
+          .from("units")
+          .select("building_id, beds")
+          .in("building_id", buildingIds)
+          .eq("is_available", true)
+          .order("building_id")
+          .range(from, to)
+      ),
+    ]);
+
     for (const u of units) {
       unitCountMap[u.building_id] = (unitCountMap[u.building_id] || 0) + 1;
       if (u.latest_rent != null) {
@@ -170,6 +209,16 @@ export default async function CityPage({ params }: CityPageProps) {
         if (cur === undefined || u.latest_rent < cur) minPriceMap[u.building_id] = u.latest_rent;
       }
     }
+
+    const perFacet = new Map<string, Set<string>>();
+    for (const u of availableUnits) {
+      const facet = BED_FACETS.find((f) => f.matches(u.beds));
+      if (!facet) continue;
+      const set = perFacet.get(facet.slug) || new Set<string>();
+      set.add(u.building_id);
+      perFacet.set(facet.slug, set);
+    }
+    for (const [facetSlug, set] of perFacet) facetBuildingCounts[facetSlug] = set.size;
   }
 
   // Stats
@@ -191,6 +240,39 @@ export default async function CityPage({ params }: CityPageProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Cities", path: "/cities" },
+          { name: `${city.name} Apartments` },
+        ]}
+      />
+      {/* Marks the grid as a ranked list of distinct properties rather than
+          one page of text — without it the city pages carried no schema at
+          all beyond the site-wide WebSite node. Capped at 50: past that the
+          node is large, and Google only reads the head of the list anyway. */}
+      <BuildingItemListJsonLd
+        name={`Apartments for rent in ${city.name}, ${city.state}`}
+        buildings={sortedBuildings.slice(0, 50).map((b) => {
+          const imgs = (b.building_images || []) as Array<{
+            url: string;
+            is_primary: boolean;
+            sort_order: number;
+          }>;
+          const hero = [...imgs].sort((x, y) => {
+            if (x.is_primary && !y.is_primary) return -1;
+            if (!x.is_primary && y.is_primary) return 1;
+            return x.sort_order - y.sort_order;
+          })[0]?.url;
+          return {
+            name: b.name,
+            path: buildingPath(b),
+            image: hero,
+            cityName: city.name,
+            address: b.address_1,
+            minPrice: minPriceMap[b.id] ?? null,
+          };
+        })}
+      />
       <Header />
 
       <main className="flex-1">
@@ -221,7 +303,7 @@ export default async function CityPage({ params }: CityPageProps) {
                 className="mb-4 text-white/70 [&_a]:text-white/70 [&_a:hover]:text-white"
               />
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-2">
-                {city.name}
+                Apartments for Rent in {city.name}
               </h1>
               <p className="text-lg md:text-xl text-white/80 mb-6">{tagline}</p>
 
@@ -281,12 +363,43 @@ export default async function CityPage({ params }: CityPageProps) {
               </h2>
               <div className="flex flex-wrap gap-2">
                 {neighborhoods.map((n) => (
-                  <Link key={n.id} href={`/search?city=${city.slug}&neighborhood=${n.slug}`}>
+                  // Points at the neighborhood PAGE, not /search. The chips
+                  // used to link into the client-rendered search view, which
+                  // left every neighborhood page orphaned — in the sitemap but
+                  // with no crawlable link anywhere on the site.
+                  <Link key={n.id} href={`/neighborhoods/${n.slug}?city=${city.slug}`}>
                     <Badge
                       variant="outline"
                       className="px-3 py-1.5 text-sm cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
                     >
-                      {n.name}
+                      {n.name} apartments
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Browse by layout — the internal links into the bedroom facet
+              pages, which are what actually rank for "<n> bedroom apartments
+              in <city>". Only rendered where inventory backs the facet. */}
+          {BED_FACETS.some((f) => (facetBuildingCounts[f.slug] || 0) >= MIN_FACET_BUILDINGS) && (
+            <section>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                Browse {city.name} apartments by layout
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {BED_FACETS.filter(
+                  (f) => (facetBuildingCounts[f.slug] || 0) >= MIN_FACET_BUILDINGS
+                ).map((f) => (
+                  <Link key={f.slug} href={facetPath(city.slug, f.slug)}>
+                    <Badge
+                      variant="outline"
+                      className="px-3 py-1.5 text-sm cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                    >
+                      {f.label} in {city.name}
+                      <span className="ml-1.5 opacity-60">{facetBuildingCounts[f.slug]}</span>
                     </Badge>
                   </Link>
                 ))}
@@ -317,83 +430,32 @@ export default async function CityPage({ params }: CityPageProps) {
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedBuildings.map((building) => {
-                  // Get best image
+                  // Best image: primary first, then sort order.
                   const images = (building.building_images || []) as Array<{
                     url: string;
                     is_primary: boolean;
                     sort_order: number;
                   }>;
-                  const sortedImgs = [...images].sort((a, b) => {
-                    if (a.is_primary && !b.is_primary) return -1;
-                    if (!a.is_primary && b.is_primary) return 1;
-                    return a.sort_order - b.sort_order;
-                  });
-                  const heroImg = sortedImgs[0]?.url ?? null;
+                  const heroImg =
+                    [...images].sort((a, b) => {
+                      if (a.is_primary && !b.is_primary) return -1;
+                      if (!a.is_primary && b.is_primary) return 1;
+                      return a.sort_order - b.sort_order;
+                    })[0]?.url ?? null;
 
                   const neighborhood = Array.isArray(building.neighborhoods)
                     ? building.neighborhoods[0]
                     : building.neighborhoods;
 
-                  const availableUnits = unitCountMap[building.id] || 0;
-                  const minPrice = minPriceMap[building.id];
-
                   return (
-                    <Link key={building.id} href={`/buildings/${building.id}`}>
-                      <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full">
-                        {/* Image */}
-                        <div className="relative h-52 overflow-hidden">
-                          {heroImg ? (
-                          <Image
-                            src={heroImg}
-                            alt={building.name}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          />
-                          ) : (
-                            <ListingPlaceholder seed={building.id} name={building.name} />
-                          )}
-                          {neighborhood && (
-                            <Badge className="absolute top-3 left-3 bg-black/60 text-white border-0">
-                              {(neighborhood as { name: string }).name}
-                            </Badge>
-                          )}
-                          {availableUnits > 0 && (
-                            <Badge className="absolute top-3 right-3 bg-green-600">
-                              {availableUnits} available
-                            </Badge>
-                          )}
-                        </div>
-
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold text-base leading-tight mb-1">
-                            {building.name}
-                          </h3>
-                          <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
-                            <MapPin className="h-3 w-3 shrink-0" />
-                            {building.address_1}
-                            {building.zip && ` ${building.zip}`}
-                          </p>
-                          {building.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-                              {building.description}
-                            </p>
-                          )}
-                          <div className="flex items-center justify-between">
-                            {minPrice ? (
-                              <div>
-                                <span className="text-xs text-muted-foreground">From </span>
-                                <span className="font-semibold text-sm">{formatPrice(minPrice)}</span>
-                                <span className="text-xs text-muted-foreground">/mo</span>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Contact for pricing</span>
-                            )}
-                            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
+                    <BuildingCard
+                      key={building.id}
+                      building={building}
+                      heroImage={heroImg}
+                      neighborhoodName={(neighborhood as { name: string } | null)?.name}
+                      availableUnits={unitCountMap[building.id] || 0}
+                      minPrice={minPriceMap[building.id] ?? null}
+                    />
                   );
                 })}
               </div>

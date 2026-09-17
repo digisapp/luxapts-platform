@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { cache } from "react";
@@ -13,6 +13,7 @@ import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { StickyMobileCTA } from "@/components/ui/StickyMobileCTA";
 import { BuildingContactButtons } from "../../BuildingContactButtons";
 import { formatPrice, formatDate } from "@/lib/utils";
+import { buildingPath } from "@/lib/seo/urls";
 import { ListingPlaceholder } from "@/components/ui/ListingPlaceholder";
 import {
   ArrowLeft,
@@ -41,7 +42,7 @@ const getUnit = cache(async (unitId: string) => {
     .select(`
       *,
       buildings:building_id (
-        id, name, address_1, address_2, zip, leasing_email, leasing_phone,
+        id, slug, name, address_1, address_2, zip, leasing_email, leasing_phone,
         pet_policy, parking_policy, deposit_policy,
         cities:city_id (id, name, slug, state),
         neighborhoods:neighborhood_id (id, name, slug)
@@ -70,7 +71,20 @@ export async function generateMetadata({
   return {
     title,
     description: `${bedLabel}${unit.baths ? `, ${unit.baths} bath` : ""}${unit.sqft ? `, ${unit.sqft.toLocaleString()} sqft` : ""} at ${building?.name}. ${unit.is_available ? "Available now." : ""}`,
-    alternates: { canonical: `/buildings/${id}/units/${unitId}` },
+    // Canonical always uses the building's slug, never whichever form the
+    // request happened to arrive on.
+    alternates: {
+      canonical: `${building ? buildingPath(building) : `/buildings/${id}`}/units/${unitId}`,
+    },
+    // noindex, follow.
+    //
+    // There are ~8,000 unit pages against 247 buildings. Each is a handful of
+    // numbers that also appear on its building page, and each becomes a soft
+    // 404 the moment the unit leases — exactly the churn-plus-thin-content mix
+    // that drags a small site's crawl budget and index quality down. The link
+    // equity still flows through to the building page via `follow`, and the
+    // pages stay fully usable for anyone who lands on one.
+    robots: { index: false, follow: true },
   };
 }
 
@@ -83,8 +97,17 @@ export default async function UnitPage({
   const supabase = createAdminClient();
 
   const { data: unit, error } = await getUnit(unitId);
-  if (error || !unit || (unit.buildings as { id: string } | null)?.id !== buildingId) {
+  // The parent segment is the building's slug now, but every pre-026 link (and
+  // anything Google already has) uses the UUID — accept either, and reject a
+  // unit that does not belong to the building in the URL.
+  const parent = unit?.buildings as { id: string; slug: string | null } | null;
+  if (error || !unit || !parent || (parent.id !== buildingId && parent.slug !== buildingId)) {
     notFound();
+  }
+
+  // Canonicalise the parent segment the same way the building page does.
+  if (parent.slug && buildingId !== parent.slug) {
+    permanentRedirect(`/buildings/${parent.slug}/units/${unitId}`);
   }
 
   const building = Array.isArray(unit.buildings) ? unit.buildings[0] : unit.buildings;
@@ -139,7 +162,7 @@ export default async function UnitPage({
               items={[
                 { label: "Search", href: "/search" },
                 ...(city ? [{ label: city.name, href: `/search?city=${city.slug}` }] : []),
-                ...(building ? [{ label: building.name, href: `/buildings/${buildingId}` }] : []),
+                ...(building ? [{ label: building.name, href: buildingPath(parent) }] : []),
                 { label: unit.unit_number ? `Unit ${unit.unit_number}` : "Unit" },
               ]}
               className="mb-6"
@@ -170,7 +193,7 @@ export default async function UnitPage({
                   </h1>
                   {building && (
                     <Link
-                      href={`/buildings/${buildingId}`}
+                      href={buildingPath(parent)}
                       className="text-sm text-muted-foreground hover:text-primary mt-1 inline-flex items-center gap-1"
                     >
                       <Building2 className="h-3.5 w-3.5" />
@@ -301,7 +324,7 @@ export default async function UnitPage({
               )}
 
               {/* Back to Building */}
-              <Link href={`/buildings/${buildingId}`}>
+              <Link href={buildingPath(parent)}>
                 <Button variant="outline" className="gap-2">
                   <ArrowLeft className="h-4 w-4" />
                   View all units at {building?.name}

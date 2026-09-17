@@ -9,9 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Neighborhoods - Staycio",
+  title: "Apartments by Neighborhood | Staycio",
   description:
-    "Explore luxury apartment neighborhoods across New York, Miami, Los Angeles, Austin, Dallas, Atlanta, Nashville, and Brooklyn.",
+    "Explore apartments for rent by neighborhood across New York, Brooklyn, Miami, Los Angeles, Austin, Dallas, Atlanta and Nashville — live availability and verified rents.",
+  alternates: { canonical: "/neighborhoods" },
+  openGraph: {
+    title: "Apartments by Neighborhood | Staycio",
+    description: "Explore apartments for rent by neighborhood with live availability.",
+    url: "/neighborhoods",
+    type: "website",
+  },
 };
 
 export const revalidate = 3600;

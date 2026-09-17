@@ -9,8 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { Building2, MapPin, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Explore Cities - Staycio",
-  description: "Browse luxury apartments across major US cities including Miami, New York, Los Angeles, Dallas, Austin, Nashville, Atlanta, and Brooklyn.",
+  title: "Apartments for Rent by City | Staycio",
+  description:
+    "Browse apartments for rent in New York, Brooklyn, Miami, Los Angeles, Dallas, Austin, Nashville and Atlanta. Live availability, verified rents and floor plans on Staycio.",
+  // Self-referencing canonical: without one, every ?utm_/?ref= variant of this
+  // page is a separate crawlable duplicate.
+  alternates: { canonical: "/cities" },
+  openGraph: {
+    title: "Apartments for Rent by City | Staycio",
+    description: "Browse apartments for rent across eight US cities with live availability.",
+    url: "/cities",
+    type: "website",
+  },
 };
 
 // Revalidate hourly — counts don't need to be live, and this page was the

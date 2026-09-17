@@ -28,11 +28,18 @@ const CardHeader = React.forwardRef<
 ));
 CardHeader.displayName = "CardHeader";
 
+/**
+ * Renders a div by default (unchanged for every existing call site), but takes
+ * `as="h2"` so a card that IS a page section can emit a real heading.
+ *
+ * Every card title on the site was a div, so crawled pages had an h1 and then
+ * nothing — no document outline at all on the building and city pages.
+ */
 const CardTitle = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
+  HTMLHeadingElement,
+  React.HTMLAttributes<HTMLHeadingElement> & { as?: "div" | "h2" | "h3" | "h4" }
+>(({ className, as: Tag = "div", ...props }, ref) => (
+  <Tag
     ref={ref}
     className={cn("font-semibold leading-none tracking-tight", className)}
     {...props}

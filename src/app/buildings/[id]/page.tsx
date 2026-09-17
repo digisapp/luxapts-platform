@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { cache } from "react";
@@ -12,6 +12,8 @@ import {
 } from "@/lib/search/fetch-enrichments";
 import { ListingPlaceholder } from "@/components/ui/ListingPlaceholder";
 import { isJunkImageUrl } from "@/lib/images/quality";
+import { buildingPath, buildingUrl, isUuid } from "@/lib/seo/urls";
+import { buildSummary } from "@/lib/seo/building-summary";
 
 // Revalidate every hour instead of force-dynamic — reduces DB load ~90%
 export const revalidate = 3600;
@@ -23,18 +25,27 @@ export async function generateStaticParams() {
   return [];
 }
 
-// Deduplicate the building fetch between generateMetadata and the page
-const getBuilding = cache(async (id: string) => {
+// Deduplicate the building fetch between generateMetadata and the page.
+//
+// The route param is the SEO slug ("maple-terrace"), but every link shared
+// before migration 026 — emails, the 65 stored leads, anything Google already
+// crawled — carries the UUID, so both still resolve here and the page 301s the
+// UUID form to the slug.
+const getBuilding = cache(async (idOrSlug: string) => {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("buildings")
-    .select(`
+  const select = `
       *,
       cities:city_id (id, name, slug, state),
       neighborhoods:neighborhood_id (id, name, slug)
-    `)
-    .eq("id", id)
-    .single();
+    `;
+
+  const column = isUuid(idOrSlug) ? "id" : "slug";
+  const { data, error } = await supabase
+    .from("buildings")
+    .select(select)
+    .eq(column, idOrSlug)
+    .maybeSingle();
+
   return { data, error };
 });
 
@@ -54,27 +65,50 @@ const getPrimaryBuildingImage = cache(async (id: string) => {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const [{ data: building }, ogImage] = await Promise.all([
-    getBuilding(id),
-    getPrimaryBuildingImage(id),
-  ]);
+  const { data: building } = await getBuilding(id);
 
   if (!building) {
-    return { title: "Building Not Found - Staycio" };
+    return { title: "Building Not Found - Staycio", robots: { index: false, follow: false } };
   }
 
+  const ogImage = await getPrimaryBuildingImage(building.id);
   const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
-  const title = `${building.name} - Luxury Apartments${city?.name ? ` in ${city.name}` : ""} | Staycio`;
-  const description = `View available units, pricing, amenities, and floor plans at ${building.name}, ${building.address_1}${city?.name ? `, ${city.name}` : ""}.`;
+  const neighborhood = Array.isArray(building.neighborhoods)
+    ? building.neighborhoods[0]
+    : building.neighborhoods;
+
+  const place = city?.name
+    ? `${neighborhood?.name ? `${neighborhood.name}, ` : ""}${city.name}${city.state ? `, ${city.state}` : ""}`
+    : "";
+
+  // Title leads with the query people actually type ("<name> apartments") and
+  // keeps the location inside the ~60 chars Google renders.
+  const title = `${building.name} Apartments${place ? ` — ${place}` : ""} | Staycio`;
+
+  // Description carries the two facts that decide the click: what it costs and
+  // whether anything is open. Falls back to the static line when neither is
+  // known rather than emitting an empty snippet.
+  const description = `${building.name} in ${place || "the city"}: see live rents, available floor plans, amenities, pet and parking policies${
+    building.year_built ? `. Built ${building.year_built}` : ""
+  }. Verified pricing on Staycio.`;
+
+  const canonical = buildingPath(building);
 
   return {
     title,
     description,
-    alternates: { canonical: `/buildings/${id}` },
+    alternates: { canonical },
     openGraph: {
       title,
       description,
+      url: canonical,
       type: "website",
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
+    twitter: {
+      card: ogImage ? "summary_large_image" : "summary",
+      title,
+      description,
       ...(ogImage ? { images: [ogImage] } : {}),
     },
   };
@@ -107,7 +141,12 @@ import { BuildingPageClient } from "./BuildingPageClient";
 import { BuildingContactButtons } from "./BuildingContactButtons";
 import { StickyMobileCTA } from "@/components/ui/StickyMobileCTA";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
-import { ApartmentComplexJsonLd } from "@/components/seo/JsonLd";
+import {
+  ApartmentComplexJsonLd,
+  BreadcrumbJsonLd,
+  FaqJsonLd,
+  UnitOffersJsonLd,
+} from "@/components/seo/JsonLd";
 
 // Freshness check for the pricing-verified badge (page regenerates hourly via ISR)
 function isWithinDays(isoDate: string, days: number): boolean {
@@ -160,15 +199,25 @@ interface Floorplan {
 }
 
 export default async function BuildingPage({ params }: BuildingPageProps) {
-  const { id } = await params;
+  const { id: idOrSlug } = await params;
   const supabase = createAdminClient();
 
   // Reuse cached building fetch (shared with generateMetadata — no duplicate query)
-  const { data: building, error } = await getBuilding(id);
+  const { data: building, error } = await getBuilding(idOrSlug);
 
   if (error || !building) {
     notFound();
   }
+
+  // One building, one indexable URL: a UUID request 301s to the slug so link
+  // equity from anything already crawled or emailed lands on the canonical.
+  if (building.slug && idOrSlug !== building.slug) {
+    permanentRedirect(buildingPath(building));
+  }
+
+  // Every scoped query below keys off the real row id, never the route param
+  // (which may be a slug).
+  const id = building.id;
 
   // Phase 1: building-scoped queries (independent of each other)
   const [amenitiesRes, factsRes, buildingImagesRes, unitsRes] = await Promise.all([
@@ -363,6 +412,30 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     })
     .filter((name): name is string => !!name);
 
+  // Server-rendered page copy built from the building's own stored facts.
+  // Without it a building with no `description` (213 of 247) rendered ~2.3KB of
+  // boilerplate that Google crawls and declines to index.
+  const summary = buildSummary({
+    name: building.name,
+    address: building.address_1,
+    cityName: building.cities?.name,
+    state: building.cities?.state,
+    neighborhoodName: building.neighborhoods?.name,
+    yearBuilt: building.year_built,
+    stories: building.stories,
+    description: building.description,
+    petPolicy: building.pet_policy,
+    parkingPolicy: building.parking_policy,
+    amenities: amenityNames ?? [],
+    units: (units || []).map((u) => ({
+      beds: u.beds,
+      baths: u.baths,
+      sqft: u.sqft,
+      price: unitPrices[u.id]?.rent ?? null,
+    })),
+    pricesVerifiedAt: latestPriceDate,
+  });
+
   return (
     <>
       <ApartmentComplexJsonLd
@@ -372,12 +445,45 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
         city={building.cities?.name || ""}
         state={building.cities?.state}
         zip={building.zip}
-        url={`https://staycio.com/buildings/${building.id}`}
+        url={buildingUrl(building)}
         image={allImages[0]?.url}
         priceRange={priceRange || undefined}
         amenities={amenityNames}
         latitude={building.lat}
         longitude={building.lng}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Apartments", path: "/cities" },
+          ...(building.cities
+            ? [{ name: `${building.cities.name} Apartments`, path: `/cities/${building.cities.slug}` }]
+            : []),
+          ...(building.neighborhoods
+            ? [
+                {
+                  name: `${building.neighborhoods.name} Apartments`,
+                  path: `/neighborhoods/${building.neighborhoods.slug}${
+                    building.cities ? `?city=${building.cities.slug}` : ""
+                  }`,
+                },
+              ]
+            : []),
+          { name: building.name },
+        ]}
+      />
+      <FaqJsonLd items={summary.faqs} />
+      <UnitOffersJsonLd
+        buildingName={building.name}
+        buildingUrl={buildingUrl(building)}
+        units={(units || []).map((u) => ({
+          unitId: u.id,
+          unitNumber: u.unit_number,
+          beds: u.beds,
+          baths: u.baths,
+          sqft: u.sqft,
+          price: unitPrices[u.id]?.rent ?? null,
+          availableOn: u.available_on,
+        }))}
       />
       <div className="flex min-h-screen flex-col">
         <Header />
@@ -528,14 +634,86 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 </Card>
               )}
 
-              {/* Description */}
-              {building.description && (
+              {/* About — always rendered. The stored description opens it when
+                  one exists; the rest is assembled from the building's own
+                  facts so the page is never a bare unit table. */}
+              <Card>
+                <CardHeader>
+                  <CardTitle as="h2">
+                    About {building.name}
+                    {building.cities?.name ? ` in ${building.cities.name}` : ""}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {summary.overview.map((para, i) => (
+                    <p key={i} className="text-muted-foreground leading-relaxed">
+                      {para}
+                    </p>
+                  ))}
+
+                  {summary.unitMix.length > 0 && (
+                    <div className="pt-2">
+                      <h3 className="font-semibold mb-2 text-sm">
+                        Floor plans at {building.name}
+                      </h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-muted-foreground border-b border-border">
+                              <th className="py-2 pr-4 font-medium">Layout</th>
+                              <th className="py-2 pr-4 font-medium">Available</th>
+                              <th className="py-2 pr-4 font-medium">Size</th>
+                              <th className="py-2 font-medium">Rent</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {summary.unitMix.map((row) => (
+                              <tr key={row.key} className="border-b border-border/50 last:border-0">
+                                <td className="py-2 pr-4 font-medium">{row.label}</td>
+                                <td className="py-2 pr-4 text-muted-foreground">{row.count}</td>
+                                <td className="py-2 pr-4 text-muted-foreground">
+                                  {row.minSqft
+                                    ? row.maxSqft && row.maxSqft !== row.minSqft
+                                      ? `${row.minSqft.toLocaleString()}–${row.maxSqft.toLocaleString()} sq ft`
+                                      : `${row.minSqft.toLocaleString()} sq ft`
+                                    : "—"}
+                                </td>
+                                <td className="py-2 text-muted-foreground">
+                                  {row.minPrice
+                                    ? row.maxPrice && row.maxPrice !== row.minPrice
+                                      ? `${formatPrice(row.minPrice)}–${formatPrice(row.maxPrice)}`
+                                      : formatPrice(row.minPrice)
+                                    : "—"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* FAQ — every answer is a stored fact, so it is safe to mark up
+                  as FAQPage, and it targets the long-tail questions people
+                  actually type ("is <building> pet friendly"). */}
+              {summary.faqs.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>About</CardTitle>
+                    <CardTitle as="h2">
+                      Frequently asked questions about {building.name}
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{building.description}</p>
+                  <CardContent className="space-y-4">
+                    {summary.faqs.map((faq) => (
+                      <div key={faq.question}>
+                        <h3 className="font-semibold text-sm mb-1">{faq.question}</h3>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    ))}
                   </CardContent>
                 </Card>
               )}
@@ -566,7 +744,9 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
               {/* Available Units */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Available Units ({units?.length || 0})</CardTitle>
+                  <CardTitle as="h2">
+                    Available Units at {building.name} ({units?.length || 0})
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {units?.length ? (
@@ -670,7 +850,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                                       </a>
                                     </Button>
                                   )}
-                                  <Link href={`/buildings/${building.id}/units/${unit.id}`}>
+                                  <Link href={`${buildingPath(building)}/units/${unit.id}`}>
                                     <Button size="sm">View</Button>
                                   </Link>
                                 </div>
@@ -692,7 +872,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
               {amenities?.length ? (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Amenities</CardTitle>
+                    <CardTitle as="h2">{building.name} Amenities</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
@@ -728,7 +908,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
               {/* Policies */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Policies</CardTitle>
+                  <CardTitle as="h2">Pet, Parking &amp; Deposit Policies</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {building.pet_policy && (
@@ -769,7 +949,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
               {/* Building Details */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Building Details</CardTitle>
+                  <CardTitle as="h2">Building Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   {building.year_built && (

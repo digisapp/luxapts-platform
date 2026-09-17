@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { buildingPath } from "@/lib/seo/urls";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Sparkles, Mic, MapPin } from "lucide-react";
@@ -25,6 +26,8 @@ export interface HomeCity {
 
 export interface FeaturedBuilding {
   id: string;
+  /** SEO slug (migration 026). Falls back to the id when absent. */
+  slug?: string | null;
   name: string;
   cityName: string | null;
   neighborhood: string | null;
@@ -83,10 +86,15 @@ const FEATURED_CITIES: HomeCity[] = [
 
 // Three, not five. Every extra option in the hero is another way to not use
 // the search box, and these only have to demonstrate the phrasing.
+//
+// Each one has to be a query the parser actually fills in and the search
+// actually answers — an example that returns an empty page is worse than no
+// example. Between them they show the three things a filter row cannot do:
+// neighborhood + amenity, a pet rule, and a move-in date.
 const EXAMPLE_SEARCHES = [
-  "2 bed in Miami under $3,500",
-  "Dog-friendly in Austin under $2,400",
-  "Studio in Williamsburg under $2,800",
+  "1 bed in Brickell under $3,500 with a pool and gym",
+  "Dog-friendly in Austin under $2,400, moving in November",
+  "Studio in Williamsburg with a gym",
 ];
 
 // A/B test: two different pitches, not two synonyms. The previous test ran
@@ -98,12 +106,12 @@ const HERO_VARIANTS = {
   frustration: {
     headline: "Stop searching.",
     accent: "Just tell Stacy what you want.",
-    sub: "Describe your ideal apartment naturally. Stacy searches thousands of live listings, compares pricing and availability, and recommends the ones actually worth touring.",
+    sub: "Tell Stacy the neighborhood, the budget, when you need to move in and what you can't live without. She reads every available listing and comes back with the ones worth touring.",
   },
   outcome: {
     headline: "Your next apartment,",
     accent: "found in one sentence.",
-    sub: "Tell Stacy your budget, your neighborhood and your dealbreakers. She reads thousands of live listings and comes back with the handful actually worth your time.",
+    sub: "One sentence — neighborhood, budget, move-in date, dealbreakers. Stacy reads every available listing and comes back with the handful actually worth your time.",
   },
 } as const;
 type HeroVariant = keyof typeof HERO_VARIANTS;
@@ -427,10 +435,10 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                   {/* Solid, not gradient. The gradient belongs to the h1; when
                       every heading has it, it stops reading as an accent. */}
                   <h2 className="text-3xl md:text-4xl font-medium text-white mb-3">
-                    Featured residences
+                    Buildings with the most availability
                   </h2>
                   <p className="text-white/60">
-                    Buildings with the most open units right now, so there&apos;s more to choose from.
+                    Ranked by how many apartments are open — not by anyone paying for placement.
                   </p>
                 </div>
                 <Link
@@ -446,7 +454,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                 {featured.map((building) => (
                   <Link
                     key={building.id}
-                    href={`/buildings/${building.id}`}
+                    href={buildingPath(building)}
                     className="group rounded-2xl overflow-hidden bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.18] hover:bg-white/[0.05] transition-colors duration-300"
                   >
                     <div className="relative h-44 sm:h-52 overflow-hidden">

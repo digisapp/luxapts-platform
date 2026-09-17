@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
@@ -19,6 +19,11 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import {
+  BreadcrumbJsonLd,
+  BuildingItemListJsonLd,
+} from "@/components/seo/JsonLd";
+import { buildingPath } from "@/lib/seo/urls";
 
 export const revalidate = 3600;
 
@@ -37,7 +42,7 @@ export async function generateMetadata({
 
   const { data: matches } = await supabase
     .from("neighborhoods")
-    .select(`name, description, cities:city_id (name, slug, state)`)
+    .select(`id, name, description, cities:city_id (name, slug, state)`)
     .eq("slug", slug)
     .order("name");
 
@@ -54,18 +59,43 @@ export async function generateMetadata({
   const neighborhood =
     (citySlugParam && matches.find((n) => cityOf(n)?.slug === citySlugParam)) || matches[0];
   const city = cityOf(neighborhood);
+
+  const { count: listingCount } = await supabase
+    .from("buildings")
+    .select("id", { count: "exact", head: true })
+    .eq("neighborhood_id", neighborhood.id)
+    .eq("status", "active");
+
   const title = city
-    ? `${neighborhood.name} Apartments - ${city.name}, ${city.state} | Staycio`
-    : `${neighborhood.name} Apartments | Staycio`;
+    ? `Apartments for Rent in ${neighborhood.name}, ${city.name}${
+        listingCount ? ` — ${listingCount} Buildings` : ""
+      } | Staycio`
+    : `${neighborhood.name} Apartments for Rent | Staycio`;
   const description =
     neighborhood.description ||
-    `Browse luxury apartments in ${neighborhood.name}${city ? `, ${city.name}` : ""} — verified pricing, amenities, and availability on Staycio.`;
+    (listingCount
+      ? `${listingCount} apartment building${listingCount === 1 ? "" : "s"} for rent in ${
+          neighborhood.name
+        }${city ? `, ${city.name}` : ""}. Live availability, verified rents, floor plans and amenities on Staycio.`
+      : `Apartments for rent in ${neighborhood.name}${city ? `, ${city.name}` : ""} — verified pricing, amenities, and availability on Staycio.`);
+
+  // "midtown" is a neighborhood in NYC, Miami AND Atlanta. All three pages
+  // claimed the same bare canonical, so two of them were dropped as duplicates
+  // of a page showing someone else's buildings. Qualify the canonical with
+  // ?city= whenever the slug is shared.
+  const ambiguous = matches.length > 1;
+  const canonical =
+    ambiguous && city ? `/neighborhoods/${slug}?city=${city.slug}` : `/neighborhoods/${slug}`;
 
   return {
     title,
     description,
-    alternates: { canonical: `/neighborhoods/${slug}` },
-    openGraph: { title, description },
+    // Matches the city page: a neighborhood with no listings stays reachable
+    // but out of the index until it has inventory.
+    robots: listingCount ? undefined : { index: false, follow: true },
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical, type: "website" },
+    twitter: { card: "summary", title, description },
   };
 }
 
@@ -103,13 +133,25 @@ export default async function NeighborhoodPage({ params, searchParams }: Neighbo
     (citySlugParam && matches.find((n) => cityOf(n)?.slug === citySlugParam)) || matches[0];
   const city = cityOf(neighborhood);
 
+  // ?city=<somewhere this neighborhood isn't> used to serve another city's
+  // neighborhood at a 200 — a soft duplicate of the real page. Send it to the
+  // page it actually resolved to instead of serving it under a foreign URL.
+  if (citySlugParam && city && citySlugParam !== city.slug) {
+    permanentRedirect(
+      matches.length > 1 ? `/neighborhoods/${slug}?city=${city.slug}` : `/neighborhoods/${slug}`
+    );
+  }
+
   // Get buildings in this neighborhood
   const { data: buildings } = await supabase
     .from("buildings")
     .select(`
       id,
+      slug,
       name,
       address_1,
+      zip,
+      description,
       year_built,
       stories
     `)
@@ -178,6 +220,23 @@ export default async function NeighborhoodPage({ params, searchParams }: Neighbo
 
   return (
     <div className="flex min-h-screen flex-col">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Neighborhoods", path: "/neighborhoods" },
+          ...(city ? [{ name: `${city.name} Apartments`, path: `/cities/${city.slug}` }] : []),
+          { name: `${neighborhood.name} Apartments` },
+        ]}
+      />
+      <BuildingItemListJsonLd
+        name={`Apartments for rent in ${neighborhood.name}${city ? `, ${city.name}` : ""}`}
+        buildings={(buildings || []).slice(0, 50).map((b) => ({
+          name: b.name,
+          path: buildingPath(b),
+          cityName: city?.name,
+          address: b.address_1,
+          minPrice: priceByBuilding[b.id]?.min ?? null,
+        }))}
+      />
       <Header />
 
       <main className="flex-1 pt-16 pb-20 lg:pb-0">
@@ -201,7 +260,7 @@ export default async function NeighborhoodPage({ params, searchParams }: Neighbo
                   </Badge>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                  {neighborhood.name}
+                  Apartments for Rent in {neighborhood.name}
                 </h1>
                 <p className="text-lg text-zinc-400 max-w-2xl">
                   {description}
@@ -268,7 +327,8 @@ export default async function NeighborhoodPage({ params, searchParams }: Neighbo
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">
-                  Buildings in {neighborhood.name}
+                  Apartment buildings in {neighborhood.name}
+                  {city ? `, ${city.name}` : ""}
                 </h2>
                 <Link href={`/search?city=${city?.slug}&neighborhood=${neighborhood.slug}`}>
                   <Button variant="outline" size="sm">
@@ -285,7 +345,7 @@ export default async function NeighborhoodPage({ params, searchParams }: Neighbo
                     return (
                       <Link
                         key={building.id}
-                        href={`/buildings/${building.id}`}
+                        href={buildingPath(building)}
                         className="block"
                       >
                         <Card className="hover:border-primary/50 transition-colors">

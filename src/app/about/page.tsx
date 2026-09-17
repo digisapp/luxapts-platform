@@ -8,6 +8,14 @@ export const metadata: Metadata = {
   title: "About Staycio — Your space, found.",
   description:
     "Finding a home should feel like a conversation, not a search. Staycio is an AI apartment agent that searches thousands of apartments so you don't have to.",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About Staycio — Your space, found.",
+    description:
+      "Staycio is an AI apartment agent that searches thousands of apartments so you don't have to.",
+    url: "/about",
+    type: "website",
+  },
 };
 
 const principles = [
