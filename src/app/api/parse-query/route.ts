@@ -7,6 +7,7 @@ import { CITY_SLUGS, isKnownCitySlug, normalizeCitySlug } from "@/lib/constants/
 import { getNeighborhoodCatalog, resolveNeighborhoods } from "@/lib/search/neighborhood-resolver";
 import { AMENITY_KEYWORDS } from "@/lib/constants/amenities";
 import { canonicalAmenityKey } from "@/lib/search/amenity-filter";
+import { sanitizeMoveInDate } from "@/lib/search/move-in-date";
 
 const PARSE_MODEL = process.env.XAI_PARSE_MODEL || "grok-4.20-0309-non-reasoning";
 const PARSE_FALLBACK_MODEL = "grok-4.3";
@@ -21,7 +22,9 @@ const RequestSchema = z.object({
   city_slug: z.string().optional(),
 });
 
-const PARSE_SYSTEM_PROMPT = `You are a search query parser for a luxury apartment rental platform.
+// Relative phrasing ("October 1", "next month", "ASAP") can only be resolved
+// against a concrete date, and the model has no reliable clock of its own.
+const parseSystemPrompt = (today: string) => `You are a search query parser for a luxury apartment rental platform.
 Extract structured search filters from natural language queries.
 
 Return a JSON object with ONLY these keys (omit any key you cannot fill):
@@ -32,9 +35,10 @@ Return a JSON object with ONLY these keys (omit any key you cannot fill):
   "baths_min": number,
   "budget_min": integer, "budget_max": integer,   // monthly USD
   "pet_friendly": boolean, "parking_required": boolean,
+  "move_in_date": string,       // YYYY-MM-DD — the date they want to be moved in by
   "amenities": string[],        // use these exact names only: ${AMENITY_KEY_LIST}
   "sort": "best_match" | "price_low" | "price_high" | "newest" | "sqft_high",
-  "summary": string             // brief human-readable confirmation, e.g. "2BR in Miami under $3,500, pet-friendly, with pool"
+  "summary": string             // brief human-readable confirmation, e.g. "2BR in Miami under $3,500, pet-friendly, with pool, available by Oct 1"
 }
 
 Rules:
@@ -43,6 +47,7 @@ Rules:
 - beds: "studio" → beds_min=0, beds_max=0; "1BR" → beds_min=1, beds_max=1; "2+" → beds_min=2
 - budget: "$3k" → 3000; "under $4,000" → budget_max=4000; a bare amount like "$2,800" is budget_max
 - pet_friendly: true if the user mentions pets, dogs, cats or "pet-friendly"
+- move_in_date: today is ${today}. Resolve timing against it — "moving October 1" → the next October 1 falling on or after today, "moving in November" → the 1st of the next November, "next month" → the 1st of next month, "ASAP"/"now"/"immediately" → today. Omit the key entirely when the query says nothing about when they move.
 - sort: "cheapest" → price_low; "biggest" → sqft_high; "newest" → newest
 
 Respond ONLY with valid JSON. No markdown, no explanation.`;
@@ -63,10 +68,11 @@ export async function POST(req: Request) {
 
     const { query } = parsed.data;
     const contextCity = normalizeCitySlug(parsed.data.city_slug);
+    const today = new Date().toISOString().slice(0, 10);
 
     const client = createXAIClient();
     const messages = [
-      { role: "system" as const, content: PARSE_SYSTEM_PROMPT },
+      { role: "system" as const, content: parseSystemPrompt(today) },
       {
         role: "user" as const,
         content: contextCity
@@ -118,6 +124,8 @@ export async function POST(req: Request) {
     if (typeof parsed_json.budget_max === "number" && parsed_json.budget_max > 0) filters.budget_max = Math.round(parsed_json.budget_max);
     if (parsed_json.pet_friendly === true) filters.pet_friendly = true;
     if (parsed_json.parking_required === true) filters.parking_required = true;
+    const moveInDate = sanitizeMoveInDate(parsed_json.move_in_date, today);
+    if (moveInDate) filters.move_in_date = moveInDate;
     if (Array.isArray(parsed_json.amenities) && parsed_json.amenities.length > 0) {
       // Canonicalize to the display keys so the UI's amenity badges and the
       // keyword matcher both recognise them ("washer-dryer" → "Washer Dryer").
