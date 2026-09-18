@@ -99,6 +99,8 @@ export const MICROSITE_DOMAINS = [
   "miamiworldtowerapartments.com",
 ] as const;
 
+export type MicrositeDomain = (typeof MICROSITE_DOMAINS)[number];
+
 export const micrositeLeadSchema = z.object({
   domain: z.enum(MICROSITE_DOMAINS, { message: "Unknown microsite domain" }),
   building: z.string().min(1, "Building is required").max(200),

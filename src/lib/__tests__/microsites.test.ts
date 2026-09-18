@@ -5,6 +5,10 @@ import { MICROSITE_DOMAINS, micrositeLeadSchema, micrositeAnalyticsSchema } from
 import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
 import { telHref, whatsappHref } from "@/lib/utils";
 import { MICROSITE_BUILDINGS, senderIdentityFor } from "@/lib/microsites";
+import { MICROSITE_CATALOG_SLUG } from "@/lib/microsite-inventory";
+// The generator's building records, read directly so the delivery-date guard
+// below runs against the same source the pages are built from.
+import generatedBuildings from "../../../microsites/_generator/buildings.js";
 
 const ROOT = join(process.cwd(), "microsites");
 
@@ -292,6 +296,103 @@ describe("per-microsite sender identity", () => {
   it("keeps a building name for every domain the dashboard lists", () => {
     for (const d of MICROSITE_DOMAINS) {
       expect(MICROSITE_BUILDINGS[d], `${d} missing from MICROSITE_BUILDINGS`).toBeTruthy();
+    }
+  });
+});
+
+describe("microsite call-to-action placement", () => {
+  // Each page carries exactly one form. The submit handler binds to the first
+  // `form[data-lead]` it finds, and every field id (#name, #email, #phone) is
+  // unique per document — a second form would silently orphan one of them.
+  it.each(siteDirs)("%s has exactly one lead form", (domain) => {
+    const html = readFileSync(join(ROOT, domain, "index.html"), "utf8");
+    expect(html.match(/<form[\s>]/g)?.length ?? 0).toBe(1);
+  });
+
+  // The form sits at the bottom of a long page. The mid-page band is a second
+  // place to act without scrolling past the whole building tour.
+  it.each(siteDirs)("%s offers a mid-page route to the form", (domain) => {
+    const html = readFileSync(join(ROOT, domain, "index.html"), "utf8");
+    const mid = html.match(/<div class="midcta[^"]*">[\s\S]*?<\/div>\s*<\/div>/)?.[0];
+    expect(mid, `${domain}: no mid-page CTA`).toBeTruthy();
+
+    // It must point at an anchor the page actually defines.
+    const target = mid!.match(/href="#([\w-]+)"/)?.[1];
+    expect(target, `${domain}: mid-page CTA has no anchor`).toBeTruthy();
+    expect(html, `${domain}: mid-page CTA points at #${target}, which does not exist`)
+      .toContain(`id="${target}"`);
+  });
+});
+
+describe("microsite availability strip", () => {
+  it("only promises live inventory for buildings in the catalog", () => {
+    for (const domain of siteDirs) {
+      const html = readFileSync(join(ROOT, domain, "index.html"), "utf8");
+      const claims = html.includes("data-inv");
+      expect(
+        claims,
+        `${domain}: renders an availability strip but has no catalog slug to fill it`
+      ).toBe(domain in MICROSITE_CATALOG_SLUG);
+    }
+  });
+
+  it("every mapped domain is a registered microsite", () => {
+    for (const domain of Object.keys(MICROSITE_CATALOG_SLUG)) {
+      expect(MICROSITE_DOMAINS as readonly string[]).toContain(domain);
+    }
+  });
+
+  // The strip starts hidden and is unhidden only once real data arrives. If it
+  // ever shipped visible, an empty box would render on every page load.
+  it.each(Object.keys(MICROSITE_CATALOG_SLUG))("%s ships its strip hidden", (domain) => {
+    const html = readFileSync(join(ROOT, domain, "index.html"), "utf8");
+    expect(html).toMatch(/<div class="inv" data-inv hidden>/);
+  });
+});
+
+// The one failure this portfolio has already paid for: namdartowers.com carried
+// 47% Google traffic and converted at ~1% while still selling a waitlist for a
+// tower that had opened. `delivers` exists so that cannot recur unnoticed.
+describe("microsite delivery dates", () => {
+  // Availability entries carry no `delivers`; only the pre-leasing ones do, so
+  // read it through a narrowing accessor rather than casting the whole record.
+  const generated = generatedBuildings;
+  const deliversOf = (b: (typeof generated)[number]): string | null =>
+    "delivers" in b && typeof b.delivers === "string" ? b.delivers : null;
+  const SOON_DAYS = 120;
+  const daysOut = (iso: string) => (new Date(iso).getTime() - Date.now()) / 86_400_000;
+
+  it("gives every pre-leasing building a delivery date or an explicit null", () => {
+    for (const b of generated) {
+      if (b.mode !== "waitlist") continue;
+      expect(b, `${b.domain}: no delivers field`).toHaveProperty("delivers");
+      const d = deliversOf(b);
+      if (d !== null) {
+        expect(Number.isNaN(new Date(d).getTime()), `${b.domain}: bad date`).toBe(false);
+      }
+    }
+  });
+
+  it("never sells a waitlist for a building that has already delivered", () => {
+    const stale = generated
+      .filter((b) => b.mode === "waitlist")
+      .map((b) => ({ domain: b.domain, delivers: deliversOf(b) }))
+      .filter((b) => b.delivers !== null && daysOut(b.delivers) <= 0);
+    expect(
+      stale.map((b) => `${b.domain} (delivered ${b.delivers})`),
+      "rewrite these as mode:'availability', or push delivers out if the date slipped"
+    ).toEqual([]);
+  });
+
+  it("runs first-access copy for anything inside the crossover window", () => {
+    for (const b of generated) {
+      const d = deliversOf(b);
+      if (b.mode !== "waitlist" || d === null) continue;
+      const html = readFileSync(join(ROOT, b.domain, "index.html"), "utf8");
+      expect(
+        html.includes("First Access"),
+        `${b.domain}: delivers ${d} (${Math.round(daysOut(d))}d out) — regenerate the microsites`
+      ).toBe(daysOut(d) <= SOON_DAYS);
     }
   });
 });

@@ -96,6 +96,14 @@
   details[open] summary::after{transform:rotate(45deg)}
   details p{margin-top:14px;color:var(--muted-dark);max-width:64ch}
 
+
+  /* Mid-page CTA. The form is at the very bottom; this is a second place to
+     act without scrolling the whole page. Anchor only — one form per page. */
+  .midcta{background:var(--cream);border-top:1px solid #e8e0d2;border-bottom:1px solid #e8e0d2;padding:38px 0}
+  .midcta .wrap{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
+  .midcta p{font-family:var(--display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;margin:0;max-width:62ch}
+  .midcta .btn{flex:none}
+
   .cta-band{position:relative;color:#fff;padding:130px 0;
     background:linear-gradient(rgba(12,31,24,.9),rgba(12,31,24,.9)),
     url('img/skyline.jpg') center/cover}
@@ -123,6 +131,7 @@
   .reveal.in{opacity:1;transform:none}
 
   @media(max-width:900px){
+    .midcta .wrap{flex-direction:column;align-items:flex-start}
     .split,.cta-grid{grid-template-columns:1fr;gap:44px}
     .split img{height:380px}
     .gallery-grid{grid-template-columns:1fr}
@@ -197,6 +206,13 @@
     </div>
   </div>
 </section>
+
+<div class="midcta reveal">
+  <div class="wrap">
+    <p>Jade listings move before they reach the public sites. Tell us what you're after and we'll send what's open now.</p>
+    <a class="btn btn-champagne" href="#listings">Send Me Current Listings</a>
+  </div>
+</div>
 
 <section>
   <div class="wrap">

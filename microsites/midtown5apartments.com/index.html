@@ -101,6 +101,14 @@
   details[open] summary::after{transform:rotate(45deg)}
   details p{margin-top:12px;color:var(--muted-dark)}
 
+
+  /* Mid-page CTA. The form is at the very bottom; this is a second place to
+     act without scrolling the whole page. Anchor only — one form per page. */
+  .midcta{background:var(--off);border-top:1px solid #f2dcd7;border-bottom:1px solid #f2dcd7;padding:38px 0}
+  .midcta .wrap{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
+  .midcta p{font-family:var(--display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;margin:0;max-width:62ch}
+  .midcta .btn{flex:none}
+
   .cta-band{position:relative;color:#fff;padding:120px 0;
     background:linear-gradient(150deg,rgba(26,15,20,.93),rgba(217,44,61,.75)),
     url('img/pool2.jpg') center/cover}
@@ -126,6 +134,7 @@
   .reveal.in{opacity:1;transform:none}
 
   @media(max-width:900px){
+    .midcta .wrap{flex-direction:column;align-items:flex-start}
     .split,.cta-grid{grid-template-columns:1fr;gap:42px}
     .split img{height:340px}
     .gallery-grid{grid-template-columns:1fr}
@@ -213,6 +222,13 @@
     </div>
   </div>
 </section>
+
+<div class="midcta reveal">
+  <div class="wrap">
+    <p>Midtown 5 turns over constantly. Tell us your bedroom count and timing and we'll come back with what's actually open.</p>
+    <a class="btn btn-coral" href="#availability">Get Current Availability</a>
+  </div>
+</div>
 
 <section style="padding-top:0">
   <div class="wrap">

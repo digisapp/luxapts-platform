@@ -2,12 +2,19 @@
 // Sources: Florida YIMBY, REBusinessOnline, Multi-Housing News, PROFILEmiami,
 // official leasing sites, and Staycio's own scraped rent snapshots.
 // `mode`: waitlist = not yet leasing · availability = operating building.
+//
+// `delivers` is the earliest credible delivery date, ISO. It is what decides
+// which CTA a waitlist page actually renders — build.js derives the tier from
+// it rather than trusting `mode`, so a page cannot keep selling a waitlist for
+// a building that has already opened. That is not hypothetical: namdartowers
+// carried 47% Google traffic and converted at ~1% while doing exactly that.
+// Leave it null only for buildings with no announced date.
 module.exports = [
   {
     domain: "2600biscaynemiami.com", name: "2600 Biscayne", short: "2600", accent: "BISCAYNE",
     mode: "waitlist", palette: { ink:"#0d1f2d", a:"#2fb8c6", deep:"#17707c", pale:"#dff5f8" },
     hood: "Edgewater", address: "2626 Biscayne Blvd", zip: "33137", units: 400, stories: 41,
-    developer: "Oak Row Equities", eta: "Late 2026", etaShort: "Late '26",
+    developer: "Oak Row Equities", eta: "Late 2026", etaShort: "Late '26", delivers: "2026-11-01",
     chip: "Topped Out · Delivering Late 2026",
     h1: ["400 new apartments", "above Edgewater's", "newest office tower."],
     sub: "Oak Row Equities' 41-story Arquitectonica tower at 2626 Biscayne — 400 rentals over 160,000 sq ft of Class A office. Get pricing before the leasing office opens.",
@@ -32,13 +39,17 @@ module.exports = [
     ],
     moveIn: ["Late 2026","Early 2027","Flexible"],
     ctaH2: "Get pricing before the crowd.",
-    ctaP: "400 apartments in Edgewater will not stay quiet for long. Floor plans, rents and opening specials — emailed the moment they drop."
+    ctaP: "400 apartments in Edgewater will not stay quiet for long. Floor plans, rents and opening specials — emailed the moment they drop.",
+    soon: {
+      h2: "Pricing lands this fall. This list sees it first.",
+      p: "400 apartments do not release all at once — the first wave is where the choice actually is, in lines, floors and opening specials. Waiting until it reaches the listing sites means shopping what the first wave left behind. One email when rents drop, nothing else."
+    }
   },
   {
     domain: "jemmiamiapartments.com", name: "JEM Miami Worldcenter", short: "JEM", accent: "MIAMI",
     mode: "waitlist", palette: { ink:"#1a1329", a:"#c9a84c", deep:"#8a6f22", pale:"#f7f0dc" },
     hood: "Miami Worldcenter", address: "1016 NE 2nd Ave", zip: "33132", units: 530, stories: 67,
-    developer: "Naftali Group", eta: "Q4 2027", etaShort: "Q4 '27",
+    developer: "Naftali Group", eta: "Q4 2027", etaShort: "Q4 '27", delivers: "2027-10-01",
     chip: "Under Construction · Rentals Delivering Q4 2027",
     h1: ["530 rental homes", "inside Miami", "Worldcenter's", "tallest tower."],
     sub: "Naftali Group's 67-story JEM rises over the $6B Worldcenter district. Floors 10 through 42 are rentals — and nobody is marketing them yet.",
@@ -69,7 +80,7 @@ module.exports = [
     domain: "kenectmiamiapartments.com", name: "Kenect Miami", short: "KENECT", accent: "MIAMI",
     mode: "waitlist", palette: { ink:"#131a2b", a:"#ff6b4a", deep:"#c14127", pale:"#ffe9e3" },
     hood: "Miami Worldcenter", address: "Miami Worldcenter", zip: "33132", units: 450, stories: 39,
-    developer: "Akara Partners", eta: "Under construction", etaShort: "TBA",
+    developer: "Akara Partners", eta: "Under construction", etaShort: "TBA", delivers: null,
     chip: "Under Construction · Miami Worldcenter",
     h1: ["450 homes built", "for people who", "work where they", "live."],
     sub: "Akara Partners' 39-story Kenect tower brings 20,000 sq ft of coworking, furnished residences and micro-unit pricing to Miami Worldcenter.",
@@ -100,7 +111,7 @@ module.exports = [
     domain: "3333biscaynemiami.com", name: "3333 Biscayne", short: "3333", accent: "BISCAYNE",
     mode: "waitlist", palette: { ink:"#10222b", a:"#4cc3a5", deep:"#1f7a66", pale:"#ddf6ef" },
     hood: "Edgewater", address: "3333 Biscayne Blvd", zip: "33137", units: 667, stories: 45,
-    developer: "Beitel Group", eta: "2028", etaShort: "2028",
+    developer: "Beitel Group", eta: "2028", etaShort: "2028", delivers: "2028-01-01",
     chip: "In Permitting · First of Three Towers",
     h1: ["667 apartments.", "An entire", "Edgewater", "city block."],
     sub: "Beitel Group's three-tower redevelopment of 3333 Biscayne begins with a 45-story, 667-unit building — the largest rental project in the Edgewater pipeline.",
@@ -131,7 +142,7 @@ module.exports = [
     domain: "biscayne18.com", name: "Biscayne 18", short: "BISCAYNE", accent: "18",
     mode: "waitlist", palette: { ink:"#0f1b2d", a:"#c9a84c", deep:"#8a6f22", pale:"#f6f0de" },
     hood: "Edgewater", address: "331 NE 18th St", zip: "33132", units: 1178, stories: 46,
-    developer: "Melo Group", eta: "2029–2030", etaShort: "2029+",
+    developer: "Melo Group", eta: "2029–2030", etaShort: "2029+", delivers: "2029-01-01",
     chip: "Permits Filed · Nearing Groundbreaking",
     h1: ["1,178 apartments.", "Twin 46-story", "towers. One", "Edgewater block."],
     sub: "Melo Group's largest project yet — two 46-story towers at 331 NE 18th Street, bringing 1,178 rental homes to Edgewater. Permits are filed. Pricing is years away. The list starts now.",
@@ -163,7 +174,7 @@ module.exports = [
     domain: "urban22edgewater.com", name: "Urban 22", short: "URBAN", accent: "22",
     mode: "waitlist", palette: { ink:"#151d2e", a:"#6c8cff", deep:"#3b52b8", pale:"#e6ebff" },
     hood: "Edgewater", address: "2222 NE 2nd Ave", zip: "33137", units: 441, stories: 24,
-    developer: "Melo Group", eta: "Topped off", etaShort: "Soon",
+    developer: "Melo Group", eta: "Topped off", etaShort: "Soon", delivers: "2026-11-01",
     chip: "Topped Off · Leasing Soon",
     h1: ["441 apartments,", "725 to 1,100", "square feet,", "all balconied."],
     sub: "Melo Group's Urban 22 at 2222 NE 2nd Avenue has topped off. Every residence gets a private balcony with glass railings — and pricing is about to land.",
@@ -188,7 +199,11 @@ module.exports = [
     ],
     moveIn: ["As soon as possible","Next 3 months","Next 6 months","Flexible"],
     ctaH2: "Pricing drops soon.",
-    ctaP: "441 balconied apartments in Edgewater, finishing now. Be on the list when Melo releases rents."
+    ctaP: "441 balconied apartments in Edgewater, finishing now. Be on the list when Melo releases rents.",
+    soon: {
+      h2: "Melo sets opening rents within weeks.",
+      p: "441 balconied apartments, finishing now. Opening pricing and move-in specials are set before a building ever reaches the listing sites — this list gets them at that point, with the floor and line still yours to pick. One email when it happens."
+    }
   },
   {
     domain: "downtown5miami.com", name: "Downtown 5th", short: "DOWNTOWN", accent: "5TH",

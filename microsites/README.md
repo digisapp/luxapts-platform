@@ -96,12 +96,65 @@ Nothing income-restricted is included. Wyn Park was dropped for that reason
 Grand Station was dropped because its official site places it at 240 N Miami
 Ave downtown, not Wynwood as the catalog claims.
 
+## Lead capture: which CTA a page gets, and why
+
+All 65 leads to date came from pre-construction pages — 60 from
+`downtown6miami.com` alone, where 37 of them knowingly chose a Q4 2026 move-in.
+The operating buildings produced zero. That gap is **traffic, not copy**: the
+pre-construction domains rank because the official site is parked, while the
+operating buildings have real leasing sites that own their search results.
+
+So the waitlist framing stays. Its trade is honest — the information does not
+exist yet anywhere, so the list is the only way to get it — and rewriting those
+pages as "see what's open right now" would promise something a building
+delivering in 2028 cannot deliver.
+
+`build.js` derives the CTA tier from `delivers`, never from `mode` alone:
+
+| Tier | When | CTA |
+|---|---|---|
+| `waitlist` | more than 120 days out | "Join the Waitlist" |
+| `soon` | within 120 days | "Get Pricing First" + first-access copy from the entry's `soon: {h2, p}` |
+| `availability` | operating building | "Check Availability" + live inventory strip |
+| `opened` | delivery date has passed | **build fails** — see below |
+
+That last row is the guard. `namdartowers.com` carried 47% Google traffic and
+converted at ~1% because it kept selling a waitlist for a tower that had already
+opened. Now the generator exits non-zero, and
+`src/lib/__tests__/microsites.test.ts` fails, listing every building whose date
+has passed. Pages are still written — one stale record cannot block the other
+eighteen sites — but it cannot pass unnoticed.
+
+**When a building's date slips, update `delivers`.** When it actually opens,
+rewrite the entry as `mode: "availability"` with real rents.
+
+### Live availability strip
+
+Operating-building pages ask for five fields and promise a callback, which reads
+like a gate on data anyone can get off apartments.com. The pages whose building
+exists in the catalog now show real inventory above the form — unit count, rent
+range, bedroom mix, and the date it was verified — fetched at page load from
+`GET /api/microsite-inventory?domain=<domain>` (origin-guarded, cached 15 min).
+
+The route returns `{ available: null }` and the strip stays hidden whenever the
+data is missing, the building is not in the catalog, or **the newest price is
+older than 45 days**. Panorama Tower is the live example: nine units are marked
+available but its last price capture is eight months old, so it shows nothing.
+A stale number is worse than no number — that is the same broken promise that
+sank Namdar.
+
+Add a domain to `MICROSITE_CATALOG_SLUG` in `src/lib/microsite-inventory.ts`
+(and to `CATALOG_SLUG` in `_generator/build.js`, which only decides whether to
+render the strip at all) once its building is in the catalog with fresh rents.
+
 ### Adding another site
 
 1. Append an entry to `_generator/buildings.js`.
 2. Run the generator.
 3. Add the domain to `MICROSITE_DOMAINS` in `src/lib/validations/index.ts` —
-   CORS for both API routes derives from that array.
+   CORS for all three API routes derives from that array.
+   For a pre-leasing building, set `delivers` to its earliest credible delivery
+   date so the CTA tier stays correct on its own.
 4. Add a label to `BUILDING_LABEL` in `src/app/admin/microsites/page.tsx`.
 5. **Deploy the platform.** A domain missing from `MICROSITE_DOMAINS` in
    production fails CORS and every lead the page captures is silently lost.

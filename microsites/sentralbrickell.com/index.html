@@ -97,6 +97,14 @@
   details[open] summary::after{transform:rotate(45deg)}
   details p{margin-top:12px;color:var(--muted-dark);max-width:64ch;font-weight:300}
 
+
+  /* Mid-page CTA. The form is at the very bottom; this is a second place to
+     act without scrolling the whole page. Anchor only — one form per page. */
+  .midcta{background:var(--sand);border-top:1px solid #eee2d6;border-bottom:1px solid #eee2d6;padding:38px 0}
+  .midcta .wrap{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
+  .midcta p{font-family:var(--display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;margin:0;max-width:62ch}
+  .midcta .btn{flex:none}
+
   .cta-band{position:relative;color:#fff;padding:126px 0;
     background:linear-gradient(rgba(36,26,19,.9),rgba(36,26,19,.9)),
     url('img/brickell.jpg') center/cover}
@@ -124,6 +132,7 @@
   .reveal.in{opacity:1;transform:none}
 
   @media(max-width:900px){
+    .midcta .wrap{flex-direction:column;align-items:flex-start}
     .split,.cta-grid{grid-template-columns:1fr;gap:42px}
     .split img{height:360px}
     .gallery-grid{grid-template-columns:1fr}
@@ -203,6 +212,13 @@
     </div>
   </div>
 </section>
+
+<div class="midcta reveal">
+  <div class="wrap">
+    <p>One Twenty Brickell pricing goes to this list before it reaches the listing sites.</p>
+    <a class="btn btn-terra" href="#interest">Keep Me Posted</a>
+  </div>
+</div>
 
 <section style="padding-top:0">
   <div class="wrap">

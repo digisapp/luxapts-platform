@@ -105,6 +105,23 @@
   details[open] summary::after{transform:rotate(45deg)}
   details p{margin-top:12px;color:var(--muted-dark)}
 
+  /* Mid-page CTA. The form lives at the very bottom; on a long page that is a
+     lot of scroll between "I'm interested" and anywhere to say so. */
+  .midcta{background:var(--off);border-top:1px solid #e6eef0;border-bottom:1px solid #e6eef0;padding:38px 0}
+  .midcta .wrap{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
+  .midcta p{font-family:var(--display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;margin:0;max-width:62ch}
+  .midcta .btn{flex:none}
+
+  /* Live availability, filled from /api/microsite-inventory. Stays hidden when
+     the data is missing or older than the freshness cutoff — an empty strip is
+     the correct output, a stale number is not. */
+  .inv{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-top:30px;padding:20px 24px;
+    border-radius:16px;background:rgba(88,198,168,0.14);border:1px solid rgba(88,198,168,0.4)}
+  .inv[hidden]{display:none}
+  .inv b{font-family:var(--display);font-weight:800;font-size:1.32rem;color:#fff;letter-spacing:-.01em}
+  .inv span{color:rgba(255,255,255,.82);font-size:.97rem}
+  .inv em{flex-basis:100%;font-style:normal;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+
   .cta-band{position:relative;color:#fff;padding:120px 0;
     background:linear-gradient(160deg,rgba(14,31,34,0.94),rgba(34,128,106,0.84)),
     url('img/cta.jpg') center/cover}
@@ -137,6 +154,7 @@
     section{padding:72px 0}
     .btn-ghost{margin-left:0;margin-top:12px}
     form{padding:32px}
+    .midcta .wrap{flex-direction:column;align-items:flex-start}
   }
 </style>
 </head>
@@ -197,6 +215,13 @@
   </div>
 </section>
 
+<div class="midcta reveal">
+  <div class="wrap">
+    <p>Tell us what you need and we'll come back with what's actually open at Remi on the River.</p>
+    <a class="btn btn-aqua" href="#signup">Check Availability</a>
+  </div>
+</div>
+
 <section>
   <div class="wrap">
     <p class="kicker reveal">The Neighborhood</p>
@@ -227,6 +252,11 @@
         <p class="kicker" style="color:#ddf6ef">Availability Check</p>
         <h2>Check current openings.</h2>
         <p class="prose">Tell us your bedroom count, budget and timing and we'll come back with what's genuinely available at Remi.</p>
+        <div class="inv" data-inv hidden>
+          <b data-inv-count></b>
+          <span data-inv-detail></span>
+          <em data-inv-asof></em>
+        </div>
       </div>
       <form data-lead class="reveal">
         <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
@@ -250,7 +280,7 @@
 <footer>
   <div class="wrap">
     <span class="wordmark">REMITHERIVER.COM</span>
-    <p>© 2026 remitheriver.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Greystar or the owners or leasing agents of Remi on the River. Building names are used for identification only. Details compiled from public reporting and believed accurate as of 2026-09-16 — always verify with the official leasing office.</p>
+    <p>© 2026 remitheriver.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Greystar or the owners or leasing agents of Remi on the River. Building names are used for identification only. Details compiled from public reporting and believed accurate as of 2026-09-18 — always verify with the official leasing office.</p>
   </div>
 </footer>
 
@@ -277,6 +307,30 @@
         m.textContent=(err&&err.message?err.message:"Something went wrong")+" — please try again.";
       });
   });
+})();
+</script>
+<script>
+/* Live availability strip. Fails silent by design: any error, any stale or
+   missing data, and the strip simply never unhides, leaving the page exactly as
+   it renders without JS. The one thing it must never do is state a number the
+   building cannot back up. */
+(function(){
+  var box=document.querySelector("[data-inv]");if(!box)return;
+  fetch("https://staycio.com/api/microsite-inventory?domain="+encodeURIComponent("remitheriver.com"))
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){
+      if(!d||!d.available)return;
+      var beds=(d.beds||[]).map(function(n){return n===0?"studio":n+"BR";});
+      box.querySelector("[data-inv-count]").textContent=d.available+(d.available===1?" home open now":" homes open now");
+      var bits=[];
+      if(d.rentMin)bits.push(d.rentMin===d.rentMax?"$"+d.rentMin.toLocaleString()+"/mo":"$"+d.rentMin.toLocaleString()+"–$"+d.rentMax.toLocaleString()+"/mo");
+      if(beds.length)bits.push(beds.join(", "));
+      box.querySelector("[data-inv-detail]").textContent=bits.length?"· "+bits.join(" · "):"";
+      if(d.asOf)box.querySelector("[data-inv-asof]").textContent="Verified "+d.asOf;
+      box.hidden=false;
+      if(window.__scTrack)window.__scTrack("inventory_shown",{available:d.available});
+    })
+    .catch(function(){});
 })();
 </script>
 <script>

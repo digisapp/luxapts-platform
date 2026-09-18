@@ -105,6 +105,14 @@
   details[open] summary::after{transform:rotate(45deg)}
   details p{margin-top:12px;color:var(--muted-dark)}
 
+  /* Mid-page CTA. The form lives at the very bottom; on a long page that is a
+     lot of scroll between "I'm interested" and anywhere to say so. */
+  .midcta{background:var(--off);border-top:1px solid #e6eef0;border-bottom:1px solid #e6eef0;padding:38px 0}
+  .midcta .wrap{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
+  .midcta p{font-family:var(--display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;margin:0;max-width:62ch}
+  .midcta .btn{flex:none}
+
+
   .cta-band{position:relative;color:#fff;padding:120px 0;
     background:linear-gradient(160deg,rgba(19,26,43,0.94),rgba(193,65,39,0.84)),
     url('img/cta.jpg') center/cover}
@@ -137,6 +145,7 @@
     section{padding:72px 0}
     .btn-ghost{margin-left:0;margin-top:12px}
     form{padding:32px}
+    .midcta .wrap{flex-direction:column;align-items:flex-start}
   }
 </style>
 </head>
@@ -197,6 +206,13 @@
   </div>
 </section>
 
+<div class="midcta reveal">
+  <div class="wrap">
+    <p>Kenect Miami pricing goes to this list before it reaches the listing sites.</p>
+    <a class="btn btn-aqua" href="#signup">Join the Waitlist</a>
+  </div>
+</div>
+
 <section>
   <div class="wrap">
     <p class="kicker reveal">The Neighborhood</p>
@@ -227,6 +243,7 @@
         <p class="kicker" style="color:#ffe9e3">The Waitlist</p>
         <h2>First look at Kenect pricing.</h2>
         <p class="prose">450 residences with coworking downstairs, in the middle of Miami Worldcenter. Rents and floor plans — the moment they're published.</p>
+
       </div>
       <form data-lead class="reveal">
         <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
@@ -250,7 +267,7 @@
 <footer>
   <div class="wrap">
     <span class="wordmark">KENECTMIAMIAPARTMENTS.COM</span>
-    <p>© 2026 kenectmiamiapartments.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Akara Partners or the owners or leasing agents of Kenect Miami. Building names are used for identification only. Details compiled from public reporting and believed accurate as of 2026-09-16 — always verify with the official leasing office.</p>
+    <p>© 2026 kenectmiamiapartments.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Akara Partners or the owners or leasing agents of Kenect Miami. Building names are used for identification only. Details compiled from public reporting and believed accurate as of 2026-09-18 — always verify with the official leasing office.</p>
   </div>
 </footer>
 
@@ -279,6 +296,7 @@
   });
 })();
 </script>
+
 <script>
 /* Staycio microsite analytics — anonymous, first-party, no cookies. */
 (function(){

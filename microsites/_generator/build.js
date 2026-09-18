@@ -46,11 +46,53 @@ const SLOTS = ["hero.jpg", "split.jpg", "g1.jpg", "g2.jpg", "g3.jpg", "cta.jpg"]
 const OPTIMIZE = { "hero.jpg": [1920, 74], "cta.jpg": [1920, 74], "split.jpg": [1200, 76],
   "g1.jpg": [900, 76], "g2.jpg": [900, 76], "g3.jpg": [900, 76] };
 
+// Domains whose building exists in the Staycio catalog, so the availability
+// strip has something to ask for. Mirrors MICROSITE_CATALOG_SLUG in
+// src/lib/microsite-inventory.ts — the page only needs to know whether to
+// render the strip at all; the route decides what it says.
+const CATALOG_SLUG = {
+  "panoramatowerbrickell.com": "panorama-tower",
+  "maizonbrickell.com": "maizon-brickell",
+  "muzemet.com": "muze-at-met",
+  "remitheriver.com": "remi-on-the-river",
+};
+
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+// A building within this many days of delivery stops being a "someday" waitlist
+// and becomes a "pricing lands imminently" page. 120 days is roughly when a
+// renter starts actually shopping, and it is the window in which opening
+// specials and first pick of units are still real things to offer.
+const SOON_DAYS = 120;
+
+/**
+ * The CTA tier a page renders. Derived from `delivers`, never from `mode`
+ * alone: `mode` is a static hand-written field and the one thing this portfolio
+ * has already been burned by is a page that kept selling a waitlist after its
+ * building opened.
+ *
+ *   waitlist     — delivery is far off. The honest trade: this information does
+ *                  not exist yet anywhere, so the list is the only way to get it.
+ *   soon         — delivery inside SOON_DAYS. Same trade, plus a dated promise
+ *                  and a reason not to "come back later".
+ *   availability — operating building. Show real inventory, ask for specifics.
+ */
+function tierOf(b, now = Date.now()) {
+  if (b.mode === "availability") return "availability";
+  if (!b.delivers) return "waitlist";
+  const days = (new Date(b.delivers).getTime() - now) / 86400000;
+  if (days <= 0) return "opened";
+  return days <= SOON_DAYS ? "soon" : "waitlist";
+}
 
 function page(b) {
   const p = b.palette;
-  const isWait = b.mode === "waitlist";
+  const tier = tierOf(b);
+  // "opened" reaches here only when the build was allowed to continue past the
+  // warning below; render it as a waitlist rather than inventing copy.
+  const isWait = tier === "waitlist" || tier === "soon" || tier === "opened";
+  const isSoon = tier === "soon";
+  const hasInventory = tier === "availability" && CATALOG_SLUG[b.domain];
   const utm = b.domain.replace(/\.com$/, "");
   const title = isWait
     ? `${b.name} — ${b.hood} Apartments ${b.eta} | Waitlist, Rents & Floor Plans`
@@ -58,7 +100,10 @@ function page(b) {
   const desc = isWait
     ? `${b.name}: ${b.units ? b.units.toLocaleString() + " rental apartments " : ""}at ${b.address}, ${b.hood}, Miami${b.developer ? ", by " + b.developer : ""}. ${b.eta}. Join the waitlist for rents and floor plans.`
     : `${b.name} at ${b.address}, ${b.hood}, Miami${b.units ? " — " + b.units.toLocaleString() + " rental residences" : ""}. Check real availability, rents and floor plans.`;
-  const ctaLabel = isWait ? "Join the Waitlist" : "Check Availability";
+  // "Get Pricing First" is proven copy — it is what perrinbrickell.com runs.
+  // The soon tier promotes it to the primary button because at that range the
+  // offer really is "you see the number before anyone else", not "someday".
+  const ctaLabel = isSoon ? "Get Pricing First" : isWait ? "Join the Waitlist" : "Check Availability";
   const navLabel = isWait ? "Get Pricing First" : "Check Availability";
   const ticker = b.ticker.join(" &nbsp;·&nbsp; ");
 
@@ -162,6 +207,23 @@ ${JSON.stringify(ld, null, 2)}
   details[open] summary::after{transform:rotate(45deg)}
   details p{margin-top:12px;color:var(--muted-dark)}
 
+  /* Mid-page CTA. The form lives at the very bottom; on a long page that is a
+     lot of scroll between "I'm interested" and anywhere to say so. */
+  .midcta{background:var(--off);border-top:1px solid #e6eef0;border-bottom:1px solid #e6eef0;padding:38px 0}
+  .midcta .wrap{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
+  .midcta p{font-family:var(--display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;margin:0;max-width:62ch}
+  .midcta .btn{flex:none}
+
+${hasInventory ? `  /* Live availability, filled from /api/microsite-inventory. Stays hidden when
+     the data is missing or older than the freshness cutoff — an empty strip is
+     the correct output, a stale number is not. */
+  .inv{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-top:30px;padding:20px 24px;
+    border-radius:16px;background:${hexA(p.a, 0.14)};border:1px solid ${hexA(p.a, 0.4)}}
+  .inv[hidden]{display:none}
+  .inv b{font-family:var(--display);font-weight:800;font-size:1.32rem;color:#fff;letter-spacing:-.01em}
+  .inv span{color:rgba(255,255,255,.82);font-size:.97rem}
+  .inv em{flex-basis:100%;font-style:normal;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+` : ""}
   .cta-band{position:relative;color:#fff;padding:120px 0;
     background:linear-gradient(160deg,${hexA(p.ink, 0.94)},${hexA(p.deep, 0.84)}),
     url('img/cta.jpg') center/cover}
@@ -194,6 +256,7 @@ ${JSON.stringify(ld, null, 2)}
     section{padding:72px 0}
     .btn-ghost{margin-left:0;margin-top:12px}
     form{padding:32px}
+    .midcta .wrap{flex-direction:column;align-items:flex-start}
   }
 </style>
 </head>
@@ -248,6 +311,15 @@ ${b.cards.map(([t, d], i) => `      <div class="card reveal"><span class="num">0
   </div>
 </section>
 
+<div class="midcta reveal">
+  <div class="wrap">
+    <p>${esc(isWait
+      ? `${b.name} pricing goes to this list before it reaches the listing sites.`
+      : `Tell us what you need and we'll come back with what's actually open at ${b.name}.`)}</p>
+    <a class="btn btn-aqua" href="#signup">${ctaLabel}</a>
+  </div>
+</div>
+
 <section>
   <div class="wrap">
     <p class="kicker reveal">The Neighborhood</p>
@@ -272,9 +344,14 @@ ${b.faq.map(([q, a]) => `    <details class="reveal"><summary>${esc(q)}</summary
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:${p.pale}">${isWait ? "The Waitlist" : "Availability Check"}</p>
-        <h2>${esc(b.ctaH2)}</h2>
-        <p class="prose">${esc(b.ctaP)}</p>
+        <p class="kicker" style="color:${p.pale}">${isSoon ? "First Access" : isWait ? "The Waitlist" : "Availability Check"}</p>
+        <h2>${esc(isSoon && b.soon ? b.soon.h2 : b.ctaH2)}</h2>
+        <p class="prose">${esc(isSoon && b.soon ? b.soon.p : b.ctaP)}</p>
+${hasInventory ? `        <div class="inv" data-inv hidden>
+          <b data-inv-count></b>
+          <span data-inv-detail></span>
+          <em data-inv-asof></em>
+        </div>` : ""}
       </div>
       <form data-lead class="reveal">
         <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
@@ -327,6 +404,30 @@ ${b.faq.map(([q, a]) => `    <details class="reveal"><summary>${esc(q)}</summary
   });
 })();
 </script>
+${hasInventory ? `<script>
+/* Live availability strip. Fails silent by design: any error, any stale or
+   missing data, and the strip simply never unhides, leaving the page exactly as
+   it renders without JS. The one thing it must never do is state a number the
+   building cannot back up. */
+(function(){
+  var box=document.querySelector("[data-inv]");if(!box)return;
+  fetch("https://staycio.com/api/microsite-inventory?domain="+encodeURIComponent(${JSON.stringify(b.domain)}))
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){
+      if(!d||!d.available)return;
+      var beds=(d.beds||[]).map(function(n){return n===0?"studio":n+"BR";});
+      box.querySelector("[data-inv-count]").textContent=d.available+(d.available===1?" home open now":" homes open now");
+      var bits=[];
+      if(d.rentMin)bits.push(d.rentMin===d.rentMax?"$"+d.rentMin.toLocaleString()+"/mo":"$"+d.rentMin.toLocaleString()+"–$"+d.rentMax.toLocaleString()+"/mo");
+      if(beds.length)bits.push(beds.join(", "));
+      box.querySelector("[data-inv-detail]").textContent=bits.length?"· "+bits.join(" · "):"";
+      if(d.asOf)box.querySelector("[data-inv-asof]").textContent="Verified "+d.asOf;
+      box.hidden=false;
+      if(window.__scTrack)window.__scTrack("inventory_shown",{available:d.available});
+    })
+    .catch(function(){});
+})();
+</script>` : ""}
 <script>
 /* Staycio microsite analytics — anonymous, first-party, no cookies. */
 (function(){
@@ -389,7 +490,16 @@ function hexA(hex, a) {
 
 let made = 0;
 const work = [];
+// Buildings whose delivery date has passed while the page still runs waitlist
+// copy. Collected rather than thrown on, so one stale record cannot block
+// regenerating the other eighteen sites — but the run exits non-zero so it
+// cannot be missed either.
+const opened = [];
+const crossing = [];
 for (const b of BUILDINGS) {
+  const t = tierOf(b);
+  if (t === "opened") opened.push(b);
+  if (t === "soon") crossing.push(b);
   const dir = path.join(ROOT, b.domain);
   fs.mkdirSync(path.join(dir, "img"), { recursive: true });
   fs.writeFileSync(path.join(dir, "index.html"), page(b));
@@ -421,4 +531,23 @@ for (const b of BUILDINGS) {
   made++;
   console.log(`  ✓ ${b.domain}`);
 }
-Promise.all(work).then(() => console.log(`\nGenerated ${made} microsites (images optimized).`));
+Promise.all(work).then(() => {
+  console.log(`\nGenerated ${made} microsites (images optimized).`);
+
+  if (crossing.length) {
+    console.log(`\n  Within ${SOON_DAYS} days of delivery — running first-access copy:`);
+    for (const b of crossing) console.log(`    · ${b.domain} (${b.name}, ${b.delivers})`);
+  }
+
+  if (opened.length) {
+    console.error(`\n  ✗ ${opened.length} building(s) passed their delivery date and still carry waitlist copy:`);
+    for (const b of opened) console.error(`    · ${b.domain} (${b.name}, delivers ${b.delivers})`);
+    console.error(
+      `\n  These pages are now selling a waitlist for a building that has opened.\n` +
+      `  That is what dropped namdartowers.com to ~1% conversion on real search traffic.\n` +
+      `  Fix: rewrite the entry as mode:"availability" with real rents, or push \`delivers\`\n` +
+      `  out if the date actually slipped. Pages were still written.`
+    );
+    process.exitCode = 1;
+  }
+});
