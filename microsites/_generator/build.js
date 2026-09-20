@@ -11,6 +11,10 @@ const BUILDINGS = require("./buildings.js");
 
 const ROOT = path.join(__dirname, "..");
 const TODAY = new Date().toISOString().slice(0, 10);
+// The footer claims facts were "believed accurate as of" this date. It tracks
+// when the DATA was verified, not when the file was built — wiring it to TODAY
+// meant every regeneration silently re-asserted diligence nobody had done.
+const VERIFIED = BUILDINGS.FACTS_VERIFIED || TODAY;
 const VERIFY = "b3cf5795b633271ae0b26ee982d06033";
 
 // Image pool drawn from the existing sites (generic Miami stock already licensed
@@ -375,7 +379,7 @@ ${hasInventory ? `        <div class="inv" data-inv hidden>
 <footer>
   <div class="wrap">
     <span class="wordmark">${esc(b.domain.toUpperCase())}</span>
-    <p>© ${new Date().getFullYear()} ${esc(b.domain)} — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by${b.developer ? ", " + esc(b.developer) + " or" : ""} the owners or leasing agents of ${esc(b.name)}. Building names are used for identification only. Details compiled from public reporting and believed accurate as of ${TODAY} — always verify with the official leasing office.</p>
+    <p>© ${new Date().getFullYear()} ${esc(b.domain)} — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by${b.developer ? ", " + esc(b.developer) + " or" : ""} the owners or leasing agents of ${esc(b.name)}. Building names are used for identification only. Details compiled from public reporting and believed accurate as of ${VERIFIED} — always verify with the official leasing office.</p>
   </div>
 </footer>
 
@@ -496,10 +500,16 @@ const work = [];
 // cannot be missed either.
 const opened = [];
 const crossing = [];
+// Pre-leasing buildings with no announced date. They are exempt from the guard
+// above by construction, so the only thing standing between them and a stale
+// waitlist is someone noticing — print them on every run rather than letting
+// them be silently unguarded.
+const undated = [];
 for (const b of BUILDINGS) {
   const t = tierOf(b);
   if (t === "opened") opened.push(b);
   if (t === "soon") crossing.push(b);
+  if (b.mode === "waitlist" && !b.delivers) undated.push(b);
   const dir = path.join(ROOT, b.domain);
   fs.mkdirSync(path.join(dir, "img"), { recursive: true });
   fs.writeFileSync(path.join(dir, "index.html"), page(b));
@@ -533,6 +543,11 @@ for (const b of BUILDINGS) {
 }
 Promise.all(work).then(() => {
   console.log(`\nGenerated ${made} microsites (images optimized).`);
+
+  if (undated.length) {
+    console.log(`\n  No delivery date — NOT covered by the stale-waitlist guard, review by hand:`);
+    for (const b of undated) console.log(`    · ${b.domain} (${b.name}, "${b.eta}")`);
+  }
 
   if (crossing.length) {
     console.log(`\n  Within ${SOON_DAYS} days of delivery — running first-access copy:`);

@@ -9,7 +9,14 @@
 // a building that has already opened. That is not hypothetical: namdartowers
 // carried 47% Google traffic and converted at ~1% while doing exactly that.
 // Leave it null only for buildings with no announced date.
-module.exports = [
+// When the per-building FACTS below were last checked against public sources.
+// The footer disclaimer on every generated page renders this date, so it is a
+// public claim about our own diligence — bump it ONLY after actually
+// re-verifying unit counts, delivery dates, developers and addresses. It must
+// never be wired to the build date: regenerating a page verifies nothing.
+const FACTS_VERIFIED = "2026-09-16";
+
+const BUILDINGS = [
   {
     domain: "2600biscaynemiami.com", name: "2600 Biscayne", short: "2600", accent: "BISCAYNE",
     mode: "waitlist", palette: { ink:"#0d1f2d", a:"#2fb8c6", deep:"#17707c", pale:"#dff5f8" },
@@ -423,3 +430,6 @@ module.exports = [
     ctaP: "560 residences inside Miami Worldcenter. Tell us what you need and we'll come back with what's actually open."
   }
 ];
+
+module.exports = BUILDINGS;
+module.exports.FACTS_VERIFIED = FACTS_VERIFIED;
