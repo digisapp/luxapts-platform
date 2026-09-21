@@ -1,23 +1,9 @@
 import OpenAI from "openai";
-import DOMPurify from "isomorphic-dompurify";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getReplyToAddress } from "@/lib/email/recipients";
 import { escapeHtml } from "@/lib/utils";
-
-/**
- * Sanitize AI-drafted reply HTML before sending. The draft is influenced by
- * attacker-controlled inbound email content (prompt injection), so only a
- * minimal formatting allowlist is permitted — no scripts, styles, images,
- * or non-https/mailto links.
- */
-function sanitizeDraftHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ["p", "br", "strong", "em", "b", "i", "ul", "ol", "li", "a"],
-    ALLOWED_ATTR: ["href"],
-    ALLOWED_URI_REGEXP: /^(?:https:|mailto:)/i,
-  });
-}
+import { sanitizeDraftHtml } from "@/lib/html-sanitize";
 
 const CATEGORIES = [
   "tour_request",

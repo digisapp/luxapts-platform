@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeRenderedEmailHtml } from "@/lib/html-sanitize";
 
 interface SandboxedEmailProps {
   html: string;
@@ -16,21 +16,7 @@ export function SandboxedEmail({ html, className = "" }: SandboxedEmailProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(120);
 
-  const sanitizedHtml = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
-      "div", "span", "p", "br", "b", "i", "u", "strong", "em",
-      "a", "img", "ul", "ol", "li", "h1", "h2", "h3", "h4", "h5", "h6",
-      "table", "thead", "tbody", "tr", "td", "th",
-      "blockquote", "pre", "code", "hr", "sup", "sub", "small",
-    ],
-    ALLOWED_ATTR: [
-      "href", "src", "alt", "title", "style", "class", "width", "height",
-      "target", "cellpadding", "cellspacing", "border", "align", "valign",
-      "colspan", "rowspan",
-    ],
-    ALLOW_DATA_ATTR: false,
-    ADD_ATTR: ["target"],
-  });
+  const sanitizedHtml = sanitizeRenderedEmailHtml(html);
 
   // Force all links to open in new tab
   const processedHtml = sanitizedHtml.replace(
