@@ -32,9 +32,9 @@ const BUILDINGS = [
     verified: "2026-09-21",
     // Overridden because neoedgewatermiami.com is the same building; these
     // target the address search, that page the brand search.
-    title: "2600 Biscayne Miami — Now Leasing as Neo Edgewater | Rents & Availability",
+    title: "2600 Biscayne Miami — Now Leasing as Neo Edgewater | Rents",
     ogTitle: "2600 Biscayne — Edgewater, Miami",
-    desc: "2600 Biscayne Blvd, Edgewater, Miami: 399 rental apartments over roughly 205,000 sq ft of Class A office, by Oak Row Equities. Now leasing as Neo Edgewater — check current availability and rents.",
+    desc: "2600 Biscayne Blvd, Edgewater: 399 rental apartments by Oak Row Equities, now leasing as Neo Edgewater. Check current availability, rents and specials.",
     chip: "Open · Now Leasing as Neo Edgewater",
     h1: ["The tower at", "2600 Biscayne", "is leasing.", "It's called Neo."],
     sub: "Oak Row Equities' 41-story Arquitectonica tower opened preleasing in September 2026 as Neo Edgewater — 399 rentals over roughly 205,000 sq ft of Class A office and retail, with the first residents moving in from October.",
@@ -189,38 +189,42 @@ const BUILDINGS = [
   },
   {
     domain: "urban22edgewater.com", name: "Urban 22", short: "URBAN", accent: "22",
-    mode: "waitlist", palette: { ink:"#151d2e", a:"#6c8cff", deep:"#3b52b8", pale:"#e6ebff" },
-    hood: "Edgewater", address: "2222 NE 2nd Ave", zip: "33137", units: 441, stories: 24,
-    developer: "Melo Group", eta: "Topped off", etaShort: "Soon", delivers: "2026-11-01",
-    chip: "Topped Off · Leasing Soon",
-    h1: ["441 apartments,", "725 to 1,100", "square feet,", "all balconied."],
-    sub: "Melo Group's Urban 22 at 2222 NE 2nd Avenue has topped off. Every residence gets a private balcony with glass railings — and pricing is about to land.",
-    ticker: ["Topped off","441 luxury rentals","725–1,100 sq ft","Private balcony in every home","Edgewater"],
-    stats: [["441","Residences"],["725+","Sq Ft"],["100%","With Balconies"],["529","Parking Spaces"]],
+    // Opened in 2023. Until 2026-09-21 this entry ran "topped off · leasing
+    // soon" against an invented 2026-11-01 delivery date — a waitlist for a
+    // building that had been leasing for three years on apartments.com,
+    // Zillow and its own site (urban22miami.com, 305.377.2200). It was written
+    // from 2021–22 construction coverage and never re-checked against a
+    // listing site. The stale-waitlist guard could not catch it because the
+    // date it was guarding was fiction. Now an availability page.
+    mode: "availability", palette: { ink:"#151d2e", a:"#6c8cff", deep:"#3b52b8", pale:"#e6ebff" },
+    hood: "Edgewater", address: "2222 NE 2nd Ave", zip: "33137", units: 441, stories: 15,
+    developer: "Melo Group", eta: "Leasing now", etaShort: "Now", year: 2023,
+    verified: "2026-09-21",
+    chip: "Open · Leasing Now",
+    h1: ["441 apartments,", "every one with", "a private", "balcony."],
+    sub: "Melo Group's Urban 22 at 2222 NE 2nd Avenue opened in 2023 — one- to three-bedroom homes of roughly 640 to 1,370 sq ft, each with a glass-railed balcony, a few blocks from Margaret Pace Park. Tell us what you need and we'll find what's actually open.",
+    ticker: ["Opened 2023","441 residences","640–1,370 sq ft","Private balcony in every home","Leasing now"],
+    stats: [["441","Residences"],["$2,700+","Recent Low"],["100%","With Balconies"],["2023","Opened"]],
     kicker: "2222 NE 2nd Avenue",
     h2: "Bigger floor plans than the tower next door",
     body: [
-      "Urban 22 holds 441 rental apartments across roughly 708,000 square feet: 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms, ranging from 725 to 1,100 square feet. Every unit has a private balcony with glass railings.",
-      "The building sits on NE 2nd Avenue in Edgewater, a few blocks from Margaret Pace Park and the bay, with Midtown and Wynwood immediately west. It includes about 7,168 square feet of retail, 5,692 square feet of office and 529 parking spaces."
+      "Urban 22 holds 441 rental apartments across twin 15-story buildings: 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms, from roughly 640 to 1,370 square feet. Every home has a private balcony with glass railings.",
+      "The building sits on NE 2nd Avenue in Edgewater, a few blocks from Margaret Pace Park and the bay, with Midtown and Wynwood immediately west. Downstairs: about 7,000 square feet of retail, a 2,100 sq ft fitness center, a lounge with market café, and a pool and jacuzzi deck, with 529 parking spaces behind."
     ],
     cards: [
-      ["Space you can't find new","At 725–1,100 sq ft, Urban 22's one- and two-bedrooms run larger than most new Miami construction, where studios under 500 sq ft are the norm."],
+      ["Space you can't find new","At up to 1,370 sq ft, Urban 22's two- and three-bedrooms run larger than most new Miami construction, where studios under 500 sq ft are the norm."],
       ["Balcony in every home","Not a select-units amenity — all 441 residences have private outdoor space."],
-      ["Melo pricing","The developer behind Downtown 5th and Art Plaza has a long record of leasing below comparable new construction."]
+      ["Melo pricing","The developer behind Downtown 5th and Art Plaza has a long record of leasing below comparable new construction; Urban 22 has listed from about $2,700."]
     ],
     faq: [
-      ["When does Urban 22 start leasing?","The tower has topped off and is finishing out. Melo lease-ups typically open around completion, and pricing tends to be released with little advance notice."],
-      ["How big are the apartments?","From 725 to 1,100 square feet — 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms."],
-      ["How much will rent be?","Not yet published. Melo's completed Downtown 5th currently runs roughly $1,700–4,000 depending on size."],
-      ["Where exactly is it?","2222 NE 2nd Avenue in Miami's Edgewater neighborhood."]
+      ["Is Urban 22 currently available?","Yes — it opened in 2023 and units turn over regularly. Tell us your bedroom count and timing and we'll check what's actually open."],
+      ["How much is rent?","Recent public listings have started around $2,700 a month, rising with size and floor. Pricing moves weekly — send your budget and we'll tell you what fits today."],
+      ["How big are the apartments?","Roughly 640 to 1,370 square feet — 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms."],
+      ["Where exactly is it?","2222 NE 2nd Avenue in Miami's Edgewater neighborhood, between Midtown and Margaret Pace Park."]
     ],
-    moveIn: ["As soon as possible","Next 3 months","Next 6 months","Flexible"],
-    ctaH2: "Pricing drops soon.",
-    ctaP: "441 balconied apartments in Edgewater, finishing now. Be on the list when Melo releases rents.",
-    soon: {
-      h2: "Melo sets opening rents within weeks.",
-      p: "441 balconied apartments, finishing now. Opening pricing and move-in specials are set before a building ever reaches the listing sites — this list gets them at that point, with the floor and line still yours to pick. One email when it happens."
-    }
+    moveIn: ["As soon as possible","Next 30 days","Next 60 days","Next 90 days","Flexible"],
+    ctaH2: "Tell us what you need.",
+    ctaP: "441 balconied apartments means real turnover. Send your bedroom count and move-in window and we'll come back with what's genuinely available at Urban 22."
   },
   {
     domain: "downtown5miami.com", name: "Downtown 5th", short: "DOWNTOWN", accent: "5TH",
@@ -487,9 +491,9 @@ const BUILDINGS = [
     domain: "mohawkmiami.com", name: "Mohawk at Wynwood", short: "MOHAWK", accent: "MIAMI",
     // Overridden because mohawkwynwood.com covers the same building: left to
     // derive, both pages would ship the identical title and description.
-    title: "Mohawk Miami Apartments — Amenities, Rents & the 2028 Waitlist",
+    title: "Mohawk Miami Apartments — Amenities, Rents & 2028 Waitlist",
     ogTitle: "Mohawk Miami — Amenities & 2028 Rents",
-    desc: "Mohawk at Wynwood, Miami: 300 rental apartments at 56 NE 29th St by Rilea Group, with a Turkish hammam spa, padel court and rooftop dog park. Delivering 2028 — join the waitlist for rents and floor plans.",
+    desc: "Mohawk at Wynwood: 300 rentals at 56 NE 29th St by Rilea Group, with a hammam spa, padel court and rooftop dog park. Delivering 2028 — join the waitlist.",
     // Same building as mohawkwynwood.com, deliberately a different page: this
     // one is written for the amenity-and-comparison search ("mohawk miami
     // apartments"), that one for the neighborhood search. Different palette,
@@ -572,9 +576,9 @@ const BUILDINGS = [
     hood: "Edgewater", address: "2600 Biscayne Blvd", zip: "33137", units: 399, stories: 41,
     developer: "Oak Row Equities", eta: "Preleasing now", etaShort: "Now", year: 2026,
     verified: "2026-09-21",
-    title: "Neo Edgewater Apartments — 2600 Biscayne, Miami | Rents, Specials & Availability",
+    title: "Neo Edgewater Apartments Miami — Rents, Specials & Availability",
     ogTitle: "Neo Edgewater — Now Preleasing, Edgewater Miami",
-    desc: "Neo Edgewater at 2600 Biscayne Blvd, Miami: 399 apartments now preleasing from about $2,727, with a multi-level Equinox and first residents in October 2026. Check what's available and what it costs.",
+    desc: "Neo Edgewater at 2600 Biscayne Blvd: 399 apartments preleasing from about $2,727, Equinox in the building, first residents October 2026. Check availability.",
     chip: "Preleasing · First Residents October 2026",
     h1: ["Miami's newest", "41-story rental", "just opened its", "leasing office."],
     sub: "Neo Edgewater started preleasing in September 2026 at 2600 Biscayne Boulevard — 399 residences of roughly 500 to 1,700 sq ft, an Equinox in the building, and the first move-ins in October.",

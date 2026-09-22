@@ -24,6 +24,7 @@ import {
   BuildingItemListJsonLd,
 } from "@/components/seo/JsonLd";
 import { buildingPath } from "@/lib/seo/urls";
+import { MICROSITE_GUIDES } from "@/lib/microsites";
 
 export const revalidate = 3600;
 
@@ -214,6 +215,13 @@ export default async function NeighborhoodPage({ params, searchParams }: Neighbo
     const beds = unit.beds ?? 0;
     bedCounts[beds] = (bedCounts[beds] || 0) + 1;
   }
+
+  // Staycio's own single-building guide sites for this neighborhood. Miami
+  // only: "downtown" is also a slug in LA, Dallas and Nashville.
+  const guides =
+    city?.slug === "miami"
+      ? MICROSITE_GUIDES.filter((g) => g.neighborhood === neighborhood.slug)
+      : [];
 
   // Generate description if not exists
   const description = neighborhood.description || `${neighborhood.name} is one of ${city?.name || "the city"}'s most desirable neighborhoods for luxury apartment living. With ${buildings?.length || 0} luxury buildings, ${neighborhood.name} offers a variety of modern apartments with premium amenities.`;
@@ -457,6 +465,34 @@ export default async function NeighborhoodPage({ params, searchParams }: Neighbo
                         <span className="font-medium">{formatPrice(priceStats.max)}/mo</span>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Building guides — the microsites for buildings in this neighborhood */}
+              {guides.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Building guides
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1">
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Our own pages on new and notable {neighborhood.name} rentals — waitlists
+                      for buildings not yet open, live availability for those that are.
+                    </p>
+                    {guides.map((g) => (
+                      <a
+                        key={g.domain}
+                        href={`https://${g.domain}/?utm_source=staycio&utm_medium=neighborhood`}
+                        className="flex items-center justify-between py-2 border-b last:border-0 hover:text-primary transition-colors"
+                      >
+                        <span className="text-sm font-medium">{g.name}</span>
+                        <span className="text-xs text-muted-foreground">{g.blurb}</span>
+                      </a>
+                    ))}
                   </CardContent>
                 </Card>
               )}

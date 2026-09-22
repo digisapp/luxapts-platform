@@ -6,6 +6,7 @@
  */
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const sharp = require("sharp");
 const BUILDINGS = require("./buildings.js");
 
@@ -21,27 +22,39 @@ const VERIFIED = BUILDINGS.FACTS_VERIFIED || TODAY;
 // actually re-checking that building, never to match the build date.
 const VERIFY = "b3cf5795b633271ae0b26ee982d06033";
 
-// Image pool drawn from the existing sites (generic Miami stock already licensed
-// for this use). Keyed by the mood each page needs.
+// Image pool drawn from the existing sites. Only GENERIC Miami imagery belongs
+// here — skyline, bay, street and construction shots. Never a specific
+// building's rendering or photo: the skyline pool used to carry Namdar's tower
+// rendering and the bay pool One Twenty Brickell's renderings plus a photo of
+// Jade, so JEM, Kenect and Miami World Tower each captioned a competitor's
+// tower "Miami skyline", and 2600 Biscayne, Art Plaza and Panorama showed
+// Jade as their own building. A renter who knows the skyline notices.
+//
+// The interior pool is Midtown 5's own photography ("courtesy of Greystar /
+// Midtown 5" in that page's footer) and is still reused on six other
+// operating-building pages. That is a rights and honesty question to settle
+// with real photos, not a generator fix — see the README.
 const POOL = {
   construction: ["downtown6miami.com/img/construction.jpg", "downtown6miami.com/img/const-01.jpg",
     "downtown6miami.com/img/const-03.jpg", "downtown6miami.com/img/const-05.jpg",
     "downtown6miami.com/img/const-11.jpg", "downtown6miami.com/img/const-15.jpg"],
   skyline: ["namdartowers.com/img/downtown.jpg", "namdartowers.com/img/downtown-night.jpg",
     "namdartowers.com/img/bayfront.jpg", "namdartowers.com/img/worldcenter.jpg",
-    "namdartowers.com/img/tower-rendering.jpg", "jadebrickell.com/img/skyline.jpg"],
+    "jadebrickell.com/img/skyline.jpg", "jadebrickell.com/img/bay.jpg"],
   interior: ["midtown5apartments.com/img/living.jpg", "midtown5apartments.com/img/kitchen.jpg",
     "midtown5apartments.com/img/pool.jpg", "midtown5apartments.com/img/lounge.jpg",
     "midtown5apartments.com/img/fitness.jpg", "midtown5apartments.com/img/pool2.jpg"],
-  bay: ["jadebrickell.com/img/bay.jpg", "jadebrickell.com/img/tower.jpg", "jadebrickell.com/img/street.jpg",
-    "sentralbrickell.com/img/brickell.jpg", "sentralbrickell.com/img/tower.jpg",
-    "sentralbrickell.com/img/tower2.jpg"],
+  // jadebrickell/skyline.jpg is the same photo as sentralbrickell/brickell.jpg,
+  // so it must not appear twice within a pool.
+  bay: ["jadebrickell.com/img/bay.jpg", "jadebrickell.com/img/street.jpg", "sentralbrickell.com/img/brickell.jpg",
+    "namdartowers.com/img/worldcenter.jpg", "namdartowers.com/img/bayfront.jpg",
+    "namdartowers.com/img/downtown-night.jpg"],
 };
 // hero, split, g1, g2, g3, cta  — six slots per site.
 const THEME = {
   "2600biscaynemiami.com": "bay", "jemmiamiapartments.com": "skyline",
   "kenectmiamiapartments.com": "skyline", "3333biscaynemiami.com": "construction",
-  "biscayne18.com": "construction", "urban22edgewater.com": "construction",
+  "biscayne18.com": "construction", "urban22edgewater.com": "bay",
   "downtown5miami.com": "interior", "panoramatowerbrickell.com": "bay",
   "maizonbrickell.com": "interior", "muzemet.com": "interior",
   "remitheriver.com": "interior", "artplazaapartments.com": "bay",
@@ -115,18 +128,52 @@ function page(b) {
   // is, and Google resolves it by picking one page and dropping the other.
   // Distinct body copy is not enough on its own; an entry in a pair overrides
   // these so each page targets the search its domain is actually named for.
-  const title = b.title || (isWait
-    ? `${b.name} — ${b.hood} Apartments ${b.eta} | Waitlist, Rents & Floor Plans`
-    : `${b.name} Apartments — ${b.hood}, Miami | Availability, Rents & Floor Plans`);
-  const desc = b.desc || (isWait
-    ? `${b.name}: ${b.units ? b.units.toLocaleString() + " rental apartments " : ""}at ${b.address}, ${b.hood}, Miami${b.developer ? ", by " + b.developer : ""}. ${b.eta}. Join the waitlist for rents and floor plans.`
-    : `${b.name} at ${b.address}, ${b.hood}, Miami${b.units ? " — " + b.units.toLocaleString() + " rental residences" : ""}. Check real availability, rents and floor plans.`);
+  // Google shows about 60 characters of a title and 155 of a description, and
+  // less on the phones that carry most of this traffic. The old derivations ran
+  // 80–106 and 130–210 characters, so the words that earn the click — "Rents",
+  // "Waitlist", the delivery date — were exactly the words cut off. Candidates
+  // are tried in order and the first that fits wins; the last is the floor.
+  const inName = (s) => b.name.toLowerCase().includes(s.toLowerCase());
+  const city = inName("Miami") ? "" : " Miami";
+  const hood = inName(b.hood) ? null : b.hood;
+  const dated = b.delivers || /\d{4}/.test(b.eta); // "Under construction" is not a date
+  const when = dated ? b.etaShort + " " : "";
+  const units = b.units ? b.units.toLocaleString() + " " : "";
+  const title = b.title || fit(63, isSoon
+    ? [`${b.name} Apartments, ${hood} — Rents & Floor Plans, Opening Soon`,
+       `${b.name} Apartments${city} — Rents & Floor Plans, Opening Soon`,
+       `${b.name} — Rents & Floor Plans, Opening Soon`]
+    : isWait
+    ? [`${b.name} Apartments, ${hood} — Rents & ${when}Waitlist`,
+       `${b.name} Apartments${city} — Rents & ${when}Waitlist`,
+       `${b.name} — Rents & Waitlist`]
+    : [`${b.name} Apartments — ${hood} | Rents & Availability`,
+       `${b.name} Apartments${city} — Rents & Availability`,
+       `${b.name} — Rents & Availability`]);
+  const desc = b.desc || fit(155, isWait
+    ? [`${b.name}: ${units}rental apartments at ${b.address}, ${b.hood}, Miami${b.developer ? ", by " + b.developer : ""}. ${b.eta}. Join the waitlist for rents and floor plans.`,
+       `${b.name}: ${units}rental apartments at ${b.address}, ${b.hood}, Miami. ${b.eta}. Join the waitlist for rents and floor plans.`,
+       `${b.name}: ${units}rental apartments in ${b.hood}, Miami, ${b.eta.toLowerCase()}. Join the waitlist for rents and floor plans.`,
+       `${b.name}: ${units}new apartments in ${b.hood}, Miami. Join the waitlist for rents and floor plans.`]
+    : [`${b.name}: ${units}rental residences at ${b.address}, ${b.hood}, Miami. Check live availability, rents and floor plans.`,
+       `${b.name}: ${units}rental residences in ${b.hood}, Miami. Check live availability, rents and floor plans.`,
+       `${b.name} apartments in ${b.hood}, Miami. Check live availability, rents and floor plans.`]);
   const ogTitle = b.ogTitle || `${b.name} — ${b.hood}, Miami`;
-  // "Get Pricing First" is proven copy — it is what perrinbrickell.com runs.
-  // The soon tier promotes it to the primary button because at that range the
-  // offer really is "you see the number before anyone else", not "someday".
-  const ctaLabel = isSoon ? "Get Pricing First" : isWait ? "Join the Waitlist" : "Check Availability";
-  const navLabel = isWait ? "Get Pricing First" : "Check Availability";
+  // "Get Pricing First" is the primary label on every pre-leasing page, not
+  // just the soon tier. On downtown6miami.com (90 days to 2026-09-21) the
+  // pinned header button carrying that label drew 113 navigation clicks
+  // against 32 for the two larger "Join the Waitlist" buttons, and 30 of 61
+  // submissions came from sessions whose first click was "Get Pricing First".
+  // "Waitlist" tells a renter nothing is happening for a year or two;
+  // "pricing" names the thing they came for. The page still states the real
+  // delivery date in the chip, ticker, stats and FAQ, so the promise is the
+  // same honest one — you see the number first, when it exists.
+  // Operating buildings lead with the number as well. "Check Availability" is
+  // what every listing site's button says; "Get Current Pricing" names what
+  // the visitor actually searched for, and the form's promise (today's rents
+  // and what's open, usually within a day) covers it.
+  const ctaLabel = isWait ? "Get Pricing First" : "Get Current Pricing";
+  const navLabel = ctaLabel;
   const ticker = b.ticker.join(" &nbsp;·&nbsp; ");
 
   const ld = {
@@ -145,6 +192,7 @@ function page(b) {
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="https://${b.domain}/">
+<link rel="preload" as="image" href="img/hero.jpg" fetchpriority="high">
 <meta property="og:title" content="${esc(ogTitle)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:image" content="https://${b.domain}/img/hero.jpg">
@@ -504,6 +552,15 @@ ${hasInventory ? `<script>
 `;
 }
 
+// First candidate at or under `max` characters, after dropping the "null" hood
+// variants and collapsing the double spaces an empty `when` leaves behind.
+function fit(max, candidates) {
+  const clean = candidates
+    .filter((c) => !/\bnull\b/.test(c))
+    .map((c) => c.replace(/\s{2,}/g, " ").replace(/\s+,/g, ","));
+  return clean.find((c) => c.length <= max) || clean[clean.length - 1];
+}
+
 function hexA(hex, a) {
   const h = hex.replace("#", "");
   const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
@@ -546,9 +603,15 @@ for (const b of BUILDINGS) {
   fs.writeFileSync(path.join(dir, `${VERIFY}.txt`), VERIFY + "\n");
   fs.writeFileSync(path.join(dir, ".gitignore"), ".vercel\n");
   const pool = POOL[THEME[b.domain]];
+  // Every site in a theme used to take pool[0] as its hero, so six operating
+  // buildings opened on the same kitchen and five pre-construction pages on the
+  // same crane. Offsetting by the site's position within its theme gives each
+  // a different hero (six images per pool, at most six sites per theme).
+  const themeIdx = BUILDINGS.filter((x) => THEME[x.domain] === THEME[b.domain])
+    .findIndex((x) => x.domain === b.domain);
   work.push(
     ...SLOTS.map(async (slot, i) => {
-      const src = path.join(ROOT, pool[i % pool.length]);
+      const src = path.join(ROOT, pool[(i + themeIdx) % pool.length]);
       if (!fs.existsSync(src)) return;
       const [w, q] = OPTIMIZE[slot];
       const buf = await sharp(src).rotate().resize({ width: w, withoutEnlargement: true })
@@ -561,6 +624,22 @@ for (const b of BUILDINGS) {
 }
 Promise.all(work).then(() => {
   console.log(`\nGenerated ${made} microsites (images optimized).`);
+
+  // Two pages opening on the same photo is the templated look this whole
+  // portfolio is trying not to have. Heroes come from per-theme pools with a
+  // per-site offset, but the pools share a few sources, so check the output.
+  const heroes = new Map();
+  for (const b of BUILDINGS) {
+    const f = path.join(ROOT, b.domain, "img", "hero.jpg");
+    if (!fs.existsSync(f)) continue;
+    const h = crypto.createHash("md5").update(fs.readFileSync(f)).digest("hex");
+    heroes.set(h, [...(heroes.get(h) || []), b.domain]);
+  }
+  const shared = [...heroes.values()].filter((d) => d.length > 1);
+  if (shared.length) {
+    console.warn(`\n  Same hero image on more than one site — adjust POOL or THEME:`);
+    for (const d of shared) console.warn(`    · ${d.join(", ")}`);
+  }
 
   if (undated.length) {
     console.log(`\n  No delivery date — NOT covered by the stale-waitlist guard, review by hand:`);

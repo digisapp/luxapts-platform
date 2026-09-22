@@ -74,7 +74,7 @@ ranking, so Largest Contentful Paint matters).
 | `kenectmiamiapartments.com/` | Kenect Miami (Miami Worldcenter, 450 units, Akara Partners) | Waitlist |
 | `3333biscaynemiami.com/` | 3333 Biscayne (Edgewater, 667 units, Beitel Group) | Waitlist |
 | `biscayne18.com/` | Biscayne 18 (Edgewater, 1,178 units, Melo Group) | Waitlist |
-| `urban22edgewater.com/` | Urban 22 (Edgewater, 441 units, Melo Group) | Waitlist |
+| `urban22edgewater.com/` | Urban 22 (Edgewater, 441 units, Melo Group, opened 2023) | Availability (was Waitlist until 2026-09-21 — see below) |
 | `downtown5miami.com/` | Downtown 5th (Downtown Miami, 1,042 units, Melo Group) | Availability |
 | `panoramatowerbrickell.com/` | Panorama Tower (Brickell, 821 units, Florida East Coast Realty) | Availability |
 | `maizonbrickell.com/` | Maizon Brickell (Brickell) | Availability |
@@ -96,6 +96,39 @@ Nothing income-restricted is included. Wyn Park was dropped for that reason
 Grand Station was dropped because its official site places it at 240 N Miami
 Ave downtown, not Wynwood as the catalog claims.
 
+## What the dashboard was actually showing (2026-09-21 audit)
+
+Five days after the second wave launched, every new site showed 60–78
+"visitors" and 0 leads, which read as a conversion problem across 18 pages.
+It was not. Pulled by user agent, referrer and behaviour, those sessions were
+scanners hitting freshly certificated domains: one view per session, no
+referrer, no scroll, no time on page, a spike on deploy day, a handful of
+spoofed user agents (`Safari/537.3`, `Chrome/125 … Edge`) on every domain.
+The honest 90-day funnel:
+
+| Site | Sessions | From search | Engaged | Leads | Leads / engaged |
+|---|---|---|---|---|---|
+| downtown6miami.com | 311 | 146 | 188 | 63 | 34% |
+| perrinbrickell.com | 122 | 12 | 22 | 4 | 18% |
+| namdartowers.com | 83 | 29 | 24 | 2 | 8% |
+| every other domain | 4–77 | 0–2 | 0–8 | 0 | — |
+
+None of the wave-2 or wave-3 domains was in Google's index, and staycio.com
+linked to none of the 23. So the pages that get humans convert very well and
+the rest have no humans — a traffic problem, not a page problem.
+Migration `027_microsite_engaged_stats.sql` adds **Engaged** and **From
+search** columns to the admin dashboard and makes conversion rate leads /
+engaged; the neighborhood pages on staycio.com now link to the guides for
+buildings in that neighborhood (`MICROSITE_GUIDES` in `src/lib/microsites.ts`).
+Both need the platform deployed and the migration run.
+
+The same audit found Urban 22 selling a "leasing soon" waitlist for a building
+that opened in 2023 (its `delivers` date was invented, so the stale-waitlist
+guard had nothing true to check), and Namdar's page telling visitors there was
+"no official leasing website yet" while the tower leased as CMPND Miami with
+listed rents. Both are rewritten. **The guard only works when `delivers` is
+real. When adding a building, check a listing site, not a construction blog.**
+
 ## Lead capture: which CTA a page gets, and why
 
 All 65 leads to date came from pre-construction pages — 60 from
@@ -113,9 +146,9 @@ delivering in 2028 cannot deliver.
 
 | Tier | When | CTA |
 |---|---|---|
-| `waitlist` | more than 120 days out | "Join the Waitlist" |
+| `waitlist` | more than 120 days out | "Get Pricing First" (was "Join the Waitlist" until 2026-09-21 — see below) |
 | `soon` | within 120 days | "Get Pricing First" + first-access copy from the entry's `soon: {h2, p}` |
-| `availability` | operating building | "Check Availability" + live inventory strip |
+| `availability` | operating building | "Get Current Pricing" (was "Check Availability" until 2026-09-21) + live inventory strip |
 | `opened` | delivery date has passed | **build fails** — see below |
 
 That last row is the guard. `namdartowers.com` carried 47% Google traffic and
@@ -127,6 +160,42 @@ eighteen sites — but it cannot pass unnoticed.
 
 **When a building's date slips, update `delivers`.** When it actually opens,
 rewrite the entry as `mode: "availability"` with real rents.
+
+### Why every pre-leasing button says "Get Pricing First"
+
+Downtown 6 ran two labels side by side for 90 days: the pinned header button
+said "Get Pricing First" and the two larger buttons (hero, mid-page) said
+"Join the Waitlist". Navigation clicks to the form, 90 days to 2026-09-21:
+
+| Button | Clicks | Sessions that then started the form |
+|---|---|---|
+| "Get Pricing First" (header, pinned) | 113 | 59 of 86 (69%) |
+| "Join the Waitlist" (hero + mid-page) | 32 | 28 of 31 (90%) |
+| "See the Building" (hero, ghost) | 120 | 50 of 97 (52%) |
+
+30 of the 61 submissions came from sessions whose first click was "Get
+Pricing First"; 17 from "Join the Waitlist". The header is visible at every
+scroll position, so exposure is not equal — but the hero button is larger and
+above the fold on every phone, and it still drew a quarter of the clicks.
+"Waitlist" reads as "nothing for a year or two"; "pricing" names the thing the
+visitor searched for. So the primary label is now "Get Pricing First" on every
+pre-leasing page (generator `waitlist` and `soon` tiers, plus downtown6miami,
+perrinbrickell and sentralbrickell by hand). The promise is unchanged and
+still honest: the delivery date stays in the chip, ticker, stats and FAQ, and
+the offer is the number first, when it exists. Operating-building pages
+(generator `availability` tier, namdartowers, midtown5apartments) lead with
+"Get Current Pricing" for the same reason; jadebrickell keeps "Current
+Listings" because that page covers sales as well as rentals.
+
+**Baseline to judge it against** (downtown6miami.com, 90 days to 2026-09-21):
+188 engaged sessions, 76 started the form (40%), 61 submitted (32%). If the
+form-start share of engaged sessions has not held or risen after a month on
+the new label, put the hero button back and say so here.
+
+Note when reading `cta_click` events: the page script logs every `.btn`
+click, so the submit button shows up under whatever label it carries with
+`href: null`. Filter on `href` starting with `#` for navigation clicks —
+the admin dashboard now does.
 
 ### Live availability strip
 
@@ -146,6 +215,25 @@ sank Namdar.
 Add a domain to `MICROSITE_CATALOG_SLUG` in `src/lib/microsite-inventory.ts`
 (and to `CATALOG_SLUG` in `_generator/build.js`, which only decides whether to
 render the strip at all) once its building is in the catalog with fresh rents.
+
+## Titles, images and what the generator will not do for you
+
+- `<title>` and `<meta name="description">` are fitted to about 63 and 155
+  characters (`fit()` in `build.js`): the old derivations ran 80–106 and up to
+  210, so "Rents", "Waitlist" and the date were the parts Google cut off. A
+  custom `title`/`desc` on an entry must respect the same limits by hand.
+- Every page preloads its hero (`<link rel="preload" as="image">`) — it is a
+  CSS background, so without the hint the browser could not start fetching it
+  until the stylesheet was parsed. The hand-built pages' source images were
+  also resized to 1920px and recompressed (downtown6miami.com's hero was
+  1 MB on a page that is 72% mobile; Perrin shipped three 3 MB PNGs).
+- `POOL` holds **generic** Miami imagery only. It used to include Namdar's
+  tower rendering, One Twenty Brickell's renderings and a photo of Jade, so
+  six other buildings' pages captioned a competitor's tower "Miami skyline" or
+  showed Jade as themselves. Each site now also takes a different hero within
+  its theme (`themeIdx` offset). Still open: the `interior` pool is Midtown 5's
+  own photography ("courtesy of Greystar / Midtown 5") reused on six other
+  operating-building pages — that needs real photos or a rights decision.
 
 ## Third wave — 4 generated sites (added 2026-09-21)
 

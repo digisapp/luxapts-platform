@@ -12,6 +12,10 @@ type Stat = {
   visitors: number;
   leads: number;
   form_starts: number;
+  // Added by migration 027. Optional so the page renders (with zeros) until it
+  // has been run.
+  engaged?: number;
+  search_visitors?: number;
 };
 
 function pct(n: number, d: number): string {
@@ -33,7 +37,7 @@ async function loadMicrositeData(days: number) {
       .limit(15),
     supabase
       .from("analytics_events")
-      .select("event_name, source_domain")
+      .select("event_name, source_domain, properties")
       .not("source_domain", "is", null)
       .gte("created_at", new Date(Date.now() - days * 86400000).toISOString())
       .limit(1000),
@@ -63,6 +67,8 @@ export default async function AdminMicrositesPage({
         visitors: 0,
         leads: 0,
         form_starts: 0,
+        engaged: 0,
+        search_visitors: 0,
       }
   ).sort((a, b) => b.views - a.views);
 
@@ -72,11 +78,22 @@ export default async function AdminMicrositesPage({
       visitors: acc.visitors + Number(r.visitors),
       leads: acc.leads + Number(r.leads),
       form_starts: acc.form_starts + Number(r.form_starts),
+      engaged: acc.engaged + Number(r.engaged ?? 0),
+      search: acc.search + Number(r.search_visitors ?? 0),
     }),
-    { views: 0, visitors: 0, leads: 0, form_starts: 0 }
+    { views: 0, visitors: 0, leads: 0, form_starts: 0, engaged: 0, search: 0 }
   );
+  const hasEngaged = rows.some((r) => r.engaged !== undefined);
 
-  const ctaClicks = (eventsRes.data || []).filter((e) => e.event_name === "cta_click").length;
+  // The page script logs every .btn click as cta_click, including the form's
+  // submit button, so the raw count overstated calls to action by one per
+  // submission attempt. Only clicks on a link with an anchor target are a
+  // visitor choosing to go to the form.
+  const ctaClicks = (eventsRes.data || []).filter((e) => {
+    if (e.event_name !== "cta_click") return false;
+    const href = (e.properties as { href?: string | null } | null)?.href;
+    return typeof href === "string" && href.startsWith("#");
+  }).length;
   const staycioClicks = (eventsRes.data || []).filter(
     (e) => e.event_name === "staycio_click"
   ).length;
@@ -114,10 +131,12 @@ export default async function AdminMicrositesPage({
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-7">
         {[
           { label: "Page views", value: totals.views },
           { label: "Visitors", value: totals.visitors },
+          { label: "Engaged", value: totals.engaged },
+          { label: "From search", value: totals.search },
           { label: "Form starts", value: totals.form_starts },
           { label: "Leads", value: totals.leads },
           { label: "CTA clicks", value: ctaClicks },
@@ -136,9 +155,15 @@ export default async function AdminMicrositesPage({
               <th className="p-3">Site</th>
               <th className="p-3">Views</th>
               <th className="p-3">Visitors</th>
+              <th className="p-3" title="Scrolled past half the page, stayed 10s+, clicked a CTA or started the form">
+                Engaged
+              </th>
+              <th className="p-3">From search</th>
               <th className="p-3">Form starts</th>
               <th className="p-3">Leads</th>
-              <th className="p-3">Conv. rate</th>
+              <th className="p-3" title="Leads as a share of engaged sessions">
+                Conv. rate
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -157,9 +182,13 @@ export default async function AdminMicrositesPage({
                 </td>
                 <td className="p-3">{Number(r.views).toLocaleString()}</td>
                 <td className="p-3">{Number(r.visitors).toLocaleString()}</td>
+                <td className="p-3">{Number(r.engaged ?? 0).toLocaleString()}</td>
+                <td className="p-3">{Number(r.search_visitors ?? 0).toLocaleString()}</td>
                 <td className="p-3">{Number(r.form_starts).toLocaleString()}</td>
                 <td className="p-3 font-semibold">{Number(r.leads).toLocaleString()}</td>
-                <td className="p-3">{pct(Number(r.leads), Number(r.visitors))}</td>
+                <td className="p-3">
+                  {pct(Number(r.leads), Number(hasEngaged ? r.engaged ?? 0 : r.visitors))}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -207,6 +236,13 @@ export default async function AdminMicrositesPage({
         )}
       </div>
 
+      <p className="text-xs text-muted-foreground">
+        &ldquo;Visitors&rdquo; counts every session that loaded the page, and on a new domain most
+        of those are scanners with browser user agents. &ldquo;Engaged&rdquo; is the human number:
+        sessions that scrolled past half the page, stayed 10 seconds, clicked a CTA or started the
+        form. Conversion rate is leads over engaged sessions
+        {hasEngaged ? "" : " (falling back to visitors until migration 027 is run)"}.
+      </p>
       <p className="text-xs text-muted-foreground">
         Outbound clicks to staycio.com from microsites in this window: {staycioClicks}. Traffic is
         recorded in <code>page_views</code>/<code>analytics_events</code> tagged by{" "}
