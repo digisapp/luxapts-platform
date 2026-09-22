@@ -19,6 +19,7 @@ const FACTS_VERIFIED = "2026-09-16";
 const BUILDINGS = [
   {
     domain: "2600biscaynemiami.com", name: "2600 Biscayne", short: "2600", accent: "BISCAYNE",
+    captions: ["Pool Deck","Kitchens","Bedrooms"], credit: "Photography and renderings courtesy of Oak Row Equities, Bozzuto and Neo Edgewater; aerial photography via Florida YIMBY",
     // Leases under the name Neo Edgewater. Preleasing launched September 2026
     // with first residents in October, so this entry ran "get pricing before
     // the leasing office opens" right up to the month the office opened and
@@ -64,6 +65,7 @@ const BUILDINGS = [
   },
   {
     domain: "jemmiamiapartments.com", name: "JEM Miami Worldcenter", short: "JEM", accent: "MIAMI",
+    captions: ["Residences","Rooftop Pool","Under Construction"], credit: "Renderings courtesy of Naftali Group; construction photography via Florida YIMBY",
     mode: "waitlist", palette: { ink:"#1a1329", a:"#c9a84c", deep:"#8a6f22", pale:"#f7f0dc" },
     hood: "Miami Worldcenter", address: "1016 NE 2nd Ave", zip: "33132", units: 530, stories: 67,
     developer: "Naftali Group", eta: "Q4 2027", etaShort: "Q4 '27", delivers: "2027-10-01",
@@ -95,6 +97,7 @@ const BUILDINGS = [
   },
   {
     domain: "kenectmiamiapartments.com", name: "Kenect Miami", short: "KENECT", accent: "MIAMI",
+    captions: ["The Tower","Miami Worldcenter","Downtown Skyline"], credit: "Renderings courtesy of Akara Partners via Florida YIMBY",
     mode: "waitlist", palette: { ink:"#131a2b", a:"#ff6b4a", deep:"#c14127", pale:"#ffe9e3" },
     hood: "Miami Worldcenter", address: "Miami Worldcenter", zip: "33132", units: 450, stories: 39,
     developer: "Akara Partners", eta: "Under construction", etaShort: "TBA", delivers: null,
@@ -126,6 +129,7 @@ const BUILDINGS = [
   },
   {
     domain: "3333biscaynemiami.com", name: "3333 Biscayne", short: "3333", accent: "BISCAYNE",
+    captions: ["The New Design","Three-Tower Master Plan","Edgewater Skyline"], credit: "Renderings courtesy of Beitel Group via Florida YIMBY and Floridian Development",
     mode: "waitlist", palette: { ink:"#10222b", a:"#4cc3a5", deep:"#1f7a66", pale:"#ddf6ef" },
     hood: "Edgewater", address: "3333 Biscayne Blvd", zip: "33137", units: 667, stories: 45,
     developer: "Beitel Group", eta: "2028", etaShort: "2028", delivers: "2028-01-01",
@@ -157,6 +161,7 @@ const BUILDINGS = [
   },
   {
     domain: "biscayne18.com", name: "Biscayne 18", short: "BISCAYNE", accent: "18",
+    captions: ["The Towers","Lobby","Ground-Floor Retail"], credit: "Renderings courtesy of Melo Group / G3AEC via Florida YIMBY",
     mode: "waitlist", palette: { ink:"#0f1b2d", a:"#c9a84c", deep:"#8a6f22", pale:"#f6f0de" },
     hood: "Edgewater", address: "331 NE 18th St", zip: "33132", units: 1178, stories: 46,
     developer: "Melo Group", eta: "2029–2030", etaShort: "2029+", delivers: "2029-01-01",
@@ -189,6 +194,7 @@ const BUILDINGS = [
   },
   {
     domain: "urban22edgewater.com", name: "Urban 22", short: "URBAN", accent: "22",
+    captions: ["Pool Deck","Residences","Balcony Views"], credit: "Photography courtesy of Melo Group / Urban 22",
     // Opened in 2023. Until 2026-09-21 this entry ran "topped off · leasing
     // soon" against an invented 2026-11-01 delivery date — a waitlist for a
     // building that had been leasing for three years on apartments.com,
@@ -228,6 +234,7 @@ const BUILDINGS = [
   },
   {
     domain: "downtown5miami.com", name: "Downtown 5th", short: "DOWNTOWN", accent: "5TH",
+    captions: ["Resident Lounge","Kitchens","Fitness Center"], credit: "Photography courtesy of Melo Group / Downtown 5th",
     mode: "availability", palette: { ink:"#0c1c26", a:"#00b3a4", deep:"#00776d", pale:"#d9f5f2" },
     hood: "Downtown Miami", address: "55 NE 5th St", zip: "33132", units: 1042, stories: 52,
     developer: "Melo Group", eta: "Leasing now", etaShort: "Now",
@@ -259,6 +266,7 @@ const BUILDINGS = [
   },
   {
     domain: "panoramatowerbrickell.com", name: "Panorama Tower", short: "PANORAMA", accent: "TOWER",
+    captions: ["Pool Deck","Balcony Views","Brickell Bay Drive"], credit: "Photography courtesy of Panorama Tower / Florida East Coast Realty",
     mode: "availability", palette: { ink:"#0b1626", a:"#7ab8ff", deep:"#2a6fb5", pale:"#e2f0ff" },
     hood: "Brickell", address: "1100 Brickell Bay Dr", zip: "33131", units: 821, stories: 85,
     developer: "Florida East Coast Realty", eta: "Leasing now", etaShort: "Now",
@@ -290,6 +298,7 @@ const BUILDINGS = [
   },
   {
     domain: "maizonbrickell.com", name: "Maizon Brickell", short: "MAIZON", accent: "BRICKELL",
+    captions: ["Resident Lounge","Kitchens","Balcony Views"], credit: "Photography courtesy of Maizon Brickell / ZRS Management",
     mode: "availability", palette: { ink:"#1c1620", a:"#d4885f", deep:"#a35a32", pale:"#fbeee6" },
     hood: "Brickell", address: "221 SW 12th St", zip: "33130", units: 0, stories: 19,
     developer: "", eta: "Leasing now", etaShort: "Now", year: 2019,
@@ -321,6 +330,7 @@ const BUILDINGS = [
   },
   {
     domain: "muzemet.com", name: "Muze at Met", short: "MUZE", accent: "AT MET",
+    captions: ["Kitchens","Residences","The View"], credit: "Photography courtesy of Muze at Met / ZRS Management",
     mode: "availability", palette: { ink:"#171425", a:"#a98bff", deep:"#6a4bc4", pale:"#efe9ff" },
     hood: "Downtown Miami", address: "340 SE 3rd St", zip: "33131", units: 391, stories: 0,
     developer: "", eta: "Leasing now", etaShort: "Now",
@@ -352,6 +362,7 @@ const BUILDINGS = [
   },
   {
     domain: "remitheriver.com", name: "Remi on the River", short: "REMI", accent: "ON THE RIVER",
+    captions: ["Resident Lounge","Bedrooms","Downtown, Minutes Away"], credit: "Photography courtesy of Greystar / Remi on the River",
     mode: "availability", palette: { ink:"#0e1f22", a:"#58c6a8", deep:"#22806a", pale:"#ddf6ef" },
     hood: "Miami River District", address: "999 NW 7th St", zip: "33136", units: 342, stories: 0,
     developer: "Greystar", eta: "Leasing now", etaShort: "Now",
@@ -383,6 +394,7 @@ const BUILDINGS = [
   },
   {
     domain: "artplazaapartments.com", name: "Art Plaza", short: "ART", accent: "PLAZA",
+    captions: ["Pool Deck","Resident Lounge","The View"], credit: "Photography courtesy of Melo Group / Art Plaza",
     mode: "availability", palette: { ink:"#1b1522", a:"#ff7ab8", deep:"#c43e81", pale:"#ffe8f3" },
     hood: "Arts & Entertainment District", address: "58 NE 14th St", zip: "33132", units: 667, stories: 36,
     developer: "Melo Group", eta: "Leasing now", etaShort: "Now", year: 2019,
@@ -414,6 +426,7 @@ const BUILDINGS = [
   },
   {
     domain: "miamiworldtowerapartments.com", name: "Miami World Tower", short: "MIAMI WORLD", accent: "TOWER",
+    captions: ["Pool Deck","Dining with a View","Balcony Views"], credit: "Photography courtesy of Miami World Tower",
     mode: "availability", palette: { ink:"#101a2c", a:"#f2b544", deep:"#b07d12", pale:"#fdf2d9" },
     hood: "Miami Worldcenter", address: "710 NE 1st Ave", zip: "33132", units: 560, stories: 0,
     developer: "Lalezarian Properties", eta: "Leasing now", etaShort: "Now",
@@ -453,6 +466,7 @@ const BUILDINGS = [
   // the stronger one rather than letting both drift into the same page.
   {
     domain: "mohawkwynwood.com", name: "Mohawk at Wynwood", short: "MOHAWK", accent: "AT WYNWOOD",
+    captions: ["Street Elevation","The Paseo","The Site Today"], credit: "Renderings courtesy of Rilea Group",
     // The neighborhood search: "mohawk wynwood apartments". Exact-match domain
     // for the building name, and Rilea has published no leasing site — the same
     // pairing that made downtown6miami.com the portfolio's only real earner.
@@ -489,6 +503,7 @@ const BUILDINGS = [
   },
   {
     domain: "mohawkmiami.com", name: "Mohawk at Wynwood", short: "MOHAWK", accent: "MIAMI",
+    captions: ["The Paseo","NE 29th Street","Skyline Aerial"], credit: "Renderings courtesy of Rilea Group",
     // Overridden because mohawkwynwood.com covers the same building: left to
     // derive, both pages would ship the identical title and description.
     title: "Mohawk Miami Apartments — Amenities, Rents & 2028 Waitlist",
@@ -531,6 +546,7 @@ const BUILDINGS = [
   },
   {
     domain: "2900terrace.com", name: "2900 Terrace", short: "2900", accent: "TERRACE",
+    captions: ["Rooftop Pool","Street Level","Over the Bay"], credit: "Renderings courtesy of Oak Row Equities and LNDMRK Development via Florida YIMBY",
     // Exact-match domain for the building name, and the developers have
     // published no leasing site — 2900terrace.com and 2900terracemiami.com were
     // both parked when this was written. Strongest of the wave 3 domains.
@@ -567,6 +583,7 @@ const BUILDINGS = [
   },
   {
     domain: "neoedgewatermiami.com", name: "Neo Edgewater", short: "NEO", accent: "EDGEWATER",
+    captions: ["Pool Deck","Residences","Lobby"], credit: "Photography and renderings courtesy of Oak Row Equities, Bozzuto and Neo Edgewater; aerial photography via Florida YIMBY",
     // Same building as 2600biscaynemiami.com: 2600 Biscayne Blvd leases under
     // the name Neo Edgewater. This page is the brand-and-pricing search, the
     // 2600 page the address-and-office search. Note the official leasing site

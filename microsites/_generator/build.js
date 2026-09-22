@@ -57,7 +57,7 @@ const THEME = {
   "biscayne18.com": "construction", "urban22edgewater.com": "bay",
   "downtown5miami.com": "interior", "panoramatowerbrickell.com": "bay",
   "maizonbrickell.com": "interior", "muzemet.com": "interior",
-  "remitheriver.com": "interior", "artplazaapartments.com": "bay",
+  "remitheriver.com": "skyline", "artplazaapartments.com": "bay",
   "miamiworldtowerapartments.com": "skyline",
   // Wave 3. The two same-building pairs deliberately draw from different pools
   // so the pages do not share a single image: mohawkwynwood/mohawkmiami and
@@ -67,6 +67,13 @@ const THEME = {
   "2900terrace.com": "construction", "neoedgewatermiami.com": "interior",
 };
 const SLOTS = ["hero.jpg", "split.jpg", "g1.jpg", "g2.jpg", "g3.jpg", "cta.jpg"];
+// Real photography and renderings of the building itself live in
+// _generator/photos/<domain>/<slot>.jpg. Any slot present there wins over the
+// stock pool; anything missing falls back to the pool, so a page never loses
+// an image. Sources are kept at up to 2000px and re-encoded per slot below.
+// An entry with its own photos should also set `captions` (three gallery
+// labels, in order g1–g3) and `credit` (rendered in the footer disclaimer).
+const PHOTOS = path.join(__dirname, "photos");
 // Source stock runs 1–1.5MB per file. Heroes at that weight tank Largest
 // Contentful Paint, and these pages exist to rank — so every copy is resized
 // to its real display width and re-encoded. OPTIMIZE maps slot -> [width, quality].
@@ -176,9 +183,15 @@ function page(b) {
   const navLabel = ctaLabel;
   const ticker = b.ticker.join(" &nbsp;·&nbsp; ");
 
+  // Gallery captions and alt text. With stock imagery the captions are
+  // deliberately vague; with the building's own photos they should say what
+  // the photo shows ("Pool Deck", "Residence Interior").
+  const cap = b.captions || [b.hood, "The Area", "The View"];
+  const splitAlt = b.splitAlt || `${b.name} — ${b.hood}, Miami`;
   const ld = {
     "@context": "https://schema.org", "@type": "ApartmentComplex", name: b.name,
     description: desc,
+    image: `https://${b.domain}/img/hero.jpg`,
     address: { "@type": "PostalAddress", streetAddress: b.address, addressLocality: "Miami", addressRegion: "FL", postalCode: b.zip, addressCountry: "US" },
     url: `https://${b.domain}/`,
   };
@@ -366,7 +379,7 @@ ${b.stats.map(([v, l]) => `    <div class="stat reveal"><b>${esc(v)}</b><small>$
         <h2>${esc(b.h2)}</h2>
 ${b.body.map((t) => `        <p class="prose">${esc(t)}</p>`).join("\n")}
       </div>
-      <img class="reveal" src="img/split.jpg" alt="${esc(b.name)} — ${esc(b.hood)}, Miami" loading="lazy">
+      <img class="reveal" src="img/split.jpg" alt="${esc(splitAlt)}" loading="lazy">
     </div>
   </div>
 </section>
@@ -395,9 +408,9 @@ ${b.cards.map(([t, d], i) => `      <div class="card reveal"><span class="num">0
     <p class="kicker reveal">The Neighborhood</p>
     <h2 class="reveal" style="margin-bottom:44px">${esc(b.hood)}, on foot</h2>
     <div class="gallery-grid">
-      <figure class="reveal"><img src="img/g1.jpg" alt="${esc(b.hood)}, Miami" loading="lazy"><figcaption>${esc(b.hood)}</figcaption></figure>
-      <figure class="reveal"><img src="img/g2.jpg" alt="${esc(b.name)} area" loading="lazy"><figcaption>The Area</figcaption></figure>
-      <figure class="reveal"><img src="img/g3.jpg" alt="Miami skyline" loading="lazy"><figcaption>The View</figcaption></figure>
+      <figure class="reveal"><img src="img/g1.jpg" alt="${esc(b.name)} — ${esc(cap[0])}" loading="lazy"><figcaption>${esc(cap[0])}</figcaption></figure>
+      <figure class="reveal"><img src="img/g2.jpg" alt="${esc(b.name)} — ${esc(cap[1])}" loading="lazy"><figcaption>${esc(cap[1])}</figcaption></figure>
+      <figure class="reveal"><img src="img/g3.jpg" alt="${esc(b.name)} — ${esc(cap[2])}" loading="lazy"><figcaption>${esc(cap[2])}</figcaption></figure>
     </div>
   </div>
 </section>
@@ -445,7 +458,7 @@ ${hasInventory ? `        <div class="inv" data-inv hidden>
 <footer>
   <div class="wrap">
     <span class="wordmark">${esc(b.domain.toUpperCase())}</span>
-    <p>© ${new Date().getFullYear()} ${esc(b.domain)} — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by${b.developer ? ", " + esc(b.developer) + " or" : ""} the owners or leasing agents of ${esc(b.name)}. Building names are used for identification only. Details compiled from public reporting and believed accurate as of ${b.verified || VERIFIED} — always verify with the official leasing office.</p>
+    <p>© ${new Date().getFullYear()} ${esc(b.domain)} — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by${b.developer ? ", " + esc(b.developer) + " or" : ""} the owners or leasing agents of ${esc(b.name)}. Building names are used for identification only.${b.credit ? " " + esc(b.credit) + "." : ""} Details compiled from public reporting and believed accurate as of ${b.verified || VERIFIED} — always verify with the official leasing office.</p>
   </div>
 </footer>
 
@@ -611,7 +624,8 @@ for (const b of BUILDINGS) {
     .findIndex((x) => x.domain === b.domain);
   work.push(
     ...SLOTS.map(async (slot, i) => {
-      const src = path.join(ROOT, pool[(i + themeIdx) % pool.length]);
+      const own = path.join(PHOTOS, b.domain, slot);
+      const src = fs.existsSync(own) ? own : path.join(ROOT, pool[(i + themeIdx) % pool.length]);
       if (!fs.existsSync(src)) return;
       const [w, q] = OPTIMIZE[slot];
       const buf = await sharp(src).rotate().resize({ width: w, withoutEnlargement: true })

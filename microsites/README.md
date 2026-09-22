@@ -21,7 +21,14 @@ Deploy the updated platform to staycio.com before pointing live microsites at it
 
 ## Photos
 
-Heroes currently use **Unsplash placeholder images** (hotlinked from images.unsplash.com — free license, verified live Aug 2026), tinted with each site's brand gradient. Swap for real building photos when you have rights (your own shots or partner marketing assets) — just replace the `url(...)` in each file's `.hero` style. Do not hotlink Apartments.com/Zillow images.
+As of 2026-09-21 every page runs the building's own photography or the
+developer's released renderings, pulled from official sites and press
+releases (we work with these buildings, so their marketing imagery is usable
+here; each footer credits the source). The six hand-built pages reference
+their files directly in `img/`; the generated pages take theirs from
+`_generator/photos/<domain>/` — see "Real photos per building" below. Only
+Jade still uses Wikimedia photography of the building. Do not hotlink
+Apartments.com/Zillow images.
 
 ## Deploying (recommended: Vercel, free)
 
@@ -234,6 +241,19 @@ render the strip at all) once its building is in the catalog with fresh rents.
   its theme (`themeIdx` offset). Still open: the `interior` pool is Midtown 5's
   own photography ("courtesy of Greystar / Midtown 5") reused on six other
   operating-building pages — that needs real photos or a rights decision.
+
+## Real photos per building
+
+The stock pool is the fallback, not the goal. Put the building's own photography
+or renderings in `_generator/photos/<domain>/` as `hero.jpg`, `split.jpg`,
+`g1.jpg`, `g2.jpg`, `g3.jpg` and `cta.jpg` (any subset; missing slots fall
+back to the pool). Sources can be up to 2000px; the generator re-encodes each
+slot to its display size. On the entry, set `captions` (three gallery labels,
+g1–g3, saying what each photo shows) and `credit` (rendered in the footer,
+e.g. "Photography courtesy of Bozzuto / Neo Edgewater"). Photos were pulled
+from each building's official site or the developer's released renderings
+on 2026-09-21 — we work with these buildings, so their marketing imagery is
+usable here. Keep the hero landscape and at least 1600px wide.
 
 ## Third wave — 4 generated sites (added 2026-09-21)
 
