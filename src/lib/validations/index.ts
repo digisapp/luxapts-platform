@@ -97,6 +97,13 @@ export const MICROSITE_DOMAINS = [
   "remitheriver.com",
   "artplazaapartments.com",
   "miamiworldtowerapartments.com",
+  // Added 2026-09-21 — third wave. Two buildings, four domains: the two Mohawk
+  // domains are one building, and neoedgewatermiami.com is the same building as
+  // 2600biscaynemiami.com (2600 Biscayne leases as Neo Edgewater).
+  "mohawkwynwood.com",
+  "mohawkmiami.com",
+  "2900terrace.com",
+  "neoedgewatermiami.com",
 ] as const;
 
 export type MicrositeDomain = (typeof MICROSITE_DOMAINS)[number];

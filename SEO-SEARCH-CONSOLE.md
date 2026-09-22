@@ -126,6 +126,19 @@ indexing** on the homepage.
 - [ ] remitheriver.com
 - [ ] urban22edgewater.com
 
+### Wave 3 — added 2026-09-21, not yet deployed or in Search Console
+
+- [ ] 2900terrace.com ← strongest of the four (exact-match, official site parked)
+- [ ] mohawkwynwood.com
+- [ ] mohawkmiami.com
+- [ ] neoedgewatermiami.com
+
+Note that `mohawkwynwood.com` / `mohawkmiami.com` are one building, and
+`neoedgewatermiami.com` / `2600biscaynemiami.com` are one building. Each pair
+runs distinct titles, descriptions and copy so Google does not filter one of
+them; if a pair ever stops earning its keep, 301 the weaker domain rather than
+letting the pages converge.
+
 ---
 
 ## 3. What to expect, and when

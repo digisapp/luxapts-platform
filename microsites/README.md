@@ -69,7 +69,7 @@ ranking, so Largest Contentful Paint matters).
 
 | Folder | Building | Page type |
 |---|---|---|
-| `2600biscaynemiami.com/` | 2600 Biscayne (Edgewater, 400 units, Oak Row Equities) | Waitlist |
+| `2600biscaynemiami.com/` | 2600 Biscayne (Edgewater, 399 units, Oak Row Equities) — leases as Neo Edgewater | Availability (was Waitlist; see wave 3) |
 | `jemmiamiapartments.com/` | JEM Miami Worldcenter (Miami Worldcenter, 530 units, Naftali Group) | Waitlist |
 | `kenectmiamiapartments.com/` | Kenect Miami (Miami Worldcenter, 450 units, Akara Partners) | Waitlist |
 | `3333biscaynemiami.com/` | 3333 Biscayne (Edgewater, 667 units, Beitel Group) | Waitlist |
@@ -147,9 +147,75 @@ Add a domain to `MICROSITE_CATALOG_SLUG` in `src/lib/microsite-inventory.ts`
 (and to `CATALOG_SLUG` in `_generator/build.js`, which only decides whether to
 render the strip at all) once its building is in the catalog with fresh rents.
 
+## Third wave — 4 generated sites (added 2026-09-21)
+
+Two buildings, four domains. Generated the same way — append to
+`_generator/buildings.js`, run `node microsites/_generator/build.js`.
+
+| Folder | Building | Page type |
+|---|---|---|
+| `mohawkwynwood.com/` | Mohawk at Wynwood (Wynwood, 300 units, Rilea Group, 2028) | Waitlist |
+| `mohawkmiami.com/` | Mohawk at Wynwood — amenity angle | Waitlist |
+| `2900terrace.com/` | 2900 Terrace (Edgewater, 324 units, Oak Row + LNDMRK, Q4 2027) | Waitlist |
+| `neoedgewatermiami.com/` | Neo Edgewater (Edgewater, 399 units, Oak Row Equities) | Availability |
+
+`2900terrace.com` is the strongest of the four on the screening rule: a large
+market-rate rental whose exact-match `.com` was parked (both `2900terrace.com`
+and `2900terracemiami.com` served GoDaddy landers). That is the downtown6miami
+pairing.
+
+`neoedgewatermiami.com` is the weakest, and deliberately so — Neo Edgewater has
+a real, live official leasing site at `neoedgewater.com` run by Bozzuto, so this
+page competes with an operator rather than filling a vacuum. It is an
+availability page with real published rents, not a waitlist.
+
+### Two domains, one building
+
+Both pairs cover a single building:
+
+- `mohawkwynwood.com` + `mohawkmiami.com` → Mohawk at Wynwood
+- `2600biscaynemiami.com` + `neoedgewatermiami.com` → 2600 Biscayne, which
+  leases under the name **Neo Edgewater**
+
+They are written as two different pages aimed at different searches, never one
+page under a second name. The neighborhood/address domain gets the building
+story; the brand/amenity domain gets the comparison story — different H1, body,
+cards, FAQ, stats, palette and image pool.
+
+Derived `<title>`, `<meta name="description">` and `og:title` break for a pair,
+because they are built from the building and both entries name the same one.
+`build.js` therefore honours optional `title`, `desc` and `ogTitle` fields, and
+**every entry in a pair must set them.** Byte-identical titles are the strongest
+near-duplicate signal there is, and Google resolves it by keeping one page and
+dropping the other — which would cost whichever one was ranking.
+
+If a pair is ever not worth maintaining as two pages, 301 the weaker domain at
+the stronger one. Do not let both drift back into the same page.
+
+### 2600 Biscayne is now Neo Edgewater, and now leasing
+
+Preleasing launched September 2026 with first residents in October, so the
+entry was rewritten from `mode: "waitlist"` to `mode: "availability"` with the
+published lease-up rents. It had been running "get pricing before the leasing
+office opens" into the month the office opened and posted rents — the
+namdartowers.com failure, about six weeks from repeating (its `delivers` was
+2026-11-01, after which the build would have failed outright).
+
+### Per-building verification dates
+
+`FACTS_VERIFIED` is global, so re-checking one building could only be recorded
+by re-asserting diligence on all of them. An entry may now carry its own
+`verified: "YYYY-MM-DD"`, which overrides `FACTS_VERIFIED` in that page's
+footer. The wave 3 entries and the rewritten 2600 Biscayne entry carry
+`2026-09-21`; everything else still reads `2026-09-16`, which is the truth.
+The same rule applies to both: bump only after actually re-checking that
+building, never to match the build date.
+
 ### Adding another site
 
-1. Append an entry to `_generator/buildings.js`.
+1. Append an entry to `_generator/buildings.js`. If another domain already
+   covers the same building, set `title`, `desc` and `ogTitle` on **both**
+   entries — see "Two domains, one building" above.
 2. Run the generator.
 3. Add the domain to `MICROSITE_DOMAINS` in `src/lib/validations/index.ts` —
    CORS for all three API routes derives from that array.
@@ -159,5 +225,5 @@ render the strip at all) once its building is in the catalog with fresh rents.
 5. **Deploy the platform.** A domain missing from `MICROSITE_DOMAINS` in
    production fails CORS and every lead the page captures is silently lost.
 
-`src/lib/__tests__/microsites.test.ts` enforces steps 3 and that each page
+`src/lib/__tests__/microsites.test.ts` enforces steps 3 and 4 and that each page
 posts under its own domain.

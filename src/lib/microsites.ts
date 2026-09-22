@@ -21,7 +21,16 @@ export const MICROSITE_BUILDINGS: Record<string, string> = {
   "muzemet.com": "Muze at Met",
   "remitheriver.com": "Remi on the River",
   "artplazaapartments.com": "Art Plaza",
-  "miamiworldtowerapartments.com": "Miami World Tower",};
+  "miamiworldtowerapartments.com": "Miami World Tower",
+  // Both Mohawk domains are the same building, so both carry the same name —
+  // a lead from either should arrive from "Mohawk at Wynwood". Likewise
+  // neoedgewatermiami.com and 2600biscaynemiami.com are one building, but they
+  // keep different labels because each domain is searched under its own name.
+  "mohawkwynwood.com": "Mohawk at Wynwood",
+  "mohawkmiami.com": "Mohawk at Wynwood",
+  "2900terrace.com": "2900 Terrace",
+  "neoedgewatermiami.com": "Neo Edgewater",
+};
 
 /**
  * Who a reply to a lead should appear to come from.

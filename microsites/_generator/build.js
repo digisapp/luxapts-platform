@@ -15,6 +15,10 @@ const TODAY = new Date().toISOString().slice(0, 10);
 // when the DATA was verified, not when the file was built — wiring it to TODAY
 // meant every regeneration silently re-asserted diligence nobody had done.
 const VERIFIED = BUILDINGS.FACTS_VERIFIED || TODAY;
+// A single global date means re-checking one building can only be recorded by
+// re-asserting diligence on every other one. `verified` on an entry overrides
+// FACTS_VERIFIED for that page alone. Same rule applies: bump it only after
+// actually re-checking that building, never to match the build date.
 const VERIFY = "b3cf5795b633271ae0b26ee982d06033";
 
 // Image pool drawn from the existing sites (generic Miami stock already licensed
@@ -35,13 +39,19 @@ const POOL = {
 };
 // hero, split, g1, g2, g3, cta  — six slots per site.
 const THEME = {
-  "2600biscaynemiami.com": "construction", "jemmiamiapartments.com": "skyline",
+  "2600biscaynemiami.com": "bay", "jemmiamiapartments.com": "skyline",
   "kenectmiamiapartments.com": "skyline", "3333biscaynemiami.com": "construction",
   "biscayne18.com": "construction", "urban22edgewater.com": "construction",
   "downtown5miami.com": "interior", "panoramatowerbrickell.com": "bay",
   "maizonbrickell.com": "interior", "muzemet.com": "interior",
   "remitheriver.com": "interior", "artplazaapartments.com": "bay",
   "miamiworldtowerapartments.com": "skyline",
+  // Wave 3. The two same-building pairs deliberately draw from different pools
+  // so the pages do not share a single image: mohawkwynwood/mohawkmiami and
+  // 2600biscayne/neoedgewatermiami. 2600 Biscayne moved off "construction"
+  // because the building is finished and leasing.
+  "mohawkwynwood.com": "construction", "mohawkmiami.com": "interior",
+  "2900terrace.com": "construction", "neoedgewatermiami.com": "interior",
 };
 const SLOTS = ["hero.jpg", "split.jpg", "g1.jpg", "g2.jpg", "g3.jpg", "cta.jpg"];
 // Source stock runs 1–1.5MB per file. Heroes at that weight tank Largest
@@ -98,12 +108,20 @@ function page(b) {
   const isSoon = tier === "soon";
   const hasInventory = tier === "availability" && CATALOG_SLUG[b.domain];
   const utm = b.domain.replace(/\.com$/, "");
-  const title = isWait
+  // `title`, `desc` and `ogTitle` are derived from the building, which breaks
+  // the moment two domains cover the SAME building — the two Mohawk domains and
+  // the 2600 Biscayne / Neo Edgewater pair would otherwise ship byte-identical
+  // titles and descriptions. That is the strongest near-duplicate signal there
+  // is, and Google resolves it by picking one page and dropping the other.
+  // Distinct body copy is not enough on its own; an entry in a pair overrides
+  // these so each page targets the search its domain is actually named for.
+  const title = b.title || (isWait
     ? `${b.name} — ${b.hood} Apartments ${b.eta} | Waitlist, Rents & Floor Plans`
-    : `${b.name} Apartments — ${b.hood}, Miami | Availability, Rents & Floor Plans`;
-  const desc = isWait
+    : `${b.name} Apartments — ${b.hood}, Miami | Availability, Rents & Floor Plans`);
+  const desc = b.desc || (isWait
     ? `${b.name}: ${b.units ? b.units.toLocaleString() + " rental apartments " : ""}at ${b.address}, ${b.hood}, Miami${b.developer ? ", by " + b.developer : ""}. ${b.eta}. Join the waitlist for rents and floor plans.`
-    : `${b.name} at ${b.address}, ${b.hood}, Miami${b.units ? " — " + b.units.toLocaleString() + " rental residences" : ""}. Check real availability, rents and floor plans.`;
+    : `${b.name} at ${b.address}, ${b.hood}, Miami${b.units ? " — " + b.units.toLocaleString() + " rental residences" : ""}. Check real availability, rents and floor plans.`);
+  const ogTitle = b.ogTitle || `${b.name} — ${b.hood}, Miami`;
   // "Get Pricing First" is proven copy — it is what perrinbrickell.com runs.
   // The soon tier promotes it to the primary button because at that range the
   // offer really is "you see the number before anyone else", not "someday".
@@ -127,7 +145,7 @@ function page(b) {
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="https://${b.domain}/">
-<meta property="og:title" content="${esc(b.name)} — ${esc(b.hood)}, Miami">
+<meta property="og:title" content="${esc(ogTitle)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:image" content="https://${b.domain}/img/hero.jpg">
 <meta property="og:url" content="https://${b.domain}/">
@@ -379,7 +397,7 @@ ${hasInventory ? `        <div class="inv" data-inv hidden>
 <footer>
   <div class="wrap">
     <span class="wordmark">${esc(b.domain.toUpperCase())}</span>
-    <p>© ${new Date().getFullYear()} ${esc(b.domain)} — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by${b.developer ? ", " + esc(b.developer) + " or" : ""} the owners or leasing agents of ${esc(b.name)}. Building names are used for identification only. Details compiled from public reporting and believed accurate as of ${VERIFIED} — always verify with the official leasing office.</p>
+    <p>© ${new Date().getFullYear()} ${esc(b.domain)} — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by${b.developer ? ", " + esc(b.developer) + " or" : ""} the owners or leasing agents of ${esc(b.name)}. Building names are used for identification only. Details compiled from public reporting and believed accurate as of ${b.verified || VERIFIED} — always verify with the official leasing office.</p>
   </div>
 </footer>
 
