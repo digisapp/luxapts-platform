@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavorites, FavoriteItem } from "@/hooks/useFavorites";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { cn } from "@/lib/utils";
 
 interface FavoriteButtonProps {
@@ -20,6 +21,7 @@ export function FavoriteButton({
   className,
 }: FavoriteButtonProps) {
   const { toggleItem, isFavorite, isLoaded } = useFavorites();
+  const { track } = useAnalytics();
   const [isAnimating, setIsAnimating] = useState(false);
 
   const isFav = isFavorite(item.id);
@@ -31,6 +33,9 @@ export function FavoriteButton({
     // Trigger animation when adding to favorites
     if (!isFav) {
       setIsAnimating(true);
+      track.favoriteAdded(item.id, item.name);
+    } else {
+      track.favoriteRemoved(item.id);
     }
 
     toggleItem(item);

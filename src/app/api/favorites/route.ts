@@ -130,6 +130,23 @@ export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url);
     const building_id = searchParams.get("building_id");
     const unit_id = searchParams.get("unit_id");
+    const all = searchParams.get("all") === "true";
+
+    const adminClient = createAdminClient();
+
+    // "Clear all" on the favorites page — without this the list came back
+    // from the DB on the next login.
+    if (all) {
+      const { error } = await adminClient
+        .from("user_favorites")
+        .delete()
+        .eq("user_id", user.id);
+      if (error) {
+        console.error("Error clearing favorites:", error);
+        return apiError("Failed to clear favorites", 500);
+      }
+      return NextResponse.json({ message: "Favorites cleared" });
+    }
 
     if (!building_id && !unit_id) {
       return apiError("building_id or unit_id is required");
@@ -140,8 +157,6 @@ export async function DELETE(req: Request) {
     if (unit_id && !isValidUUID(unit_id)) {
       return apiError("Invalid unit_id");
     }
-
-    const adminClient = createAdminClient();
 
     let query = adminClient
       .from("user_favorites")

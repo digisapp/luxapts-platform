@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -25,9 +26,16 @@ import {
   Loader2,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import { INVENTORY_MAX_AGE_DAYS } from "@/lib/microsite-inventory";
+
+// A saved card's price is the rent captured when the heart was tapped. Past
+// the verified-pricing window it is no longer a price we stand behind, so the
+// card drops it and the building page shows the current one.
+const PRICE_MAX_AGE_MS = INVENTORY_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 
 export default function FavoritesPage() {
   const { user } = useAuth();
+  const [priceCutoff] = useState(() => Date.now() - PRICE_MAX_AGE_MS);
   const { items: favorites, removeItem: removeFavorite, clearAll: clearFavorites, isLoaded: favoritesLoaded, isSyncing: favoritesSyncing } = useFavorites();
   const { searches, removeSearch, toggleEmailAlerts, clearAll: clearSearches, isLoaded: searchesLoaded, isSyncing: searchesSyncing } = useSavedSearches();
 
@@ -127,7 +135,7 @@ export default function FavoritesPage() {
                               </p>
                             )}
                             <div className="flex items-center gap-3 mt-1">
-                              {item.price != null && item.price > 0 && (
+                              {item.price != null && item.price > 0 && item.addedAt > priceCutoff && (
                                 <span className="text-sm font-medium">
                                   {formatPrice(item.price)}/mo
                                 </span>

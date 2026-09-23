@@ -210,9 +210,17 @@ export function useFavorites() {
     [items]
   );
 
-  const clearAll = useCallback(() => {
+  const clearAll = useCallback(async () => {
     favoritesStore.set(() => []);
-  }, []);
+
+    if (user) {
+      try {
+        await fetch("/api/favorites?all=true", { method: "DELETE" });
+      } catch (e) {
+        console.error("Error clearing favorites in DB:", e);
+      }
+    }
+  }, [user]);
 
   return {
     items,

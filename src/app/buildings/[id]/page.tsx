@@ -139,6 +139,7 @@ import {
 import { ImageGallery } from "./ImageGallery";
 import { BuildingPageClient } from "./BuildingPageClient";
 import { BuildingContactButtons } from "./BuildingContactButtons";
+import { FavoriteButton } from "@/components/listings/FavoriteButton";
 import { StickyMobileCTA } from "@/components/ui/StickyMobileCTA";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import {
@@ -502,7 +503,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
               className="mb-6"
             />
 
-            <div className="grid gap-8 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               {/* Image Gallery */}
               <div className="lg:col-span-2">
                 {allImages.length > 0 ? (
@@ -525,7 +526,24 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   {building.neighborhoods && (
                     <Badge className="mb-2">{building.neighborhoods.name}</Badge>
                   )}
-                  <h1 className="text-3xl font-bold">{building.name}</h1>
+                  <div className="flex items-start justify-between gap-3">
+                    <h1 className="text-3xl font-bold">{building.name}</h1>
+                    <FavoriteButton
+                      item={{
+                        id: building.id,
+                        type: "building",
+                        name: building.name,
+                        address: building.address_1,
+                        neighborhood: building.neighborhoods?.name,
+                        citySlug: building.cities?.slug,
+                        image: allImages[0]?.url,
+                        // Only a verified rent is worth carrying onto the saved card
+                        price: pricingVerified ? priceRange?.min : undefined,
+                      }}
+                      size="lg"
+                      className="shrink-0 mt-0.5"
+                    />
+                  </div>
                   <p className="mt-2 flex items-center gap-2 text-muted-foreground">
                     <MapPin className="h-4 w-4" />
                     {building.address_1}
@@ -616,7 +634,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
         </div>
 
         <div className="container mx-auto px-4 py-8">
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-8">
               {/* Move-in Specials */}
               {buildingFacts.move_in_specials && (
