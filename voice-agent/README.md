@@ -38,16 +38,15 @@ Deploy the platform first (with `VOICE_AGENT_SECRET` set in Vercel), then the ag
 
 ```bash
 cd voice-agent
-lk agent create --secrets XAI_API_KEY=... --secrets VOICE_AGENT_SECRET=...   # first time
-lk agent deploy                                                               # later updates
+lk agent deploy --project staycio --secrets-file .env   # .env holds XAI_API_KEY, VOICE_AGENT_SECRET, STAYCIO_API_URL
 ```
 
 The agent registers as **`staycio-voice-agent`** and only takes calls that are explicitly dispatched to it. Route a number to it:
 
+**Live setup (2026-09-23):** LiveKit project `staycio` (staycio-m5zeiqz9), agent `CA_mrJmAuUYh8Pn`, number **+1 305 952 1558** (`PN_PPN_kAQQJGYRXhQ3`), dispatch rule `SDR_v4nH3G7q8Nq3`, as in `dispatch-rule.json`. Numbers bought in the dashboard get a rule with no agent, so after adding a number put it in `trunkIds` and run:
+
 ```bash
-lk number list                              # note the PN_... id of the Staycio number
-# put that id in dispatch-rule.json -> trunkIds, then:
-lk sip dispatch create dispatch-rule.json
+lk sip dispatch update --project staycio --id SDR_v4nH3G7q8Nq3 dispatch-rule.json
 ```
 
 ## Numbers per building

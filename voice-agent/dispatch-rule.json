@@ -1,6 +1,6 @@
 {
   "name": "staycio-inbound",
-  "trunkIds": ["REPLACE_WITH_PN_ID_OF_STAYCIO_NUMBER"],
-  "rule": { "dispatchRuleIndividual": { "roomPrefix": "staycio-call-" } },
+  "trunkIds": ["PN_PPN_kAQQJGYRXhQ3"],
+  "rule": { "dispatchRuleIndividual": { "roomPrefix": "staycio-" } },
   "roomConfig": { "agents": [{ "agentName": "staycio-voice-agent" }] }
 }
