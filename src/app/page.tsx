@@ -265,7 +265,10 @@ async function getHomeData(): Promise<{
       stats: {
         cities: cityUnits.size,
         buildings: buildings.length,
-        availableUnits: units.length,
+        // Only units in active buildings: the query above also returns units
+        // of inactive (hidden) buildings, which inflated this headline by
+        // roughly a thousand apartments nobody could click through to.
+        availableUnits: [...cityUnits.values()].reduce((sum, c) => sum + c.units, 0),
       },
       featured,
       neighborhoods,
