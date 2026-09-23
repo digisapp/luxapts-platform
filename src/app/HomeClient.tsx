@@ -121,7 +121,7 @@ const HERO_VARIANTS = {
   frustration: {
     headline: "Stop searching.",
     accent: "Just tell Stacy what you want.",
-    sub: "Tell Stacy the neighborhood, the budget, when you need to move in and what you can't live without. She reads every available listing and comes back with the ones worth touring.",
+    sub: "Tell Stacy where you want to live, your budget, move-in date, and must-haves. She searches every available listing and brings you the best matches.",
   },
   outcome: {
     headline: "Your next apartment,",
