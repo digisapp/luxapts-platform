@@ -9,6 +9,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { buildingFamilyKey } from "@/lib/images/quality";
 import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
+import { INVENTORY_MAX_AGE_DAYS } from "@/lib/microsite-inventory";
 import { buildingPath } from "@/lib/seo/urls";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
 
@@ -187,9 +188,14 @@ async function getHomeData(): Promise<{
     // availability ranking, so the order shown has to be exactly that.
     picked.sort((a, b) => (unitCount[b.id] || 0) - (unitCount[a.id] || 0));
 
-    // Latest rent per unit, then min price and bed range per featured building
+    // Latest rent per unit, then min price and bed range per featured building.
+    // "From $X" comes from freshly verified units when a building has any —
+    // a months-old capture otherwise undercut the real asking rents (29 Wyn
+    // showed $2,100 from April over units verified at $2,369+).
     const minPrice: Record<string, number> = {};
+    const minFreshPrice: Record<string, number> = {};
     const bedRange: Record<string, { min: number; max: number }> = {};
+    const freshSince = Date.now() - INVENTORY_MAX_AGE_DAYS * 86_400_000;
 
     if (picked.length > 0) {
       // Chunked by building id — never a giant `.in(unitIds)` URL
@@ -197,8 +203,9 @@ async function getHomeData(): Promise<{
         id: string;
         building_id: string;
         latest_rent: number | null;
+        price_captured_at: string | null;
         beds: number | null;
-      }>(supabase, picked.map((b) => b.id), ["beds"]);
+      }>(supabase, picked.map((b) => b.id), ["beds", "price_captured_at"]);
       for (const u of priced) {
         if (u.beds != null) {
           const r = bedRange[u.building_id];
@@ -209,6 +216,10 @@ async function getHomeData(): Promise<{
         if (u.latest_rent == null) continue;
         const cur = minPrice[u.building_id];
         if (cur === undefined || u.latest_rent < cur) minPrice[u.building_id] = u.latest_rent;
+        if (u.price_captured_at && Date.parse(u.price_captured_at) >= freshSince) {
+          const f = minFreshPrice[u.building_id];
+          if (f === undefined || u.latest_rent < f) minFreshPrice[u.building_id] = u.latest_rent;
+        }
       }
     }
 
@@ -229,7 +240,7 @@ async function getHomeData(): Promise<{
         // `eligible()` already guaranteed a real photo for every featured card.
         image: images[0]!.url,
         availableUnits: unitCount[b.id] || 0,
-        minPrice: minPrice[b.id] ?? null,
+        minPrice: minFreshPrice[b.id] ?? minPrice[b.id] ?? null,
         bedRange: bedRange[b.id] ?? null,
       };
     });

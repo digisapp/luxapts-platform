@@ -152,12 +152,12 @@ export function SimilarListings({
                 </Badge>
                 {listing.petPolicy && (
                   <span title="Pet friendly">
-                    <PawPrint className="h-3 w-3 text-green-600" />
+                    <PawPrint className="h-3 w-3 text-muted-foreground" />
                   </span>
                 )}
                 {listing.parkingPolicy && (
                   <span title="Parking available">
-                    <Car className="h-3 w-3 text-blue-600" />
+                    <Car className="h-3 w-3 text-muted-foreground" />
                   </span>
                 )}
               </div>

@@ -327,7 +327,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-black" />
             {/* Aurora, now over the photography rather than instead of it */}
-            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-cyan-500/10 rounded-full blur-[120px]" />
+            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-cyan-500/[0.07] rounded-full blur-[120px]" />
             <div className="absolute top-1/2 right-1/4 w-[300px] h-[300px] bg-cyan-500/5 rounded-full blur-[80px]" />
           </div>
 
@@ -341,7 +341,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-balance text-white mb-6 animate-fade-in [animation-delay:100ms]">
               {hero.headline}
               <br />
-              <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
                 {hero.accent}
               </span>
             </h1>
@@ -357,7 +357,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             <div className="max-w-xl mx-auto animate-fade-in [animation-delay:300ms]">
               <div className="relative group">
                 {/* Glow effect on focus */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                <div className="absolute -inset-1 bg-cyan-500/20 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
                 <div className="relative flex items-center">
                   <input
                     type="text"
@@ -410,7 +410,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             {/* One quiet escape hatch, kept because the header links to
                 listings from nowhere — the ten city pills that used to sit
                 here were the problem, not the existence of a browse link. */}
-            <p className="mt-4 text-sm text-white/50 animate-fade-in [animation-delay:320ms]">
+            <p className="mt-4 text-sm text-white/60 animate-fade-in [animation-delay:320ms]">
               or{" "}
               <Link
                 href="/search"
@@ -445,7 +445,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
           <section className="py-16 sm:py-20 px-6 relative overflow-hidden">
             {/* Background effect */}
             <div className="absolute inset-0">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-gradient-to-r from-cyan-500/5 to-blue-500/5 rounded-full blur-[100px]" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-gradient-to-r from-cyan-500/5 to-cyan-500/5 rounded-full blur-[100px]" />
             </div>
 
             <div className="relative z-10 max-w-6xl mx-auto">
@@ -496,9 +496,9 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                     </div>
 
                     <div className="p-5">
-                      <h3 className="text-white font-medium leading-tight mb-1">{building.name}</h3>
+                      <h3 className="text-lg text-white font-medium leading-tight mb-1">{building.name}</h3>
                       {(building.cityName || building.bedRange) && (
-                        <p className="text-sm text-white/50 flex items-center gap-1 mb-4">
+                        <p className="text-sm text-white/70 flex items-center gap-1 mb-4">
                           <MapPin className="h-3.5 w-3.5 shrink-0" />
                           {building.cityName}
                           {building.cityName && building.bedRange && (
@@ -509,11 +509,11 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                       )}
                       <div className="flex items-center justify-between">
                         {building.minPrice ? (
-                          <p className="text-sm text-white/60">
-                            From <span className="text-white font-medium">{formatPrice(building.minPrice)}</span>/mo
+                          <p className="text-base text-white/70">
+                            From <span className="text-white font-semibold">{formatPrice(building.minPrice)}</span>/mo
                           </p>
                         ) : (
-                          <p className="text-sm text-white/50">Contact for pricing</p>
+                          <p className="text-base text-white/70">Contact for pricing</p>
                         )}
                         <ArrowRight className="h-4 w-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all duration-300" />
                       </div>
@@ -561,7 +561,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                   key={city.slug}
                   href={`/cities/${city.slug}`}
                   onClick={() => trackHeroEngagement("browse_link")}
-                  className="px-4 py-2.5 rounded-full text-center bg-white/[0.03] border border-white/[0.08] text-sm text-white/70 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.18] transition-colors duration-300"
+                  className="px-4 py-3 rounded-full text-center bg-white/[0.03] border border-white/[0.08] text-base text-white/85 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.18] transition-colors duration-300"
                 >
                   {city.name}
                 </Link>
@@ -570,7 +570,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
 
             {neighborhoods.length > 0 && (
               <>
-                <h3 className="mt-12 mb-5 text-sm uppercase tracking-wider text-white/50">
+                <h3 className="mt-12 mb-5 text-sm uppercase tracking-wider text-white/60">
                   Popular neighborhoods
                 </h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
@@ -583,13 +583,13 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                           : `/neighborhoods/${n.slug}`
                       }
                       onClick={() => trackHeroEngagement("browse_link")}
-                      className="px-4 py-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-sm text-white/70 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.18] transition-colors duration-300"
+                      className="px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-base text-white/90 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.18] transition-colors duration-300"
                     >
                       <span className="block truncate">{n.name}</span>
-                      <span className="block truncate text-xs text-white/50">
+                      <span className="block truncate text-sm text-white/60">
                         {n.cityName}
                         {n.cityName && <span aria-hidden="true" className="px-1 text-white/25">·</span>}
-                        <span className="text-emerald-300/80">{n.units} available</span>
+                        <span className="text-emerald-300">{n.units} available</span>
                       </span>
                     </Link>
                   ))}
@@ -603,7 +603,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             who did not click straight through to search. */}
         <section className="py-16 sm:py-20 px-6 relative overflow-hidden">
           <div className="absolute inset-0">
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-r from-blue-500/10 to-cyan-500/5 rounded-full blur-[110px]" />
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-r from-cyan-500/10 to-cyan-500/5 rounded-full blur-[110px]" />
           </div>
 
           <div className="relative z-10 max-w-xl mx-auto">

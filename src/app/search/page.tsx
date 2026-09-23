@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { groupByBuilding, bedRangeLabel } from "@/lib/search/group-by-building";
 import { formatPrice, cn } from "@/lib/utils";
 import { CompareButton } from "@/components/compare/CompareButton";
 import { FavoriteButton } from "@/components/listings/FavoriteButton";
@@ -231,7 +232,7 @@ function SearchContent() {
 
   // Map view state
   const [showMap, setShowMap] = useState(true);
-  const [highlightedListingId, setHighlightedListingId] = useState<string | null>(null);
+  const [highlightedBuildingId, setHighlightedBuildingId] = useState<string | null>(null);
 
   // Default the map off on mobile (post-hydration to stay SSR-safe): it's a
   // heavy Mapbox GL instance + tile downloads, and the list is the primary
@@ -404,6 +405,12 @@ function SearchContent() {
           return minutes <= commute.maxMinutes;
         })
       : results;
+
+  // One card per building; the API returns one row per unit
+  const buildingGroups = groupByBuilding(
+    visibleResults,
+    (capturedAt) => priceAgeLabel(capturedAt)?.stale === false
+  );
 
   // Count active filters
   const activeFilterCount = [
@@ -639,8 +646,8 @@ function SearchContent() {
       <main className="flex-1">
         {/* Background effects */}
         <div className="fixed inset-0 -z-10">
-          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px]" />
+          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-white/[0.02] rounded-full blur-[100px]" />
         </div>
 
         <div className="container mx-auto px-4 pt-20 pb-24 md:pt-24 lg:pb-8">
@@ -650,7 +657,7 @@ function SearchContent() {
             <div className="flex gap-2 mb-2 md:hidden">
               <div className="relative flex-1 group">
                 {smartSearch
-                  ? <Brain className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-400" />
+                  ? <Brain className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
                   : <Sparkles className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
                 }
                 <Input
@@ -659,12 +666,12 @@ function SearchContent() {
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={smartSearch ? "Describe your ideal apartment…" : "Try: '2BR in Miami under $3,500'"}
-                  className={`pl-9 text-base bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-violet-500/30" : ""}`}
+                  className={`pl-9 text-base bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-cyan-500/30" : ""}`}
                 />
               </div>
               <Button
                 size="icon"
-                className={`shadow-lg ${smartSearch ? "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 shadow-violet-500/20" : "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-cyan-500/20"}`}
+                className={`shadow-lg bg-cyan-400 text-black hover:bg-cyan-300 shadow-cyan-500/20`}
                 onClick={handleAiSearch}
                 disabled={aiParsing || loading}
               >
@@ -681,7 +688,7 @@ function SearchContent() {
             <div className="flex items-center gap-2 mb-3 md:hidden">
               <button
                 onClick={() => { setSmartSearch(!smartSearch); setSemanticResults([]); setSemanticQuery(null); }}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${smartSearch ? "bg-violet-500/20 text-violet-300 border border-violet-500/30" : "bg-white/[0.05] text-white/50 border border-white/[0.08] hover:text-white/60"}`}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${smartSearch ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "bg-white/[0.05] text-white/50 border border-white/[0.08] hover:text-white/60"}`}
               >
                 <Brain className="h-3 w-3" />
                 Smart Search {smartSearch ? "ON" : "OFF"}
@@ -740,7 +747,7 @@ function SearchContent() {
               {/* Smart Search toggle pill */}
               <button
                 onClick={() => { setSmartSearch(!smartSearch); setSemanticResults([]); setSemanticQuery(null); }}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 h-12 text-sm font-medium transition-all border ${smartSearch ? "bg-violet-500/15 text-violet-300 border-violet-500/40 shadow-sm shadow-violet-500/20" : "bg-white/[0.03] text-white/50 border-white/[0.08] hover:text-white/60 hover:bg-white/[0.06]"}`}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 h-12 text-sm font-medium transition-all border ${smartSearch ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-sm shadow-cyan-500/20" : "bg-white/[0.03] text-white/50 border-white/[0.08] hover:text-white/60 hover:bg-white/[0.06]"}`}
                 title={smartSearch ? "Smart Search active — natural language mode" : "Enable Smart Search for natural language queries"}
               >
                 <Brain className="h-4 w-4" />
@@ -748,10 +755,10 @@ function SearchContent() {
               </button>
 
               <div className="relative flex-1 group">
-                <div className={`absolute -inset-1 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 ${smartSearch ? "bg-gradient-to-r from-violet-500/20 via-purple-500/20 to-pink-500/20" : "bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20"}`} />
+                <div className={`absolute -inset-1 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 bg-cyan-500/15`} />
                 <div className="relative">
                   {smartSearch
-                    ? <Brain className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-violet-400" />
+                    ? <Brain className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" />
                     : <Sparkles className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" />
                   }
                   <Input
@@ -760,7 +767,7 @@ function SearchContent() {
                     onChange={(e) => setSearchInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder={smartSearch ? "Describe your ideal apartment in plain English…" : "Try: '2 bedroom in Miami under $3,500' or 'pet-friendly studio'"}
-                    className={`h-12 pl-10 bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-violet-500/20" : ""}`}
+                    className={`h-12 pl-10 bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-cyan-500/20" : ""}`}
                   />
                 </div>
               </div>
@@ -809,7 +816,7 @@ function SearchContent() {
               </Button>
 
               <Button
-                className={`h-12 gap-2 shadow-lg ${smartSearch ? "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 shadow-violet-500/20" : "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-cyan-500/20"}`}
+                className={`h-12 gap-2 shadow-lg bg-cyan-400 text-black hover:bg-cyan-300 shadow-cyan-500/20`}
                 onClick={handleAiSearch}
                 disabled={aiParsing || (smartSearch && loading)}
               >
@@ -826,7 +833,7 @@ function SearchContent() {
 
             {/* AI Summary Banner */}
             {aiSummary && (
-              <div className="mt-4 flex items-center gap-3 rounded-xl bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 backdrop-blur-xl border border-cyan-500/20 p-4">
+              <div className="mt-4 flex items-center gap-3 rounded-xl bg-cyan-500/[0.06] backdrop-blur-xl border border-cyan-500/20 p-4">
                 <Sparkles className="h-5 w-5 text-cyan-400 flex-shrink-0" />
                 <p className="text-sm font-medium text-white/90">{aiSummary}</p>
                 <Button
@@ -1093,7 +1100,7 @@ function SearchContent() {
                           onCheckedChange={setPetFriendly}
                         />
                         <span className="flex items-center gap-2 text-sm">
-                          <PawPrint className="h-4 w-4 text-green-600" />
+                          <PawPrint className="h-4 w-4 text-white/60" />
                           Pet-friendly
                         </span>
                       </label>
@@ -1104,7 +1111,7 @@ function SearchContent() {
                           onCheckedChange={setParkingRequired}
                         />
                         <span className="flex items-center gap-2 text-sm">
-                          <Car className="h-4 w-4 text-blue-600" />
+                          <Car className="h-4 w-4 text-white/60" />
                           Parking available
                         </span>
                       </label>
@@ -1158,7 +1165,7 @@ function SearchContent() {
               {smartSearch && semanticQuery ? (
                 <>
                   <div className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-violet-400" />
+                    <Brain className="h-5 w-5 text-cyan-400" />
                     <h1 className="text-2xl font-bold text-white">
                       {loading ? "Finding matches…" : `${semanticResults.length} Building${semanticResults.length !== 1 ? "s" : ""} Matched`}
                     </h1>
@@ -1172,6 +1179,11 @@ function SearchContent() {
                   <h1 className="text-2xl font-bold text-white">
                     {loading ? "Searching..." : `${visibleResults.length} ${visibleResults.length === 1 ? "Apartment" : "Apartments"} Available`}
                   </h1>
+                  {!loading && buildingGroups.length > 1 && (
+                    <p className="text-sm text-white/60">
+                      in {buildingGroups.length} buildings
+                    </p>
+                  )}
                   {capturedAt && (
                     <p className="text-sm text-white/50">
                       Prices updated {new Date(capturedAt).toLocaleDateString()}
@@ -1291,7 +1303,7 @@ function SearchContent() {
                       const score = Math.round(building.relevance_score * 100);
                       return (
                         <Link key={building.id} href={`/buildings/${building.id}`}>
-                          <Card className="group h-full cursor-pointer overflow-hidden bg-white/[0.02] backdrop-blur-xl border-white/[0.06] hover:bg-white/[0.04] hover:border-violet-500/30 transition-all duration-500">
+                          <Card className="group h-full cursor-pointer overflow-hidden bg-white/[0.02] backdrop-blur-xl border-white/[0.06] hover:bg-white/[0.04] hover:border-cyan-500/30 transition-all duration-500">
                             <CardContent className="p-0">
                               {/* Image */}
                               <div className="relative h-44 bg-gradient-to-br from-white/[0.03] to-black/20 overflow-hidden">
@@ -1315,14 +1327,14 @@ function SearchContent() {
                                   </Badge>
                                 )}
                                 {/* Relevance score */}
-                                <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-violet-500/90 backdrop-blur-sm px-2 py-0.5">
+                                <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-cyan-500/90 backdrop-blur-sm px-2 py-0.5">
                                   <Star className="h-3 w-3 text-white fill-white" />
                                   <span className="text-xs font-medium text-white">{score}% match</span>
                                 </div>
                               </div>
 
                               <div className="p-4">
-                                <h3 className="font-semibold text-white group-hover:text-violet-400 transition-colors">
+                                <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors">
                                   {building.name}
                                 </h3>
                                 <p className="mt-1 flex items-center gap-1 text-sm text-white/50">
@@ -1339,7 +1351,7 @@ function SearchContent() {
                                 <div className="mt-3">
                                   <div className="h-1 w-full rounded-full bg-white/[0.06]">
                                     <div
-                                      className="h-1 rounded-full bg-gradient-to-r from-violet-500 to-purple-400 transition-all"
+                                      className="h-1 rounded-full bg-cyan-400 transition-all"
                                       style={{ width: `${score}%` }}
                                     />
                                   </div>
@@ -1388,35 +1400,48 @@ function SearchContent() {
                     </p>
                   </div>
                 ) : (
-                  visibleResults.map((result) => {
-                    const primaryImage = result.images?.[0];
-                    const priceAge = priceAgeLabel(result.pricing?.captured_at);
+                  buildingGroups.map((group) => {
+                    const { building, units, lead, imageUnit } = group;
+                    const primaryImage = imageUnit?.images?.[0];
+                    const priceAge = priceAgeLabel(lead.pricing?.captured_at);
                     // Fall back to the placeholder if the photo failed to load,
-                    // rather than dropping the listing from the grid
-                    const showImage = Boolean(primaryImage) && !brokenImageIds.has(result.unit.id);
-                    const hasFloorplan = result.floorplan?.layout_image_url;
-                    const isHighlighted = highlightedListingId === result.unit.id;
+                    // rather than dropping the building from the grid
+                    const showImage = Boolean(primaryImage) && !brokenImageIds.has(building.id);
+                    const isHighlighted = highlightedBuildingId === building.id;
+                    const multi = units.length > 1;
+                    const beds = bedRangeLabel(group.bedsMin, group.bedsMax);
+                    const sqft =
+                      group.sqftMin === null
+                        ? null
+                        : group.sqftMin === group.sqftMax
+                          ? `${group.sqftMin.toLocaleString()} sqft`
+                          : `${group.sqftMin.toLocaleString()}–${group.sqftMax!.toLocaleString()} sqft`;
+                    const moveIn = group.earliestAvailable
+                      ? Date.parse(group.earliestAvailable) <= Date.now()
+                        ? "Available now"
+                        : `Available ${new Date(group.earliestAvailable).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+                      : null;
 
                     return (
                       <Link
-                        key={result.unit.id}
-                        href={`/buildings/${result.building.id}`}
-                        onMouseEnter={() => setHighlightedListingId(result.unit.id)}
-                        onMouseLeave={() => setHighlightedListingId(null)}
+                        key={building.id}
+                        href={`/buildings/${building.id}`}
+                        onMouseEnter={() => setHighlightedBuildingId(building.id)}
+                        onMouseLeave={() => setHighlightedBuildingId(null)}
                       >
-                        <Card className={`group h-full cursor-pointer overflow-hidden bg-white/[0.02] backdrop-blur-xl border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-500 ${isHighlighted ? "ring-2 ring-cyan-500/50 shadow-lg shadow-cyan-500/10" : ""}`}>
+                        <Card className={`group h-full cursor-pointer overflow-hidden bg-white/[0.02] backdrop-blur-xl border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-500 ${isHighlighted ? "ring-2 ring-cyan-400/60 shadow-lg shadow-cyan-500/10" : ""}`}>
                           <CardContent className="p-0">
                             {/* Image section */}
                             <div className="relative h-48 bg-gradient-to-br from-white/[0.03] to-black/20 overflow-hidden">
                               {showImage && primaryImage ? (
                                 <Image
                                   src={primaryImage.url}
-                                  alt={primaryImage.alt_text || `${result.building.name} - Unit ${result.unit.unit_number}`}
+                                  alt={primaryImage.alt_text || building.name}
                                   fill
                                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                   onError={() => {
-                                    setBrokenImageIds((prev) => new Set([...prev, result.unit.id]));
+                                    setBrokenImageIds((prev) => new Set([...prev, building.id]));
                                   }}
                                 />
                               ) : (
@@ -1428,58 +1453,64 @@ function SearchContent() {
                               {showImage && (
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                               )}
-                              {result.building.neighborhoods && (
+                              {building.neighborhoods && (
                                 <Badge className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm" variant="secondary">
-                                  {result.building.neighborhoods.name}
+                                  {building.neighborhoods.name}
                                 </Badge>
                               )}
                               <div className="absolute top-3 right-3 flex gap-2">
-                                {commute && commuteTimes?.[result.building.id] !== undefined && (
-                                  <Badge className="bg-cyan-950/90 text-cyan-300 backdrop-blur-sm gap-1" variant="outline">
+                                {commute && commuteTimes?.[building.id] !== undefined && (
+                                  <Badge className="bg-black/80 text-white backdrop-blur-sm gap-1" variant="outline">
                                     <Navigation className="h-3 w-3" />
-                                    {commuteTimes[result.building.id]} min
+                                    {commuteTimes[building.id]} min
                                   </Badge>
                                 )}
-                                {hasFloorplan && (
+                                {group.hasFloorplan && (
                                   <Badge className="bg-background/90 backdrop-blur-sm gap-1" variant="outline">
                                     <Layout className="h-3 w-3" />
                                     Floor Plan
                                   </Badge>
                                 )}
-                                {result.unit.unit_number && (
+                                {multi ? (
                                   <Badge className="bg-background/90 backdrop-blur-sm" variant="outline">
-                                    Unit {result.unit.unit_number}
+                                    {units.length} units
                                   </Badge>
+                                ) : (
+                                  lead.unit.unit_number && (
+                                    <Badge className="bg-background/90 backdrop-blur-sm" variant="outline">
+                                      Unit {lead.unit.unit_number}
+                                    </Badge>
+                                  )
                                 )}
                               </div>
                               {/* Image count indicator */}
-                              {result.images && result.images.length > 1 && (
+                              {imageUnit?.images && imageUnit.images.length > 1 && (
                                 <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                                  +{result.images.length - 1} photos
+                                  +{imageUnit.images.length - 1} photos
                                 </div>
                               )}
                               {/* Compare and Favorite buttons */}
                               <div className="absolute bottom-3 left-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                 <CompareButton
                                   building={{
-                                    id: result.building.id,
-                                    name: result.building.name,
-                                    address: result.building.address_1,
-                                    neighborhood: result.building.neighborhoods?.name,
+                                    id: building.id,
+                                    name: building.name,
+                                    address: building.address_1,
+                                    neighborhood: building.neighborhoods?.name,
                                     image: primaryImage?.url,
                                   }}
                                 />
                                 <FavoriteButton
                                   item={{
-                                    id: result.building.id,
+                                    id: building.id,
                                     type: "building",
-                                    name: result.building.name,
-                                    address: result.building.address_1,
-                                    neighborhood: result.building.neighborhoods?.name,
+                                    name: building.name,
+                                    address: building.address_1,
+                                    neighborhood: building.neighborhoods?.name,
                                     image: primaryImage?.url,
-                                    price: result.pricing?.rent,
-                                    beds: result.unit.beds ?? undefined,
-                                    baths: result.unit.baths ?? undefined,
+                                    price: group.minRent ?? undefined,
+                                    beds: lead.unit.beds ?? undefined,
+                                    baths: lead.unit.baths ?? undefined,
                                   }}
                                   size="md"
                                 />
@@ -1488,38 +1519,40 @@ function SearchContent() {
 
                             <div className="p-4">
                               <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors">
-                                {result.building.name}
+                                {building.name}
                               </h3>
-                              <p className="mt-1 flex items-center gap-1 text-sm text-white/50">
+                              <p className="mt-1 flex items-center gap-1 text-sm text-white/60">
                                 <MapPin className="h-3 w-3" />
-                                {result.building.address_1}
+                                {building.address_1}
                               </p>
 
                               <div className="mt-3 flex flex-wrap gap-2">
-                                <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
-                                  <Bed className="h-3 w-3" />
-                                  {result.unit.beds === 0 ? "Studio" : `${result.unit.beds} bed`}
-                                </Badge>
-                                {result.unit.baths && (
+                                {beds && (
+                                  <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
+                                    <Bed className="h-3 w-3" />
+                                    {beds}
+                                  </Badge>
+                                )}
+                                {!multi && lead.unit.baths && (
                                   <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
                                     <Bath className="h-3 w-3" />
-                                    {result.unit.baths} bath
+                                    {lead.unit.baths} bath
                                   </Badge>
                                 )}
-                                {result.unit.sqft && (
+                                {sqft && (
                                   <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
                                     <Square className="h-3 w-3" />
-                                    {result.unit.sqft.toLocaleString()} sqft
+                                    {sqft}
                                   </Badge>
                                 )}
-                                {result.building.pet_policy && (
-                                  <Badge variant="secondary" className="gap-1 bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                                {building.pet_policy && (
+                                  <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
                                     <PawPrint className="h-3 w-3" />
                                     Pets OK
                                   </Badge>
                                 )}
-                                {result.building.parking_policy && (
-                                  <Badge variant="secondary" className="gap-1 bg-blue-500/10 text-blue-400 border-blue-500/20">
+                                {building.parking_policy && (
+                                  <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
                                     <Car className="h-3 w-3" />
                                     Parking
                                   </Badge>
@@ -1528,27 +1561,28 @@ function SearchContent() {
 
                               <div className="mt-4 flex items-end justify-between">
                                 <div>
-                                  {result.pricing ? (
+                                  {group.minRent !== null ? (
                                     <>
+                                      {multi && <span className="text-sm text-white/60">From </span>}
                                       <span className="text-xl font-bold text-white">
-                                        {formatPrice(result.pricing.rent)}
+                                        {formatPrice(group.minRent)}
                                       </span>
-                                      <span className="text-white/50">/mo</span>
+                                      <span className="text-white/60">/mo</span>
                                     </>
                                   ) : (
-                                    <span className="text-white/50">Contact for pricing</span>
+                                    <span className="text-white/60">Contact for pricing</span>
                                   )}
                                 </div>
                                 <div className="flex flex-col items-end gap-0.5">
-                                  {result.unit.available_on && (
-                                    <span className="flex items-center gap-1 text-sm text-white/50">
+                                  {moveIn && (
+                                    <span className="flex items-center gap-1 text-sm text-white/60">
                                       <Calendar className="h-3 w-3" />
-                                      {new Date(result.unit.available_on).toLocaleDateString()}
+                                      {moveIn}
                                     </span>
                                   )}
                                   {priceAge && (
                                     <span
-                                      className={`flex items-center gap-1 text-xs ${priceAge.stale ? "text-amber-400/90" : "text-white/50"}`}
+                                      className={`flex items-center gap-1 text-xs ${priceAge.stale ? "text-amber-400/90" : "text-white/60"}`}
                                       title={priceAge.stale ? "This price hasn't been re-verified recently" : "Price last verified"}
                                     >
                                       <Clock className="h-3 w-3" />
@@ -1572,29 +1606,27 @@ function SearchContent() {
             {showMap && !smartSearch && (
               <div className="lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100dvh-300px)] rounded-xl overflow-hidden border border-white/[0.08] sticky top-4">
                 <SearchMap
-                  listings={visibleResults
-                    .filter((r) => r.building.lat && r.building.lng && r.pricing)
-                    .map((r) => ({
-                      id: r.unit.id,
-                      buildingId: r.building.id,
-                      buildingName: r.building.name,
-                      unitNumber: r.unit.unit_number || "",
-                      lat: r.building.lat!,
-                      lng: r.building.lng!,
-                      rent: r.pricing!.rent,
-                      beds: r.unit.beds || 0,
-                      baths: r.unit.baths || 1,
-                      sqft: r.unit.sqft,
-                      neighborhood: r.building.neighborhoods?.name || "",
+                  // One pin per building, quoting exactly what its card quotes
+                  listings={buildingGroups
+                    .filter((g) => g.building.lat && g.building.lng && g.minRent !== null)
+                    .map((g) => ({
+                      id: g.lead.unit.id,
+                      buildingId: g.building.id,
+                      buildingName: g.building.name,
+                      unitNumber: g.lead.unit.unit_number || "",
+                      lat: g.building.lat!,
+                      lng: g.building.lng!,
+                      rent: g.minRent!,
+                      maxRent: g.maxRent ?? undefined,
+                      unitCount: g.units.length,
+                      beds: g.lead.unit.beds || 0,
+                      baths: g.lead.unit.baths || 1,
+                      sqft: g.lead.unit.sqft,
+                      neighborhood: g.building.neighborhoods?.name || "",
                     }))}
-                  onListingClick={(id) => {
-                    const result = results.find((r) => r.unit.id === id);
-                    if (result) {
-                      router.push(`/buildings/${result.building.id}`);
-                    }
-                  }}
-                  onListingHover={setHighlightedListingId}
-                  highlightedListingId={highlightedListingId}
+                  onBuildingClick={(buildingId) => router.push(`/buildings/${buildingId}`)}
+                  onBuildingHover={setHighlightedBuildingId}
+                  highlightedBuildingId={highlightedBuildingId}
                 />
               </div>
             )}

@@ -514,7 +514,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   </div>
                 )}
                 {buildingFacts.move_in_specials && (
-                  <Badge className="mt-4 bg-green-600">
+                  <Badge className="mt-4 bg-white text-black hover:bg-white">
                     Special Offer Available
                   </Badge>
                 )}
@@ -564,7 +564,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                         </Badge>
                       )}
                       {lastTourDebrief && (
-                        <Badge variant="outline" className="gap-1 border-indigo-700/60 text-indigo-400">
+                        <Badge variant="outline" className="gap-1 border-white/20 text-white/80">
                           <Footprints className="h-3.5 w-3.5" />
                           Toured by Staycio {formatDate(lastTourDebrief.submitted_at)}
                         </Badge>
@@ -638,14 +638,14 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
             <div className="lg:col-span-2 space-y-8">
               {/* Move-in Specials */}
               {buildingFacts.move_in_specials && (
-                <Card className="border-green-500/50 bg-green-500/5">
+                <Card className="border-white/15 bg-white/[0.03]">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-600">
+                    <CardTitle className="flex items-center gap-2 text-white">
                       <span className="text-xl">🎉</span> Move-in Special
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-green-700 dark:text-green-400 font-medium">
+                    <p className="text-white/80 font-medium">
                       {buildingFacts.move_in_specials}
                     </p>
                   </CardContent>

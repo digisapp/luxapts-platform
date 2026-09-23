@@ -222,7 +222,7 @@ export function ChatWidget() {
           <MessageCircle className="h-6 w-6" />
           <span
             aria-hidden="true"
-            className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-700 text-[10px] text-white font-medium"
+            className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-400 text-[10px] text-black font-semibold"
           >
             AI
           </span>
@@ -244,8 +244,8 @@ export function ChatWidget() {
             onClick={() => isMinimized && setIsMinimized(false)}
           >
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600">
-                <Sparkles className="h-4 w-4 text-white" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-400">
+                <Sparkles className="h-4 w-4 text-black" />
               </div>
               <div>
                 <p className="text-sm font-medium text-white">Stacy</p>

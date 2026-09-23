@@ -20,12 +20,12 @@ function stableIndex(seed: string, length: number): number {
 
 /** Muted, on-brand tints — enough variation that a grid does not look broken. */
 const TINTS = [
-  "from-cyan-500/[0.07] via-transparent to-blue-500/[0.05]",
+  "from-cyan-500/[0.07] via-transparent to-slate-400/[0.05]",
   "from-slate-400/[0.07] via-transparent to-cyan-500/[0.04]",
-  "from-indigo-500/[0.06] via-transparent to-cyan-400/[0.05]",
-  "from-teal-500/[0.06] via-transparent to-slate-400/[0.05]",
-  "from-sky-500/[0.07] via-transparent to-indigo-500/[0.04]",
-  "from-blue-500/[0.06] via-transparent to-teal-400/[0.05]",
+  "from-white/[0.05] via-transparent to-cyan-400/[0.05]",
+  "from-cyan-400/[0.05] via-transparent to-white/[0.04]",
+  "from-slate-500/[0.07] via-transparent to-cyan-500/[0.03]",
+  "from-white/[0.04] via-transparent to-slate-400/[0.05]",
 ];
 
 export function ListingPlaceholder({

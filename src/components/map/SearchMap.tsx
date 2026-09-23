@@ -33,15 +33,18 @@ interface MapListing {
   baths: number;
   sqft: number | null;
   neighborhood: string;
+  /** Set when one listing stands for a whole building (its "from" rent). */
+  unitCount?: number;
+  maxRent?: number;
 }
 
 interface SearchMapProps {
   listings: MapListing[];
   center?: [number, number];
   zoom?: number;
-  onListingClick?: (listingId: string) => void;
-  onListingHover?: (listingId: string | null) => void;
-  highlightedListingId?: string | null;
+  onBuildingClick?: (buildingId: string) => void;
+  onBuildingHover?: (buildingId: string | null) => void;
+  highlightedBuildingId?: string | null;
   className?: string;
 }
 
@@ -49,9 +52,9 @@ export function SearchMap({
   listings,
   center = DEFAULT_CENTER,
   zoom = 12,
-  onListingClick,
-  onListingHover,
-  highlightedListingId,
+  onBuildingClick,
+  onBuildingHover,
+  highlightedBuildingId,
   className = "",
 }: SearchMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -69,12 +72,12 @@ export function SearchMap({
   // (inline callbacks and freshly-mapped arrays would otherwise destroy and
   // recreate every marker under the cursor on each hover)
   const listingsRef = useRef(listings);
-  const onListingClickRef = useRef(onListingClick);
-  const onListingHoverRef = useRef(onListingHover);
+  const onBuildingClickRef = useRef(onBuildingClick);
+  const onBuildingHoverRef = useRef(onBuildingHover);
   useEffect(() => {
     listingsRef.current = listings;
-    onListingClickRef.current = onListingClick;
-    onListingHoverRef.current = onListingHover;
+    onBuildingClickRef.current = onBuildingClick;
+    onBuildingHoverRef.current = onBuildingHover;
   });
 
   // Stable signature of the listing data — markers only rebuild when this changes
@@ -172,10 +175,10 @@ export function SearchMap({
     // Create markers
     buildingGroups.forEach((buildingListings, key) => {
       const [lat, lng] = key.split(",").map(Number);
-      const count = buildingListings.length;
+      const count = buildingListings.reduce((n, l) => n + (l.unitCount ?? 1), 0);
       const firstListing = buildingListings[0];
       const minRent = Math.min(...buildingListings.map((l) => l.rent));
-      const maxRent = Math.max(...buildingListings.map((l) => l.rent));
+      const maxRent = Math.max(...buildingListings.map((l) => l.maxRent ?? l.rent));
 
       // Create marker element
       const el = document.createElement("div");
@@ -204,8 +207,8 @@ export function SearchMap({
           </div>
         `;
         el.style.cssText = "cursor: pointer;";
-        markerElsRef.current.set(firstListing.id, el);
       }
+      markerElsRef.current.set(firstListing.buildingId, el);
 
       // Create popup content (escaped to prevent XSS)
       const popupContent = count > 1
@@ -260,29 +263,25 @@ export function SearchMap({
         // Keep the map's closeOnClick from racing this handler
         e.stopPropagation();
         if (hoverCapable) {
-          onListingClickRef.current?.(firstListing.id);
+          onBuildingClickRef.current?.(firstListing.buildingId);
         } else if (popup.isOpen()) {
           // Second tap: navigate
-          onListingClickRef.current?.(firstListing.id);
+          onBuildingClickRef.current?.(firstListing.buildingId);
         } else {
           // First tap: preview
           openPopup();
-          if (count === 1) {
-            onListingHoverRef.current?.(firstListing.id);
-          }
+          onBuildingHoverRef.current?.(firstListing.buildingId);
         }
       });
 
       if (hoverCapable) {
         el.addEventListener("mouseenter", () => {
-          if (count === 1) {
-            onListingHoverRef.current?.(firstListing.id);
-          }
+          onBuildingHoverRef.current?.(firstListing.buildingId);
           openPopup();
         });
 
         el.addEventListener("mouseleave", () => {
-          onListingHoverRef.current?.(null);
+          onBuildingHoverRef.current?.(null);
           closePopup();
         });
       }
@@ -294,13 +293,13 @@ export function SearchMap({
 
   // Toggle highlight class on existing marker elements without recreating markers
   useEffect(() => {
-    markerElsRef.current.forEach((el, listingId) => {
-      const inner = el.querySelector(".single-marker");
-      if (inner) {
-        inner.classList.toggle("highlighted", listingId === highlightedListingId);
-      }
+    markerElsRef.current.forEach((el, buildingId) => {
+      const on = buildingId === highlightedBuildingId;
+      el.querySelector(".single-marker, .cluster-marker")?.classList.toggle("highlighted", on);
+      // Dense areas stack pins; lift the highlighted one above its neighbours
+      el.style.zIndex = on ? "10" : "";
     });
-  }, [highlightedListingId, listingsKey, mapLoaded]);
+  }, [highlightedBuildingId, listingsKey, mapLoaded]);
 
   // Fit bounds to show all markers
   const fitBounds = useCallback(() => {
@@ -344,14 +343,10 @@ export function SearchMap({
           padding: 6px 10px;
           border-radius: 20px;
           background: #18181b;
-          border: 2px solid #6366f1;
+          border: 2px solid rgba(255, 255, 255, 0.35);
           box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
           transition: all 0.2s;
           gap: 4px;
-        }
-        .cluster-marker:hover {
-          background: #6366f1;
-          transform: scale(1.05);
         }
         .cluster-badge {
           display: inline-flex;
@@ -372,18 +367,29 @@ export function SearchMap({
           padding: 6px 10px;
           border-radius: 20px;
           background: #18181b;
-          border: 2px solid #3b82f6;
+          border: 2px solid rgba(255, 255, 255, 0.35);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
           transition: all 0.2s;
         }
-        .single-marker:hover {
-          background: #3b82f6;
-          transform: scale(1.05);
+        /* Hovering a pin, or its building's card, lights it in the brand cyan */
+        .single-marker:hover,
+        .cluster-marker:hover,
+        .single-marker.highlighted,
+        .cluster-marker.highlighted {
+          background: #22d3ee;
+          border-color: #22d3ee;
+          transform: scale(1.08);
         }
-        .single-marker.highlighted {
-          border-color: #f59e0b;
-          background: #f59e0b;
-          transform: scale(1.1);
+        .single-marker:hover .marker-price,
+        .cluster-marker:hover .marker-price,
+        .single-marker.highlighted .marker-price,
+        .cluster-marker.highlighted .marker-price {
+          color: #000;
+        }
+        .cluster-marker:hover .cluster-badge,
+        .cluster-marker.highlighted .cluster-badge {
+          background: rgba(0, 0, 0, 0.2);
+          color: #000;
         }
         .marker-price {
           color: white;
@@ -413,7 +419,7 @@ export function SearchMap({
           margin: 2px 0;
         }
         .map-popup .popup-price {
-          color: #3b82f6;
+          color: white;
           font-weight: 600;
           font-size: 14px;
         }
@@ -423,7 +429,10 @@ export function SearchMap({
         }
       `}</style>
       <div className={`relative w-full h-full ${className}`}>
-        <div ref={mapContainer} className="absolute inset-0" />
+        {/* h-full/w-full, not just inset-0: mapbox-gl.css sets .mapboxgl-map to
+            position: relative and, being unlayered, beats Tailwind v4's layered
+            utilities — with inset-0 alone the map collapsed to 0px tall. */}
+        <div ref={mapContainer} className="absolute inset-0 h-full w-full" />
         {mapError && (
           <div
             role="status"

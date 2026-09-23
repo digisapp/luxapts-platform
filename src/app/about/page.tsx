@@ -56,13 +56,13 @@ export default function AboutPage() {
         {/* Mission */}
         <section className="relative overflow-hidden px-6 pt-16 pb-16 lg:pt-24">
           <div className="absolute inset-0" aria-hidden="true">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-cyan-500/10 rounded-full blur-[120px]" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-cyan-500/[0.07] rounded-full blur-[120px]" />
           </div>
 
           <div className="relative z-10 mx-auto max-w-3xl">
             <h1 className="text-4xl lg:text-5xl font-medium tracking-tight leading-[1.1]">
               Finding a home should feel like{" "}
-              <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
                 a conversation.
               </span>
             </h1>
@@ -157,7 +157,7 @@ export default function AboutPage() {
             <div className="mt-10 flex flex-wrap gap-x-10 gap-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-7 py-6">
               {beats.map((beat) => (
                 <div key={beat.word}>
-                  <span className="text-xl font-medium bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">
+                  <span className="text-xl font-medium bg-gradient-to-r from-cyan-200 to-cyan-400 bg-clip-text text-transparent">
                     {beat.word}.
                   </span>
                   <span className="ml-2.5 text-sm text-white/50">
@@ -174,13 +174,13 @@ export default function AboutPage() {
           <div className="mx-auto max-w-3xl">
             <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] p-10 text-center">
               <div className="absolute inset-0" aria-hidden="true">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-[100px]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-cyan-500/10 to-cyan-500/10 rounded-full blur-[100px]" />
               </div>
 
               <div className="relative z-10">
                 <p className="text-xl md:text-2xl font-medium leading-snug">
                   Staycio is the space.{" "}
-                  <span className="bg-gradient-to-r from-cyan-200 to-blue-400 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-cyan-200 to-cyan-400 bg-clip-text text-transparent">
                     Stacy
                   </span>{" "}
                   is who finds it for you.
