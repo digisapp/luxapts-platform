@@ -19,13 +19,13 @@ from shapely import affinity
 
 P = dict(
     cx=435, cy=495, R=255, tip_y=912, tip_round=14,   # pin
-    sx=432, sy=550,                                   # S centre (between the bowls)
+    sx=432, sy=575,                                   # S centre (between the bowls)
     w=96,                                             # channel width where the bowls meet
     rin_top=30, rin_bot=28,                           # counter radii = half the tongue / lobe thickness
-    lift=28,                                          # upper stroke swells to w + 2*lift at the top
+    lift=42,                                          # upper stroke swells to w + 2*lift at the top
     taper=2.0, taper_bot=2.1,                         # opening circles (x r_out): top crescent tip, bottom-left tip
     tilt=17,                                          # degrees, rotates the S about its centre
-    door_w=82, door_h=118, door_dx=38, door_gap=-6,   # door (upright)
+    door_cx=492, door_top=352, door_w=94,             # door: upright, rounded top, base hidden by the tongue
     corner=6,                                         # soften every sharp corner
 )
 if len(sys.argv) > 1:
@@ -71,18 +71,15 @@ def black(p):
         shape = affinity.rotate(shape, p["tilt"], origin=(sx, sy))
     return shape, o1, rin1, rout1
 
-def door(p, o1, rin):
-    import math
-    # Anchor on the tongue's top edge, then follow the S's tilt; the door
-    # itself stays upright and sits on the highest point of that sloped edge.
-    t = math.radians(p["tilt"])
-    ax, ay = o1[0] + p["door_dx"] - p["sx"], o1[1] - rin - p["sy"]
-    x = p["sx"] + ax * math.cos(t) - ay * math.sin(t)
-    y = p["sy"] + ax * math.sin(t) + ay * math.cos(t)
-    w, h = p["door_w"], p["door_h"]
-    base = y - (w / 2) * abs(math.tan(t)) - p["door_gap"]
-    body = box(x - w / 2, base - h + w / 2, x + w / 2, base)
-    return unary_union([body, circ(x, base - h + w / 2, w / 2)])
+def door(p, white):
+    """An upright door whose base disappears behind the tongue, as if it
+    stands on the path. Built long, then the white shape is cut away and only
+    the part above the tongue is kept."""
+    x, top, w = p["door_cx"], p["door_top"], p["door_w"]
+    tall = box(x - w / 2, top + w / 2, x + w / 2, top + 600)
+    raw = unary_union([tall, circ(x, top + w / 2, w / 2)]).difference(white)
+    parts = [raw] if raw.geom_type == "Polygon" else list(raw.geoms)
+    return next(g for g in parts if g.contains(Point(x, top + w / 2)))
 
 def soften(g, r):
     return g.buffer(-r, 32).buffer(2 * r, 32).buffer(-r, 32) if r else g
@@ -91,7 +88,7 @@ def build(p):
     pn = pin(p)
     blk, o1, rin, rout = black(p)
     white = soften(pn.difference(blk), p["corner"])
-    return white, soften(door(p, o1, rin), 3)
+    return white, soften(door(p, white), 3)
 
 if __name__ == "__main__":
     white, dr = build(P)
