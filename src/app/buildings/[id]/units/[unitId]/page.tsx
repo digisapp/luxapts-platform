@@ -227,8 +227,10 @@ export default async function UnitPage({
                   )}
                 </div>
 
-                {/* Price */}
-                {latestPrice ? (
+                {/* Price. An unavailable unit shows none: its last rent is at
+                    best stale, and for the generated units hidden 2026-09-23
+                    it was never real. */}
+                {!unit.is_available ? null : latestPrice ? (
                   <div>
                     <p className="text-sm text-muted-foreground">Monthly rent</p>
                     <p className="text-3xl font-bold">
@@ -309,7 +311,7 @@ export default async function UnitPage({
               )}
 
               {/* Price History */}
-              {priceHistory.length > 1 && (
+              {unit.is_available && priceHistory.length > 1 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">

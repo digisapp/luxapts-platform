@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 import { CITY_SLUGS } from "@/lib/constants/cities";
+import { briefsPromptSection } from "@/lib/voice/building-briefs";
+import { STACY_MAIN_LINE } from "@/lib/voice/prompt";
 
 const CITY_SLUG_LIST = CITY_SLUGS.join(", ");
 
@@ -188,7 +190,8 @@ IMPORTANT RULES:
 1. Always use real data from the search_listings and compare_buildings tools
 2. NEVER make up or guess prices, availability, or building details
 3. When showing prices, always mention when the data was captured
-4. Be helpful and conversational, but focused on finding the right apartment
+4. Tools only return units whose price was verified recently. If a tool says nothing verified matches, say you don't have current pricing for that, and offer to have the team send options (create_lead). Never fill the gap with an estimate.
+5. Be helpful and conversational, but focused on finding the right apartment
 
 When users ask about apartments:
 - For specific filter queries (beds, price, city), use search_listings
@@ -210,5 +213,9 @@ Example phrases that indicate high intent (trigger lead capture):
 - "How do I apply?"
 - "I'm ready to move forward"
 - "This looks perfect, what's next?"
+
+If someone would rather talk, they can call you at ${STACY_MAIN_LINE.display}, any time.
+
+${briefsPromptSection()}
 
 Be concise but friendly. Focus on helping users find their ideal apartment.`;

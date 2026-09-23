@@ -5,6 +5,7 @@ import { cachedSearch, type SearchResponse } from "@/lib/search/cache";
 import { searchRequestSchema } from "@/lib/validations";
 import { normalizeCitySlug } from "@/lib/constants/cities";
 import { getFirstRelation } from "@/lib/db-helpers";
+import { isVerifiedPrice } from "@/lib/verified-pricing";
 
 // Per-request state passed through a single chat turn so tool usage can be
 // bounded (e.g. at most one lead created per conversation turn).
@@ -50,13 +51,27 @@ interface EmbeddedPricing {
   captured_at?: string | null;
 }
 
-/** Compact, image-light projection of a search page for the model. */
-function compactSearchResults(res: SearchResponse) {
+const NOTHING_VERIFIED =
+  "No units with recently verified pricing match. Do not quote prices or availability from memory; " +
+  "say so, and offer to have the team send current options (create_lead).";
+
+/**
+ * Compact, image-light projection of a search page for the model. Only units
+ * with a verified price (see verified-pricing.ts) are returned: the model
+ * repeats whatever it is given as a promise to a real renter.
+ */
+function compactSearchResults(res: SearchResponse, limit: number) {
+  const verified = res.results.filter((r) => {
+    const p = (r.pricing ?? null) as EmbeddedPricing | null;
+    return isVerifiedPrice(p?.rent, p?.captured_at);
+  });
   return {
     city: res.city,
     captured_at_max: res.captured_at_max,
-    result_count: res.results.length,
-    results: res.results.map((r) => {
+    result_count: Math.min(verified.length, limit),
+    unverified_omitted: res.results.length - verified.length,
+    ...(verified.length === 0 ? { note: NOTHING_VERIFIED } : {}),
+    results: verified.slice(0, limit).map((r) => {
       const b = (r.building ?? {}) as EmbeddedBuilding;
       const p = (r.pricing ?? null) as EmbeddedPricing | null;
       const image = (r.images?.[0] ?? null) as { url?: string } | null;
@@ -122,7 +137,15 @@ function compactBuildingDetails(payload: unknown): unknown {
   const floorplans = Array.isArray(b.floorplans)
     ? b.floorplans.map((f) => pick(f, ["id", "name", "beds", "baths", "sqft", "sqft_min", "sqft_max"]))
     : [];
-  const units = Array.isArray(b.units) ? b.units : [];
+  // Verified units only; the building's price_range is recomputed from them
+  // because the route's range includes stale captures.
+  const units = (Array.isArray(b.units) ? b.units : []).filter((u) => {
+    const latest = (u as Row).latest_price as { rent?: number; captured_at?: string } | null | undefined;
+    return isVerifiedPrice(latest?.rent, latest?.captured_at);
+  });
+  const rents = units
+    .map((u) => ((u as Row).latest_price as { rent?: number } | null)?.rent)
+    .filter((r): r is number => typeof r === "number");
   const buildingId = typeof b.id === "string" ? b.id : null;
 
   return {
@@ -130,8 +153,9 @@ function compactBuildingDetails(payload: unknown): unknown {
       ...pick(b, [
         "id", "name", "address_1", "zip", "year_built", "stories",
         "pet_policy", "parking_policy", "deposit_policy",
-        "leasing_phone", "leasing_email", "website_url", "price_range",
+        "leasing_phone", "leasing_email", "website_url",
       ]),
+      price_range: rents.length ? { min: Math.min(...rents), max: Math.max(...rents) } : null,
       description: truncate(b.description, MAX_DESCRIPTION_CHARS),
       city: city ? pick(city, ["name", "slug", "state"]) : null,
       neighborhood: neighborhood ? pick(neighborhood, ["name", "slug"]) : null,
@@ -139,6 +163,13 @@ function compactBuildingDetails(payload: unknown): unknown {
       facts,
       floorplans,
       available_units_count: units.length,
+      ...(units.length === 0
+        ? {
+            note:
+              "No recently verified pricing for this building. Describe it, but don't quote rents " +
+              "or say units are available; offer a tour request or a follow-up instead.",
+          }
+        : {}),
       units: units.slice(0, MAX_DETAIL_UNITS).map((u) => {
         const unit = pick(u, ["id", "unit_number", "beds", "baths", "sqft", "available_on"]);
         const latest = (u as Row).latest_price as { rent?: number; captured_at?: string } | null | undefined;
@@ -171,24 +202,39 @@ export async function executeTool(
         // avoids an extra function invocation + network hop. Validated with the
         // same schema the route uses. The model routinely writes "NYC"/"LA";
         // map shorthand onto the real database slugs before validating.
+        // Fetch a full page and trim after filtering, so unverified rows
+        // don't eat the model's requested count.
+        const limit = clampSearchLimit(args.limit);
         const parsed = searchRequestSchema.safeParse({
           ...args,
           city_slug: normalizeCitySlug(args.city_slug),
-          limit: clampSearchLimit(args.limit),
+          limit: MAX_SEARCH_LIMIT,
         });
         if (!parsed.success) {
           return { error: parsed.error.issues[0]?.message || "Invalid search parameters" };
         }
-        return compactSearchResults(await cachedSearch(parsed.data));
+        return compactSearchResults(await cachedSearch(parsed.data), limit);
       }
 
-      case "compare_buildings":
+      case "compare_buildings": {
         response = await fetch(`${baseUrl}/api/compare`, {
           method: "POST",
           headers: jsonHeaders,
           body: JSON.stringify(args),
         });
-        break;
+        if (!response.ok) break;
+        // Price stats aggregate every available unit. A side whose newest
+        // capture is stale has nothing verified to compare on.
+        const compared = (await response.json()) as Row;
+        for (const side of ["building_a", "building_b"]) {
+          const b = compared[side] as Row | undefined;
+          if (b && !isVerifiedPrice(1, b.price_captured_at_max)) {
+            delete b.price_stats;
+            b.pricing_note = "No recently verified pricing; don't quote rents for this building.";
+          }
+        }
+        return compared;
+      }
 
       case "get_building_details":
         if (typeof args.building_id !== "string" || !isValidUUID(args.building_id)) {

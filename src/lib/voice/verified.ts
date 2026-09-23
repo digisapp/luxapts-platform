@@ -1,28 +1,11 @@
-import { INVENTORY_MAX_AGE_DAYS } from "@/lib/microsite-inventory";
+import { isVerifiedPrice } from "@/lib/verified-pricing";
+
+export { isVerifiedPrice };
 
 /**
- * What Stacy may say out loud on a phone call.
- *
- * Most "available" units in the catalog were never priced by a scrape (template
- * floorplans with random rents, and 12-per-building generated units, all priced
- * January 2026). On the website that is a bad listing; spoken on a call it is a
- * promise to a real person. So the phone agent only ever sees units whose price
- * was captured recently, using the same cutoff the microsites use.
+ * What Stacy may say out loud on a phone call: verified units only (see
+ * verified-pricing.ts), trimmed to what can be spoken.
  */
-
-const DAY_MS = 86_400_000;
-
-export function isVerifiedPrice(
-  rent: unknown,
-  capturedAt: unknown,
-  now: Date = new Date()
-): boolean {
-  if (typeof rent !== "number" || !(rent > 0)) return false;
-  if (typeof capturedAt !== "string") return false;
-  const captured = new Date(capturedAt).getTime();
-  if (Number.isNaN(captured)) return false;
-  return captured >= now.getTime() - INVENTORY_MAX_AGE_DAYS * DAY_MS;
-}
 
 type Row = Record<string, unknown>;
 

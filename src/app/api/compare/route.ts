@@ -151,6 +151,7 @@ export async function POST(req: Request) {
           parking: aRes.data.parking_policy,
         },
         price_stats: { by_beds: aStats.by_beds },
+        price_captured_at_max: aStats.captured_at_max,
       },
       building_b: {
         ...bRes.data,
@@ -160,6 +161,7 @@ export async function POST(req: Request) {
           parking: bRes.data.parking_policy,
         },
         price_stats: { by_beds: bStats.by_beds },
+        price_captured_at_max: bStats.captured_at_max,
       },
       deltas: {
         amenities_only_in_a,

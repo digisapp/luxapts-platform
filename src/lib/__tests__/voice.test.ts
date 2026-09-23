@@ -21,6 +21,10 @@ describe("isVerifiedPrice", () => {
   it("rejects January prices (the fabricated units)", () => {
     expect(isVerifiedPrice(3200, "2026-01-15T00:00:00Z", NOW)).toBe(false);
   });
+  it("accepts numeric strings (Postgres numeric arrives as text)", () => {
+    expect(isVerifiedPrice("3200", "2026-09-10T00:00:00Z", NOW)).toBe(true);
+    expect(isVerifiedPrice("abc", "2026-09-10T00:00:00Z", NOW)).toBe(false);
+  });
   it("rejects missing or zero rent and bad dates", () => {
     expect(isVerifiedPrice(0, "2026-09-10T00:00:00Z", NOW)).toBe(false);
     expect(isVerifiedPrice(null, "2026-09-10T00:00:00Z", NOW)).toBe(false);
