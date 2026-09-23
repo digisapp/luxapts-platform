@@ -15,12 +15,26 @@ import {
 import { rateLimit, getClientIp, RATE_LIMITS, isInternalRequest } from "@/lib/rate-limit";
 import type { CreateLeadResponse } from "@/types/database";
 
+function isSameOrigin(req: Request): boolean {
+  try {
+    return new URL(req.headers.get("origin") || "").host === new URL(req.url).host;
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(req: Request) {
   try {
     // Internal AI-tool calls are already bounded by the chat rate limit and a
     // per-conversation lead cap, and carry no client IP; only IP-limit external
     // callers.
     if (!isInternalRequest(req)) {
+      // External calls come from staycio.com's own forms. A web_form lead
+      // emails a tour confirmation to whatever address was posted, so without
+      // this any script could make Staycio mail arbitrary inboxes.
+      if (!isSameOrigin(req)) {
+        return apiError("Forbidden", 403);
+      }
       const clientIp = getClientIp(req);
       const rateLimitResult = rateLimit(`leads:${clientIp}`, RATE_LIMITS.leads);
       if (!rateLimitResult.success) {

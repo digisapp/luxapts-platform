@@ -39,6 +39,10 @@ export function useSavedSearches() {
   // Sync with database when user logs in
   useEffect(() => {
     if (!user) {
+      // Signing out: the local copy is that account's saved searches. Keeping it
+      // meant the next person to sign in on this browser had them uploaded
+      // into their own account by the merge below.
+      if (syncedUserId !== null) savedSearchesStore.set(() => []);
       syncedUserId = null;
       return;
     }

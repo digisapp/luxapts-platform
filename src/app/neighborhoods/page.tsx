@@ -60,7 +60,8 @@ export default async function NeighborhoodsPage() {
   for (const n of neighborhoods || []) {
     const c = n.cities as CityInfo | CityInfo[] | null;
     const city = Array.isArray(c) ? c[0] ?? null : c;
-    if (!city) continue;
+    // A neighborhood with no buildings links to an empty, noindexed page
+    if (!city || !buildingCounts[n.id]) continue;
     if (!cityGroups.has(city.id)) {
       cityGroups.set(city.id, { city, neighborhoods: [] });
     }

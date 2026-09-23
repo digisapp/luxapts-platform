@@ -252,7 +252,7 @@ export default async function CityPage({ params }: CityPageProps) {
           node is large, and Google only reads the head of the list anyway. */}
       <BuildingItemListJsonLd
         name={`Apartments for rent in ${city.name}, ${city.state}`}
-        buildings={sortedBuildings.slice(0, 50).map((b) => {
+        buildings={sortedBuildings.slice(0, 20).map((b) => {
           const imgs = (b.building_images || []) as Array<{
             url: string;
             is_primary: boolean;

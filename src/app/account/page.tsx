@@ -89,7 +89,10 @@ export default function AccountPage() {
       })
       .catch(() => setProfileLoadError(true))
       .finally(() => setLoadingProfile(false));
-  }, [user]);
+    // Keyed on the id: AuthContext hands out a new user object on every token
+    // refresh / tab refocus, and refetching then overwrote unsaved edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Clear "Saved" timeout on unmount
   useEffect(() => {

@@ -2,15 +2,16 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { storageGet, storageSet } from "@/lib/safe-storage";
 
 // Generate or retrieve session ID
 function getSessionId(): string {
   if (typeof window === "undefined") return "";
 
-  let sessionId = sessionStorage.getItem("lux_session_id");
+  let sessionId = storageGet("session", "lux_session_id");
   if (!sessionId) {
     sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-    sessionStorage.setItem("lux_session_id", sessionId);
+    storageSet("session", "lux_session_id", sessionId);
   }
   return sessionId;
 }
@@ -62,7 +63,7 @@ export function useAnalytics() {
     sessionId.current = getSessionId();
 
     // Track session start (only once per session)
-    const hasTrackedSession = sessionStorage.getItem("lux_session_tracked");
+    const hasTrackedSession = storageGet("session", "lux_session_tracked");
     if (!hasTrackedSession) {
       const utm = getUtmParams();
       sendTracking({
@@ -74,7 +75,7 @@ export function useAnalytics() {
           ...utm,
         },
       });
-      sessionStorage.setItem("lux_session_tracked", "true");
+      storageSet("session", "lux_session_tracked", "true");
     }
   }, [user?.id]);
 

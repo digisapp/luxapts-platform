@@ -622,7 +622,9 @@ export interface SearchResult {
   building: BuildingWithRelations;
   unit: Pick<Unit, "id" | "unit_number" | "beds" | "baths" | "sqft" | "available_on" | "floorplan_id">;
   pricing: Pick<UnitPriceSnapshot, "rent" | "net_effective_rent" | "lease_term_months" | "captured_at"> | null;
+  /** Only the primary photo; image_count is the size of the full gallery. */
   images?: UnitImage[];
+  image_count?: number;
   floorplan?: Pick<Floorplan, "id" | "name" | "layout_image_url"> | null;
 }
 

@@ -6,6 +6,10 @@ import { isValidUUID, escapeHtml } from "@/lib/utils";
 import { getReplyToAddress } from "@/lib/email/recipients";
 import { senderIdentityFor } from "@/lib/microsites";
 import { apiError } from "@/lib/api-helpers";
+import { unsubscribeFooterHtml, unsubscribeToken } from "@/lib/email/unsubscribe";
+
+// Up to 200 sends; Resend batches of 100 keep this well inside the limit.
+export const maxDuration = 60;
 
 // Most microsite leads want the same thing — 43 of the first 60 asked for a
 // Q4 2026 move-in at Downtown 6 — so the realistic outreach is one message to
@@ -15,6 +19,7 @@ import { apiError } from "@/lib/api-helpers";
 // name, and from the building they actually signed up on. No BCC blast.
 
 const MAX_RECIPIENTS = 200;
+const BATCH_SIZE = 100;
 
 type Lead = {
   id: string;
@@ -29,6 +34,16 @@ function fill(template: string, lead: Lead, building: string): string {
   return template
     .replace(/\{\{\s*name\s*\}\}/gi, first)
     .replace(/\{\{\s*building\s*\}\}/gi, building);
+}
+
+/**
+ * The admin types plain text, and lead names come from public forms. Inserted
+ * raw, line breaks collapsed into one paragraph and a name like
+ * `<img onerror=…>` ran in the admin preview (rendered as HTML). Escape
+ * everything, then keep the line breaks.
+ */
+function textToHtml(text: string): string {
+  return escapeHtml(text).replace(/\r?\n/g, "<br>");
 }
 
 export async function POST(req: Request) {
@@ -60,7 +75,9 @@ export async function POST(req: Request) {
     const { data: leads, error } = await supabase
       .from("leads")
       .select("id, name, user_email, source_detail")
-      .in("id", lead_ids);
+      .in("id", lead_ids)
+      // CAN-SPAM: never mail someone who used the unsubscribe link.
+      .is("unsubscribed_at", null);
 
     if (error) {
       console.error("Bulk email lead fetch failed:", error);
@@ -68,8 +85,20 @@ export async function POST(req: Request) {
     }
 
     const fallbackFrom = getFromEmail();
-    const withEmail = (leads ?? []).filter((l): l is Lead => Boolean(l.user_email));
-    const skipped = (leads ?? []).length - withEmail.length;
+    // One send per address: the same person often has several lead rows.
+    const byEmail = new Map<string, Lead>();
+    for (const lead of leads ?? []) {
+      const email = lead.user_email?.trim().toLowerCase();
+      if (email && !byEmail.has(email)) byEmail.set(email, { ...lead, user_email: email });
+    }
+    const withEmail = [...byEmail.values()];
+    // Unsubscribed, duplicate or address-less rows
+    const skipped = lead_ids.length - withEmail.length;
+
+    // Bulk mail must carry a working unsubscribe link (signed with CRON_SECRET).
+    if (withEmail.length > 0 && !unsubscribeToken(withEmail[0].id)) {
+      return apiError("Email sending is not configured (missing unsubscribe signing secret)", 500);
+    }
 
     // A preview lets the sender see exactly who gets what before anything goes
     // out — the send itself is not undoable.
@@ -90,7 +119,7 @@ export async function POST(req: Request) {
               to: sample.user_email,
               from: senderIdentityFor(sample.source_detail, fallbackFrom).from,
               subject: fill(subject, sample, senderIdentityFor(sample.source_detail, fallbackFrom).label),
-              body: fill(emailBody, sample, senderIdentityFor(sample.source_detail, fallbackFrom).label),
+              body: textToHtml(fill(emailBody, sample, senderIdentityFor(sample.source_detail, fallbackFrom).label)),
             }
           : null,
       });
@@ -101,45 +130,49 @@ export async function POST(req: Request) {
     const sent: string[] = [];
     const failed: { id: string; error: string }[] = [];
 
-    for (const lead of withEmail) {
+    const render = (lead: Lead) => {
       const sender = senderIdentityFor(lead.source_detail, fallbackFrom);
-      const subj = fill(subject, lead, sender.label);
-      const text = fill(emailBody, lead, sender.label);
       const first = (lead.name ?? "").trim().split(/\s+/)[0];
-
-      const { error: sendError } = await resend.emails.send({
+      return {
         from: sender.from,
         to: [lead.user_email!],
-        replyTo,
-        subject: subj,
+        ...(replyTo ? { replyTo } : {}),
+        subject: fill(subject, lead, sender.label),
         html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           ${first ? `<p>Hi ${escapeHtml(first)},</p>` : ""}
-          <div>${text}</div>
+          <div>${textToHtml(fill(emailBody, lead, sender.label))}</div>
           <p style="margin-top: 24px; color: #666; font-size: 12px;">
             — ${escapeHtml(sender.label)}${sender.label === "Staycio" ? "" : " · via Staycio"}
           </p>
+          ${unsubscribeFooterHtml(lead.id)}
         </div>`,
-      });
+      };
+    };
 
-      if (sendError) {
-        // One bad address must not strand the rest of the batch.
-        failed.push({ id: lead.id, error: sendError.message ?? "send failed" });
+    // Batches instead of 200 sequential sends (which could hit Resend's rate
+    // limit or the function timeout part-way). Each batch is recorded as soon
+    // as it goes out, so a retry after a failure can't re-mail those leads
+    // without the events showing it.
+    for (let i = 0; i < withEmail.length; i += BATCH_SIZE) {
+      const chunk = withEmail.slice(i, i + BATCH_SIZE);
+      let batchError: { message?: string } | null = null;
+      try {
+        ({ error: batchError } = await resend.batch.send(chunk.map(render)));
+      } catch (err) {
+        batchError = { message: err instanceof Error ? err.message : "send failed" };
+      }
+      if (batchError) {
+        for (const lead of chunk) failed.push({ id: lead.id, error: batchError.message ?? "send failed" });
         continue;
       }
-      sent.push(lead.id);
-    }
-
-    if (sent.length) {
+      const ids = chunk.map((l) => l.id);
+      sent.push(...ids);
       await supabase.from("lead_events").insert(
-        sent.map((lead_id) => ({
-          lead_id,
-          type: "email_sent",
-          payload: { subject, bulk: true },
-        }))
+        ids.map((lead_id) => ({ lead_id, type: "email_sent", payload: { subject, bulk: true } }))
       );
       if (mark_contacted) {
-        await supabase.from("leads").update({ status: "contacted" }).in("id", sent).eq("status", "new");
+        await supabase.from("leads").update({ status: "contacted" }).in("id", ids).eq("status", "new");
       }
     }
 

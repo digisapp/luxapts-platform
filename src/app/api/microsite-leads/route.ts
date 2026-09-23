@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 import { micrositeLeadSchema } from "@/lib/validations";
-import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
-import { apiError } from "@/lib/api-helpers";
+import { corsHeaders, isAllowedOrigin, originMatches } from "@/lib/microsite-cors";
+import { MICROSITE_BUILDINGS } from "@/lib/microsites";
 import { autoAssignAgent } from "@/lib/leads/routing";
 import { newLeadEmail, micrositeWaitlistEmail } from "@/lib/email/templates";
 import {
@@ -45,6 +45,13 @@ export async function POST(req: Request) {
       );
     }
     const body = parsed.data;
+    if (!originMatches(req, body.domain)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: cors });
+    }
+    // The form's free-text `building` went into the subject and body of the
+    // waitlist email, so a script could send Staycio-branded mail with its own
+    // text to any address. Every domain maps to one building: use that.
+    const buildingName = MICROSITE_BUILDINGS[body.domain] ?? body.building;
 
     // Honeypot tripped — pretend success, store nothing.
     if (body.website) {
@@ -59,7 +66,7 @@ export async function POST(req: Request) {
       .eq("slug", "miami")
       .single();
     if (cityRes.error || !cityRes.data) {
-      return apiError("City not found", 404);
+      return NextResponse.json({ error: "City not found" }, { status: 404, headers: cors });
     }
 
     const prefs = [
@@ -71,7 +78,7 @@ export async function POST(req: Request) {
     ]
       .filter(Boolean)
       .join(" · ");
-    const notes = `[${body.domain}] ${body.building}${prefs ? ` — ${prefs}` : ""}`;
+    const notes = `[${body.domain}] ${buildingName}${prefs ? ` — ${prefs}` : ""}`;
 
     // Preferred insert uses source='microsite' + source_detail (migration 021).
     // Until that migration runs, fall back to the legacy-compatible shape with
@@ -121,7 +128,7 @@ export async function POST(req: Request) {
     // `building` is free text from the microsite form. `%` and `_` are LIKE
     // wildcards and PostgREST rewrites `*` to `%`, so an unescaped value could
     // match (and link the lead to) an arbitrary building.
-    const buildingPattern = body.building
+    const buildingPattern = buildingName
       .replace(/[\\%_]/g, "\\$&")
       .replace(/\*/g, "");
 
@@ -146,7 +153,7 @@ export async function POST(req: Request) {
       payload: {
         source: "microsite",
         domain: body.domain,
-        building: body.building,
+        building: buildingName,
         city: cityRes.data.name,
       },
     });
@@ -162,13 +169,13 @@ export async function POST(req: Request) {
       email: body.email,
       phone: body.phone,
       notes,
-      buildingName: body.building,
+      buildingName: buildingName,
     });
     await recordInternalLeadAlert(supabase, {
       leadId,
       name: body.name,
       email: body.email,
-      subject: `New Microsite Lead: ${body.name} · ${body.building}`,
+      subject: `New Microsite Lead: ${body.name} · ${buildingName}`,
       html: alertHtml,
       sourceLabel: `microsite (${body.domain})`,
     });
@@ -185,7 +192,7 @@ export async function POST(req: Request) {
             from: fromEmail,
             to: recipients,
             replyTo: body.email,
-            subject: `New Microsite Lead: ${body.name} · ${body.building}`,
+            subject: `New Microsite Lead: ${body.name} · ${buildingName}`,
             html: alertHtml,
           });
           if (notifyError) {
@@ -200,10 +207,10 @@ export async function POST(req: Request) {
           from: fromEmail,
           to: [body.email],
           replyTo: getReplyToAddress(),
-          subject: `You're on the waitlist for ${body.building}`,
+          subject: `You're on the waitlist for ${buildingName}`,
           html: micrositeWaitlistEmail({
             name: body.name,
-            buildingName: body.building,
+            buildingName: buildingName,
             city: cityRes.data.name,
             citySlug: cityRes.data.slug ?? null,
             domain: body.domain,

@@ -12,6 +12,7 @@ import { ListingPlaceholder } from "@/components/ui/ListingPlaceholder";
 import { HomeLeadCapture } from "@/components/leads/HomeLeadCapture";
 import { formatPrice } from "@/lib/utils";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { storageGet, storageSet } from "@/lib/safe-storage";
 
 export interface HomeStats {
   cities: number;
@@ -182,16 +183,16 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
   // Assign (or restore) the sticky hero variant and log an impression so each
   // variant has a denominator for conversion rate.
   useEffect(() => {
-    let variant = localStorage.getItem(HERO_VARIANT_KEY) as HeroVariant | null;
+    let variant = storageGet("local", HERO_VARIANT_KEY) as HeroVariant | null;
     if (!variant || !(variant in HERO_VARIANTS)) {
       variant = Math.random() < 0.5 ? "frustration" : "outcome";
-      localStorage.setItem(HERO_VARIANT_KEY, variant);
+      storageSet("local", HERO_VARIANT_KEY, variant);
     }
     heroVariantRef.current = variant;
     setHeroVariant(variant);
     const impressionKey = `${HERO_VARIANT_KEY}_seen`;
-    if (!sessionStorage.getItem(impressionKey)) {
-      sessionStorage.setItem(impressionKey, "true");
+    if (!storageGet("session", impressionKey)) {
+      storageSet("session", impressionKey, "true");
       trackEvent("hero_variant_view", "engagement", { variant });
     }
     // trackEvent identity changes when auth hydrates; the impressionKey guard
@@ -271,8 +272,8 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
   const proofLine =
     stats && stats.buildings >= 20
       ? stats.availableUnits >= 100
-        ? `${stats.availableUnits.toLocaleString()} available apartments across ${stats.cities} cities`
-        : `${stats.buildings.toLocaleString()} buildings across ${stats.cities} cities`
+        ? `${stats.availableUnits.toLocaleString("en-US")} available apartments across ${stats.cities} cities`
+        : `${stats.buildings.toLocaleString("en-US")} buildings across ${stats.cities} cities`
       : "AI-powered apartment search";
 
   return (

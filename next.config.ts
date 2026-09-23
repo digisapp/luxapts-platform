@@ -24,6 +24,24 @@ const nextConfig: NextConfig = {
     // being fetched at 75.
     qualities: [40, 75],
   },
+  async rewrites() {
+    return {
+      // Neighborhood slugs repeat across cities ("midtown"), so their public
+      // URLs carry ?city=. A page that reads searchParams renders on every
+      // request, so hand the city to an internal route as a path param instead
+      // and both routes stay cached. beforeFiles: /neighborhoods/[slug] would
+      // otherwise match first and the query would never be seen.
+      beforeFiles: [
+        {
+          source: "/neighborhoods/:slug",
+          has: [{ type: "query", key: "city", value: "(?<city>[a-z0-9-]+)" }],
+          destination: "/neighborhoods/:slug/in/:city",
+        },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
   async headers() {
     return [
       // CORS for public READ-ONLY catalog APIs only.

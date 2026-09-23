@@ -351,8 +351,9 @@ export function ChatWidget() {
                   />
                   <Button
                     onClick={() => handleSend()}
-                    disabled={loading || !input.trim()}
+                    disabled={loading || isStreaming || !input.trim()}
                     size="icon"
+                    aria-label="Send message"
                     className="bg-white text-black hover:bg-zinc-200 disabled:opacity-50"
                   >
                     <Send className="h-4 w-4" />

@@ -227,7 +227,7 @@ export default async function FacetPage({ params }: FacetPageProps) {
       />
       <BuildingItemListJsonLd
         name={heading}
-        buildings={listed.map((b) => ({
+        buildings={listed.slice(0, 20).map((b) => ({
           name: b.name,
           path: buildingPath(b),
           image: images.get(b.id),

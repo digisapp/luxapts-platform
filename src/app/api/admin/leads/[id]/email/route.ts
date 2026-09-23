@@ -60,7 +60,7 @@ export async function POST(
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           ${lead.name ? `<p>Hi ${escapeHtml(lead.name)},</p>` : ""}
-          <div>${emailBody}</div>
+          <div>${escapeHtml(emailBody).replace(/\r?\n/g, "<br>")}</div>
           <p style="margin-top: 24px; color: #666; font-size: 12px;">
             — ${escapeHtml(sender.label)}${sender.label === "Staycio" ? "" : " · via Staycio"}
           </p>

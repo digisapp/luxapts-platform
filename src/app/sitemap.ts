@@ -82,7 +82,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  const buildingRoutes: MetadataRoute.Sitemap = buildings.map((b) => ({
+  // Only buildings with something listed; the rest are noindex (see the
+  // building page's generateMetadata) until inventory returns.
+  const buildingsWithUnits = new Set(availableUnits.map((u) => u.building_id));
+  const buildingRoutes: MetadataRoute.Sitemap = buildings.filter((b) => buildingsWithUnits.has(b.id)).map((b) => ({
     // Slug URL only. Emitting the UUID here submitted a URL that now 301s,
     // which wastes crawl budget and splits signals across two paths.
     url: `${base}${buildingPath(b)}`,

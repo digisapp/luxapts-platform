@@ -22,6 +22,9 @@ export async function POST(req: Request) {
       ? (body.args as Record<string, unknown>)
       : {};
 
-  const result = await executeVoiceTool(body.name, args, phoneChannel(call), new URL(req.url).origin);
+  const result = await executeVoiceTool(body.name, args, phoneChannel(call),
+    // Tool calls carry CRON_SECRET: use the configured app URL, not the request host
+    process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin
+  );
   return apiSuccess({ result });
 }

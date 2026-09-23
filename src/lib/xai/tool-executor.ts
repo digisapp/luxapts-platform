@@ -287,6 +287,10 @@ export async function executeTool(
               "A lead needs an email address or a phone number. Ask the user for one, then call create_lead again.",
           };
         }
+        // Reserve the slot before awaiting: tool calls in one round run in
+        // parallel, and two create_lead calls both passed the check above
+        // when the counter only moved after the fetch (two leads, two alerts).
+        if (ctx) ctx.leadsCreated++;
         response = await fetch(`${baseUrl}/api/leads`, {
           method: "POST",
           headers: jsonHeaders,
@@ -301,8 +305,8 @@ export async function executeTool(
             city_slug: normalizeCitySlug(args.city_slug),
           }),
         });
+        if (ctx && !response.ok) ctx.leadsCreated--;
         if (ctx && response.ok) {
-          ctx.leadsCreated++;
           // Tie the conversation to the lead it produced so the Chat Log can
           // show which sessions actually converted.
           if (ctx.sessionKey) {

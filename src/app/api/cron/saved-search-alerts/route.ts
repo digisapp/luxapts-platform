@@ -103,6 +103,13 @@ export async function GET(req: Request) {
       const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
       const citySlug = normalizeCitySlug(raw.city_slug ?? raw.city);
       if (!citySlug) continue;
+      // The UI saves neighborhoods as comma-separated slugs; without them a
+      // "Brickell" alert would email matches from all of Miami.
+      const rawHood = raw.neighborhood_slugs ?? raw.neighborhood;
+      const neighborhoodSlugs = (Array.isArray(rawHood) ? rawHood : typeof rawHood === "string" ? rawHood.split(",") : [])
+        .filter((slug): slug is string => typeof slug === "string")
+        .map((slug) => slug.trim())
+        .filter(Boolean);
       const searchParams = {
         city_slug: citySlug,
         beds_min: num(raw.beds_min ?? raw.bedsMin),
@@ -110,6 +117,7 @@ export async function GET(req: Request) {
         budget_min: num(raw.budget_min ?? raw.budgetMin),
         budget_max: num(raw.budget_max ?? raw.budgetMax),
         pet_friendly: raw.pet_friendly === true || raw.petFriendly === true ? true : undefined,
+        neighborhood_slugs: neighborhoodSlugs.length ? neighborhoodSlugs : undefined,
         limit: 5,
       };
 

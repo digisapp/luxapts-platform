@@ -27,6 +27,7 @@ export async function GET(
         neighborhoods:neighborhood_id (id, name, slug)
       `)
       .eq("id", id)
+      .eq("status", "active")
       .single();
 
     if (buildingRes.error || !buildingRes.data) {
@@ -90,9 +91,13 @@ export async function GET(
       ? { min: Math.min(...prices), max: Math.max(...prices) }
       : null;
 
+    // Public route: never expose which account owns a partner listing
+    const publicBuilding: Record<string, unknown> = { ...buildingRes.data };
+    delete publicBuilding.partner_user_id;
+
     return NextResponse.json({
       building: {
-        ...buildingRes.data,
+        ...publicBuilding,
         amenities: (amenitiesRes.data || []).map((a) => ({
           ...a.amenities,
           details: a.details,

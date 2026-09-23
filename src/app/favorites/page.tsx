@@ -153,6 +153,7 @@ export default function FavoritesPage() {
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-red-500"
                             onClick={() => removeFavorite(item.id)}
+                            aria-label={`Remove ${item.name} from favorites`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -270,6 +271,7 @@ export default function FavoritesPage() {
                                 className="gap-1"
                                 onClick={() => toggleEmailAlerts(search.id, !search.emailAlerts)}
                                 title={search.emailAlerts ? "Disable email alerts" : "Enable email alerts"}
+                                aria-label={search.emailAlerts ? "Disable email alerts" : "Enable email alerts"}
                               >
                                 {search.emailAlerts ? (
                                   <Bell className="h-3 w-3" />
@@ -289,6 +291,7 @@ export default function FavoritesPage() {
                               size="icon"
                               className="h-8 w-8 text-muted-foreground hover:text-red-500"
                               onClick={() => removeSearch(search.id)}
+                              aria-label={`Delete saved search ${search.name}`}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

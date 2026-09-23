@@ -368,7 +368,10 @@ async function executeSearch(params: SearchParams): Promise<SearchResponse> {
             lease_term_months: null,
             captured_at: u.price_captured_at,
           },
-        images: unitImages.length > 0 ? unitImages : buildingImages,
+        // Cards show the first photo and a count. Whole galleries repeated on
+        // every unit row were ~77% of the response (38 images × 3 units…).
+        images: (unitImages.length > 0 ? unitImages : buildingImages).slice(0, 1),
+        image_count: unitImages.length > 0 ? unitImages.length : buildingImages.length,
         floorplan: floorplansByUnit.get(u.id) || null,
       };
     }),

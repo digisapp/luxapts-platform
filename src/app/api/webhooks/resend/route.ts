@@ -71,6 +71,21 @@ export async function POST(req: Request) {
       const replyTo = data.reply_to || null;
       const incomingHeaders = data.headers || {};
 
+      // Svix delivers at least once. A retry (e.g. after a slow body fetch)
+      // stored the email again and could send a second AI auto-reply.
+      if (resendEmailId) {
+        const { data: existing } = await supabase
+          .from("emails")
+          .select("id")
+          .eq("resend_message_id", resendEmailId)
+          .eq("direction", "inbound")
+          .limit(1)
+          .maybeSingle();
+        if (existing) {
+          return NextResponse.json({ success: true, duplicate: true, email_id: existing.id });
+        }
+      }
+
       // ── Fetch full email body from Resend API ──
       let bodyHtml = data.html || data.body || "";
       let bodyText = data.text || "";
@@ -222,7 +237,8 @@ export async function POST(req: Request) {
           fromEmail,
           subject,
           bodyText || bodyHtml,
-          threadId
+          threadId,
+          !isAutomatedEmail(incomingHeaders)
         ).catch((err) => console.error("AI classification pipeline error:", err))
       );
 
@@ -260,13 +276,32 @@ export async function POST(req: Request) {
 
 // ── AI classification pipeline ──
 
+/**
+ * Out-of-office replies, bounces and list mail (RFC 3834 Auto-Submitted, or
+ * the older Precedence / X-Autoreply conventions). Auto-replying to them lets
+ * Stacy ping-pong with another robot.
+ */
+function isAutomatedEmail(headers: Record<string, unknown>): boolean {
+  const get = (name: string) => {
+    for (const [key, value] of Object.entries(headers)) {
+      if (key.toLowerCase() === name) return String(value ?? "").toLowerCase().trim();
+    }
+    return "";
+  };
+  const autoSubmitted = get("auto-submitted");
+  if (autoSubmitted && autoSubmitted !== "no") return true;
+  if (["bulk", "junk", "list", "auto_reply"].includes(get("precedence"))) return true;
+  return Boolean(get("x-autoreply") || get("x-autorespond") || get("x-auto-response-suppress"));
+}
+
 async function processAIClassification(
   emailId: string,
   fromName: string,
   fromEmail: string,
   subject: string,
   bodyText: string,
-  threadId: string
+  threadId: string,
+  allowAutoReply: boolean
 ) {
   const supabase = createAdminClient();
 
@@ -285,8 +320,16 @@ async function processAIClassification(
     })
     .eq("id", emailId);
 
-  // Auto-reply if safe
-  if (result.autoSendable) {
+  // Auto-reply if safe — at most once per thread, and never to a robot
+  if (result.autoSendable && allowAutoReply) {
+    const { count: priorAutoReplies } = await supabase
+      .from("emails")
+      .select("id", { count: "exact", head: true })
+      .eq("thread_id", threadId)
+      .eq("direction", "outbound")
+      .eq("metadata->>auto_sent", "true");
+    if ((priorAutoReplies ?? 0) > 0) return;
+
     const toName = fromName || fromEmail.split("@")[0];
     await sendAutoReply(
       emailId,

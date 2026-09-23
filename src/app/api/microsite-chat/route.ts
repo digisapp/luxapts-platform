@@ -2,7 +2,7 @@ import { after, NextResponse } from "next/server";
 import type OpenAI from "openai";
 import { createXAIClient } from "@/lib/xai/client";
 import { createAdminClient } from "@/lib/supabase/server";
-import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
+import { corsHeaders, isAllowedOrigin, originMatches } from "@/lib/microsite-cors";
 import { MICROSITE_DOMAINS, type MicrositeDomain } from "@/lib/validations";
 import { MICROSITE_BUILDINGS } from "@/lib/microsites";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
@@ -25,6 +25,9 @@ const MAX_MESSAGES = 16;
 const MAX_CHARS = 1000;
 const MAX_TOOL_ROUNDS = 4;
 
+// Up to five model calls plus tool fetches per message.
+export const maxDuration = 60;
+
 const TOOLS: OpenAI.ChatCompletionTool[] = VOICE_TOOL_SCHEMAS.map((t) => ({
   type: "function",
   function: { name: t.name, description: t.description, parameters: t.parameters },
@@ -45,18 +48,6 @@ function parseMessages(raw: unknown): ChatMessage[] | null {
     )
     .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
   return messages.length && messages[messages.length - 1].role === "user" ? messages : null;
-}
-
-/** The request must come from the domain it claims to be. */
-function originMatches(req: Request, domain: string): boolean {
-  const host = (() => {
-    try {
-      return new URL(req.headers.get("origin") || "").hostname;
-    } catch {
-      return "";
-    }
-  })();
-  return host === domain || host === `www.${domain}` || host === `${domain.replace(/\./g, "")}.vercel.app`;
 }
 
 export async function OPTIONS(req: Request) {
@@ -106,6 +97,9 @@ export async function POST(req: Request) {
     session_key: sessionKey,
     surface: "chat",
     city_slug: "miami",
+    // The Chat Log lists and searches sessions by this; nothing else sets it
+    // for microsite chats, so every one showed a blank first question.
+    first_question: history.find((m) => m.role === "user")?.content.slice(0, 500) ?? null,
     last_message_at: new Date().toISOString(),
     messages_count: 0,
     tool_calls_count: 0,
@@ -116,7 +110,9 @@ export async function POST(req: Request) {
     console.error("Microsite chat session create failed:", sessionError);
   }
 
-  const baseUrl = new URL(req.url).origin;
+  // Tool calls carry CRON_SECRET, so send them to the configured app URL,
+  // never to a host taken from the incoming request.
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
   const messages: OpenAI.ChatCompletionMessageParam[] = [
     {
       role: "system",

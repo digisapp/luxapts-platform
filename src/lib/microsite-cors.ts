@@ -37,3 +37,16 @@ export function corsHeaders(req: Request): Record<string, string> {
 export function isAllowedOrigin(req: Request): boolean {
   return ALLOWED_ORIGINS.has(req.headers.get("origin") || "");
 }
+
+/**
+ * The request must come from the microsite it claims to be. isAllowedOrigin
+ * only proves "some microsite", so without this any one of them could post
+ * leads or page views attributed to another domain.
+ */
+export function originMatches(req: Request, domain: string): boolean {
+  let host = "";
+  try {
+    host = new URL(req.headers.get("origin") || "").hostname;
+  } catch {}
+  return host === domain || host === `www.${domain}` || host === `${domain.replace(/\./g, "")}.vercel.app`;
+}

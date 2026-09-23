@@ -42,7 +42,7 @@ const getUnit = cache(async (unitId: string) => {
     .from("units")
     .select(`
       *,
-      buildings:building_id (
+      buildings:building_id!inner (
         id, slug, name, address_1, address_2, zip, leasing_email, leasing_phone,
         pet_policy, parking_policy, deposit_policy,
         cities:city_id (id, name, slug, state),
@@ -53,6 +53,8 @@ const getUnit = cache(async (unitId: string) => {
       )
     `)
     .eq("id", unitId)
+    // Deactivated buildings are fabricated seeds and merged duplicates
+    .eq("buildings.status", "active")
     .single();
 });
 

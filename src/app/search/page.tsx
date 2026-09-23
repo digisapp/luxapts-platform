@@ -21,6 +21,7 @@ import { FavoriteButton } from "@/components/listings/FavoriteButton";
 import { SaveSearchButton } from "@/components/listings/SaveSearchButton";
 import { CommuteFilter, type CommuteTarget } from "@/components/search/CommuteFilter";
 import { AMENITY_OPTIONS } from "@/lib/constants/amenities";
+import { storageSet } from "@/lib/safe-storage";
 
 // mapbox-gl is huge — load the map chunk only when the map view mounts,
 // never during SSR or in the initial bundle
@@ -77,6 +78,7 @@ interface SearchResult {
     captured_at: string;
   } | null;
   images?: UnitImage[];
+  image_count?: number;
   floorplan?: Floorplan | null;
 }
 
@@ -124,13 +126,31 @@ function priceAgeLabel(capturedAt: string | null | undefined): { label: string; 
 // while `undefined`/absent falls back to current state.
 type SearchFilterOverrides = Omit<
   ParsedFilters,
-  "beds_min" | "beds_max" | "budget_min" | "budget_max" | "move_in_date"
+  "beds_min" | "beds_max" | "budget_min" | "budget_max" | "baths_min" | "move_in_date"
 > & {
   beds_min?: number | null;
   beds_max?: number | null;
   budget_min?: number | null;
   budget_max?: number | null;
+  baths_min?: number | null;
   move_in_date?: string | null;
+};
+
+// A fresh natural-language query defines the whole search: anything it
+// doesn't mention is cleared, so filters restored from a previous session
+// (e.g. "under $2,000", pet-friendly, a Brickell neighborhood) can't silently
+// narrow "3BR in Austin".
+const CLEARED_FILTERS: SearchFilterOverrides = {
+  neighborhood_slugs: [],
+  beds_min: null,
+  beds_max: null,
+  budget_min: null,
+  budget_max: null,
+  baths_min: null,
+  pet_friendly: false,
+  parking_required: false,
+  move_in_date: null,
+  amenities: [],
 };
 
 interface SavedFilters {
@@ -318,7 +338,7 @@ function SearchContent() {
       selectedAmenities,
       sort,
     };
-    localStorage.setItem("staycio-search-filters", JSON.stringify(filters));
+    storageSet("local", "staycio-search-filters", JSON.stringify(filters));
   }, [filtersHydrated, city, bedsMin, bedsMax, budgetMin, budgetMax, bathsMin, petFriendly, parkingRequired, moveInDate, selectedAmenities, sort]);
 
   // Fetch neighborhoods when city changes
@@ -452,10 +472,11 @@ function SearchContent() {
       // Advanced filters
       const neighborhoodSlugs = filters?.neighborhood_slugs ?? selectedNeighborhoods;
       if (neighborhoodSlugs.length > 0) body.neighborhood_slugs = neighborhoodSlugs;
-      const bathsMinVal = filters?.baths_min !== undefined ? filters.baths_min : (bathsMin ? parseInt(bathsMin) : undefined);
+      const bathsMinVal = filters?.baths_min !== undefined ? filters.baths_min ?? undefined : (bathsMin ? parseInt(bathsMin) : undefined);
       if (bathsMinVal !== undefined) body.baths_min = bathsMinVal;
-      if (filters?.pet_friendly || petFriendly) body.pet_friendly = true;
-      if (filters?.parking_required || parkingRequired) body.parking_required = true;
+      // An explicit `false` from the caller overrides state that hasn't committed yet
+      if (filters?.pet_friendly ?? petFriendly) body.pet_friendly = true;
+      if (filters?.parking_required ?? parkingRequired) body.parking_required = true;
       const moveInVal =
         filters?.move_in_date !== undefined ? filters.move_in_date ?? undefined : moveInDate || undefined;
       if (moveInVal) body.move_in_date = moveInVal;
@@ -534,7 +555,7 @@ function SearchContent() {
 
     // Fire-and-forget default search; also serves as the fallback when the
     // parse fails (handleSearch never rejects — it handles its own errors)
-    handleSearch({ beds_min: null, beds_max: null, budget_min: null, budget_max: null });
+    handleSearch(CLEARED_FILTERS);
 
     try {
       const res = await fetch("/api/parse-query", {
@@ -547,23 +568,12 @@ function SearchContent() {
         const data = await res.json();
         const filters: ParsedFilters = data.filters;
 
-        // A fresh natural-language query defines the whole search: anything
-        // it doesn't mention is cleared, so filters restored from a previous
-        // session (e.g. "under $2,000") can't silently narrow "3BR in Miami".
-        const fresh: SearchFilterOverrides = {
-          beds_min: null,
-          beds_max: null,
-          budget_min: null,
-          budget_max: null,
-          move_in_date: null,
-          amenities: [],
-          ...filters,
-        };
+        const fresh: SearchFilterOverrides = { ...CLEARED_FILTERS, ...filters };
         if (filters.city_slug) setCity(filters.city_slug);
         if (filters.neighborhood_slugs?.length) {
           pendingNeighborhoodsRef.current = filters.neighborhood_slugs;
-          setSelectedNeighborhoods(filters.neighborhood_slugs);
         }
+        setSelectedNeighborhoods(filters.neighborhood_slugs ?? []);
         setBedsMin(filters.beds_min !== undefined ? filters.beds_min.toString() : "");
         setBedsMax(filters.beds_max !== undefined ? filters.beds_max.toString() : "");
         setBudgetMin(filters.budget_min !== undefined ? filters.budget_min.toString() : "");
@@ -593,6 +603,7 @@ function SearchContent() {
   const handleAiSearch = () => {
     if (smartSearch) {
       if (searchInput.trim()) {
+        lastUrlQueryRef.current = searchInput.trim();
         router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
         handleSemanticSearch(searchInput.trim());
       } else {
@@ -601,6 +612,7 @@ function SearchContent() {
       }
     } else {
       if (searchInput.trim()) {
+        lastUrlQueryRef.current = searchInput.trim();
         router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
         parseAndSearch(searchInput.trim());
       } else {
@@ -619,6 +631,28 @@ function SearchContent() {
   // Initial load — runs once after saved filters (if any) have been restored,
   // so the first search uses the restored filters without double-searching
   const initialSearchDoneRef = useRef(false);
+  // The ?q= this page last searched for. Searching pushes a history entry, so
+  // Back/Forward (or the header's Search link while already here) changes the
+  // URL without remounting — re-run the search when it no longer matches.
+  const lastUrlQueryRef = useRef(queryParam ?? "");
+  useEffect(() => {
+    if (!initialSearchDoneRef.current) return;
+    const q = queryParam ?? "";
+    if (q === lastUrlQueryRef.current) return;
+    lastUrlQueryRef.current = q;
+    setSearchInput(q);
+    if (!q) {
+      setAiSummary(null);
+      setSemanticResults([]);
+      setSemanticQuery(null);
+      handleSearch();
+    } else if (smartSearch) {
+      handleSemanticSearch(q);
+    } else {
+      parseAndSearch(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryParam]);
   useEffect(() => {
     if (!filtersHydrated || initialSearchDoneRef.current) return;
     initialSearchDoneRef.current = true;
@@ -671,6 +705,7 @@ function SearchContent() {
               </div>
               <Button
                 size="icon"
+                aria-label="Search"
                 className={`shadow-lg bg-cyan-400 text-black hover:bg-cyan-300 shadow-cyan-500/20`}
                 onClick={handleAiSearch}
                 disabled={aiParsing || loading}
@@ -700,7 +735,7 @@ function SearchContent() {
 
             {/* Mobile: Compact filter row */}
             <div className="flex gap-2 md:hidden">
-              <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); }}>
+              <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); handleSearch({ city_slug: val, neighborhood_slugs: [] }); }}>
                 <SelectTrigger aria-label="City" className="h-9 flex-1 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="City" />
                 </SelectTrigger>
@@ -722,6 +757,8 @@ function SearchContent() {
                 variant={activeFilterCount > 0 ? "default" : "glass"}
                 size="sm"
                 className="h-9 px-3"
+                aria-label="Filters"
+                aria-expanded={showFilters}
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <SlidersHorizontal className="h-4 w-4" />
@@ -736,6 +773,7 @@ function SearchContent() {
                 variant={showMap ? "default" : "glass"}
                 size="sm"
                 className="h-9 px-3"
+                aria-label={showMap ? "Show list" : "Show map"}
                 onClick={() => setShowMap(!showMap)}
               >
                 {showMap ? <List className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
@@ -772,7 +810,7 @@ function SearchContent() {
                 </div>
               </div>
 
-              <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); }}>
+              <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); handleSearch({ city_slug: val, neighborhood_slugs: [] }); }}>
                 <SelectTrigger aria-label="City" className="h-12 w-[160px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="Select city" />
                 </SelectTrigger>
@@ -840,6 +878,7 @@ function SearchContent() {
                   variant="ghost"
                   size="sm"
                   className="ml-auto hover:bg-white/10"
+                  aria-label="Clear AI search"
                   onClick={() => {
                     setAiSummary(null);
                     setSearchInput("");
@@ -847,6 +886,7 @@ function SearchContent() {
                     setBedsMax("");
                     setBudgetMin("");
                     setBudgetMax("");
+                    lastUrlQueryRef.current = "";
                     router.push("/search");
                     // State updates above haven't committed yet, so pass
                     // explicit clear sentinels instead of relying on state
@@ -876,6 +916,7 @@ function SearchContent() {
                     size="sm"
                     onClick={() => setShowFilters(false)}
                     className="hover:bg-white/10"
+                    aria-label="Close filters"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -1084,6 +1125,7 @@ function SearchContent() {
                             <button
                               onClick={() => setSelectedAmenities((prev) => prev.filter((a) => a !== amenity))}
                               className="ml-1 hover:text-white"
+                              aria-label={`Remove ${amenity}`}
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -1206,6 +1248,7 @@ function SearchContent() {
                     budgetMin: budgetMin ? parseInt(budgetMin) : undefined,
                     budgetMax: budgetMax ? parseInt(budgetMax) : undefined,
                     petFriendly: petFriendly || undefined,
+                    neighborhood: selectedNeighborhoods.length ? selectedNeighborhoods.join(",") : undefined,
                   }}
                   resultCount={results.length}
                 />
@@ -1484,9 +1527,9 @@ function SearchContent() {
                                 )}
                               </div>
                               {/* Image count indicator */}
-                              {imageUnit?.images && imageUnit.images.length > 1 && (
+                              {(imageUnit?.image_count ?? 0) > 1 && (
                                 <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                                  +{imageUnit.images.length - 1} photos
+                                  +{(imageUnit?.image_count ?? 0) - 1} photos
                                 </div>
                               )}
                               {/* Compare and Favorite buttons */}

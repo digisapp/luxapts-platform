@@ -44,9 +44,23 @@ const getBuilding = cache(async (idOrSlug: string) => {
     .from("buildings")
     .select(select)
     .eq(column, idOrSlug)
+    // Deactivated buildings (fabricated seeds, merged duplicates) still carry
+    // "available" units; they must 404, not render as live listings.
+    .eq("status", "active")
     .maybeSingle();
 
   return { data, error };
+});
+
+// Whether anything is listed right now; decides indexability (see generateMetadata)
+const getAvailableUnitCount = cache(async (id: string) => {
+  const supabase = createAdminClient();
+  const { count } = await supabase
+    .from("units")
+    .select("id", { count: "exact", head: true })
+    .eq("building_id", id)
+    .eq("is_available", true);
+  return count ?? 0;
 });
 
 // Primary building image for social shares (deduplicated across renders)
@@ -71,7 +85,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return { title: "Building Not Found - Staycio", robots: { index: false, follow: false } };
   }
 
-  const ogImage = await getPrimaryBuildingImage(building.id);
+  const [ogImage, availableUnits] = await Promise.all([
+    getPrimaryBuildingImage(building.id),
+    getAvailableUnitCount(building.id),
+  ]);
   const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
   const neighborhood = Array.isArray(building.neighborhoods)
     ? building.neighborhoods[0]
@@ -97,6 +114,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title,
     description,
+    // Same rule as city and neighborhood pages: a building with nothing listed
+    // is a thin "No units currently available" page. Keep it reachable but out
+    // of the index (and the sitemap) until it has inventory again.
+    robots: availableUnits > 0 ? undefined : { index: false, follow: true },
     alternates: { canonical },
     openGraph: {
       title,
@@ -478,7 +499,8 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
       <UnitOffersJsonLd
         buildingName={building.name}
         buildingUrl={buildingUrl(building)}
-        units={(units || []).map((u) => ({
+        // JSON-LD is sent twice (HTML + RSC payload); 20 offers is plenty for rich results
+        units={(units || []).slice(0, 20).map((u) => ({
           unitId: u.id,
           unitNumber: u.unit_number,
           beds: u.beds,
