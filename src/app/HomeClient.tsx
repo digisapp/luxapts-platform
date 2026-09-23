@@ -456,9 +456,6 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                   <h2 className="text-3xl md:text-4xl font-medium text-white mb-3">
                     Buildings with the most availability
                   </h2>
-                  <p className="text-white/60">
-                    Ranked by how many apartments are open — not by anyone paying for placement.
-                  </p>
                 </div>
                 <Link
                   href="/search"
