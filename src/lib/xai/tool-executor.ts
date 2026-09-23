@@ -12,6 +12,8 @@ export interface ToolContext {
   leadsCreated: number;
   /** Conversation this turn belongs to, so a created lead links to its transcript. */
   sessionKey?: string | null;
+  /** Surface the lead came from. Phone calls pass "voice"; everything else is chat. */
+  leadSource?: "chat" | "voice";
 }
 
 const MAX_LEADS_PER_REQUEST = 1;
@@ -246,10 +248,10 @@ export async function executeTool(
             ...args,
             email: email || undefined,
             phone: phone || undefined,
-            // Always attributed to chat: letting the model pick "web_form"
-            // mis-attributed leads and triggered the renter tour-confirmation
-            // email path.
-            source: "chat",
+            // Set by the caller, never the model: letting the model pick
+            // "web_form" mis-attributed leads and triggered the renter
+            // tour-confirmation email path.
+            source: ctx?.leadSource ?? "chat",
             city_slug: normalizeCitySlug(args.city_slug),
           }),
         });

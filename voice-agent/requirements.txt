@@ -1,4 +1,3 @@
-livekit-agents
-livekit-plugins-xai
-supabase
+livekit-agents[xai]~=1.8
+aiohttp>=3.9
 python-dotenv

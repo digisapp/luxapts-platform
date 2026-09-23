@@ -1,128 +1,64 @@
 # Staycio Voice Agent
 
-AI-powered voice agent that answers phone calls for Staycio using LiveKit and xAI's Grok Voice Realtime API.
+Stacy on the phone: a LiveKit phone number answered by xAI's Grok realtime voice model.
 
-**Phone Number:** +1 305 952 1533
+The agent is a thin shell. Stacy's prompt, her tools, and everything those tools do live in the platform:
 
-## Prerequisites
+| Platform route | What it does |
+|---|---|
+| `POST /api/voice/call` `{event:"start"}` | Returns Stacy's instructions, greeting and tool schemas; opens the call's transcript session |
+| `POST /api/voice/tools` | Runs one tool (find_building, search_listings, get_building_details, search_knowledge, get_tour_slots, book_tour, create_lead) |
+| `POST /api/voice/call` `{event:"end"}` | Stores the transcript; it appears at `/admin/conversations` (surface: voice) |
 
-- LiveKit Cloud account (https://cloud.livekit.io)
-- xAI API key (https://console.x.ai)
-- Supabase project credentials
+So **prompt and tool changes ship with a normal Vercel deploy**. Redeploy this agent only when `agent.py` changes.
 
-## Setup
+What the phone tools guarantee (see `src/lib/voice/`):
 
-### 1. Configure Environment Variables
+- **Only verified pricing is spoken.** Units whose price wasn't captured in the last 45 days (the same cutoff the microsites use) are removed before Stacy sees them.
+- **One lead per call**, attributed `source=voice`, `source_detail=phone:<dialed number>`, with the caller ID as the phone number.
+- **Tours are booked against the real slot calendar.** If a building has no certified-shower availability, the booking becomes a request the team confirms.
+- Building tools take the **building name**, because models garble 36-character ids.
 
-You'll need these credentials for LiveKit Cloud:
+## Environment
 
-| Variable | Where to get it |
-|----------|-----------------|
-| `LIVEKIT_URL` | LiveKit Cloud Dashboard > Project Settings |
-| `LIVEKIT_API_KEY` | LiveKit Cloud Dashboard > Project Settings > Keys |
-| `LIVEKIT_API_SECRET` | LiveKit Cloud Dashboard > Project Settings > Keys |
-| `XAI_API_KEY` | https://console.x.ai/ |
-| `SUPABASE_URL` | Supabase Project Settings > API |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Project Settings > API |
+| Variable | Where |
+|---|---|
+| `XAI_API_KEY` | console.x.ai |
+| `VOICE_AGENT_SECRET` | Any long random string. Set the **same value** in Vercel (Production) |
+| `STAYCIO_API_URL` | `https://staycio.com` (default) |
+| `STACY_VOICE` | Optional Grok voice, default `ara` |
 
-### 2. Deploy Agent to LiveKit Cloud
+`LIVEKIT_URL` / `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` are provided automatically on LiveKit Cloud; set them in `.env` only for local runs.
 
-LiveKit Cloud hosts your agent 24/7 - no external hosting needed.
+If the platform can't be reached when a call starts, Stacy answers in a fallback mode with no tools. She apologizes and points callers to staycio.com, and never makes up listings.
 
-1. Go to [LiveKit Cloud Dashboard](https://cloud.livekit.io)
-2. Select your project
-3. Navigate to **Agents** > **Deploy Agent**
-4. Connect your GitHub repository
-5. Set the root directory to `voice-agent`
-6. Add environment variables:
-   - `XAI_API_KEY`
-   - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-7. Click **Deploy**
+## Deploy
 
-### 3. Configure Dispatch Rules
-
-Route incoming calls to your agent:
-
-1. In LiveKit Cloud Dashboard, go to **SIP** > **Dispatch Rules**
-2. Click **Create Dispatch Rule**
-3. Configure:
-   - **Name:** `Staycio Voice Agent`
-   - **Phone Numbers:** Select `+1 305 952 1533`
-   - **Rule Type:** `Agent Dispatch`
-   - **Agent Name:** `staycio-voice-agent`
-4. Click **Save**
-
-### 4. Test
-
-Call +1 305 952 1533 - Aria should answer and help callers find apartments.
-
-## How It Works
-
-1. **Caller dials** +1 305 952 1533
-2. **LiveKit SIP** receives the call and creates a room
-3. **Dispatch rule** routes the call to `staycio-voice-agent`
-4. **Agent connects** to the room
-5. **xAI Realtime API** handles the entire conversation:
-   - Speech recognition (STT)
-   - AI response generation (Grok)
-   - Voice synthesis (TTS)
-   - All in one native speech-to-speech model
-
-## Local Development
-
-For testing locally before deploying:
+Deploy the platform first (with `VOICE_AGENT_SECRET` set in Vercel), then the agent:
 
 ```bash
 cd voice-agent
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+lk agent create --secrets XAI_API_KEY=... --secrets VOICE_AGENT_SECRET=...   # first time
+lk agent deploy                                                               # later updates
+```
+
+The agent registers as **`staycio-voice-agent`** and only takes calls that are explicitly dispatched to it. Route a number to it:
+
+```bash
+lk number list                              # note the PN_... id of the Staycio number
+# put that id in dispatch-rule.json -> trunkIds, then:
+lk sip dispatch create dispatch-rule.json
+```
+
+## Numbers per building
+
+To give a microsite its own number, buy one, add it to `VOICE_NUMBER_BUILDINGS` in `src/lib/voice/prompt.ts` (for example `"+13055550100": "Downtown 6"`), and add it to the dispatch rule. Stacy then greets callers on that number with the building's name, and leads from it carry that number in `source_detail`.
+
+## Local testing
+
+```bash
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your credentials
-python agent.py dev
+cp .env.example .env    # point STAYCIO_API_URL at your local `next dev`
+python agent.py console  # talk to Stacy through your mic
 ```
-
-## Customization
-
-### Change the AI Voice
-
-Edit `agent.py` and modify the voice:
-
-```python
-model = xai.realtime.RealtimeModel(
-    voice="Cove",  # Options: Cove, Maple, Sage, Sal, etc.
-    ...
-)
-```
-
-### Update the System Prompt
-
-Modify `STAYCIO_SYSTEM_PROMPT` in `agent.py` to change how the AI responds.
-
-## Monitoring
-
-View active calls and agent logs in the LiveKit Cloud Dashboard:
-- **Rooms:** See active calls
-- **Agents:** Monitor connected agents and deployments
-- **Analytics:** Call metrics and duration
-
-## Troubleshooting
-
-### Agent not receiving calls
-
-1. Verify dispatch rule is configured correctly
-2. Check that phone number is assigned to the dispatch rule
-3. Ensure agent is deployed and running (check Agents tab)
-4. Check deployment logs for errors
-
-### Agent not responding
-
-1. Check XAI_API_KEY is valid and has credits
-2. Review agent logs in LiveKit Cloud Dashboard
-
-## Support
-
-- LiveKit Docs: https://docs.livekit.io/agents/
-- xAI Docs: https://docs.x.ai/
-- Staycio: https://staycio.com
