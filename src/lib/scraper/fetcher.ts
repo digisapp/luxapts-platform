@@ -298,6 +298,24 @@ export async function scrapeUnitsOnly(websiteUrl: string): Promise<ScrapeResult>
       }
     }
 
+    // No separate availability page: the main page may be it (Related Rentals
+    // lists units under #available_apartments on the building page), with the
+    // listings rendered by JavaScript. The forced render above only covered a
+    // separate units page, so these buildings always came back empty.
+    if (unitsData.units.length === 0 && !unitsPageUrl) {
+      const rendered = await renderPage(mainResult.finalUrl);
+      if (rendered) {
+        const rerun = await extractUnitsWithAI(rendered.html, rendered.finalUrl);
+        extractionError = rerun.error ?? extractionError;
+        if (rerun.units.length > 0) {
+          console.log(`Recovered ${rerun.units.length} units from force-rendered main page ${websiteUrl}`);
+          unitsData = rerun;
+          sourceUrl = rendered.finalUrl;
+          extractionError = undefined;
+        }
+      }
+    }
+
     // An AI outage / 429 / unparseable response is NOT "this building has no
     // units". Reporting it as success recorded units_found=0 and deferred the
     // building for another 7 days.

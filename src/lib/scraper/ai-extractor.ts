@@ -88,6 +88,46 @@ export function condenseHtml(html: string): string {
     .replace(/\n{3,}/g, "\n");
 }
 
+const MODEL_HTML_BUDGET = 100_000;
+const HEAD_CHARS = 6_000;
+const WINDOW_RADIUS = 2_500;
+const PRICING_SIGNAL = /\$\s?\d{1,2},?\d{3}(?!\d)|"(?:rent|price|minPrice|maxPrice|min_rent|max_rent)"\s*:/gi;
+
+/**
+ * Fit a condensed page into the model's budget without dropping the listings.
+ *
+ * Head-truncation was the default, and on large rendered pages it cut the
+ * inventory off entirely: Greystar's Miro page condenses to 643k chars with
+ * all 45 rents between 493k and 549k, so the model saw a 100k head with no
+ * prices and reported zero units. Oversized pages now send the head (for the
+ * building's name and context) plus windows around every pricing signal,
+ * merged and in page order, until the budget is spent.
+ */
+export function focusOnPricing(text: string, budget = MODEL_HTML_BUDGET): string {
+  if (text.length <= budget) return text;
+
+  const spans: [number, number][] = [];
+  for (const m of text.matchAll(PRICING_SIGNAL)) {
+    const start = Math.max(HEAD_CHARS, m.index! - WINDOW_RADIUS);
+    const end = Math.min(text.length, m.index! + WINDOW_RADIUS);
+    const last = spans[spans.length - 1];
+    if (last && start <= last[1]) last[1] = Math.max(last[1], end);
+    else spans.push([start, end]);
+  }
+  if (spans.length === 0) return text.slice(0, budget) + "\n... [truncated]";
+
+  const parts = [text.slice(0, HEAD_CHARS)];
+  let used = HEAD_CHARS;
+  for (const [start, end] of spans) {
+    const room = budget - used;
+    if (room <= 0) break;
+    const piece = text.slice(start, Math.min(end, start + room));
+    parts.push(piece);
+    used += piece.length;
+  }
+  return parts.join("\n... [skipped] ...\n");
+}
+
 export interface UnitsExtraction {
   units: ScrapedUnit[];
   total_available: number;
@@ -104,9 +144,8 @@ export async function extractUnitsWithAI(
   html: string,
   sourceUrl: string
 ): Promise<UnitsExtraction> {
-  // Condense first, then truncate (keep first 100k chars for context)
-  const condensed = condenseHtml(html);
-  const truncatedHtml = condensed.length > 100000 ? condensed.slice(0, 100000) + "\n... [truncated]" : condensed;
+  // Condense, then keep the parts of the page that carry prices.
+  const truncatedHtml = focusOnPricing(condenseHtml(html));
 
   const empty = { units: [] as ScrapedUnit[], total_available: 0, move_in_specials: [] as string[] };
 

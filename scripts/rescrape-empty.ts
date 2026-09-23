@@ -2,12 +2,14 @@
 // renderer for JS-heavy leasing sites (runs locally via Playwright).
 //
 // Run with: npx tsx scripts/rescrape-empty.ts [limit]
+//           npx tsx scripts/rescrape-empty.ts --names <file>   (one building name per line)
 // Example:  npx tsx scripts/rescrape-empty.ts 15
 
 import { config } from "dotenv";
 import { resolve } from "path";
 config({ path: resolve(__dirname, "../.env.local") });
 
+import { readFileSync } from "fs";
 import { createClient } from "@supabase/supabase-js";
 
 async function main() {
@@ -21,7 +23,17 @@ async function main() {
     normalizeUnitNumber,
   } = await import("../src/lib/scraper");
 
-  const limit = parseInt(process.argv[2] || "15", 10);
+  const namesIdx = process.argv.indexOf("--names");
+  const onlyNames =
+    namesIdx !== -1
+      ? new Set(
+          readFileSync(process.argv[namesIdx + 1], "utf8")
+            .split("\n")
+            .map((n) => n.trim())
+            .filter(Boolean)
+        )
+      : null;
+  const limit = onlyNames ? 1000 : parseInt(process.argv[2] || "15", 10);
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -44,7 +56,7 @@ async function main() {
 
   const targets = (rows || []).filter((r) => {
     const b = Array.isArray(r.buildings) ? r.buildings[0] : r.buildings;
-    return b && b.status === "active";
+    return b && b.status === "active" && (!onlyNames || onlyNames.has(b.name));
   });
 
   console.log(`Re-scraping ${targets.length} zero-unit buildings (limit ${limit})\n`);
