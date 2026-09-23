@@ -29,7 +29,10 @@ const E164_RE = /^\+[1-9]\d{6,14}$/;
 
 function e164(value: unknown): string | null {
   if (typeof value !== "string") return null;
-  const cleaned = value.replace(/[^\d+]/g, "");
+  let cleaned = value.replace(/[^\d+]/g, "");
+  // LiveKit reports the dialed number without the plus ("13059521558").
+  if (/^1\d{10}$/.test(cleaned)) cleaned = `+${cleaned}`;
+  else if (/^\d{10}$/.test(cleaned)) cleaned = `+1${cleaned}`;
   return E164_RE.test(cleaned) ? cleaned : null;
 }
 

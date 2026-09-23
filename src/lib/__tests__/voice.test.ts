@@ -117,6 +117,9 @@ describe("call info", () => {
       dialed: null,
     });
     expect(parseCallInfo({ caller: "+13055551234" })).toBeNull();
+    // LiveKit sends the dialed number without the plus.
+    expect(parseCallInfo({ id: "x", dialed: "13059521558" })?.dialed).toBe("+13059521558");
+    expect(parseCallInfo({ id: "x", dialed: "3059521558" })?.dialed).toBe("+13059521558");
   });
   it("builds a session key the transcript log accepts", () => {
     expect(isValidSessionKey(callSessionKey("call-_+13055551234_Ab9x"))).toBe(true);
