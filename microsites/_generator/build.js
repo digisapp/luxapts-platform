@@ -9,6 +9,7 @@ const path = require("path");
 const crypto = require("crypto");
 const sharp = require("sharp");
 const BUILDINGS = require("./buildings.js");
+const { stacyBlock, stacyGreeting } = require("../_shared/stacy.js");
 
 const ROOT = path.join(__dirname, "..");
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -560,9 +561,40 @@ ${hasInventory ? `<script>
   });
 })();
 </script>
+${stacyBlock({
+  domain: b.domain,
+  accent: p.a,
+  ink: p.ink,
+  greeting: stacyGreeting({
+    name: b.name,
+    // "in the Arts & Entertainment District", not "in Arts & Entertainment District"
+    area: !b.hood ? "Miami" : /District$/.test(b.hood) ? `the ${b.hood}` : b.hood,
+    open: tier === "availability",
+  }),
+})}
 </body>
 </html>
 `;
+}
+
+// What Stacy's microsite chat knows about this page's building: exactly what
+// the page publishes, so the chat can never contradict it. Written to the
+// platform as src/lib/voice/microsite-facts.generated.json on every build.
+function stacyFacts(b) {
+  const t = tierOf(b);
+  const size = [b.units && `${b.units} rental residences`, b.stories && `${b.stories} stories`]
+    .filter(Boolean).join(", ");
+  return [
+    `${b.name}, ${b.address}, ${b.hood}, Miami FL ${b.zip}.`,
+    size && `${size}.`,
+    b.developer && `Developer: ${b.developer}.`,
+    t === "availability"
+      ? "Status: operating and leasing now."
+      : `Status: NOT leasing yet. Expected ${b.eta}. Don't promise a date beyond that.`,
+    b.sub,
+    ...b.faq.map(([q, a]) => `Q: ${q} A: ${a}`),
+    `(Page facts last checked ${b.verified || VERIFIED}; published rents are snapshots, not quotes.)`,
+  ].filter(Boolean).join(" ");
 }
 
 // First candidate at or under `max` characters, after dropping the "null" hood
@@ -579,6 +611,11 @@ function hexA(hex, a) {
   const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 }
+
+fs.writeFileSync(
+  path.join(ROOT, "..", "src", "lib", "voice", "microsite-facts.generated.json"),
+  JSON.stringify(Object.fromEntries(BUILDINGS.map((b) => [b.domain, stacyFacts(b)])), null, 2) + "\n"
+);
 
 let made = 0;
 const work = [];

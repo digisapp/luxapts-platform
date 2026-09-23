@@ -8,6 +8,7 @@ import { MICROSITE_BUILDINGS } from "@/lib/microsites";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { isValidSessionKey, logChatTurn, type LoggedToolCall } from "@/lib/chat/session-log";
 import { executeVoiceTool, isVoiceToolName, type LeadChannel } from "@/lib/voice/tools";
+import { micrositeFacts } from "@/lib/voice/microsite-facts";
 import {
   micrositeChatInstructions,
   STACY_MAIN_LINE,
@@ -122,6 +123,7 @@ export async function POST(req: Request) {
       content: micrositeChatInstructions({
         today: todayInMiami(new Date()),
         building,
+        facts: micrositeFacts(domain),
         phoneNumber: STACY_MAIN_LINE.display,
       }),
     },

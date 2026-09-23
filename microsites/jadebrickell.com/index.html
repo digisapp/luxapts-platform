@@ -335,5 +335,77 @@
   });
 })();
 </script>
+<!-- stacy:start (generated from microsites/_shared/stacy-widget.html; edit the template, not this block) -->
+<style>
+.stc,.stc-panel{--stc-a:#cdb380;--stc-ink:#0c1f18;letter-spacing:normal;text-transform:none;text-align:left}
+.stc{position:fixed;right:16px;bottom:16px;z-index:60;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;display:flex;gap:10px;align-items:center}
+.stc-fab{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:13px 18px;font-family:inherit;font-weight:600;font-size:15px;line-height:1;cursor:pointer;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.stc-chat{background:var(--stc-a);color:var(--stc-ink)}
+.stc-call{background:var(--stc-ink);color:#fff}
+.stc-fab svg{width:18px;height:18px;flex:none}
+.stc-panel{position:fixed;right:16px;bottom:78px;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 110px));background:#fff;color:#111;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.3);display:none;flex-direction:column;overflow:hidden;z-index:61;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+.stc-panel.open{display:flex}
+.stc-head{background:var(--stc-ink);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.stc-head b{display:block;font-size:15px}
+.stc-head small{display:block;opacity:.75;font-size:12px;margin-top:2px}
+.stc-x{background:none;border:0;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 2px}
+.stc-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:#f6f7f8}
+.stc-m{max-width:85%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+.stc-m.a{background:#fff;border:1px solid #e3e5e8;align-self:flex-start}
+.stc-m.u{background:var(--stc-ink);color:#fff;align-self:flex-end}
+.stc-m.t{color:#6b7280;font-style:italic;background:none;border:0;padding:2px 4px}
+.stc-form{display:flex;gap:8px;padding:10px;border-top:1px solid #e3e5e8;background:#fff}
+.stc-form input{flex:1;min-width:0;width:auto;height:auto;margin:0;border:1px solid #d5d8dc;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;line-height:1.3;color:#111;background:#fff;box-shadow:none;-webkit-appearance:none;appearance:none;opacity:1}
+.stc-form input::placeholder{color:#8a9097;opacity:1}
+.stc-form input:focus{outline:2px solid var(--stc-a);outline-offset:1px;border-color:transparent}
+.stc-form button{width:auto;margin:0;border:0;border-radius:10px;padding:0 14px;letter-spacing:normal;text-transform:none;background:var(--stc-a);color:var(--stc-ink);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.stc-form button:disabled{opacity:.5;cursor:default}
+.stc-foot{font-size:11px;color:#6b7280;padding:0 12px 10px;background:#fff}
+.stc-foot a{color:inherit}
+@media (max-width:520px){.stc{right:12px;bottom:12px}.stc-fab{padding:12px 15px}.stc-call span{display:none}.stc-panel{right:8px;left:8px;width:auto;bottom:70px;height:calc(100vh - 90px)}}
+</style>
+<div class="stc" id="stc">
+  <a class="stc-fab stc-call" href="tel:+13059521558" aria-label="Call Stacy, Staycio's AI assistant, at (305) 952-1558"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg><span>Call</span></a>
+  <button class="stc-fab stc-chat" type="button" aria-expanded="false" aria-controls="stc-panel"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2z"/></svg>Ask Stacy</button>
+</div>
+<div class="stc-panel" id="stc-panel" role="dialog" aria-label="Chat with Stacy">
+  <div class="stc-head"><div><b>Stacy · AI apartment assistant</b><small>Staycio, independent of the building and its leasing office</small></div><button class="stc-x" type="button" aria-label="Close chat">×</button></div>
+  <div class="stc-log" aria-live="polite"></div>
+  <div class="stc-form"><input type="text" autocomplete="off" enterkeyhint="send" maxlength="1000" placeholder="Ask about rents, timing, pets…" aria-label="Message Stacy"><button type="button">Send</button></div>
+  <div class="stc-foot">AI answers can be wrong; confirm with the leasing office. Rather talk? <a href="tel:+13059521558">Call (305) 952-1558</a>, any time.</div>
+</div>
+<script>
+(function(){
+  var D="jadebrickell.com",EP="https://staycio.com/api/microsite-chat",GREET="Hi, I'm Stacy. I can help you explore Jade Brickell availability or find apartments in Brickell that are available.";
+  var root=document.getElementById("stc"),panel=document.getElementById("stc-panel");
+  // Deliberately not a form element: each page has exactly one form, and its lead handler binds
+  // to the first one it finds.
+  var log=panel.querySelector(".stc-log"),input=panel.querySelector(".stc-form input"),sendBtn=panel.querySelector(".stc-form button");
+  var openBtn=root.querySelector(".stc-chat"),msgs=[],busy=false,started=false;
+  function track(n,p){try{window.__scTrack&&window.__scTrack(n,p||{});}catch(e){}}
+  function sid(){var k="stc_sid",v=null;try{v=sessionStorage.getItem(k);}catch(e){}
+    if(!v){v=(Date.now().toString(36)+Math.random().toString(36).slice(2,10)).replace(/[^a-z0-9]/g,"");try{sessionStorage.setItem(k,v);}catch(e){}}return v;}
+  function add(cls,text){var d=document.createElement("div");d.className="stc-m "+cls;d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
+  function toggle(open){panel.classList.toggle("open",open);openBtn.setAttribute("aria-expanded",open?"true":"false");
+    if(open){if(!started){started=true;add("a",GREET);}track("chat_open");setTimeout(function(){input.focus();},50);}}
+  openBtn.addEventListener("click",function(){toggle(!panel.classList.contains("open"));});
+  panel.querySelector(".stc-x").addEventListener("click",function(){toggle(false);});
+  root.querySelector(".stc-call").addEventListener("click",function(){track("call_click",{where:"floating"});});
+  panel.querySelector(".stc-foot a").addEventListener("click",function(){track("call_click",{where:"chat"});});
+  input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();send();}});
+  sendBtn.addEventListener("click",send);
+  function send(){
+    var q=input.value.trim();if(!q||busy)return;
+    input.value="";add("u",q);msgs.push({role:"user",content:q});busy=true;sendBtn.disabled=true;
+    var typing=add("t","Stacy is typing…");track("chat_message",{n:msgs.length});
+    fetch(EP,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({domain:D,session_id:sid(),messages:msgs.slice(-16)})})
+      .then(function(r){return r.json();})
+      .then(function(d){var t=(d&&(d.reply||d.error))||"Sorry, something went wrong.";typing.remove();add("a",t);if(d&&d.reply)msgs.push({role:"assistant",content:d.reply});})
+      .catch(function(){typing.remove();add("a","I can't connect right now. Call (305) 952-1558 or use the form on this page.");})
+      .then(function(){busy=false;sendBtn.disabled=false;input.focus();});
+  }
+})();
+</script>
+<!-- stacy:end -->
 </body>
 </html>

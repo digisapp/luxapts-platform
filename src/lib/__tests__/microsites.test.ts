@@ -6,6 +6,8 @@ import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
 import { telHref, whatsappHref } from "@/lib/utils";
 import { MICROSITE_BUILDINGS, senderIdentityFor } from "@/lib/microsites";
 import { MICROSITE_CATALOG_SLUG } from "@/lib/microsite-inventory";
+import { micrositeFacts } from "@/lib/voice/microsite-facts";
+import { briefByDomain } from "@/lib/voice/building-briefs";
 // The generator's building records, read directly so the delivery-date guard
 // below runs against the same source the pages are built from.
 import generatedBuildings from "../../../microsites/_generator/buildings.js";
@@ -321,6 +323,20 @@ describe("microsite call-to-action placement", () => {
     expect(target, `${domain}: mid-page CTA has no anchor`).toBeTruthy();
     expect(html, `${domain}: mid-page CTA points at #${target}, which does not exist`)
       .toContain(`id="${target}"`);
+  });
+});
+
+describe("Stacy on every microsite", () => {
+  it.each(siteDirs)("%s carries one Stacy chat block for its own domain", (domain) => {
+    const html = readFileSync(join(ROOT, domain, "index.html"), "utf8");
+    expect(html.match(/<!-- stacy:start/g)?.length ?? 0).toBe(1);
+    expect(html).toContain(`var D=${JSON.stringify(domain)},`);
+  });
+
+  // Without facts the chat knows only the building's name and would answer
+  // the page's own questions with "I don't have that".
+  it.each([...MICROSITE_DOMAINS])("%s gives the chat its building's facts", (domain) => {
+    expect(briefByDomain(domain) || micrositeFacts(domain)).toBeTruthy();
   });
 });
 

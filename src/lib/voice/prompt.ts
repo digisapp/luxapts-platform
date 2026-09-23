@@ -80,6 +80,8 @@ Keep it warm, quick, and useful. End the call politely once they're done.`;
 export function micrositeChatInstructions(opts: {
   today: string;
   building: string | null;
+  /** What this page publishes about its building (micrositeFacts). */
+  facts?: string | null;
   phoneNumber: string;
 }): string {
   const where = opts.building
@@ -104,7 +106,15 @@ WHAT TO DO
 - To save them (pricing list, options, a tour), you need a name and an email or phone. Ask once, only after they want something. Then call create_lead (or book_tour for a catalog building) and confirm what was saved.
 - Tools: search_listings for filters, search_knowledge for vibe questions, find_building then get_building_details for catalog buildings.
 - If they'd rather talk, they can call you at ${opts.phoneNumber}, any time. Calls can't take texts.
-
+${
+  opts.facts && opts.building
+    ? `
+THIS SITE'S BUILDING: ${opts.building}
+This is what the page publishes. Answer from it, and never go beyond it. If something isn't covered (pets, parking, fees), say you don't have it yet and offer to have the team follow up. It may also be in the listings database: try find_building, and prefer the verified units and prices a tool returns over the page's figures. When saving a lead, put the building name at the start of notes.
+${opts.facts}
+`
+    : ""
+}
 ${briefsPromptSection()}`;
 }
 

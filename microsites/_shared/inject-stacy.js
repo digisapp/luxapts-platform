@@ -8,50 +8,31 @@
 
 const fs = require("fs");
 const path = require("path");
+const { stacyBlock, stacyGreeting } = require("./stacy.js");
 
-// All sites share Stacy's main line until per-building numbers exist (the
-// LiveKit plan allows one number). Keep in sync with STACY_MAIN_LINE in
-// src/lib/voice/prompt.ts.
-const MAIN_LINE = { e164: "+13059521558", display: "(305) 952-1558" };
-
+// Generated pages get the widget from _generator/build.js instead.
 const SITES = [
-  {
-    domain: "downtown6miami.com",
-    accent: "#00c2cb",
-    ink: "#041f22",
-    greeting:
-      "Hi, I'm Stacy. I can help you explore Downtown 6 availability or find apartments in Downtown Miami that are available.",
-  },
-  {
-    domain: "namdartowers.com",
-    accent: "#c8a96a",
-    ink: "#0a0f1e",
-    greeting:
-      "Hi, I'm Stacy. I can help you explore Namdar Towers availability or find apartments in Downtown Miami that are available.",
-  },
-  {
-    domain: "perrinbrickell.com",
-    accent: "#c9b8e4",
-    ink: "#181228",
-    greeting:
-      "Hi, I'm Stacy. I can help you explore The Perrin or find apartments in Brickell that are available now.",
-  },
+  { domain: "downtown6miami.com", accent: "#00c2cb", ink: "#041f22",
+    greeting: stacyGreeting({ name: "Downtown 6", area: "Downtown Miami", open: true }) },
+  { domain: "namdartowers.com", accent: "#c8a96a", ink: "#0a0f1e",
+    greeting: stacyGreeting({ name: "Namdar Towers", area: "Downtown Miami", open: true }) },
+  { domain: "perrinbrickell.com", accent: "#c9b8e4", ink: "#181228",
+    greeting: stacyGreeting({ name: "The Perrin", area: "Brickell", open: false }) },
+  { domain: "jadebrickell.com", accent: "#cdb380", ink: "#0c1f18",
+    greeting: stacyGreeting({ name: "Jade Brickell", area: "Brickell", open: true }) },
+  { domain: "sentralbrickell.com", accent: "#c1663c", ink: "#241a13",
+    greeting: stacyGreeting({ name: "Sentral Brickell", area: "Brickell", open: false }) },
+  { domain: "midtown5apartments.com", accent: "#ff4d5e", ink: "#1a0f14",
+    greeting: stacyGreeting({ name: "Midtown 5", area: "Midtown Miami", open: true }) },
 ];
 
 const START = "<!-- stacy:start";
 const END = "<!-- stacy:end -->";
-const template = fs.readFileSync(path.join(__dirname, "stacy-widget.html"), "utf8").trim();
 
 for (const site of SITES) {
   const file = path.join(__dirname, "..", site.domain, "index.html");
   let html = fs.readFileSync(file, "utf8");
-  const block = template
-    .replaceAll("{{ACCENT}}", site.accent)
-    .replaceAll("{{INK}}", site.ink)
-    .replaceAll("{{PHONE_E164}}", MAIN_LINE.e164)
-    .replaceAll("{{PHONE_DISPLAY}}", MAIN_LINE.display)
-    .replaceAll("{{DOMAIN_JSON}}", JSON.stringify(site.domain))
-    .replaceAll("{{GREETING_JSON}}", JSON.stringify(site.greeting));
+  const block = stacyBlock(site);
 
   const s = html.indexOf(START);
   if (s !== -1) {
