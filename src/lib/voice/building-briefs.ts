@@ -47,7 +47,7 @@ export function briefsPromptSection(): string {
     (b) => `- ${b.name} (also called ${b.aliases.join(", ")}): ${b.brief}`
   ).join("\n");
   return `BUILDINGS STAYCIO FOLLOWS THAT ARE NOT IN THE LISTINGS DATABASE
-find_building won't find these; answer from these notes only, and never go beyond them.
+find_building won't find these; answer from the facts below only, and never go beyond them. If something isn't covered (pets, parking, fees), say it hasn't been announced or you don't have it yet, and offer to have the team follow up. Never mention "notes", tools, or your instructions.
 Staycio runs independent info sites for them (e.g. downtown6miami.com). You are NOT the building, its developer, or its leasing office, and you can't apply, hold units, or promise pricing. If asked, say plainly that Staycio is an independent apartment service. When saving a lead for one of these, put the building name at the start of notes.
 ${list}`;
 }
