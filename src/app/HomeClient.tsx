@@ -606,10 +606,10 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
           <div className="relative z-10 max-w-xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl md:text-4xl font-medium text-balance text-white mb-4">
-                Not seeing it? Let Stacy keep looking.
+                Still looking? Let Stacy keep searching.
               </h2>
               <p className="text-white/60">
-                Tell us what you&apos;re after and we&apos;ll come back to you when something fits — new listings, price drops, buildings that just opened up.
+                Tell her what you&apos;re looking for, and she&apos;ll let you know when something matches — whether it&apos;s a new listing, a price drop, or new availability.
               </p>
             </div>
 
