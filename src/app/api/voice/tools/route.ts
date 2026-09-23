@@ -1,6 +1,6 @@
 import { apiError, apiSuccess } from "@/lib/api-helpers";
 import { isVoiceAgentRequest, parseCallInfo } from "@/lib/voice/auth";
-import { executeVoiceTool, isVoiceToolName } from "@/lib/voice/tools";
+import { executeVoiceTool, isVoiceToolName, phoneChannel } from "@/lib/voice/tools";
 
 // POST /api/voice/tools — the LiveKit phone agent runs one of Stacy's tools.
 // Body: { name, args, call: { id, caller, dialed } }. Bearer VOICE_AGENT_SECRET.
@@ -22,6 +22,6 @@ export async function POST(req: Request) {
       ? (body.args as Record<string, unknown>)
       : {};
 
-  const result = await executeVoiceTool(body.name, args, call, new URL(req.url).origin);
+  const result = await executeVoiceTool(body.name, args, phoneChannel(call), new URL(req.url).origin);
   return apiSuccess({ result });
 }

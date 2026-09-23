@@ -51,7 +51,7 @@ lk sip dispatch update --project staycio --id SDR_v4nH3G7q8Nq3 dispatch-rule.jso
 
 ## Numbers per building
 
-To give a microsite its own number, buy one, add it to `VOICE_NUMBER_BUILDINGS` in `src/lib/voice/prompt.ts` (for example `"+13055550100": "Downtown 6"`), and add it to the dispatch rule. Stacy then greets callers on that number with the building's name, and leads from it carry that number in `source_detail`.
+Stacy knows the microsite buildings that aren't in the listings catalog from `src/lib/voice/building-briefs.ts` (facts copied from each page; keep them in sync). All microsites currently show the main line. To give one its own number: buy it (the free plan allows one number, so this needs billing on the LiveKit project), add it to `trunkIds` in `dispatch-rule.json` and run the update command above, then map it in `VOICE_NUMBER_DOMAINS` in `src/lib/voice/prompt.ts` (for example `"+13059521561": "downtown6miami.com"`) and put it on that page. Callers on it are greeted with the building's name, and leads carry the number in `source_detail`.
 
 ## Local testing
 

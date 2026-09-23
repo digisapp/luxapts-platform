@@ -35,6 +35,34 @@ export function isVoiceToolName(name: unknown): name is VoiceToolName {
 
 type Args = Record<string, unknown>;
 
+/**
+ * Where a conversation is happening, which decides how its lead is recorded.
+ * Phone calls and microsite chat run the same tools.
+ */
+export interface LeadChannel {
+  /** chat_sessions.session_key; also enforces one lead per conversation. */
+  sessionKey: string;
+  /** Contact number to use when the person doesn't give one (caller ID). */
+  defaultPhone: string | null;
+  /** leads.source as accepted by /api/leads. */
+  source: "voice" | "chat";
+  /** Written after insert: final leads.source and source_detail. */
+  finalSource?: "microsite";
+  sourceDetail: string;
+  /** Appended to the lead's notes. */
+  note: string;
+}
+
+export function phoneChannel(call: CallInfo): LeadChannel {
+  return {
+    sessionKey: callSessionKey(call.id),
+    defaultPhone: call.caller,
+    source: "voice",
+    sourceDetail: `phone:${call.dialed ?? "unknown"}`,
+    note: `Phone call${call.caller ? ` from ${call.caller}` : ""}${call.dialed ? ` to ${call.dialed}` : ""}.`,
+  };
+}
+
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
 /** A call produces at most one lead, however many times the model asks. */
@@ -139,46 +167,48 @@ async function buildingCitySlug(buildingId: string): Promise<string | null> {
   return getFirstRelation(data?.cities as { slug: string } | { slug: string }[] | null)?.slug ?? null;
 }
 
-/** Record which Staycio number the call came in on. Never throws. */
-async function tagLeadSource(leadId: string, call: CallInfo) {
+/** Record where the lead came from. Never throws. */
+async function tagLeadSource(leadId: string, channel: LeadChannel) {
   try {
     await createAdminClient()
       .from("leads")
-      .update({ source_detail: `phone:${call.dialed ?? "unknown"}` })
+      .update({
+        source_detail: channel.sourceDetail,
+        ...(channel.finalSource ? { source: channel.finalSource } : {}),
+      })
       .eq("id", leadId);
   } catch (err) {
     console.error("Voice lead source tag failed:", err);
   }
 }
 
-async function createVoiceLead(args: Args, call: CallInfo, baseUrl: string) {
-  const sessionKey = callSessionKey(call.id);
+async function createLead(args: Args, channel: LeadChannel, baseUrl: string) {
+  const { sessionKey } = channel;
   if (await callAlreadyHasLead(sessionKey)) {
-    return { error: "This call already saved their details. Don't save again; just confirm what was saved." };
+    return { error: "Their details are already saved. Don't save again; just confirm what was saved." };
   }
 
-  const callNote = `Phone call${call.caller ? ` from ${call.caller}` : ""}${call.dialed ? ` to ${call.dialed}` : ""}.`;
   const result = await executeTool(
     "create_lead",
     {
       ...args,
       // The caller's own number is the contact unless they gave another.
-      phone: str(args.phone) || call.caller || undefined,
-      notes: [str(args.notes), callNote].filter(Boolean).join("\n"),
+      phone: str(args.phone) || channel.defaultPhone || undefined,
+      notes: [str(args.notes), channel.note].filter(Boolean).join("\n"),
     },
     baseUrl,
-    { leadsCreated: 0, sessionKey, leadSource: "voice" }
+    { leadsCreated: 0, sessionKey, leadSource: channel.source }
   );
 
   const leadId = (result as { lead_id?: string } | null)?.lead_id;
   if (leadId) {
-    await tagLeadSource(leadId, call);
+    await tagLeadSource(leadId, channel);
     return { saved: true };
   }
   return result;
 }
 
-async function bookTour(args: Args, call: CallInfo, baseUrl: string) {
+async function bookTour(args: Args, channel: LeadChannel, baseUrl: string) {
   const buildingId = await resolveBuildingId(args);
   if (!buildingId) return UNKNOWN_BUILDING;
   const date = str(args.tour_date);
@@ -201,7 +231,7 @@ async function bookTour(args: Args, call: CallInfo, baseUrl: string) {
   const citySlug = await buildingCitySlug(buildingId);
   if (!citySlug) return { error: "Couldn't find that building." };
 
-  const result = await createVoiceLead(
+  const result = await createLead(
     {
       city_slug: citySlug,
       name: args.name,
@@ -213,7 +243,7 @@ async function bookTour(args: Args, call: CallInfo, baseUrl: string) {
       targets: [{ building_id: buildingId, rank: 1 }],
       conversation_summary: args.conversation_summary,
     },
-    call,
+    channel,
     baseUrl
   );
   if ((result as { saved?: boolean }).saved) {
@@ -231,7 +261,7 @@ async function bookTour(args: Args, call: CallInfo, baseUrl: string) {
 export async function executeVoiceTool(
   name: VoiceToolName,
   args: Args,
-  call: CallInfo,
+  channel: LeadChannel,
   baseUrl: string
 ): Promise<unknown> {
   try {
@@ -273,7 +303,7 @@ export async function executeVoiceTool(
       }
 
       case "book_tour":
-        return await bookTour(args, call, baseUrl);
+        return await bookTour(args, channel, baseUrl);
 
       case "create_lead": {
         // Buildings come in by name; an unresolvable one is dropped rather
@@ -285,7 +315,7 @@ export async function executeVoiceTool(
         );
         const rest = { ...args };
         delete rest.building_names;
-        return await createVoiceLead({ ...rest, targets: targets.length ? targets : undefined }, call, baseUrl);
+        return await createLead({ ...rest, targets: targets.length ? targets : undefined }, channel, baseUrl);
       }
     }
   } catch (err) {

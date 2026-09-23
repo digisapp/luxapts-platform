@@ -162,6 +162,10 @@ export const micrositeAnalyticsSchema = z.discriminatedUnion("type", [
       "staycio_click",
       "scroll_depth",
       "time_on_page",
+      // Stacy on the microsites: tap-to-call and the chat bubble.
+      "call_click",
+      "chat_open",
+      "chat_message",
     ]),
     properties: z.record(z.string(), z.unknown()).optional(),
   }),

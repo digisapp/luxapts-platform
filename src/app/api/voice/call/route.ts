@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { logChatTurn } from "@/lib/chat/session-log";
 import { parseTranscript, transcriptToTurns } from "@/lib/voice/transcript";
 import { callSessionKey, isVoiceAgentRequest, parseCallInfo } from "@/lib/voice/auth";
-import { VOICE_NUMBER_BUILDINGS, VOICE_TOOL_SCHEMAS, voiceInstructions } from "@/lib/voice/prompt";
+import { buildingForNumber, todayInMiami, VOICE_TOOL_SCHEMAS, voiceInstructions } from "@/lib/voice/prompt";
 
 // POST /api/voice/call — call lifecycle for the LiveKit phone agent.
 //
@@ -11,18 +11,6 @@ import { VOICE_NUMBER_BUILDINGS, VOICE_TOOL_SCHEMAS, voiceInstructions } from "@
 //   { event: "end", call, transcript }   -> stores the call at /admin/conversations
 //
 // Bearer VOICE_AGENT_SECRET.
-
-function todayInMiami(now: Date): string {
-  const long = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(now);
-  const iso = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(now);
-  return `${long} (${iso})`;
-}
 
 export async function POST(req: Request) {
   if (!isVoiceAgentRequest(req)) return apiError("Unauthorized", 401);
@@ -53,7 +41,7 @@ export async function POST(req: Request) {
     });
     if (error && error.code !== "23505") console.error("Voice session create failed:", error);
 
-    const building = (call.dialed && VOICE_NUMBER_BUILDINGS[call.dialed]) || null;
+    const building = buildingForNumber(call.dialed);
     return apiSuccess({
       instructions: voiceInstructions({ today: todayInMiami(new Date()), building }),
       tools: VOICE_TOOL_SCHEMAS,
