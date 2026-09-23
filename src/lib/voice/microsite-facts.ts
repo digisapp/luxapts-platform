@@ -1,5 +1,6 @@
 import generated from "./microsite-facts.generated.json";
-import { briefByDomain } from "@/lib/voice/building-briefs";
+import { BUILDING_BRIEFS, briefByDomain } from "@/lib/voice/building-briefs";
+import { MICROSITE_BUILDINGS } from "@/lib/microsites";
 
 /**
  * What Stacy's microsite chat knows about the building a page covers, for the
@@ -25,4 +26,58 @@ const GENERATED: Record<string, string> = generated;
 export function micrositeFacts(domain: string): string | null {
   if (briefByDomain(domain)) return null;
   return HAND_BUILT[domain] ?? GENERATED[domain] ?? null;
+}
+
+/** Names people use that don't contain the site's building name. */
+const EXTRA_NAMES: Record<string, string[]> = {
+  "jadebrickell.com": ["Jade Residences", "Jade at Brickell Bay"],
+  "sentralbrickell.com": ["One Twenty Brickell", "120 Brickell", "Sentral"],
+  "midtown5apartments.com": ["Midtown Five"],
+  "2600biscaynemiami.com": ["Neo Edgewater"],
+  "neoedgewatermiami.com": ["2600 Biscayne"],
+  "mohawkwynwood.com": ["Mohawk"],
+  "jemmiamiapartments.com": ["JEM"],
+  "downtown5miami.com": ["Downtown 5", "Downtown Five"],
+};
+
+// "the Muze building" -> "muze"; applied to names too so "Remi on the River" still matches.
+const norm = (s: string) =>
+  s.replace(/\b(the|apartments?|building|residences)\b/gi, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/**
+ * Staycio's microsite buildings matching a spoken name, with what each page
+ * publishes. Covers every site, including the three with full briefs, so the
+ * phone line can answer about any of them. Two domains covering one building
+ * (the Mohawk pair) collapse to one result.
+ */
+export function findMicrositeBuildings(query: string): { name: string; site: string; facts: string }[] {
+  const q = norm(query);
+  if (q.length < 3) return [];
+  const seen = new Set<string>();
+  const out: { name: string; site: string; facts: string }[] = [];
+  for (const [domain, name] of Object.entries(MICROSITE_BUILDINGS)) {
+    const brief = briefByDomain(domain);
+    const names = [name, domain.replace(/\.com$/, ""), ...(brief?.aliases ?? []), ...(EXTRA_NAMES[domain] ?? [])]
+      .map(norm)
+      .filter((n) => n.length >= 3);
+    if (!names.some((n) => n.includes(q) || q.includes(n))) continue;
+    const facts = brief?.brief ?? HAND_BUILT[domain] ?? GENERATED[domain];
+    const building = brief?.name ?? name;
+    if (!facts || seen.has(building)) continue;
+    seen.add(building);
+    out.push({ name: building, site: domain, facts });
+  }
+  return out.slice(0, 3);
+}
+
+/** Every building Staycio runs a site for, for the prompt's directory line. */
+export function micrositeBuildingNames(): string[] {
+  const briefed = new Set(BUILDING_BRIEFS.map((b) => b.domain));
+  return [
+    ...new Set(
+      Object.entries(MICROSITE_BUILDINGS)
+        .filter(([domain]) => !briefed.has(domain))
+        .map(([, name]) => name)
+    ),
+  ];
 }

@@ -6,7 +6,7 @@ import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
 import { telHref, whatsappHref } from "@/lib/utils";
 import { MICROSITE_BUILDINGS, senderIdentityFor } from "@/lib/microsites";
 import { MICROSITE_CATALOG_SLUG } from "@/lib/microsite-inventory";
-import { micrositeFacts } from "@/lib/voice/microsite-facts";
+import { findMicrositeBuildings, micrositeFacts } from "@/lib/voice/microsite-facts";
 import { briefByDomain } from "@/lib/voice/building-briefs";
 // The generator's building records, read directly so the delivery-date guard
 // below runs against the same source the pages are built from.
@@ -337,6 +337,22 @@ describe("Stacy on every microsite", () => {
   // the page's own questions with "I don't have that".
   it.each([...MICROSITE_DOMAINS])("%s gives the chat its building's facts", (domain) => {
     expect(briefByDomain(domain) || micrositeFacts(domain)).toBeTruthy();
+  });
+
+  // The phone line is shared, so a caller can ask about any site's building
+  // by name; find_building returns these facts alongside catalog matches.
+  it.each([...MICROSITE_DOMAINS])("%s can be found by its building's name", (domain) => {
+    const hits = findMicrositeBuildings(MICROSITE_BUILDINGS[domain]);
+    expect(hits.length, `${domain}: no match for "${MICROSITE_BUILDINGS[domain]}"`).toBeGreaterThan(0);
+    expect(hits.every((h) => h.facts.length > 50)).toBe(true);
+  });
+
+  it("finds buildings by the names callers actually use", () => {
+    expect(findMicrositeBuildings("CMPND")[0]?.site).toBe("namdartowers.com");
+    expect(findMicrositeBuildings("the Muze")[0]?.site).toBe("muzemet.com");
+    expect(findMicrositeBuildings("One Twenty Brickell")[0]?.site).toBe("sentralbrickell.com");
+    expect(findMicrositeBuildings("Mohawk")).toHaveLength(1);
+    expect(findMicrositeBuildings("Brickell City Centre")).toEqual([]);
   });
 });
 

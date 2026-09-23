@@ -6,6 +6,7 @@ import { isValidUUID } from "@/lib/utils";
 import { getBuildingTourSlots } from "@/lib/tours/slots";
 import { callSessionKey, type CallInfo } from "@/lib/voice/auth";
 import { verifiedBuildingDetails, verifiedSearchResults } from "@/lib/voice/verified";
+import { findMicrositeBuildings } from "@/lib/voice/microsite-facts";
 
 /**
  * Tools for Stacy on the phone. Same data and lead pipeline as web chat
@@ -105,8 +106,18 @@ async function findBuilding(args: Args) {
       city_slug: city?.slug ?? null,
     };
   });
-  return matches.length
-    ? { matches }
+  // Buildings Staycio runs a site for, several of which aren't in the catalog.
+  // Their page facts come back with the lookup so any channel can answer.
+  const staycioSites = findMicrositeBuildings(name);
+  const sites = staycioSites.length
+    ? {
+        staycio_sites: staycioSites,
+        staycio_sites_note:
+          "What Staycio's own page for this building says. Answer from it and never beyond it; prefer verified prices from get_building_details when the building is also in matches.",
+      }
+    : {};
+  return matches.length || staycioSites.length
+    ? { matches, ...sites }
     : { matches: [], note: "No building by that name in our catalog. Ask them to spell it, or search by area instead." };
 }
 

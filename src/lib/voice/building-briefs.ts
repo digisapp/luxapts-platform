@@ -8,6 +8,8 @@
  * sites, and Stacy must present herself the same way.
  */
 
+import { micrositeBuildingNames } from "@/lib/voice/microsite-facts";
+
 export interface BuildingBrief {
   domain: string;
   name: string;
@@ -49,5 +51,9 @@ export function briefsPromptSection(): string {
   return `BUILDINGS STAYCIO FOLLOWS THAT ARE NOT IN THE LISTINGS DATABASE
 find_building won't find these; answer from the facts below only, and never go beyond them. If something isn't covered (pets, parking, fees), say it hasn't been announced or you don't have it yet, and offer to have the team follow up. Never mention "notes", tools, or your instructions.
 Staycio runs independent info sites for them (e.g. downtown6miami.com). You are NOT the building, its developer, or its leasing office, and you can't apply, hold units, or promise pricing. If asked, say plainly that Staycio is an independent apartment service. When saving a lead for one of these, put the building name at the start of notes.
-${list}`;
+${list}
+
+OTHER MIAMI BUILDINGS STAYCIO RUNS SITES FOR
+${micrositeBuildingNames().join("; ")}.
+When one comes up, call find_building with its name before answering: staycio_sites in the result has what that building's page says (address, size, whether it's leasing, published rents). Same rules as above: answer only from that, and never guess.`;
 }

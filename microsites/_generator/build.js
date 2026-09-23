@@ -585,12 +585,12 @@ function stacyFacts(b) {
   const size = [b.units && `${b.units} rental residences`, b.stories && `${b.stories} stories`]
     .filter(Boolean).join(", ");
   return [
-    `${b.name}, ${b.address}, ${b.hood}, Miami FL ${b.zip}.`,
+    `${[b.name, b.address !== b.hood && b.address, b.hood].filter(Boolean).join(", ")}, Miami FL ${b.zip}.`,
     size && `${size}.`,
     b.developer && `Developer: ${b.developer}.`,
     t === "availability"
       ? "Status: operating and leasing now."
-      : `Status: NOT leasing yet. Expected ${b.eta}. Don't promise a date beyond that.`,
+      : `Status: NOT leasing yet (${b.eta}). Don't promise a date beyond that.`,
     b.sub,
     ...b.faq.map(([q, a]) => `Q: ${q} A: ${a}`),
     `(Page facts last checked ${b.verified || VERIFIED}; published rents are snapshots, not quotes.)`,
