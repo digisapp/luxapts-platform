@@ -1,5 +1,22 @@
 import { ImageResponse } from "next/og";
 import { createAdminClient } from "@/lib/supabase/server";
+import { isUuid } from "@/lib/seo/urls";
+import {
+  MARK_VIEWBOX,
+  MARK_ASPECT,
+  MARK_BODY_PATH,
+  MARK_DOOR_PATH,
+  MARK_DOOR_COLOR,
+} from "@/components/brand/StaycioMark";
+
+function Mark({ height }: { height: number }) {
+  return (
+    <svg viewBox={MARK_VIEWBOX} height={height} width={Math.round(height * MARK_ASPECT)}>
+      <path fill="white" d={MARK_BODY_PATH} />
+      <path fill={MARK_DOOR_COLOR} d={MARK_DOOR_PATH} />
+    </svg>
+  );
+}
 
 export const runtime = "nodejs";
 export const revalidate = 86400; // 24h
@@ -23,7 +40,9 @@ export default async function BuildingOgImage({
       neighborhoods:neighborhood_id (name),
       building_images!left (url, is_primary, sort_order)
     `)
-    .eq("id", id)
+    // The route param is the SEO slug for every link we publish; matching on
+    // id alone sent every shared building URL to the generic fallback card.
+    .eq(isUuid(id) ? "id" : "slug", id)
     .single();
 
   if (!building) {
@@ -38,7 +57,10 @@ export default async function BuildingOgImage({
           background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
         }}
       >
-        <span style={{ color: "white", fontSize: 48, fontWeight: 700 }}>Staycio</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <Mark height={64} />
+          <span style={{ color: "white", fontSize: 48, fontWeight: 700 }}>Staycio</span>
+        </div>
       </div>,
       { ...size }
     );
@@ -151,7 +173,7 @@ export default async function BuildingOgImage({
         </div>
         {building.address_1 && (
           <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 24 }}>
-            {building.address_1}{building.zip ? ` ${building.zip}` : ""}
+            {`${building.address_1}${building.zip ? ` ${building.zip}` : ""}`}
           </div>
         )}
 
@@ -167,13 +189,14 @@ export default async function BuildingOgImage({
             border: "1px solid rgba(255,255,255,0.2)",
             borderRadius: 12,
             padding: "8px 16px",
-            width: "fit-content",
+            alignSelf: "flex-start",
             color: "white",
             fontSize: 20,
             fontWeight: 600,
           }}
         >
-          🏢 Staycio
+          <Mark height={24} />
+          Staycio
         </div>
       </div>
     </div>,

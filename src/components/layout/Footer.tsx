@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StaycioMark } from "@/components/brand/StaycioMark";
 
 export function Footer() {
   return (
@@ -7,8 +8,9 @@ export function Footer() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           {/* Left side */}
           <div className="flex flex-col gap-4">
-            <div className="flex items-baseline gap-2.5">
-              <Link href="/" className="text-lg font-medium text-white">
+            <div className="flex items-center gap-2.5">
+              <Link href="/" className="flex items-center gap-2 text-lg font-medium text-white">
+                <StaycioMark className="h-6 w-auto" />
                 Staycio
               </Link>
               <span className="font-mono text-xs text-zinc-400">

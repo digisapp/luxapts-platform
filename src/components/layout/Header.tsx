@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Menu, X, Heart, LogOut, Settings, LayoutDashboard } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
+import { StaycioMark } from "@/components/brand/StaycioMark";
 import { useAuth } from "@/contexts/AuthContext";
 
 // Staff roles each have their own portal, but nothing in the UI linked to
@@ -65,6 +66,7 @@ export function Header() {
       <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
+          <StaycioMark className="h-7 w-auto text-white group-hover:opacity-70 transition-opacity" />
           <span className="text-lg font-medium tracking-tight text-white group-hover:opacity-70 transition-opacity">
             Staycio
           </span>
