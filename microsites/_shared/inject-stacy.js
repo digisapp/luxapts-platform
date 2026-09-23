@@ -20,21 +20,21 @@ const SITES = [
     accent: "#00c2cb",
     ink: "#041f22",
     greeting:
-      "Hi, I'm Stacy, Staycio's AI apartment assistant. Ask me about Downtown 6, or about Downtown Miami apartments you can move into sooner.",
+      "Hi, I'm Stacy. I can help you explore Downtown 6 availability or find apartments in Downtown Miami that are available.",
   },
   {
     domain: "namdartowers.com",
     accent: "#c8a96a",
     ink: "#0a0f1e",
     greeting:
-      "Hi, I'm Stacy, Staycio's AI apartment assistant. Ask me about Namdar Towers (Tower One leases as CMPND Miami), or other Downtown options.",
+      "Hi, I'm Stacy. I can help you explore Namdar Towers availability or find apartments in Downtown Miami that are available.",
   },
   {
     domain: "perrinbrickell.com",
     accent: "#c9b8e4",
     ink: "#181228",
     greeting:
-      "Hi, I'm Stacy, Staycio's AI apartment assistant. Ask me about The Perrin, or about Brickell apartments you can move into before it opens.",
+      "Hi, I'm Stacy. I can help you explore The Perrin or find apartments in Brickell that are available now.",
   },
 ];
 
