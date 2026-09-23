@@ -34,6 +34,18 @@ export interface FeaturedBuilding {
   image: string;
   availableUnits: number;
   minPrice: number | null;
+  /** Bedroom range across the building's open units; 0 is a studio. */
+  bedRange: { min: number; max: number } | null;
+}
+
+function formatBeds(n: number): string {
+  return n === 0 ? "Studio" : `${n} bed`;
+}
+
+function formatBedRange(r: { min: number; max: number }): string {
+  if (r.min === r.max) return formatBeds(r.min);
+  // "Studio–2 bed", "1–3 bed"
+  return `${r.min === 0 ? "Studio" : r.min}–${formatBeds(r.max)}`;
 }
 
 function BuildingImage({ src, seed, alt }: { src: string; seed: string; alt: string }) {
@@ -60,6 +72,7 @@ export interface TopNeighborhood {
   slug: string;
   cityName: string | null;
   citySlug: string | null;
+  units: number;
 }
 
 interface HomeClientProps {
@@ -67,16 +80,18 @@ interface HomeClientProps {
   featured: FeaturedBuilding[];
   neighborhoods: TopNeighborhood[];
   cities: HomeCity[];
+  /** Markets with open units, most inventory first. */
+  browseCities: HomeCity[];
 }
 
-// Curated for the browse band and the marketing copy — ordered by how much
-// inventory and sales coverage each market has, not alphabetically.
+// Fallback only, for when the inventory query fails. The live list comes from
+// `browseCities`, so a market never gets a button after it runs dry — this
+// curated list used to link Chicago and San Francisco with nothing open in
+// either.
 const FEATURED_CITIES: HomeCity[] = [
   { name: "New York", slug: "new-york" },
   { name: "Miami", slug: "miami" },
   { name: "Los Angeles", slug: "los-angeles" },
-  { name: "Chicago", slug: "chicago" },
-  { name: "San Francisco", slug: "san-francisco" },
   { name: "Dallas", slug: "dallas" },
   { name: "Austin", slug: "austin" },
   { name: "Nashville", slug: "nashville" },
@@ -128,7 +143,7 @@ interface SpeechRecognitionErrorEvent extends Event {
   error: string;
 }
 
-export default function HomeClient({ stats, featured, neighborhoods, cities }: HomeClientProps) {
+export default function HomeClient({ stats, featured, neighborhoods, cities, browseCities }: HomeClientProps) {
   const router = useRouter();
   const { trackEvent } = useAnalytics();
   const [searchQuery, setSearchQuery] = useState("");
@@ -144,6 +159,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
   // Real rows when the query succeeded, curated list when it didn't — the
   // picker must never render empty or the form cannot be submitted.
   const leadCities = cities.length > 0 ? cities : FEATURED_CITIES;
+  const cityLinks = browseCities.length > 0 ? browseCities : FEATURED_CITIES;
   // The same buildings the featured grid renders, reused as the hero backdrop
   // so the first screen shows real inventory without a second image payload.
   const heroImages = featured.slice(0, 6);
@@ -317,12 +333,12 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
 
           <div className="relative z-10 max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] mb-8 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] mb-6 sm:mb-8 animate-fade-in">
               <Sparkles className="h-4 w-4 text-cyan-400" />
               <span className="text-sm text-white/70">{proofLine}</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-balance text-white mb-5 sm:mb-6 animate-fade-in [animation-delay:100ms]">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-balance text-white mb-6 animate-fade-in [animation-delay:100ms]">
               {hero.headline}
               <br />
               <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
@@ -330,7 +346,10 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-white/60 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed animate-fade-in [animation-delay:240ms]">
+            {/* Hidden on phones: at four lines it pushed the example searches
+                below the fixed bottom nav, and the examples teach the same
+                thing — what to type — more concretely than the sentence. */}
+            <p className="hidden sm:block text-lg text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in [animation-delay:240ms]">
               {hero.sub}
             </p>
 
@@ -478,10 +497,14 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
 
                     <div className="p-5">
                       <h3 className="text-white font-medium leading-tight mb-1">{building.name}</h3>
-                      {building.cityName && (
+                      {(building.cityName || building.bedRange) && (
                         <p className="text-sm text-white/50 flex items-center gap-1 mb-4">
                           <MapPin className="h-3.5 w-3.5 shrink-0" />
                           {building.cityName}
+                          {building.cityName && building.bedRange && (
+                            <span aria-hidden="true" className="px-1 text-white/25">·</span>
+                          )}
+                          {building.bedRange && formatBedRange(building.bedRange)}
                         </p>
                       )}
                       <div className="flex items-center justify-between">
@@ -520,9 +543,8 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                   Prefer to look around yourself? Start here.
                 </p>
               </div>
-              {/* The hero badge counts every market we have; this band is the
-                  ten with the most inventory. Without this link the two
-                  numbers just looked like one of them was wrong. */}
+              {/* The rest of the markets we cover — including ones with
+                  nothing open right now, which this band leaves out. */}
               <Link
                 href="/cities"
                 onClick={() => trackHeroEngagement("browse_link")}
@@ -533,8 +555,8 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
-              {FEATURED_CITIES.map((city) => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+              {cityLinks.map((city) => (
                 <Link
                   key={city.slug}
                   href={`/cities/${city.slug}`}
@@ -551,7 +573,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                 <h3 className="mt-12 mb-5 text-sm uppercase tracking-wider text-white/50">
                   Popular neighborhoods
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                   {neighborhoods.map((n) => (
                     <Link
                       key={`${n.citySlug ?? ""}/${n.slug}`}
@@ -564,9 +586,11 @@ export default function HomeClient({ stats, featured, neighborhoods, cities }: H
                       className="px-4 py-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-sm text-white/70 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.18] transition-colors duration-300"
                     >
                       <span className="block truncate">{n.name}</span>
-                      {n.cityName && (
-                        <span className="block truncate text-xs text-white/50">{n.cityName}</span>
-                      )}
+                      <span className="block truncate text-xs text-white/50">
+                        {n.cityName}
+                        {n.cityName && <span aria-hidden="true" className="px-1 text-white/25">·</span>}
+                        <span className="text-emerald-300/80">{n.units} available</span>
+                      </span>
                     </Link>
                   ))}
                 </div>

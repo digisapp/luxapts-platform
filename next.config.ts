@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
         hostname: "**",
       },
     ],
+    // Next 16 only serves listed qualities and rounds anything else to the
+    // nearest. 40 is the homepage's blurred hero backdrop, which was quietly
+    // being fetched at 75.
+    qualities: [40, 75],
   },
   async headers() {
     return [

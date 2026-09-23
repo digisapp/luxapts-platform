@@ -168,7 +168,7 @@ export function Header() {
                 href="/auth/signup"
                 className="text-sm px-5 py-2.5 rounded-full bg-white text-black font-medium hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all"
               >
-                Get Started
+                Sign up
               </Link>
             </>
           )}
@@ -260,7 +260,7 @@ export function Header() {
                     className="mt-4 block text-center py-3 rounded-full bg-white text-black font-medium hover:bg-zinc-200 transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Get Started
+                    Sign up
                   </Link>
                 </>
               )}

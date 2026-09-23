@@ -39,6 +39,11 @@ export function ChatWidget() {
   const { count: compareCount } = useCompare();
   const compareBarVisible = compareCount > 0;
   const [isOpen, setIsOpen] = useState(false);
+  // The homepage hero is itself the Stacy prompt, so a second entry point on
+  // top of it was redundant — and on a phone the bubble sat over the Ask Stacy
+  // button. It appears once the hero has scrolled away.
+  const isHome = pathname === "/";
+  const [pastHero, setPastHero] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   // Stable for one conversation so the admin Chat Log stores a single
@@ -53,6 +58,14 @@ export function ChatWidget() {
   const inputRef = useRef<HTMLInputElement>(null);
   const streamingIndexRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!isHome) return;
+    const update = () => setPastHero(window.scrollY > window.innerHeight * 0.6);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, [isHome]);
 
   // Abort any in-flight stream on unmount
   useEffect(() => {
@@ -198,7 +211,7 @@ export function ChatWidget() {
           a second FAB (the Simli mic trigger) that no longer exists, so they
           sit a little higher than they need to when the compare bar is up.
           Harmless — it never overlaps — but it is why the numbers look odd. */}
-      {!isOpen && (
+      {!isOpen && (!isHome || pastHero) && (
         <button
           onClick={() => setIsOpen(true)}
           className={`fixed right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-white text-black shadow-lg hover:bg-zinc-100 transition-all hover:scale-105 group lg:right-6 ${

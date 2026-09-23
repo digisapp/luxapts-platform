@@ -121,7 +121,7 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
             </SelectContent>
           </Select>
           <Select value={String(maxMinutes)} onValueChange={(v) => setMaxMinutes(parseInt(v, 10))}>
-            <SelectTrigger aria-label="Maximum commute time" className="h-9 w-[104px] text-sm bg-white/[0.03] border-white/[0.08]">
+            <SelectTrigger aria-label="Maximum commute time" className="h-9 w-[116px] text-sm bg-white/[0.03] border-white/[0.08]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
