@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
+import { isVerifiedPrice } from "@/lib/verified-pricing";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -138,7 +139,11 @@ export default async function UnitPage({
   const images = imagesRes.data || [];
   const priceSnapshots = pricesRes.data || [];
 
-  const latestPrice = priceSnapshots[0]?.rent;
+  // Only a verified capture is quoted as the rent; older ones stay in the
+  // price history chart, which is labelled as history.
+  const latestPrice = isVerifiedPrice(priceSnapshots[0]?.rent, priceSnapshots[0]?.captured_at)
+    ? priceSnapshots[0].rent
+    : undefined;
 
   // Build price history for chart (oldest→newest, one point per day)
   const priceByDay: Record<string, number> = {};

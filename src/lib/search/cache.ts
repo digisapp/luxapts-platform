@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/db-helpers";
+import { withVerifiedPricing } from "@/lib/verified-pricing";
 import { filterBuildingsByAmenities } from "@/lib/search/amenity-filter";
 import {
   chunk,
@@ -379,11 +380,11 @@ async function executeSearch(params: SearchParams): Promise<SearchResponse> {
  * The cache key is derived from the params; the city slug is included as a tag
  * so city-level revalidation is possible via revalidateTag('search:miami').
  */
-export function cachedSearch(params: SearchParams): Promise<SearchResponse> {
+export async function cachedSearch(params: SearchParams): Promise<SearchResponse> {
   const key = buildCacheKey(params);
   const cityTag = `search:${params.city_slug}`;
 
-  return unstable_cache(
+  const res = await unstable_cache(
     () => executeSearch(params),
     ["search", key],
     {
@@ -391,4 +392,7 @@ export function cachedSearch(params: SearchParams): Promise<SearchResponse> {
       tags: [cityTag, "search"],
     }
   )();
+  // Applied after the cache so a price that ages out is hidden on time.
+  return withVerifiedPricing(res, params);
 }
+

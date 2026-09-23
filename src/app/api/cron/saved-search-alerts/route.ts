@@ -129,6 +129,9 @@ export async function GET(req: Request) {
         console.error(`saved-search ${savedSearch.id}: search failed`, err);
         continue;
       }
+      // cachedSearch nulls unverified prices; an alert never lists a unit
+      // it can't quote (that printed "$0/mo").
+      results = results.filter((r) => r.pricing !== null);
       if (results.length === 0) continue;
 
       const rows = results

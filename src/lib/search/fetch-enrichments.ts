@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fetchAllRows } from "@/lib/db-helpers";
+import { isVerifiedPrice } from "@/lib/verified-pricing";
 
 interface ImageRecord {
   id: string;
@@ -164,6 +165,7 @@ export async function fetchFloorplans(
 export interface AvailableUnitPrice {
   id: string;
   building_id: string;
+  /** Null unless the capture is verified (verified-pricing.ts). */
   latest_rent: number | null;
 }
 
@@ -174,6 +176,11 @@ export interface AvailableUnitPrice {
  * whose URL exceeded PostgREST's limit past a few hundred units: 800 ids →
  * 400 Bad Request (Los Angeles silently lost its minimum prices) and 1,500
  * ids hung the request until the build's 60 s page timeout.
+ *
+ * `latest_rent` is nulled when the capture isn't verified: every page that
+ * quotes a price (home, building, city, facet, neighborhood, compare,
+ * similar listings) reads it from here, and about 43% of priced units
+ * carried months-old captures that were shown as current asking rents.
  */
 export async function fetchAvailableUnitPrices<T extends AvailableUnitPrice = AvailableUnitPrice>(
   supabase: SupabaseClient,
@@ -181,7 +188,7 @@ export async function fetchAvailableUnitPrices<T extends AvailableUnitPrice = Av
   extraColumns: string[] = [],
 ): Promise<T[]> {
   if (buildingIds.length === 0) return [];
-  const columns = ["id", "building_id", "latest_rent", ...extraColumns].join(", ");
+  const columns = [...new Set(["id", "building_id", "latest_rent", "price_captured_at", ...extraColumns])].join(", ");
   const pages = await Promise.all(
     chunk(buildingIds, IN_CHUNK_SIZE).map((ids) =>
       fetchAllRows<T>((from, to) =>
@@ -196,5 +203,9 @@ export async function fetchAvailableUnitPrices<T extends AvailableUnitPrice = Av
       )
     )
   );
-  return pages.flat();
+  const now = new Date();
+  return pages.flat().map((row) => {
+    const captured = (row as { price_captured_at?: unknown }).price_captured_at;
+    return isVerifiedPrice(row.latest_rent, captured, now) ? row : { ...row, latest_rent: null };
+  });
 }

@@ -321,7 +321,9 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
         .maybeSingle(),
     ]);
 
-  // Latest price per unit
+  // Latest price per unit. fetchAvailableUnitPrices already nulls unverified
+  // captures, so everything priced on this page (range, summary, JSON-LD,
+  // unit rows) quotes verified rents only — the rest say "Contact for pricing".
   const unitPrices: Record<string, { rent: number; captured_at: string }> = {};
   for (const p of unitPriceRows) {
     if (p.latest_rent == null || !p.price_captured_at) continue;
