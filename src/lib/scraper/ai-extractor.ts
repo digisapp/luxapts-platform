@@ -3,6 +3,7 @@
 
 import { createXAIClient } from "@/lib/xai/client";
 import { ScrapedBuildingData, ScrapedUnit, ScrapedAmenity, ScrapedImage, ImageScrapeResult } from "./types";
+import type { ImageCandidate } from "./image-candidates";
 
 // A timed-out scrape used to keep burning the function's remaining window:
 // the OpenAI-compatible client defaults to a 10-minute request timeout with
@@ -231,133 +232,176 @@ export async function extractAmenitiesWithAI(
   }
 }
 
-const IMAGES_EXTRACTION_PROMPT = `You are an expert at extracting property images from apartment building website HTML.
+const IMAGES_CLASSIFICATION_PROMPT = `You are selecting property photos for an apartment building listing.
 
-Your job is to find ALL high-quality property photos from this apartment building's website.
+You get a numbered list of image URLs found on the building's own website, each with its alt text when the page gave one. The URLs are real; judge each from its filename, path and alt text.
 
-Look for images in:
-- <img> tags (src, data-src, data-lazy-src attributes)
-- <source> tags inside <picture> elements
-- CSS background-image URLs in style attributes
-- data-bg, data-background attributes
-- srcset attributes (pick the largest resolution)
-- JSON-LD structured data with image URLs
-- Open Graph meta tags (og:image)
-- Gallery/carousel data attributes
-- Lightbox data attributes (data-full, data-large, data-zoom)
+KEEP only photos of this property: building exterior, lobby, amenities, pool, gym, rooftop, common areas, apartment interiors, views.
+DROP logos, icons, badges, maps, staff/people headshots, stock lifestyle shots of people, neighborhood/restaurant photos, awards, banners with text, floor plan diagrams, and anything that looks like a different property.
 
-IMPORTANT FILTERING RULES:
-- ONLY include property photos (building exterior, lobby, amenities, apartments, views)
-- SKIP icons, logos, favicons, SVGs, map tiles, tracking pixels, social media icons
-- SKIP images smaller than 200px in any dimension
-- SKIP images from: google.com, facebook.com, instagram.com, twitter.com, maps.googleapis.com, googletagmanager.com, analytics
-- PREFER the highest resolution version of each image
-- If srcset is available, pick the largest size
-- Convert relative URLs to absolute using the website URL as base
-- Remove duplicate images (same image at different sizes)
+Categorize each kept image:
+- building-level: "exterior", "lobby", "amenity", "pool", "gym", "rooftop", "common", "view", "other"
+- apartment-level: "interior", "kitchen", "bathroom", "bedroom", "living"
 
-Categorize each image:
-- "exterior": Building exterior, facade, entrance
-- "lobby": Lobby, entrance hall, reception
-- "amenity": General amenity spaces
-- "pool": Swimming pool, hot tub
-- "gym": Fitness center, gym equipment
-- "rooftop": Rooftop deck, terrace with views
-- "common": Shared spaces, lounge, coworking, game room
-- "interior": General apartment interior
-- "kitchen": Kitchen
-- "bathroom": Bathroom
-- "bedroom": Bedroom
-- "living": Living room
-- "view": City/water/park views from the building
-- "floorplan": Floor plan diagrams
-- "other": Anything else that's a real property photo
-
-Return a JSON object:
+Return JSON only:
 {
-  "building_images": [
-    {"url": "https://...", "alt_text": "Rooftop pool with city views", "category": "pool", "is_hero": true},
-    {"url": "https://...", "alt_text": "Modern lobby", "category": "lobby", "is_hero": false},
-    ...
-  ],
-  "unit_images": [
-    {"url": "https://...", "alt_text": "Open kitchen with quartz counters", "category": "kitchen"},
-    {"url": "https://...", "alt_text": "Master bedroom", "category": "bedroom"},
-    ...
-  ]
+  "building_images": [{"i": 3, "category": "exterior", "alt_text": "Tower facade at dusk", "is_hero": true}, ...],
+  "unit_images": [{"i": 7, "category": "kitchen", "alt_text": "Kitchen with island"}, ...]
 }
 
-Put building-level photos (exterior, lobby, amenities, pool, gym, rooftop, common areas) in building_images.
-Put apartment-level photos (interior, kitchen, bathroom, bedroom, living room) in unit_images.
-Mark the best exterior or hero shot with is_hero: true.
+"i" is the number from the list. Mark exactly one building image as is_hero (the best exterior or signature shot). If nothing qualifies, return empty arrays.`;
 
-Only return valid JSON, no explanations.`;
+type PickedImage = { i?: number; category?: string; alt_text?: string; is_hero?: boolean };
 
 export async function extractImagesWithAI(
-  html: string,
+  candidates: ImageCandidate[],
   sourceUrl: string
 ): Promise<ImageScrapeResult> {
-  // Truncate HTML if too long - images are often in the first part of the page
-  const truncatedHtml = html.length > 120000 ? html.slice(0, 120000) + "\n... [truncated]" : html;
+  const empty = { building_images: [], unit_images: [] };
+  if (candidates.length === 0) return empty;
+
+  if (!process.env.XAI_API_KEY) {
+    console.warn("No AI service configured for image classification");
+    return empty;
+  }
+
+  const list = candidates
+    .map((c, i) => `${i}. ${c.url}${c.alt ? ` | alt: ${c.alt}` : ""}`)
+    .join("\n");
 
   try {
-    if (process.env.XAI_API_KEY) {
-      const client = createXAIClient();
+    const client = createXAIClient();
+    const response = await client.chat.completions.create(
+      {
+        model: "grok-4.3",
+        messages: [
+          { role: "system", content: IMAGES_CLASSIFICATION_PROMPT },
+          { role: "user", content: `Website: ${sourceUrl}\n\nImages:\n${list}` },
+        ],
+        temperature: 0.1,
+      },
+      XAI_REQUEST_OPTIONS,
+    );
+
+    const content = response.choices[0].message.content || "{}";
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return empty;
+    const parsed = JSON.parse(jsonMatch[0]) as { building_images?: PickedImage[]; unit_images?: PickedImage[] };
+
+    // The model picks by index, so it can only return URLs that were really on the page
+    const pick = (items: PickedImage[] | undefined, allowHero: boolean): ScrapedImage[] =>
+      (items ?? [])
+        .filter((p) => Number.isInteger(p.i) && candidates[p.i!])
+        .map((p) => ({
+          url: candidates[p.i!].url,
+          alt_text: p.alt_text || candidates[p.i!].alt,
+          category: (p.category || "other") as ScrapedImage["category"],
+          is_hero: allowHero && Boolean(p.is_hero),
+          width: candidates[p.i!].width,
+        }));
+
+    return {
+      building_images: deduplicateImages(pick(parsed.building_images, true)),
+      unit_images: deduplicateImages(pick(parsed.unit_images, false)),
+    };
+  } catch (error) {
+    console.error("AI image classification error:", error);
+    return empty;
+  }
+}
+
+const VISION_BATCH = 6;
+const VISION_MAX = 12;
+
+type VisionVerdict = {
+  i?: number;
+  photo?: boolean;
+  added_text?: boolean;
+  subject?: string;
+  quality?: number;
+};
+
+const VISION_PROMPT = (n: number) => `You are checking listing photos for an apartment building. There are ${n} images, numbered from 0 in the order given.
+
+For each image return:
+- "photo": true only for a real photograph of a building or its spaces. False for textures, patterns, illustrations, maps, logos, floor plans, collages and solid-colour graphics.
+- "added_text": true when marketing text or a logo is overlaid on the image (share cards, banners). Signage that is physically on the building does NOT count.
+- "subject": "exterior", "lobby", "amenity", "pool", "gym", "rooftop", "common", "interior", "view" or "other".
+- "quality": 1-5, how good a first impression this would make as the listing's main photo.
+
+Return a JSON array only: [{"i":0,"photo":true,"added_text":false,"subject":"exterior","quality":4}, ...]`;
+
+/**
+ * Look at the photos. The classifier only sees URLs and alt text, so a
+ * filename like "Gio_Header.jpg" (a purple palm texture) or an OG share card
+ * with the building's name printed across it passed as the hero shot. Keep
+ * real photographs without overlaid text, and make the best exterior the hero.
+ * On a vision failure the images pass through unchanged.
+ */
+export async function verifyImagesWithVision(images: ScrapedImage[]): Promise<ScrapedImage[]> {
+  if (images.length === 0 || !process.env.XAI_API_KEY) return images;
+  const client = createXAIClient();
+  const toCheck = images.slice(0, VISION_MAX);
+  const verdicts = new Map<number, VisionVerdict>();
+
+  for (let start = 0; start < toCheck.length; start += VISION_BATCH) {
+    const batch = toCheck.slice(start, start + VISION_BATCH);
+    try {
       const response = await client.chat.completions.create(
         {
           model: "grok-4.3",
           messages: [
-            { role: "system", content: IMAGES_EXTRACTION_PROMPT },
-            { role: "user", content: `Website URL: ${sourceUrl}\n\nHTML:\n${truncatedHtml}` },
+            {
+              role: "user",
+              content: [
+                { type: "text", text: VISION_PROMPT(batch.length) },
+                ...batch.map((img) => ({ type: "image_url" as const, image_url: { url: img.url } })),
+              ],
+            },
           ],
-          temperature: 0.1,
+          temperature: 0,
         },
         XAI_REQUEST_OPTIONS,
       );
-
-      const content = response.choices[0].message.content || "{}";
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        const buildingImages: ScrapedImage[] = (parsed.building_images || []).map((img: ScrapedImage) => ({
-          url: resolveUrl(img.url, sourceUrl),
-          alt_text: img.alt_text,
-          category: img.category || "other",
-          is_hero: img.is_hero || false,
-          width: img.width,
-          height: img.height,
-        }));
-        const unitImages: ScrapedImage[] = (parsed.unit_images || []).map((img: ScrapedImage) => ({
-          url: resolveUrl(img.url, sourceUrl),
-          alt_text: img.alt_text,
-          category: img.category || "other",
-          is_hero: false,
-          width: img.width,
-          height: img.height,
-        }));
-
-        return {
-          building_images: deduplicateImages(buildingImages),
-          unit_images: deduplicateImages(unitImages),
-        };
+      const content = response.choices[0].message.content || "[]";
+      const json = content.match(/\[[\s\S]*\]/);
+      if (!json) continue;
+      for (const v of JSON.parse(json[0]) as VisionVerdict[]) {
+        if (Number.isInteger(v.i) && v.i! >= 0 && v.i! < batch.length) verdicts.set(start + v.i!, v);
       }
+    } catch (error) {
+      console.error("Vision check failed; keeping batch unverified:", error instanceof Error ? error.message : error);
     }
-
-    console.warn("No AI service configured for image extraction");
-    return { building_images: [], unit_images: [] };
-  } catch (error) {
-    console.error("AI image extraction error:", error);
-    return { building_images: [], unit_images: [] };
   }
-}
 
-/** Resolve potentially relative URLs against a base */
-function resolveUrl(url: string, base: string): string {
-  try {
-    return new URL(url, base).href;
-  } catch {
-    return url;
-  }
+  const kept: (ScrapedImage & { quality: number })[] = [];
+  toCheck.forEach((img, i) => {
+    const v = verdicts.get(i);
+    if (!v) {
+      kept.push({ ...img, is_hero: false, quality: 0 });
+      return;
+    }
+    if (v.photo === false || v.added_text === true) return;
+    const category = (v.subject && v.subject !== "other" ? v.subject : img.category) as ScrapedImage["category"];
+    kept.push({ ...img, category, is_hero: false, quality: v.quality ?? 0 });
+  });
+  // Unchecked tail (beyond VISION_MAX) keeps its place after the checked ones
+  const tail = images.slice(VISION_MAX).map((img) => ({ ...img, is_hero: false, quality: 0 }));
+
+  // Hero: best verified exterior, else best verified photo of any kind
+  const verified = kept.filter((k) => k.quality > 0);
+  const byQuality = (a: { quality: number }, b: { quality: number }) => b.quality - a.quality;
+  const hero =
+    verified.filter((k) => k.category === "exterior").sort(byQuality)[0] ?? verified.sort(byQuality)[0];
+
+  return [...kept, ...tail].map((img) => ({
+    url: img.url,
+    alt_text: img.alt_text,
+    category: img.category,
+    width: img.width,
+    height: img.height,
+    is_hero: hero !== undefined && img.url === hero.url,
+  }));
 }
 
 /** Remove duplicate images by normalizing URLs */

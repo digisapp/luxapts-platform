@@ -1,0 +1,51 @@
+name: Scrape units
+
+# Scheduled unit scrape with a headless browser. Vercel can't render the
+# JavaScript leasing sites, so this replaced the scrape-units Vercel crons.
+# Stalest buildings first; each run picks up where the last one stopped.
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # 03:00 US Eastern (standard time)
+    - cron: "0 20 * * *" # 15:00 US Eastern (standard time)
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Max buildings this run"
+        default: "60"
+      minutes:
+        description: "Time budget (minutes)"
+        default: "50"
+
+concurrency:
+  group: scrape-units
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Scrape
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          XAI_BASE_URL: ${{ secrets.XAI_BASE_URL }}
+        run: >
+          npx --yes tsx scripts/scrape-units-batch.ts
+          --limit ${{ inputs.limit || '60' }}
+          --minutes ${{ inputs.minutes || '50' }}

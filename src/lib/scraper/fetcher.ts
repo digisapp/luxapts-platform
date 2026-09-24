@@ -2,8 +2,9 @@
 // Handles different website types and anti-bot measures
 
 import { ScrapeResult, ImageScrapeResult, UnitsExtractionSource } from "./types";
-import { extractUnitsWithAI, extractAmenitiesWithAI, extractFullBuildingData, extractImagesWithAI } from "./ai-extractor";
+import { extractUnitsWithAI, extractAmenitiesWithAI, extractFullBuildingData, extractImagesWithAI, verifyImagesWithVision } from "./ai-extractor";
 import { needsJsRendering, renderPage } from "./renderer";
+import { collectImageCandidates } from "./image-candidates";
 
 // Common headers to appear as a real browser
 const BROWSER_HEADERS = {
@@ -420,36 +421,36 @@ export async function scrapeImagesOnly(websiteUrl: string): Promise<{ success: b
     // Also look for amenities page (often has pool/gym photos)
     const amenitiesPageUrl = findAmenitiesPageIn(mainResult.html, mainResult.finalUrl);
 
-    // Combine HTML from all relevant pages
-    const pages: string[] = [mainResult.html];
+    // Collect candidates per page so relative URLs resolve against the page
+    // they came from, not the homepage.
+    const pages: { html: string; url: string }[] = [{ html: mainResult.html, url: mainResult.finalUrl }];
 
-    if (galleryPageUrl) {
-      const galleryResult = await fetchBuildingHTML(galleryPageUrl);
-      if (galleryResult) {
-        pages.push(`<!-- GALLERY PAGE: ${galleryResult.finalUrl} -->\n${galleryResult.html}`);
-      }
+    for (const extraUrl of [galleryPageUrl, amenitiesPageUrl, findUnitsPageIn(mainResult.html, mainResult.finalUrl)]) {
+      if (!extraUrl) continue;
+      const extra = await fetchBuildingHTML(extraUrl);
+      if (extra) pages.push({ html: extra.html, url: extra.finalUrl });
     }
 
-    if (amenitiesPageUrl) {
-      const amenitiesResult = await fetchBuildingHTML(amenitiesPageUrl);
-      if (amenitiesResult) {
-        pages.push(`<!-- AMENITIES PAGE: ${amenitiesResult.finalUrl} -->\n${amenitiesResult.html}`);
-      }
-    }
+    // Gallery first: it has the most (and the best) photos
+    const ordered = [...pages.slice(1), pages[0]];
+    const seen = new Set<string>();
+    const candidates = ordered
+      .flatMap((p) => collectImageCandidates(p.html, p.url))
+      .filter((c) => (seen.has(c.url) ? false : (seen.add(c.url), true)))
+      .slice(0, 150);
 
-    // Also try floor plans page for floorplan images
-    const unitsPageUrl = findUnitsPageIn(mainResult.html, mainResult.finalUrl);
-    if (unitsPageUrl) {
-      const unitsResult = await fetchBuildingHTML(unitsPageUrl);
-      if (unitsResult) {
-        pages.push(`<!-- FLOORPLANS PAGE: ${unitsResult.finalUrl} -->\n${unitsResult.html}`);
-      }
-    }
-
-    const fullHtml = pages.join("\n\n");
-
-    // Extract images with AI
-    const imageData = await extractImagesWithAI(fullHtml, mainResult.finalUrl);
+    const classified = await extractImagesWithAI(candidates, mainResult.finalUrl);
+    // Unit photos get looked at too: search cards show a unit photo ahead of
+    // the building's, so an unchecked texture would become the card image.
+    const [buildingImages, unitImages] = await Promise.all([
+      verifyImagesWithVision(classified.building_images),
+      verifyImagesWithVision(classified.unit_images),
+    ]);
+    const imageData = {
+      ...classified,
+      building_images: buildingImages,
+      unit_images: unitImages.map((img) => ({ ...img, is_hero: false })),
+    };
 
     return {
       success: true,
@@ -457,7 +458,7 @@ export async function scrapeImagesOnly(websiteUrl: string): Promise<{ success: b
         ...imageData,
         gallery_page_url: galleryPageUrl || undefined,
       },
-      raw_html_length: fullHtml.length,
+      raw_html_length: pages.reduce((n, p) => n + p.html.length, 0),
     };
   } catch (error) {
     return {

@@ -9,14 +9,6 @@
       "schedule": "30 9 * * *"
     },
     {
-      "path": "/api/cron/scrape-units?limit=30",
-      "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/cron/scrape-units?limit=30&slot=pm",
-      "schedule": "0 15 * * *"
-    },
-    {
       "path": "/api/cron/scrape-amenities?limit=25",
       "schedule": "0 4 * * 1"
     },
