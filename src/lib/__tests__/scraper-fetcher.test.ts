@@ -17,6 +17,26 @@ describe("normalizeHost", () => {
 });
 
 describe("findUnitsPageIn", () => {
+  it("ignores WordPress oEmbed/REST links that carry the page URL in their query", () => {
+    const page = html("/wp-json/oembed/1.0/embed?url=https%3A%2F%2Ftower.com%2Ffloorplans%2F", "/availability/");
+    expect(findUnitsPageIn(page, "https://tower.com/")).toBe("https://tower.com/availability/");
+  });
+
+  it("skips resident and applicant portal links", () => {
+    const page = html("/Apartments/module/application_authentication/popup/false/kill_session/1/", "/atlanta/tower/floorplans/");
+    expect(findUnitsPageIn(page, "https://tower.com/")).toBe("https://tower.com/atlanta/tower/floorplans/");
+  });
+
+  it("stays on the page when it already is the floor plans page", () => {
+    expect(findUnitsPageIn(html("/amenities", "/availability"), "https://rent.tower.com/floorplans/?propertyId[]=1")).toBeNull();
+  });
+
+  it("still follows a property home page under /apartments/ to its floor plans", () => {
+    expect(
+      findUnitsPageIn(html("/apartments/austin/tower/floorplans"), "https://amli.com/apartments/austin/tower")
+    ).toBe("https://amli.com/apartments/austin/tower/floorplans");
+  });
+
   it("finds the floor plans page", () => {
     expect(findUnitsPageIn(html("/floorplans"), "https://tower.com")).toBe("https://tower.com/floorplans");
   });

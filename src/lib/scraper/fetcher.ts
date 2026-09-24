@@ -134,6 +134,11 @@ export function normalizeHost(hostname: string): string {
   return hostname.toLowerCase().replace(/^www\./, "");
 }
 
+const NON_PAGE_PATH = /\/(?:wp-json|xmlrpc\.php|feed|comments\/feed|wp-admin|wp-login)\b|\.(?:xml|json|pdf|jpe?g|png|webp|gif|svg|css|js)$/i;
+// Resident/applicant portals: Entrata's "/Apartments/module/application_authentication/…"
+// matched "apartments" and the scraper read a login screen.
+const PORTAL_PATH = /application_authentication|kill_session|\/(?:log-?in|sign-?in|resident-?portal|apply-?now)\b/i;
+
 const AMENITIES_LINK_PATTERNS = [
   /href=["']([^"']*(?:amenities|features|lifestyle)[^"']*)["']/gi,
   /href=["']([^"']*(?:community|about)[^"']*)["']/gi,
@@ -145,6 +150,9 @@ const UNITS_LINK_PATTERNS = [
   /href=["']([^"']*(?:rent|apply|schedule)[^"']*)["']/gi,
 ];
 const UNITS_KEYWORDS = /floor[-_]?plans?|availability|apartments|units|pricing/i;
+// Narrower than UNITS_KEYWORDS: "/apartments/austin/amli-at-mueller" is a
+// property home page whose floor plans live one link deeper.
+const AVAILABILITY_PATH = /floor[-_]?plans?|availability|pricing/i;
 
 const GALLERY_LINK_PATTERNS = [
   /href=["']([^"']*(?:gallery|photos|photo-gallery|images|media|virtual-tour)[^"']*)["']/gi,
@@ -197,6 +205,11 @@ export function findLinkedPage(
       // fetched — the marketing page got scraped instead, every night.
       if (candidate.pathname === "" || candidate.pathname === "/") continue;
 
+      // WordPress plumbing (oEmbed/REST/feeds) carries the page URL in its
+      // query string, so "…/oembed/1.0/embed?url=…/floorplans/" matched and
+      // the scraper read a 2KB JSON stub instead of the floor plans page.
+      if (NON_PAGE_PATH.test(candidate.pathname) || PORTAL_PATH.test(candidate.pathname)) continue;
+
       if (keywords.test(candidate.pathname + candidate.search)) {
         return candidate.href;
       }
@@ -211,8 +224,19 @@ export function findAmenitiesPageIn(mainHtml: string, baseUrl: string): string |
   return findLinkedPage(mainHtml, baseUrl, AMENITIES_LINK_PATTERNS, AMENITIES_KEYWORDS);
 }
 
-/** Floor plans/availability page finder (pure). */
+/**
+ * Floor plans/availability page finder (pure). When the configured URL is
+ * already the availability page (e.g. /floorplans/?propertyId=…), stay on it:
+ * hopping to "the first availability-looking link" from there only ever
+ * lands somewhere worse.
+ */
 export function findUnitsPageIn(mainHtml: string, baseUrl: string): string | null {
+  try {
+    const here = new URL(baseUrl);
+    if (AVAILABILITY_PATH.test(here.pathname)) return null;
+  } catch {
+    return null;
+  }
   return findLinkedPage(mainHtml, baseUrl, UNITS_LINK_PATTERNS, UNITS_KEYWORDS);
 }
 
