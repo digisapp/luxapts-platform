@@ -18,7 +18,7 @@ const Schema = z.object({
 // cannot be used to spam arbitrary inboxes.
 export async function POST(req: Request) {
   const ip = getClientIp(req);
-  const rl = rateLimit(`welcome:${ip}`, RATE_LIMITS.welcome);
+  const rl = await rateLimit(`welcome:${ip}`, RATE_LIMITS.welcome);
   if (!rl.success) return apiError("Too many requests", 429);
 
   const supabase = await createClient();

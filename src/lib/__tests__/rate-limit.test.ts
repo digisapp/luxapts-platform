@@ -1,18 +1,18 @@
 import { describe, it, expect } from "vitest";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimit, rateLimitInMemory, getClientIp } from "@/lib/rate-limit";
 
 describe("rateLimit", () => {
   it("allows up to the limit then blocks", () => {
     const key = `test:${Math.random()}`;
     const config = { limit: 3, windowMs: 60_000 };
 
-    expect(rateLimit(key, config).success).toBe(true);
-    expect(rateLimit(key, config).success).toBe(true);
-    const third = rateLimit(key, config);
+    expect(rateLimitInMemory(key, config).success).toBe(true);
+    expect(rateLimitInMemory(key, config).success).toBe(true);
+    const third = rateLimitInMemory(key, config);
     expect(third.success).toBe(true);
     expect(third.remaining).toBe(0);
 
-    const blocked = rateLimit(key, config);
+    const blocked = rateLimitInMemory(key, config);
     expect(blocked.success).toBe(false);
     expect(blocked.remaining).toBe(0);
     expect(blocked.resetTime).toBeGreaterThan(Date.now());
@@ -22,9 +22,16 @@ describe("rateLimit", () => {
     const config = { limit: 1, windowMs: 60_000 };
     const a = `test:${Math.random()}`;
     const b = `test:${Math.random()}`;
-    expect(rateLimit(a, config).success).toBe(true);
-    expect(rateLimit(a, config).success).toBe(false);
-    expect(rateLimit(b, config).success).toBe(true);
+    expect(rateLimitInMemory(a, config).success).toBe(true);
+    expect(rateLimitInMemory(a, config).success).toBe(false);
+    expect(rateLimitInMemory(b, config).success).toBe(true);
+  });
+
+  it("falls back to in-memory when Upstash is not configured", async () => {
+    const key = `test:${Math.random()}`;
+    const config = { limit: 1, windowMs: 60_000 };
+    expect((await rateLimit(key, config)).success).toBe(true);
+    expect((await rateLimit(key, config)).success).toBe(false);
   });
 });
 

@@ -15,7 +15,7 @@ export async function GET(
 ) {
   try {
     const ip = getClientIp(req);
-    const limit = rateLimit(`tour-slots:${ip}`, RATE_LIMITS.api);
+    const limit = await rateLimit(`tour-slots:${ip}`, RATE_LIMITS.api);
     if (!limit.success) {
       return apiError("Too many requests", 429);
     }

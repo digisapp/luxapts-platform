@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   }
   try {
     const clientIp = getClientIp(req);
-    const rateLimitResult = rateLimit(`microsite-leads:${clientIp}`, RATE_LIMITS.leads);
+    const rateLimitResult = await rateLimit(`microsite-leads:${clientIp}`, RATE_LIMITS.leads);
     if (!rateLimitResult.success) {
       return NextResponse.json(
         { error: "Too many requests. Please wait a moment." },

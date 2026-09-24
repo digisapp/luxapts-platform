@@ -36,7 +36,7 @@ export async function POST(req: Request) {
         return apiError("Forbidden", 403);
       }
       const clientIp = getClientIp(req);
-      const rateLimitResult = rateLimit(`leads:${clientIp}`, RATE_LIMITS.leads);
+      const rateLimitResult = await rateLimit(`leads:${clientIp}`, RATE_LIMITS.leads);
       if (!rateLimitResult.success) {
         return NextResponse.json(
           { error: "Too many requests. Please wait a moment." },

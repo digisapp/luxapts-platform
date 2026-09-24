@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     NextResponse.json({ error }, { status, headers: cors });
 
   if (!isAllowedOrigin(req)) return fail("Forbidden", 403);
-  const limit = rateLimit(`microsite-chat:${getClientIp(req)}`, RATE_LIMITS.chat);
+  const limit = await rateLimit(`microsite-chat:${getClientIp(req)}`, RATE_LIMITS.chat);
   if (!limit.success) return fail("Too many messages. Give it a minute.", 429);
 
   let body: { domain?: unknown; session_id?: unknown; messages?: unknown };

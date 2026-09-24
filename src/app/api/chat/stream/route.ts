@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   try {
     // Rate limiting
     const clientIp = getClientIp(req);
-    const rateLimitResult = rateLimit(`chat:${clientIp}`, RATE_LIMITS.chat);
+    const rateLimitResult = await rateLimit(`chat:${clientIp}`, RATE_LIMITS.chat);
 
     if (!rateLimitResult.success) {
       return new Response(

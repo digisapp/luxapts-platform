@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   }
   try {
     const clientIp = getClientIp(req);
-    const limit = rateLimit(`microsite-analytics:${clientIp}`, RATE_LIMITS.api);
+    const limit = await rateLimit(`microsite-analytics:${clientIp}`, RATE_LIMITS.api);
     if (!limit.success) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: cors });
     }

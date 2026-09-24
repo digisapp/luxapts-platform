@@ -52,7 +52,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const rl = rateLimit(`microsite-inventory:${getClientIp(req)}`, RATE_LIMITS.api);
+  const rl = await rateLimit(`microsite-inventory:${getClientIp(req)}`, RATE_LIMITS.api);
   if (!rl.success) return noData(cors);
 
   const domain = new URL(req.url).searchParams.get("domain") ?? "";

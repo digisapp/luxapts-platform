@@ -8,7 +8,7 @@ import { normalizeCitySlug } from "@/lib/constants/cities";
 export async function POST(req: Request) {
   try {
     if (!isInternalRequest(req)) {
-      const rl = rateLimit(`search:${getClientIp(req)}`, RATE_LIMITS.search);
+      const rl = await rateLimit(`search:${getClientIp(req)}`, RATE_LIMITS.search);
       if (!rl.success) {
         return apiError("Too many requests", 429);
       }

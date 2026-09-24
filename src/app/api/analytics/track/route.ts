@@ -37,7 +37,7 @@ function parseUserAgent(userAgent: string): { browser: string; os: string } {
 export async function POST(req: Request) {
   try {
     const clientIp = getClientIp(req);
-    const rateLimitResult = rateLimit(`analytics:${clientIp}`, RATE_LIMITS.api);
+    const rateLimitResult = await rateLimit(`analytics:${clientIp}`, RATE_LIMITS.api);
     if (!rateLimitResult.success) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }

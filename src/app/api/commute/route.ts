@@ -29,7 +29,7 @@ const BATCH_SIZE = 24;
 
 export async function POST(req: Request) {
   const clientIp = getClientIp(req);
-  const rateLimitResult = rateLimit(`commute:${clientIp}`, RATE_LIMITS.api);
+  const rateLimitResult = await rateLimit(`commute:${clientIp}`, RATE_LIMITS.api);
   if (!rateLimitResult.success) {
     return apiError("Too many requests", 429);
   }

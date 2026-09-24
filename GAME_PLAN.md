@@ -85,7 +85,7 @@ The single highest-leverage engineering work. Everything is already half-built.
 | Item | Why | Effort |
 |---|---|---|
 | Rotate leaked Supabase service-role key + DB password | In git history, valid to 2036 — **still pending, user action** | 1 hr |
-| Upstash/Vercel KV rate limiting | Current limiter is per-instance memory | ½ day |
+| ~~Upstash/Vercel KV rate limiting~~ | **Done 2026-09-23** — Upstash sliding window, in-memory fallback | — |
 | Error monitoring (Sentry) | Flying blind on prod errors | ½ day |
 | Product analytics (PostHog) | Funnel metrics for everything above; page-tracking hook now wired | 1 day |
 | CI (GitHub Actions: tsc + lint + vitest + Playwright) | 3 audits found what CI should catch | ½ day |

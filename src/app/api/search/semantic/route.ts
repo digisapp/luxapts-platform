@@ -10,7 +10,7 @@ import { normalizeCitySlug } from "@/lib/constants/cities";
 export async function POST(req: Request) {
   try {
     const clientIp = getClientIp(req);
-    const rateLimitResult = rateLimit(`search:${clientIp}`, RATE_LIMITS.search);
+    const rateLimitResult = await rateLimit(`search:${clientIp}`, RATE_LIMITS.search);
 
     if (!rateLimitResult.success) {
       return NextResponse.json(

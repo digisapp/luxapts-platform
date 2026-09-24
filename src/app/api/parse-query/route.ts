@@ -54,7 +54,7 @@ Respond ONLY with valid JSON. No markdown, no explanation.`;
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
-  const rl = rateLimit(`parse:${ip}`, RATE_LIMITS.search);
+  const rl = await rateLimit(`parse:${ip}`, RATE_LIMITS.search);
   if (!rl.success) {
     return apiError("Too many requests", 429);
   }

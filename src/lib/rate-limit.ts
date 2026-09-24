@@ -1,15 +1,14 @@
 /**
  * Rate limiter for API routes.
  *
- * IMPORTANT: This uses in-memory storage which works per-instance only.
- * On Vercel serverless, each function invocation may run in a different
- * container, so this provides best-effort limiting (not strict).
- *
- * For strict distributed rate limiting, replace with:
- *   - @upstash/ratelimit + @upstash/redis (recommended for Vercel)
- *   - Vercel KV
- *   - Redis (self-hosted)
+ * Uses Upstash Redis (sliding window) when UPSTASH_REDIS_REST_URL/TOKEN are
+ * set, so limits hold across all Vercel instances. Without those env vars
+ * (local dev, tests) — or if Redis errors — it falls back to a per-instance
+ * in-memory limiter, which is best-effort only.
  */
+
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
 interface RateLimitEntry {
   timestamps: number[];
@@ -43,11 +42,11 @@ interface RateLimitResult {
 }
 
 /**
- * Sliding window rate limiter.
+ * In-memory sliding window rate limiter (per-instance fallback).
  * Tracks individual request timestamps for more accurate limiting
  * compared to fixed-window counters.
  */
-export function rateLimit(
+export function rateLimitInMemory(
   identifier: string,
   config: RateLimitConfig = { limit: 60, windowMs: 60 * 1000 }
 ): RateLimitResult {
@@ -82,6 +81,54 @@ export function rateLimit(
     remaining: config.limit - entry.timestamps.length,
     resetTime: now + config.windowMs,
   };
+}
+
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
+
+// One Ratelimit instance per distinct config
+const limiters = new Map<string, Ratelimit>();
+
+function getLimiter(config: RateLimitConfig): Ratelimit | null {
+  if (!redis) return null;
+  const key = `${config.limit}:${config.windowMs}`;
+  let limiter = limiters.get(key);
+  if (!limiter) {
+    limiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(config.limit, `${config.windowMs} ms`),
+      prefix: `staycio:rl:${key}`,
+      // Fail open quickly rather than stall the request if Redis is slow
+      timeout: 1000,
+    });
+    limiters.set(key, limiter);
+  }
+  return limiter;
+}
+
+/**
+ * Distributed rate limiter. Uses Upstash when configured, otherwise
+ * (or on Redis error) the in-memory limiter.
+ */
+export async function rateLimit(
+  identifier: string,
+  config: RateLimitConfig = { limit: 60, windowMs: 60 * 1000 }
+): Promise<RateLimitResult> {
+  const limiter = getLimiter(config);
+  if (!limiter) return rateLimitInMemory(identifier, config);
+
+  try {
+    const { success, remaining, reset } = await limiter.limit(identifier);
+    return { success, remaining, resetTime: reset };
+  } catch (err) {
+    console.error("[rate-limit] Upstash error, using in-memory fallback", err);
+    return rateLimitInMemory(identifier, config);
+  }
 }
 
 /**
