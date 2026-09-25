@@ -99,7 +99,7 @@ export default async function NeighborhoodsPage() {
                     City guide <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </Link>
                 </div>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {hoods.map((hood) => {
                     const count = buildingCounts[hood.id] || 0;
                     return (

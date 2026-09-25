@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { useSitePathname } from "@/hooks/use-site-pathname";
 import { useCompare, MAX_COMPARE } from "@/hooks/useCompare";
 import { Button } from "@/components/ui/button";
 import { GitCompare, X, Building2 } from "lucide-react";
 
 export function CompareBar() {
-  const pathname = usePathname() ?? "";
+  const pathname = useSitePathname();
   const { buildings, removeBuilding, clearAll, canCompare, isLoaded } = useCompare();
 
   // Don't show on compare page or admin pages
@@ -22,7 +22,11 @@ export function CompareBar() {
   }
 
   return (
-    <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 z-40 bg-zinc-900 border-t border-zinc-800 shadow-lg lg:pb-[env(safe-area-inset-bottom,0px)]">
+    // On phones it rides on top of whichever bottom bar the page has (the tab
+    // bar, or the Schedule Tour bar on building pages; both are 4rem plus the
+    // home-indicator inset). A flat bottom-16 ignored the inset and slid over
+    // the tab bar's icons once Safari's toolbar collapsed.
+    <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:bottom-0 left-0 right-0 z-40 bg-zinc-900 border-t border-zinc-800 shadow-lg lg:pb-[env(safe-area-inset-bottom,0px)]">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 overflow-x-auto">
@@ -58,7 +62,7 @@ export function CompareBar() {
                   <button
                     onClick={() => removeBuilding(building.id)}
                     aria-label="Remove from comparison"
-                    className="p-2 -m-1 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                    className="flex h-9 w-9 -my-1 -mr-1 items-center justify-center rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>

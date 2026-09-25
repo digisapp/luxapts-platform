@@ -1,4 +1,5 @@
 import { CITY_SLUGS } from "@/lib/constants/cities";
+import { STACY_MAIN_LINE } from "@/lib/constants/stacy";
 import type { VoiceToolName } from "@/lib/voice/tools";
 import { briefByDomain, briefsPromptSection } from "@/lib/voice/building-briefs";
 
@@ -24,7 +25,7 @@ export function todayInMiami(now: Date): string {
 }
 
 /** Stacy's main phone line (LiveKit project "staycio"). */
-export const STACY_MAIN_LINE = { e164: "+13059521558", display: "(305) 952-1558" };
+export { STACY_MAIN_LINE };
 
 /**
  * Staycio numbers that belong to one microsite: E.164 -> domain (a key of

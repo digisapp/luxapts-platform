@@ -252,6 +252,7 @@ export function ScheduleTourModal({
                 <Label htmlFor="name">Name *</Label>
                 <Input
                   id="name"
+                  autoComplete="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Your name"
@@ -264,6 +265,7 @@ export function ScheduleTourModal({
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="you@example.com"
@@ -276,6 +278,7 @@ export function ScheduleTourModal({
                 <Input
                   id="phone"
                   type="tel"
+                  autoComplete="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="(555) 555-5555"
@@ -328,7 +331,7 @@ export function ScheduleTourModal({
                           type="button"
                           onClick={() => setSelectedTime(s.time)}
                           className={cn(
-                            "rounded-md border px-3 py-1.5 text-sm transition-colors",
+                            "min-h-10 rounded-md border px-3 py-1.5 text-sm transition-colors",
                             s.time === selectedTime
                               ? "border-primary bg-primary text-primary-foreground"
                               : "border-input hover:bg-accent"
@@ -358,7 +361,7 @@ export function ScheduleTourModal({
                       id="preferredTime"
                       value={formData.preferredTime}
                       onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <option value="">Any time</option>
                       <option value="morning">Morning (9AM-12PM)</option>

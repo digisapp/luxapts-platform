@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { useCompare, MAX_COMPARE } from "@/hooks/useCompare";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -137,7 +137,7 @@ export default function ComparePage() {
           </div>
 
           {/* Selected Buildings */}
-          <div className="grid gap-4 md:grid-cols-2 mb-8">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-8">
             {buildings.map((building) => (
               <Card key={building.id} className="relative">
                 <button
@@ -149,7 +149,7 @@ export default function ComparePage() {
                 <Link href={`/buildings/${building.id}`}>
                   <div className="relative h-32 bg-muted">
                     {building.image ? (
-                      <Image
+                      <SafeImage
                         src={building.image}
                         alt={building.name}
                         fill
@@ -316,7 +316,7 @@ export default function ComparePage() {
                   <CardTitle>Policies</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-6 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Pets */}
                     <div>
                       <h4 className="font-medium flex items-center gap-2 mb-3">
@@ -443,7 +443,7 @@ export default function ComparePage() {
               {/* Unique Amenities */}
               {(compareData.deltas.amenities_only_in_a.length > 0 ||
                 compareData.deltas.amenities_only_in_b.length > 0) && (
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {compareData.deltas.amenities_only_in_a.length > 0 && (
                     <Card>
                       <CardHeader>

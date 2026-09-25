@@ -121,6 +121,7 @@ export default function SignUpPage() {
               <label className="mb-2 block text-sm font-medium text-white/70">Name</label>
               <Input
                 type="text"
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
@@ -132,6 +133,7 @@ export default function SignUpPage() {
               <label className="mb-2 block text-sm font-medium text-white/70">Email</label>
               <Input
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
@@ -144,6 +146,7 @@ export default function SignUpPage() {
               <label className="mb-2 block text-sm font-medium text-white/70">Password</label>
               <Input
                 type="password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 6 characters"

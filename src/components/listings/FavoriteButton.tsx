@@ -51,7 +51,8 @@ export function FavoriteButton({
 
   const sizeClasses = {
     sm: "h-7 w-7",
-    md: "h-9 w-9",
+    // after: pads the 36px circle's touch target out to 44px
+    md: "relative h-9 w-9 after:absolute after:-inset-1 after:content-['']",
     lg: "h-11 w-11",
   };
 

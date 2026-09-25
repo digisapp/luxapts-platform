@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useSitePathname } from "@/hooks/use-site-pathname";
 import { Home, Search, Heart, Building2 } from "lucide-react";
 import { isPortalRoute } from "@/hooks/portal-routes";
 import { cn } from "@/lib/utils";
@@ -14,12 +14,16 @@ const navItems = [
 ];
 
 export function MobileBottomNav() {
-  const pathname = usePathname() ?? "";
+  const pathname = useSitePathname();
 
   // Don't show on portal pages (admin/shower/partner/agent — they have their
   // own nav and this bar paints over their content on mobile) or on
-  // building/unit detail pages (which have sticky CTAs)
-  const shouldHide = isPortalRoute(pathname) || pathname.match(/^\/buildings\/[^/]+/);
+  // building/unit detail pages (which have sticky CTAs), or on the auth
+  // screens, where it covered the "Sign up"/"Forgot password" links on an SE
+  const shouldHide =
+    isPortalRoute(pathname) ||
+    /^\/buildings\/[^/]+/.test(pathname) ||
+    pathname.startsWith("/auth/");
 
   if (shouldHide) {
     return null;
@@ -27,7 +31,7 @@ export function MobileBottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden">
-      <div className="bg-background/95 backdrop-blur-lg border-t border-border safe-area-pb">
+      <div className="bg-background border-t border-border safe-area-pb">
         <div className="flex items-center justify-around">
           {navItems.map((item) => {
             const isActive = pathname === item.href ||

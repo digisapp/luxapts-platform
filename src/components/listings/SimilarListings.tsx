@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Sparkles, PawPrint, Car } from "lucide-react";
@@ -123,7 +123,7 @@ export function SimilarListings({
           >
             <div className="relative w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
               {listing.image ? (
-                <Image
+                <SafeImage
                   src={listing.image}
                   alt={listing.name}
                   fill

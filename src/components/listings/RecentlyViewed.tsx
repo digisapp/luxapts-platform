@@ -100,7 +100,8 @@ export function RecentlyViewed({ currentBuildingId, className = "" }: RecentlyVi
               variant="ghost"
               size="icon"
               aria-label="Remove from recently viewed"
-              className="relative h-6 w-6 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+              // Always visible on touch screens, which have no hover to reveal it
+              className="relative h-9 w-9 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
               onClick={() => removeItem(item.id)}
             >
               <X className="h-3 w-3" />

@@ -214,7 +214,7 @@ function SelectItem({ value, children, className }: { value: string; children: R
       onClick={() => context.onValueChange(value)}
       onMouseEnter={() => context.setHighlightedValue(value)}
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex min-h-11 w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none md:min-h-0 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         isHighlighted && "bg-accent text-accent-foreground",
         className
       )}

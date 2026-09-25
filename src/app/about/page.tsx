@@ -104,7 +104,7 @@ export default function AboutPage() {
               What we hold ourselves to
             </h2>
 
-            <div className="mt-10 grid gap-5 sm:grid-cols-2">
+            <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2">
               {principles.map((p) => (
                 <div
                   key={p.title}

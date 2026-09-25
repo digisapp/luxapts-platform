@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
-import { SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Clock, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check, Brain, Star, Navigation } from "lucide-react";
+import { SlidersHorizontal, Building2, MapPin, Bed, Bath, Square, X, Calendar, Clock, Sparkles, Loader2, Layout, Map as MapIcon, List, PawPrint, Car, ChevronDown, Check, Brain, Star, Navigation, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,9 @@ import { CompareButton } from "@/components/compare/CompareButton";
 import { FavoriteButton } from "@/components/listings/FavoriteButton";
 import { SaveSearchButton } from "@/components/listings/SaveSearchButton";
 import { CommuteFilter, type CommuteTarget } from "@/components/search/CommuteFilter";
+import { MapPreviewCard } from "@/components/map/MapPreviewCard";
+import { useCompare } from "@/hooks/useCompare";
+import { buildingPath } from "@/lib/seo/urls";
 import { AMENITY_OPTIONS } from "@/lib/constants/amenities";
 import { storageSet } from "@/lib/safe-storage";
 
@@ -54,6 +58,8 @@ interface Floorplan {
 interface SearchResult {
   building: {
     id: string;
+    /** Not returned by /api/search yet; links fall back to the id (which 301s to the slug) */
+    slug?: string | null;
     name: string;
     address_1: string;
     zip: string;
@@ -181,6 +187,19 @@ interface SemanticBuilding {
 
 // AMENITY_OPTIONS imported from @/lib/constants/amenities
 
+// Compact sort labels for the phone results header (the menu keeps the full ones)
+const SORT_SHORT_LABELS: Record<string, string> = {
+  price_low: "Low price",
+  price_high: "High price",
+  sqft_high: "Largest",
+  newest: "Newest",
+};
+
+// The phone map view fills the space between the fixed header and the fixed
+// bottom tab bar (both h-16 plus their safe-area insets)
+const MOBILE_MAP_VIEW =
+  "fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] z-30 overflow-hidden bg-zinc-950";
+
 function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -193,6 +212,8 @@ function SearchContent() {
   // City/neighborhood pages and saved-search "Run" links deep-link these too
   const neighborhoodParam = searchParams.get("neighborhood");
   const petFriendlyParam = searchParams.get("pet_friendly");
+  // Set while the phone map view is open, so Back from a building returns to the map
+  const viewParam = searchParams.get("view");
   const initialNeighborhoods = neighborhoodParam
     ? neighborhoodParam.split(",").map((n) => n.trim()).filter(Boolean)
     : [];
@@ -250,17 +271,41 @@ function SearchContent() {
   // Track listings whose images failed to load in the browser
   const [brokenImageIds, setBrokenImageIds] = useState<Set<string>>(new Set());
 
-  // Map view state
+  // Map view state. On lg+ the map is a column beside the list; below lg it
+  // is a full-height view that replaces the list while open.
   const [showMap, setShowMap] = useState(true);
   const [highlightedBuildingId, setHighlightedBuildingId] = useState<string | null>(null);
+  // Building whose preview card is open (touch: first tap on a pin)
+  const [selectedMapBuildingId, setSelectedMapBuildingId] = useState<string | null>(null);
+  // Whether the viewport is lg+; null until known on the client, so the server
+  // render (and hydration) never paints the phone map view over the list
+  const [isLg, setIsLg] = useState<boolean | null>(null);
+  // Phone: the commute filter sits behind a toggle in the control row
+  const [commuteOpen, setCommuteOpen] = useState(false);
+  // Phone: once the top controls scroll away, a floating Map button stands in
+  // for the map toggle (the List button sits in the same spot on the map)
+  const controlsRef = useRef<HTMLDivElement>(null);
+  const [controlsInView, setControlsInView] = useState(true);
+  // The compare bar covers the bottom of the phone map view while it's up
+  const { count: compareCount } = useCompare();
 
-  // Default the map off on mobile (post-hydration to stay SSR-safe): it's a
+  // Default the map off below lg (post-hydration to stay SSR-safe): it's a
   // heavy Mapbox GL instance + tile downloads, and the list is the primary
-  // mobile view. Users can still toggle it on.
+  // mobile view — unless the URL says the map view was open (Back from a
+  // building). Crossing the breakpoint (rotation, resizing) resets each
+  // layout to its own default.
   useEffect(() => {
-    if (window.matchMedia("(max-width: 1023px)").matches) {
-      setShowMap(false);
-    }
+    const mq = window.matchMedia("(min-width: 1024px)");
+    setIsLg(mq.matches);
+    if (!mq.matches) setShowMap(viewParam === "map");
+    const onChange = (e: MediaQueryListEvent) => {
+      setIsLg(e.matches);
+      setShowMap(e.matches);
+      setSelectedMapBuildingId(null);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only: later ?view= changes are our own replaceState calls
   }, []);
 
   // Lock body scroll while the mobile filter sheet is open
@@ -291,6 +336,56 @@ function SearchContent() {
   const [smartSearch, setSmartSearch] = useState(false);
   const [semanticResults, setSemanticResults] = useState<SemanticBuilding[]>([]);
   const [semanticQuery, setSemanticQuery] = useState<string | null>(null);
+
+  // The full-height phone/tablet map view (standard search only)
+  const mobileMapOpen = isLg === false && showMap && !smartSearch;
+
+  // While it's open: freeze the list underneath (so closing it lands exactly
+  // where the user left off) and let Escape close it
+  useEffect(() => {
+    if (!mobileMapOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [mobileMapOpen]);
+  useEffect(() => {
+    if (!mobileMapOpen || showFilters) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowMap(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileMapOpen, showFilters]);
+
+  // Mirror the phone map view in the URL (?view=map) without a history entry,
+  // so Back from a building page reopens the map rather than the list top
+  useEffect(() => {
+    if (isLg !== false) return;
+    const url = new URL(window.location.href);
+    if ((url.searchParams.get("view") === "map") === mobileMapOpen) return;
+    if (mobileMapOpen) url.searchParams.set("view", "map");
+    else url.searchParams.delete("view");
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [mobileMapOpen, isLg]);
+
+  useEffect(() => {
+    const el = controlsRef.current;
+    if (!el || isLg !== false) return;
+    // The fixed header covers the top 4rem
+    const io = new IntersectionObserver(([entry]) => setControlsInView(entry.isIntersecting), {
+      rootMargin: "-64px 0px 0px 0px",
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [isLg]);
+
+  const toggleSmartSearch = () => {
+    setSmartSearch(!smartSearch);
+    setSemanticResults([]);
+    setSemanticQuery(null);
+  };
 
   // Restore saved filters after hydration (skipped when the URL carries an
   // explicit query or filters — those take precedence)
@@ -673,23 +768,65 @@ function SearchContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sort]);
 
+  // One pin per building, quoting exactly what its card quotes
+  const mapListings = buildingGroups
+    .filter((g) => g.building.lat && g.building.lng && g.minRent !== null)
+    .map((g) => ({
+      id: g.lead.unit.id,
+      buildingId: g.building.id,
+      buildingName: g.building.name,
+      unitNumber: g.lead.unit.unit_number || "",
+      lat: g.building.lat!,
+      lng: g.building.lng!,
+      rent: g.minRent!,
+      maxRent: g.maxRent ?? undefined,
+      unitCount: g.units.length,
+      beds: g.lead.unit.beds || 0,
+      baths: g.lead.unit.baths || 1,
+      sqft: g.lead.unit.sqft,
+      neighborhood: g.building.neighborhoods?.name || "",
+    }));
+  const selectedGroup = selectedMapBuildingId
+    ? buildingGroups.find((g) => g.building.id === selectedMapBuildingId) ?? null
+    : null;
+  const compareBarVisible = compareCount > 0;
+  const saveSearchFilters = {
+    city,
+    bedsMin: bedsMin ? parseInt(bedsMin) : undefined,
+    bedsMax: bedsMax ? parseInt(bedsMax) : undefined,
+    budgetMin: budgetMin ? parseInt(budgetMin) : undefined,
+    budgetMax: budgetMax ? parseInt(budgetMax) : undefined,
+    petFriendly: petFriendly || undefined,
+    neighborhood: selectedNeighborhoods.length ? selectedNeighborhoods.join(",") : undefined,
+  };
+  // Where pin centers may sit in the phone map view, in px from each edge:
+  // below the top row of floating buttons (Filters, count, zoom), above the
+  // List button (plus the preview card and compare bar when up), and far
+  // enough in from the sides that a ~110px price pill isn't cut off
+  const mobileMapPadding = {
+    top: 84,
+    right: 64,
+    left: 64,
+    bottom: 88 + (selectedGroup ? 128 : 0) + (compareBarVisible ? 64 : 0),
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-black">
       <Header />
 
       <main className="flex-1">
-        {/* Background effects */}
-        <div className="fixed inset-0 -z-10">
+        {/* Background effects (clipped: the 500px glow is wider than a phone) */}
+        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
           <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-white/[0.02] rounded-full blur-[100px]" />
         </div>
 
         <div className="container mx-auto px-4 pt-20 pb-24 md:pt-24 lg:pb-8">
           {/* AI Search Bar */}
-          <div className="mb-6 md:mb-8">
-            {/* Mobile: Search input with AI button */}
+          <div ref={controlsRef} className="mb-4 md:mb-8">
+            {/* Mobile: search input, Smart Search toggle, search button */}
             <div className="flex gap-2 mb-2 md:hidden">
-              <div className="relative flex-1 group">
+              <div className="relative min-w-0 flex-1 group">
                 {smartSearch
                   ? <Brain className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
                   : <Sparkles className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
@@ -699,10 +836,21 @@ function SearchContent() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={smartSearch ? "Describe your ideal apartment…" : "Try: '2BR in Miami under $3,500'"}
-                  className={`pl-9 text-base bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-cyan-500/30" : ""}`}
+                  placeholder={smartSearch ? "Describe what you want" : "Try: 2BR under $3k"}
+                  className={`pl-9 pr-3 text-base text-ellipsis placeholder:text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-cyan-500/30" : ""}`}
                 />
               </div>
+              <button
+                type="button"
+                onClick={toggleSmartSearch}
+                aria-pressed={smartSearch}
+                aria-label="Smart Search"
+                title={smartSearch ? "Smart Search on — natural language mode" : "Turn on Smart Search for natural language queries"}
+                className={`flex h-11 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors ${smartSearch ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" : "bg-white/[0.03] text-white/60 border-white/[0.08] hover:text-white/80"}`}
+              >
+                <Brain className="h-4 w-4" />
+                Smart
+              </button>
               <Button
                 size="icon"
                 aria-label="Search"
@@ -719,24 +867,15 @@ function SearchContent() {
                 )}
               </Button>
             </div>
-            {/* Mobile: Smart Search toggle */}
-            <div className="flex items-center gap-2 mb-3 md:hidden">
-              <button
-                onClick={() => { setSmartSearch(!smartSearch); setSemanticResults([]); setSemanticQuery(null); }}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${smartSearch ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "bg-white/[0.05] text-white/50 border border-white/[0.08] hover:text-white/60"}`}
-              >
-                <Brain className="h-3 w-3" />
-                Smart Search {smartSearch ? "ON" : "OFF"}
-              </button>
-              {smartSearch && (
-                <span className="text-xs text-white/30">Natural language · AI-powered</span>
-              )}
-            </div>
+            {smartSearch && (
+              <p className="mb-2 text-xs text-white/40 md:hidden">Smart Search on · natural language, AI-powered</p>
+            )}
 
-            {/* Mobile: Compact filter row */}
+            {/* Mobile: compact control row — city, filters, commute, map */}
             <div className="flex gap-2 md:hidden">
+              <div className="min-w-0 flex-1">
               <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); handleSearch({ city_slug: val, neighborhood_slugs: [] }); }}>
-                <SelectTrigger aria-label="City" className="h-9 flex-1 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                <SelectTrigger aria-label="City" className="h-11 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="City" />
                 </SelectTrigger>
                 <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
@@ -752,39 +891,57 @@ function SearchContent() {
                   <SelectItem value="san-francisco">San Francisco</SelectItem>
                 </SelectContent>
               </Select>
+              </div>
 
               <Button
                 variant={activeFilterCount > 0 ? "default" : "glass"}
                 size="sm"
-                className="h-9 px-3"
+                className="h-11 min-w-11 gap-1 px-3"
                 aria-label="Filters"
                 aria-expanded={showFilters}
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 {activeFilterCount > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] bg-white/20">
+                  <Badge variant="secondary" className="h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] bg-white/20">
                     {activeFilterCount}
                   </Badge>
                 )}
               </Button>
 
-              <Button
-                variant={showMap ? "default" : "glass"}
-                size="sm"
-                className="h-9 px-3"
-                aria-label={showMap ? "Show list" : "Show map"}
-                onClick={() => setShowMap(!showMap)}
-              >
-                {showMap ? <List className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
-              </Button>
+              {!smartSearch && (
+                <Button
+                  variant={commute ? "default" : "glass"}
+                  size="sm"
+                  className={cn("h-11 w-11 px-0", commuteOpen && !commute && "border-white/30 bg-white/[0.12]")}
+                  aria-label={commute ? "Commute filter (on)" : "Commute filter"}
+                  aria-expanded={commuteOpen}
+                  aria-controls="commute-filter"
+                  onClick={() => setCommuteOpen((open) => !open)}
+                >
+                  <Navigation className="h-4 w-4" />
+                </Button>
+              )}
+
+              {!smartSearch && (
+                <Button
+                  variant="glass"
+                  size="sm"
+                  className="h-11 px-3 text-sm"
+                  aria-label={showMap ? "Show list" : "Show map"}
+                  onClick={() => setShowMap(!showMap)}
+                >
+                  {showMap ? <List className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
+                  {showMap ? "List" : "Map"}
+                </Button>
+              )}
             </div>
 
             {/* Desktop: Full search bar */}
             <div className="hidden md:flex flex-row items-center gap-3">
               {/* Smart Search toggle pill */}
               <button
-                onClick={() => { setSmartSearch(!smartSearch); setSemanticResults([]); setSemanticQuery(null); }}
+                onClick={toggleSmartSearch}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 h-12 text-sm font-medium transition-all border ${smartSearch ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-sm shadow-cyan-500/20" : "bg-white/[0.03] text-white/50 border-white/[0.08] hover:text-white/60 hover:bg-white/[0.06]"}`}
                 title={smartSearch ? "Smart Search active — natural language mode" : "Enable Smart Search for natural language queries"}
               >
@@ -871,13 +1028,13 @@ function SearchContent() {
 
             {/* AI Summary Banner */}
             {aiSummary && (
-              <div className="mt-4 flex items-center gap-3 rounded-xl bg-cyan-500/[0.06] backdrop-blur-xl border border-cyan-500/20 p-4">
+              <div className="mt-3 flex items-center gap-3 rounded-xl bg-cyan-500/[0.06] backdrop-blur-xl border border-cyan-500/20 p-3 pr-1 md:mt-4 md:p-4">
                 <Sparkles className="h-5 w-5 text-cyan-400 flex-shrink-0" />
                 <p className="text-sm font-medium text-white/90">{aiSummary}</p>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="ml-auto hover:bg-white/10"
+                  className="ml-auto h-11 w-11 shrink-0 px-0 hover:bg-white/10 md:h-8 md:w-auto md:px-3"
                   aria-label="Clear AI search"
                   onClick={() => {
                     setAiSummary(null);
@@ -915,7 +1072,7 @@ function SearchContent() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowFilters(false)}
-                    className="hover:bg-white/10"
+                    className="-mr-2 h-11 w-11 px-0 hover:bg-white/10 md:mr-0 md:h-8 md:w-auto md:px-3"
                     aria-label="Close filters"
                   >
                     <X className="h-4 w-4" />
@@ -1007,7 +1164,7 @@ function SearchContent() {
                             <button
                               key={n.slug}
                               className={cn(
-                                "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer",
+                                "flex w-full items-center gap-2 rounded-sm px-2 py-3 text-sm hover:bg-accent cursor-pointer md:py-1.5",
                                 selectedNeighborhoods.includes(n.slug) && "bg-accent"
                               )}
                               onClick={() => {
@@ -1086,7 +1243,7 @@ function SearchContent() {
                             <button
                               key={amenity.name}
                               className={cn(
-                                "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer",
+                                "flex w-full items-center gap-2 rounded-sm px-2 py-3 text-sm hover:bg-accent cursor-pointer md:py-1.5",
                                 selectedAmenities.includes(amenity.name) && "bg-accent"
                               )}
                               onClick={() => {
@@ -1124,7 +1281,7 @@ function SearchContent() {
                             {amenity}
                             <button
                               onClick={() => setSelectedAmenities((prev) => prev.filter((a) => a !== amenity))}
-                              className="ml-1 hover:text-white"
+                              className="-my-3.5 -mr-2.5 ml-0 p-3.5 hover:text-white md:my-0 md:mr-0 md:ml-1 md:p-0"
                               aria-label={`Remove ${amenity}`}
                             >
                               <X className="h-3 w-3" />
@@ -1201,75 +1358,118 @@ function SearchContent() {
             )}
           </div>
 
-          {/* Results Header */}
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+          {/* Results Header — one compact row on phones, as before on md+ */}
+          <div className="mb-4 flex items-center justify-between gap-2 md:mb-6 md:gap-3">
+            <div className="min-w-0">
               {smartSearch && semanticQuery ? (
                 <>
                   <div className="flex items-center gap-2">
                     <Brain className="h-5 w-5 text-cyan-400" />
-                    <h1 className="text-2xl font-bold text-white">
+                    <h1 className="text-lg font-bold text-white md:text-2xl">
                       {loading ? "Finding matches…" : `${semanticResults.length} Building${semanticResults.length !== 1 ? "s" : ""} Matched`}
                     </h1>
                   </div>
-                  <p className="text-sm text-white/50 mt-0.5">
+                  <p className="text-xs text-white/50 mt-0.5 md:text-sm">
                     Smart Search: &ldquo;{semanticQuery}&rdquo;
                   </p>
                 </>
               ) : (
                 <>
-                  <h1 className="text-2xl font-bold text-white">
-                    {loading ? "Searching..." : `${visibleResults.length} ${visibleResults.length === 1 ? "Apartment" : "Apartments"} Available`}
+                  <h1 className="text-lg font-bold text-white md:text-2xl">
+                    {loading ? (
+                      "Searching..."
+                    ) : (
+                      <>
+                        {visibleResults.length} {visibleResults.length === 1 ? "Apartment" : "Apartments"}
+                        <span className="hidden md:inline"> Available</span>
+                      </>
+                    )}
                   </h1>
-                  {!loading && buildingGroups.length > 1 && (
-                    <p className="text-sm text-white/60">
-                      in {buildingGroups.length} buildings
+                  {/* Phone: building count, price date and commute notes on one line */}
+                  {!loading && (buildingGroups.length > 1 || capturedAt) && (
+                    <p className="text-xs text-white/60 md:hidden">
+                      {[
+                        buildingGroups.length > 1 ? `${buildingGroups.length} buildings` : null,
+                        capturedAt
+                          ? `updated ${new Date(capturedAt).toLocaleDateString(undefined, { month: "numeric", day: "numeric" })}`
+                          : null,
+                        commute && commuteTimes && visibleResults.length < results.length
+                          ? `${results.length - visibleResults.length} hidden by commute`
+                          : null,
+                        commute && commutePartial ? "commute times unavailable" : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   )}
-                  {capturedAt && (
-                    <p className="text-sm text-white/50">
-                      Prices updated {new Date(capturedAt).toLocaleDateString()}
-                      {commute && commuteTimes && visibleResults.length < results.length &&
-                        ` · ${results.length - visibleResults.length} hidden by commute filter`}
-                      {commute && commutePartial && " · commute times unavailable right now"}
-                    </p>
-                  )}
+                  <div className="hidden md:block">
+                    {!loading && buildingGroups.length > 1 && (
+                      <p className="text-sm text-white/60">
+                        in {buildingGroups.length} buildings
+                      </p>
+                    )}
+                    {capturedAt && (
+                      <p className="text-sm text-white/50">
+                        Prices updated {new Date(capturedAt).toLocaleDateString()}
+                        {commute && commuteTimes && visibleResults.length < results.length &&
+                          ` · ${results.length - visibleResults.length} hidden by commute filter`}
+                        {commute && commutePartial && " · commute times unavailable right now"}
+                      </p>
+                    )}
+                  </div>
                 </>
               )}
             </div>
 
             {!smartSearch && (
-              <div className="flex items-center gap-2">
-                <SaveSearchButton
-                  filters={{
-                    city,
-                    bedsMin: bedsMin ? parseInt(bedsMin) : undefined,
-                    bedsMax: bedsMax ? parseInt(bedsMax) : undefined,
-                    budgetMin: budgetMin ? parseInt(budgetMin) : undefined,
-                    budgetMax: budgetMax ? parseInt(budgetMax) : undefined,
-                    petFriendly: petFriendly || undefined,
-                    neighborhood: selectedNeighborhoods.length ? selectedNeighborhoods.join(",") : undefined,
-                  }}
-                  resultCount={results.length}
-                />
-                <Select value={sort} onValueChange={setSort}>
-                  <SelectTrigger aria-label="Sort results" className="flex-1 sm:flex-none sm:w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
-                    <SelectItem value="price_low">Price: Low to High</SelectItem>
-                    <SelectItem value="price_high">Price: High to Low</SelectItem>
-                    <SelectItem value="sqft_high">Largest First</SelectItem>
-                    <SelectItem value="newest">Newest</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                {/* Phone: icon-only Save Search + compact sort */}
+                <div className="flex shrink-0 items-center gap-2 md:hidden">
+                  <SaveSearchButton
+                    filters={saveSearchFilters}
+                    resultCount={results.length}
+                    iconOnly
+                    className="h-11 w-11 px-0"
+                  />
+                  <Select value={sort} onValueChange={setSort}>
+                    <SelectTrigger aria-label="Sort results" className="h-11 w-auto gap-1.5 px-3 bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                      <ArrowUpDown className="h-4 w-4 shrink-0 text-white/60" aria-hidden="true" />
+                      <span>{SORT_SHORT_LABELS[sort] ?? "Sort"}</span>
+                    </SelectTrigger>
+                    <SelectContent className="right-0 w-48 bg-black/90 backdrop-blur-xl border-white/[0.1]">
+                      <SelectItem value="price_low">Price: Low to High</SelectItem>
+                      <SelectItem value="price_high">Price: High to Low</SelectItem>
+                      <SelectItem value="sqft_high">Largest First</SelectItem>
+                      <SelectItem value="newest">Newest</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="hidden items-center gap-2 md:flex">
+                  <SaveSearchButton
+                    filters={saveSearchFilters}
+                    resultCount={results.length}
+                  />
+                  <Select value={sort} onValueChange={setSort}>
+                    <SelectTrigger aria-label="Sort results" className="flex-1 sm:flex-none sm:w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
+                      <SelectItem value="price_low">Price: Low to High</SelectItem>
+                      <SelectItem value="price_high">Price: High to Low</SelectItem>
+                      <SelectItem value="sqft_high">Largest First</SelectItem>
+                      <SelectItem value="newest">Newest</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
           </div>
 
-          {/* Commute filter (standard search only) */}
+          {/* Commute filter (standard search only). Always shown on md+; on
+              phones it opens from the commute button in the control row. */}
           {!smartSearch && (
-            <div className="mb-6">
+            <div id="commute-filter" className={cn("mb-4 md:mb-6", !commuteOpen && "hidden md:block")}>
               <CommuteFilter
                 proximity={
                   results.find((r) => r.building.lat != null && r.building.lng != null)
@@ -1293,7 +1493,7 @@ function SearchContent() {
               <Button
                 variant="glass"
                 size="sm"
-                className="ml-auto"
+                className="ml-auto h-11 md:h-8"
                 onClick={() => {
                   if (smartSearch && semanticQuery) {
                     handleSemanticSearch(semanticQuery);
@@ -1309,8 +1509,11 @@ function SearchContent() {
 
           {/* Split Layout - Listings + Map */}
           <div className={`flex gap-6 ${showMap && !smartSearch ? "flex-col lg:flex-row" : ""}`}>
-            {/* Results Grid */}
-            <div className={`${showMap && !smartSearch ? "lg:w-1/2 xl:w-3/5" : "w-full"} ${showMap && !smartSearch ? "lg:h-[calc(100dvh-300px)] lg:overflow-y-auto lg:pr-4" : ""}`}>
+            {/* Results Grid (inert under the phone map view) */}
+            <div
+              inert={mobileMapOpen || undefined}
+              className={`${showMap && !smartSearch ? "lg:w-1/2 xl:w-3/5" : "w-full"} ${showMap && !smartSearch ? "lg:h-[calc(100dvh-300px)] lg:overflow-y-auto lg:pr-4" : ""}`}
+            >
               <h2 className="sr-only">Results</h2>
 
               {/* Semantic results */}
@@ -1351,7 +1554,7 @@ function SearchContent() {
                               {/* Image */}
                               <div className="relative h-44 bg-gradient-to-br from-white/[0.03] to-black/20 overflow-hidden">
                                 {building.hero_image_url ? (
-                                  <Image
+                                  <SafeImage
                                     src={building.hero_image_url}
                                     alt={building.name}
                                     fill
@@ -1411,7 +1614,7 @@ function SearchContent() {
 
               {/* Standard unit results */}
               {!smartSearch && (
-              <div className={`grid gap-6 stagger-children ${showMap ? "grid-cols-1 xl:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
+              <div className={`grid gap-6 stagger-children ${showMap ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
                     <Card key={i} className="overflow-hidden">
@@ -1468,7 +1671,7 @@ function SearchContent() {
                     return (
                       <Link
                         key={building.id}
-                        href={`/buildings/${building.id}`}
+                        href={buildingPath(building)}
                         onMouseEnter={() => setHighlightedBuildingId(building.id)}
                         onMouseLeave={() => setHighlightedBuildingId(null)}
                       >
@@ -1532,9 +1735,11 @@ function SearchContent() {
                                   +{(imageUnit?.image_count ?? 0) - 1} photos
                                 </div>
                               )}
-                              {/* Compare and Favorite buttons */}
-                              <div className="absolute bottom-3 left-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                              {/* Compare and Favorite buttons: revealed on hover only where
+                                  there is hover (touch tablets always show them) */}
+                              <div className="absolute bottom-3 left-3 flex gap-2 opacity-100 transition-opacity md:[@media(hover:hover)]:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
                                 <CompareButton
+                                  className="flex h-11 w-11 items-center justify-center p-0 md:h-10 md:w-10 lg:[@media(hover:hover)]:h-auto lg:[@media(hover:hover)]:w-8"
                                   building={{
                                     id: building.id,
                                     name: building.name,
@@ -1556,6 +1761,8 @@ function SearchContent() {
                                     baths: lead.unit.baths ?? undefined,
                                   }}
                                   size="md"
+                                  // 44px on phones; md+ keeps the button's own 40px
+                                  className="h-11 w-11"
                                 />
                               </div>
                             </div>
@@ -1645,32 +1852,146 @@ function SearchContent() {
               )} {/* end !smartSearch */}
             </div>
 
-            {/* Map View — only for standard search */}
+            {/* Phone: floating Map button once the top controls have scrolled away */}
+            {isLg === false && !showMap && !smartSearch && !controlsInView && (
+              <button
+                type="button"
+                onClick={() => setShowMap(true)}
+                aria-label="Show map"
+                className={cn(
+                  "fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-black shadow-lg shadow-black/50 transition-transform active:scale-95",
+                  compareBarVisible
+                    ? "bottom-[calc(8.75rem+env(safe-area-inset-bottom,0px))]"
+                    : "bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))]"
+                )}
+              >
+                <MapIcon className="h-4 w-4" />
+                Map
+              </button>
+            )}
+
+            {/* Map View — only for standard search. lg+: a sticky column beside
+                the list. Below lg: a full-height view between the header and
+                the tab bar that replaces the list while open. */}
             {showMap && !smartSearch && (
-              <div className="lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100dvh-300px)] rounded-xl overflow-hidden border border-white/[0.08] sticky top-4">
-                <SearchMap
-                  // One pin per building, quoting exactly what its card quotes
-                  listings={buildingGroups
-                    .filter((g) => g.building.lat && g.building.lng && g.minRent !== null)
-                    .map((g) => ({
-                      id: g.lead.unit.id,
-                      buildingId: g.building.id,
-                      buildingName: g.building.name,
-                      unitNumber: g.lead.unit.unit_number || "",
-                      lat: g.building.lat!,
-                      lng: g.building.lng!,
-                      rent: g.minRent!,
-                      maxRent: g.maxRent ?? undefined,
-                      unitCount: g.units.length,
-                      beds: g.lead.unit.beds || 0,
-                      baths: g.lead.unit.baths || 1,
-                      sqft: g.lead.unit.sqft,
-                      neighborhood: g.building.neighborhoods?.name || "",
-                    }))}
-                  onBuildingClick={(buildingId) => router.push(`/buildings/${buildingId}`)}
-                  onBuildingHover={setHighlightedBuildingId}
-                  highlightedBuildingId={highlightedBuildingId}
-                />
+              <div
+                role={isLg === false ? "region" : undefined}
+                aria-label={isLg === false ? "Map of results" : undefined}
+                className={
+                  isLg === false
+                    ? MOBILE_MAP_VIEW
+                    : `${isLg === null ? "hidden lg:block " : ""}lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100dvh-300px)] rounded-xl overflow-hidden border border-white/[0.08] sticky top-4 lg:top-20`
+                }
+              >
+                {isLg === null ? (
+                  <div className="h-full w-full animate-pulse bg-white/[0.03]" />
+                ) : (
+                  <SearchMap
+                    listings={mapListings}
+                    onBuildingClick={(buildingId) => {
+                      const group = buildingGroups.find((g) => g.building.id === buildingId);
+                      router.push(buildingPath(group?.building ?? { id: buildingId }));
+                    }}
+                    onBuildingHover={setHighlightedBuildingId}
+                    highlightedBuildingId={highlightedBuildingId}
+                    onBuildingSelect={setSelectedMapBuildingId}
+                    selectedBuildingId={selectedGroup ? selectedMapBuildingId : null}
+                    overlayPadding={
+                      isLg === false
+                        ? mobileMapPadding
+                        : selectedGroup
+                          ? { top: 190, left: 64, right: 64 } // keep the tapped pin clear of the preview card and edges
+                          : undefined
+                    }
+                    inlineZoomControls={isLg === false}
+                  />
+                )}
+
+                {/* The header is translucent: back it with solid black while
+                    the map view is open so the list doesn't show through */}
+                {isLg === false && (
+                  <div className="fixed inset-x-0 top-0 h-[calc(4rem+env(safe-area-inset-top,0px))] bg-black" aria-hidden="true" />
+                )}
+
+                {/* Phone map view: filters + count on top */}
+                {isLg === false && (
+                  <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-2">
+                    <Button
+                      variant={activeFilterCount > 0 ? "default" : "glass"}
+                      className={cn(
+                        "pointer-events-auto h-11 rounded-full px-4 shadow-lg shadow-black/40 md:hidden",
+                        activeFilterCount === 0 && "bg-zinc-950/85"
+                      )}
+                      aria-label="Filters"
+                      aria-expanded={showFilters}
+                      onClick={() => setShowFilters(true)}
+                    >
+                      <SlidersHorizontal className="h-4 w-4" />
+                      Filters
+                      {activeFilterCount > 0 && (
+                        <Badge variant="secondary" className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-black/15">
+                          {activeFilterCount}
+                        </Badge>
+                      )}
+                    </Button>
+                    <span
+                      aria-live="polite"
+                      className="rounded-full bg-zinc-950/85 px-3 py-1.5 text-xs font-medium text-white/80 shadow-lg shadow-black/40 backdrop-blur-xl max-[359px]:sr-only"
+                    >
+                      {loading
+                        ? "Searching…"
+                        : `${mapListings.length} ${mapListings.length === 1 ? "building" : "buildings"}`}
+                    </span>
+                  </div>
+                )}
+
+                {/* Tapped pin preview (touch) and, on phones, the way back to the
+                    list. In the lg split view the map column runs below the
+                    fold, so the card goes near its top instead (clear of the
+                    zoom control, and of the header once the column sticks). */}
+                {(selectedGroup || isLg === false) && (
+                  <div
+                    className={cn(
+                      "pointer-events-none absolute z-10 flex flex-col items-center gap-6",
+                      isLg === false
+                        ? cn("inset-x-3", compareBarVisible ? "bottom-[4.75rem]" : "bottom-3")
+                        : "left-3 right-16 top-16"
+                    )}
+                  >
+                    {selectedGroup && (
+                      <div className="pointer-events-auto flex w-full justify-center">
+                        <MapPreviewCard
+                          href={buildingPath(selectedGroup.building)}
+                          name={selectedGroup.building.name}
+                          neighborhood={selectedGroup.building.neighborhoods?.name}
+                          imageUrl={
+                            brokenImageIds.has(selectedGroup.building.id)
+                              ? null
+                              : selectedGroup.imageUnit?.images?.[0]?.url
+                          }
+                          price={selectedGroup.minRent}
+                          unitCount={selectedGroup.units.length}
+                          bedsLabel={bedRangeLabel(selectedGroup.bedsMin, selectedGroup.bedsMax)}
+                          onClose={() => setSelectedMapBuildingId(null)}
+                        />
+                      </div>
+                    )}
+                    {isLg === false && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMap(false);
+                          setSelectedMapBuildingId(null);
+                        }}
+                        aria-label="Show list"
+                        className="pointer-events-auto inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-black shadow-lg shadow-black/50 transition-transform active:scale-95"
+                      >
+                        <List className="h-4 w-4" />
+                        List
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -330,7 +330,7 @@ export async function NeighborhoodView({
         </div>
 
         <div className="max-w-6xl mx-auto px-6 py-12">
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Buildings List */}
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-6">

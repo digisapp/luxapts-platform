@@ -52,7 +52,8 @@ export function CompareButton({
     <button
       onClick={handleClick}
       className={cn(
-        "p-2 rounded-full transition-all",
+        // after: pads the 32px circle's touch target out to 44px
+        "relative p-2 rounded-full transition-all after:absolute after:-inset-1.5 after:content-['']",
         isSelected
           ? "bg-white text-black"
           : "bg-black/50 text-white hover:bg-black/70",

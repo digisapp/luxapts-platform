@@ -309,7 +309,7 @@ export default async function FacetPage({ params }: FacetPageProps) {
               <h2 className="text-2xl font-bold mb-6">
                 Buildings with {facet.label.toLowerCase()} in {city.name}
               </h2>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {listed.map((b) => {
                   const count = matches.get(b.id)?.count || 0;
                   const neighborhood = b.neighborhood_id

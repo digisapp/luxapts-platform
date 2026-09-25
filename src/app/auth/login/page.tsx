@@ -85,6 +85,7 @@ function LoginForm() {
               <label className="mb-2 block text-sm font-medium text-white/70">Email</label>
               <Input
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
@@ -105,6 +106,7 @@ function LoginForm() {
               </div>
               <Input
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Your password"

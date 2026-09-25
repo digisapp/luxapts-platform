@@ -428,7 +428,7 @@ export default async function CityPage({ params }: CityPageProps) {
                 </Link>
               </div>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedBuildings.map((building) => {
                   // Best image: primary first, then sort order.
                   const images = (building.building_images || []) as Array<{

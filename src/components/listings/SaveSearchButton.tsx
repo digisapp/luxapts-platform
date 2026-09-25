@@ -20,12 +20,15 @@ interface SaveSearchButtonProps {
   filters: SavedSearch["filters"];
   resultCount?: number;
   className?: string;
+  /** Bookmark icon only (the phone search header); the label stays as the accessible name. */
+  iconOnly?: boolean;
 }
 
 export function SaveSearchButton({
   filters,
   resultCount,
   className,
+  iconOnly = false,
 }: SaveSearchButtonProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -62,9 +65,15 @@ export function SaveSearchButton({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className={className} onClick={handleOpen}>
-          <Bookmark className="mr-2 h-4 w-4" />
-          Save Search
+        <Button
+          variant="outline"
+          size="sm"
+          className={className}
+          onClick={handleOpen}
+          aria-label={iconOnly ? "Save search" : undefined}
+        >
+          <Bookmark className={iconOnly ? "h-4 w-4" : "mr-2 h-4 w-4"} />
+          {!iconOnly && "Save Search"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

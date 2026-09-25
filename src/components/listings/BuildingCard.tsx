@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { ArrowRight, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,7 @@ export function BuildingCard({
       <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full">
         <div className="relative h-52 overflow-hidden">
           {heroImage ? (
-            <Image
+            <SafeImage
               src={heroImage}
               // Descriptive alt beats the bare building name for image search
               // and for anyone on a screen reader.

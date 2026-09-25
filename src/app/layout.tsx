@@ -34,7 +34,10 @@ export const metadata: Metadata = {
   keywords: ["apartments", "rentals", "NYC", "Miami", "luxury apartments", "apartment search"],
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    // "black", not "black-translucent": translucent draws the page under the
+    // status bar in a home-screen launch, and every page's fixed pt-16/pt-20
+    // offset then left its top edge under the clock. The theme is black anyway.
+    statusBarStyle: "black",
     title: "Staycio",
   },
   openGraph: {

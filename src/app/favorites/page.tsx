@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useSavedSearches } from "@/hooks/useSavedSearches";
 import { buildSavedSearchUrl } from "@/hooks/buildSavedSearchUrl";
@@ -108,7 +108,7 @@ export default function FavoritesPage() {
                             className="relative w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0"
                           >
                             {item.image ? (
-                              <Image
+                              <SafeImage
                                 src={item.image}
                                 alt={item.name}
                                 fill

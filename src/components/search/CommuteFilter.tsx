@@ -72,7 +72,7 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
 
   if (value) {
     return (
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] py-0 pl-3 pr-0 text-sm md:px-3 md:py-2">
         <Navigation className="h-4 w-4 text-cyan-400" aria-hidden="true" />
         <span className="text-white/80">
           {MODE_LABELS[value.mode]} ≤ {value.maxMinutes} min to{" "}
@@ -81,7 +81,7 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
         <button
           type="button"
           onClick={() => onChange(null)}
-          className="ml-auto rounded-full p-1 text-white/50 hover:text-white hover:bg-white/[0.08] transition-colors"
+          className="ml-auto flex h-11 w-11 items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-white/[0.08] transition-colors md:h-auto md:w-auto md:p-1"
           aria-label="Clear commute filter"
         >
           <X className="h-3.5 w-3.5" />
@@ -111,7 +111,7 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
         </div>
         <div className="flex gap-2">
           <Select value={mode} onValueChange={(v) => setMode(v as CommuteTarget["mode"])}>
-            <SelectTrigger aria-label="Travel mode" className="h-9 w-[92px] text-sm bg-white/[0.03] border-white/[0.08]">
+            <SelectTrigger aria-label="Travel mode" className="h-11 md:h-9 w-[92px] text-sm bg-white/[0.03] border-white/[0.08]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
@@ -121,7 +121,7 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
             </SelectContent>
           </Select>
           <Select value={String(maxMinutes)} onValueChange={(v) => setMaxMinutes(parseInt(v, 10))}>
-            <SelectTrigger aria-label="Maximum commute time" className="h-9 w-[116px] text-sm bg-white/[0.03] border-white/[0.08]">
+            <SelectTrigger aria-label="Maximum commute time" className="h-11 md:h-9 w-[116px] text-sm bg-white/[0.03] border-white/[0.08]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
@@ -135,7 +135,7 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
             type="button"
             onClick={applyDestination}
             disabled={geocoding || !address.trim()}
-            className="h-9 rounded-md border border-white/[0.08] bg-white/[0.06] px-3 text-sm text-white/80 hover:bg-white/[0.1] disabled:opacity-40 transition-colors"
+            className="h-11 md:h-9 min-w-11 md:min-w-0 flex-1 sm:flex-none rounded-md border border-white/[0.08] bg-white/[0.06] px-3 text-sm text-white/80 hover:bg-white/[0.1] disabled:opacity-40 transition-colors"
           >
             {geocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : "Set"}
           </button>

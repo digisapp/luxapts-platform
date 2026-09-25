@@ -431,7 +431,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                     trackHeroEngagement("example");
                     router.push(`/search?q=${encodeURIComponent(example)}`);
                   }}
-                  className="px-3.5 py-1.5 rounded-full text-xs sm:text-sm text-white/70 bg-white/[0.04] border border-white/[0.12] hover:text-white hover:bg-white/[0.1] hover:border-white/[0.22] transition-colors duration-300 cursor-pointer"
+                  className="min-h-10 px-3.5 py-1.5 rounded-full text-xs sm:text-sm text-white/70 bg-white/[0.04] border border-white/[0.12] hover:text-white hover:bg-white/[0.1] hover:border-white/[0.22] transition-colors duration-300 cursor-pointer"
                 >
                   {example}
                 </button>
@@ -467,7 +467,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                 </Link>
               </div>
 
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {featured.map((building) => (
                   <Link
                     key={building.id}

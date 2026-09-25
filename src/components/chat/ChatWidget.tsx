@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useSitePathname } from "@/hooks/use-site-pathname";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X, Send, Loader2, Sparkles, Building2, Minus } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Sparkles, Building2, Minus, Phone } from "lucide-react";
 import { parseSSEStream } from "@/lib/chat/stream-parser";
 import { useCompare } from "@/hooks/useCompare";
 import { isPortalRoute } from "@/hooks/portal-routes";
+import { OPEN_CHAT_EVENT } from "@/lib/chat/open-chat";
+import { STACY_MAIN_LINE } from "@/lib/constants/stacy";
 
 /** URL-safe conversation id; matches the session_key format the API accepts. */
 function newSessionKey(): string {
@@ -32,8 +35,36 @@ const SUGGESTED_PROMPTS = [
 // Max messages to send to the API to prevent unbounded context growth
 const MAX_HISTORY_MESSAGES = 20;
 
+/**
+ * Phone chat sheet geometry. iOS Safari keeps position:fixed elements on the
+ * layout viewport, which does not shrink when the keyboard opens, so a
+ * bottom-0 sheet slid under the keyboard and Safari scrolled its header off
+ * the top to reveal the input. Tracking the visual viewport pins the sheet to
+ * the area the user can actually see: 90% of the screen normally, exactly the
+ * space above the keyboard while typing.
+ */
+function useVisualViewportSheet(enabled: boolean) {
+  const [box, setBox] = useState<{ top: number; height: number } | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!enabled || !vv) return;
+    const update = () => {
+      const height = Math.min(vv.height, Math.round(window.innerHeight * 0.9));
+      setBox({ top: Math.round(vv.offsetTop + vv.height - height), height });
+    };
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [enabled]);
+  return enabled ? box : null;
+}
+
 export function ChatWidget() {
-  const pathname = usePathname() ?? "";
+  const pathname = useSitePathname();
   // Lift the floating button above the CompareBar when it's showing —
   // otherwise it covers the "Compare Now" CTA.
   const { count: compareCount } = useCompare();
@@ -54,7 +85,10 @@ export function ChatWidget() {
   const [loading, setLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [statusText, setStatusText] = useState("Thinking...");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  // Follow new tokens only while the reader is at the bottom, so scrolling up
+  // mid-stream to reread something is not yanked back down.
+  const stickToBottomRef = useRef(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const streamingIndexRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -80,12 +114,51 @@ export function ChatWidget() {
     return match ? match[1] : undefined;
   };
 
+  // On phones the open chat is a sheet over the page.
+  const isPhone = useMediaQuery("(max-width: 639px)");
+  const sheetMode = isOpen && !isMinimized && isPhone;
+  const sheetBox = useVisualViewportSheet(sheetMode);
+
+  // Building and unit pages have a sticky Schedule Tour bar on phones that
+  // carries its own chat button, so the floating bubble stays off it there.
+  const hasStickyCta = /^\/buildings\/[^/]+/.test(pathname);
+
+  // Other components (the building page's bottom bar) open the chat by event.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const open = () => {
+      setIsOpen(true);
+      setIsMinimized(false);
+    };
+    window.addEventListener(OPEN_CHAT_EVENT, open);
+    return () => window.removeEventListener(OPEN_CHAT_EVENT, open);
+  }, []);
+
+  // Lock the page behind the phone sheet so a swipe that runs past the end of
+  // the message list does not scroll the listing underneath.
+  useEffect(() => {
+    if (!sheetMode) return;
+    const html = document.documentElement;
+    const prevHtml = html.style.overflow;
+    const prevBody = document.body.style.overflow;
+    html.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = prevHtml;
+      document.body.style.overflow = prevBody;
+    };
+  }, [sheetMode]);
+
+  // scrollIntoView() on every streamed chunk also scrolled the page and made
+  // the sheet jitter on iOS; move only the message list.
+  useEffect(() => {
+    const list = listRef.current;
+    if (list && stickToBottomRef.current) list.scrollTop = list.scrollHeight;
+  }, [messages, loading]);
 
   useEffect(() => {
-    if (isOpen && !isMinimized) {
+    // Only auto-focus where there is a hardware keyboard: on a phone it would
+    // throw the keyboard over the suggested prompts the moment chat opens.
+    if (isOpen && !isMinimized && window.matchMedia("(hover: hover)").matches) {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen, isMinimized]);
@@ -95,6 +168,7 @@ export function ChatWidget() {
     if (!content.trim() || loading || isStreaming) return;
 
     const userMessage: Message = { role: "user", content: content.trim() };
+    stickToBottomRef.current = true;
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
@@ -198,25 +272,30 @@ export function ChatWidget() {
     }
   };
 
+  const floatOffset = compareBarVisible
+    ? "bottom-[calc(9.25rem+env(safe-area-inset-bottom,0px))] lg:bottom-[5.75rem]"
+    : "bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:bottom-6";
+  const headerButton =
+    "flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white sm:h-8 sm:w-8";
+
   // Don't show on portal pages (admin/shower/partner/agent) — the bubble
-  // covers their content on mobile and consumers never see those routes.
-  if (isPortalRoute(pathname)) {
+  // covers their content on mobile and consumers never see those routes —
+  // or on the sign-in/sign-up screens, where it sat on the form's links.
+  if (isPortalRoute(pathname) || pathname.startsWith("/auth/")) {
     return null;
   }
 
   return (
     <>
-      {/* Floating Chat Button — now the only assistant entry point.
-          The raised compare-bar offsets below were originally picked to clear
-          a second FAB (the Simli mic trigger) that no longer exists, so they
-          sit a little higher than they need to when the compare bar is up.
-          Harmless — it never overlaps — but it is why the numbers look odd. */}
+      {/* Floating Chat Button. On phones it sits above the bottom tab bar
+          (and the compare bar when that is up), including the home-indicator
+          inset; on building pages the sticky tour bar has the chat button. */}
       {!isOpen && (!isHome || pastHero) && (
         <button
           onClick={() => setIsOpen(true)}
           className={`fixed right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-white text-black shadow-lg hover:bg-zinc-100 transition-all hover:scale-105 group lg:right-6 ${
-            compareBarVisible ? "bottom-[13.25rem] lg:bottom-[10.75rem]" : "bottom-20 lg:bottom-6"
-          }`}
+            hasStickyCta ? "max-lg:hidden " : ""
+          }${floatOffset}`}
           aria-label="Open AI chat"
         >
           <MessageCircle className="h-6 w-6" />
@@ -232,10 +311,13 @@ export function ChatWidget() {
       {/* Chat Panel */}
       {isOpen && (
         <div
-          className={`fixed z-50 flex flex-col bg-zinc-900 border border-zinc-800 shadow-2xl transition-all duration-200 ${
+          role="dialog"
+          aria-label="Chat with Stacy"
+          style={sheetBox ? { top: sheetBox.top, height: sheetBox.height } : undefined}
+          className={`fixed z-50 flex flex-col bg-zinc-900 border border-zinc-800 shadow-2xl ${
             isMinimized
-              ? `right-4 w-72 h-14 rounded-2xl lg:right-6 ${compareBarVisible ? "bottom-[13.25rem] lg:bottom-[10.75rem]" : "bottom-20 lg:bottom-6"}`
-              : "inset-x-0 bottom-0 h-[85dvh] rounded-t-2xl sm:inset-x-auto sm:bottom-6 sm:right-4 sm:w-[calc(100vw-2rem)] sm:max-w-sm sm:h-[32rem] sm:max-h-[calc(100dvh-6rem)] sm:rounded-2xl lg:right-6"
+              ? `right-4 w-72 h-14 rounded-2xl lg:right-6 ${floatOffset}`
+              : `inset-x-0 rounded-t-2xl ${sheetBox ? "" : "bottom-0 h-[90dvh]"} sm:inset-x-auto sm:bottom-6 sm:right-4 sm:w-[calc(100vw-2rem)] sm:max-w-sm sm:h-[32rem] sm:max-h-[calc(100dvh-6rem)] sm:rounded-2xl lg:right-6`
           }`}
         >
           {/* Header */}
@@ -252,13 +334,23 @@ export function ChatWidget() {
                 <p className="text-[11px] leading-tight text-zinc-400">Staycio assistant</p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 -mr-2 sm:mr-0">
+              {!isMinimized && (
+                <a
+                  href={`tel:${STACY_MAIN_LINE.e164}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className={headerButton}
+                  aria-label={`Call Stacy at ${STACY_MAIN_LINE.display}`}
+                >
+                  <Phone className="h-4 w-4" />
+                </a>
+              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsMinimized(!isMinimized);
                 }}
-                className="p-1.5 text-zinc-400 hover:text-white transition-colors rounded-lg hover:bg-zinc-800"
+                className={headerButton}
                 aria-label={isMinimized ? "Expand" : "Minimize"}
               >
                 <Minus className="h-4 w-4" />
@@ -268,7 +360,7 @@ export function ChatWidget() {
                   e.stopPropagation();
                   setIsOpen(false);
                 }}
-                className="p-1.5 text-zinc-400 hover:text-white transition-colors rounded-lg hover:bg-zinc-800"
+                className={headerButton}
                 aria-label="Close chat"
               >
                 <X className="h-4 w-4" />
@@ -279,7 +371,14 @@ export function ChatWidget() {
           {!isMinimized && (
             <>
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div
+                ref={listRef}
+                onScroll={(e) => {
+                  const el = e.currentTarget;
+                  stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+                }}
+                className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4"
+              >
                 {messages.length === 0 ? (
                   <div className="space-y-4">
                     <div className="text-center py-4">
@@ -334,7 +433,6 @@ export function ChatWidget() {
                     </div>
                   </div>
                 )}
-                <div ref={messagesEndRef} />
               </div>
 
               {/* Input */}
@@ -346,6 +444,7 @@ export function ChatWidget() {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Ask about apartments..."
+                    enterKeyHint="send"
                     className="flex-1 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-zinc-600"
                     disabled={loading}
                   />

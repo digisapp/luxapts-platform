@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/db-helpers";
@@ -139,7 +139,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatPrice, formatDate } from "@/lib/utils";
+import { formatPrice, formatDate, telHref } from "@/lib/utils";
 import {
   MapPin,
   Phone,
@@ -624,8 +624,8 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 <div className="space-y-2 text-sm">
                   {building.leasing_phone && (
                     <a
-                      href={`tel:${building.leasing_phone}`}
-                      className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                      href={`tel:${telHref(building.leasing_phone)}`}
+                      className="flex min-h-11 items-center gap-2 text-muted-foreground hover:text-foreground"
                     >
                       <Phone className="h-4 w-4" />
                       {building.leasing_phone}
@@ -634,7 +634,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   {building.leasing_email && (
                     <a
                       href={`mailto:${building.leasing_email}`}
-                      className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                      className="flex min-h-11 items-center gap-2 text-muted-foreground hover:text-foreground"
                     >
                       <Mail className="h-4 w-4" />
                       {building.leasing_email}
@@ -645,7 +645,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                       href={building.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                      className="flex min-h-11 items-center gap-2 text-muted-foreground hover:text-foreground"
                     >
                       <Globe className="h-4 w-4" />
                       Visit Website
@@ -804,10 +804,12 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                             key={unit.id}
                             className="flex flex-col md:flex-row gap-4 rounded-lg border p-4"
                           >
-                            {/* Unit Image */}
-                            <div className="relative w-full md:w-48 h-32 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                            {/* Unit Image — on phones a unit with no photo skips the
+                                empty 128px placeholder box (a dozen of them made the
+                                unit list mostly grey squares). */}
+                            <div className={`relative w-full md:w-48 h-32 rounded-lg overflow-hidden bg-muted flex-shrink-0 ${primaryImage ? "" : "hidden md:block"}`}>
                               {primaryImage ? (
-                                <Image
+                                <SafeImage
                                   src={primaryImage.url}
                                   alt={primaryImage.alt_text || `Unit ${unit.unit_number}`}
                                   fill
@@ -893,7 +895,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                                     </Button>
                                   )}
                                   <Link href={`${buildingPath(building)}/units/${unit.id}`}>
-                                    <Button size="sm">View</Button>
+                                    <Button size="sm" className="h-10 px-4 sm:h-8 sm:px-3">View</Button>
                                   </Link>
                                 </div>
                               </div>
@@ -917,7 +919,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                     <CardTitle as="h2">{building.name} Amenities</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
                       {amenities.map((a, i) => (
                         <div
                           key={i}

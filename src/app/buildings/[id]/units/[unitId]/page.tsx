@@ -175,7 +175,7 @@ export default async function UnitPage({
               className="mb-6"
             />
 
-            <div className="grid gap-8 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               {/* Gallery */}
               <div className="lg:col-span-2">
                 {images.length > 0 ? (
@@ -277,7 +277,7 @@ export default async function UnitPage({
 
         {/* Body */}
         <div className="container mx-auto px-4 py-8">
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
               {/* Floor Plan */}
               {floorplan?.layout_image_url && (

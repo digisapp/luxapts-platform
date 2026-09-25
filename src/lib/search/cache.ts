@@ -134,7 +134,7 @@ const UNIT_SELECT: string = `
   id, building_id, floorplan_id, unit_number, beds, baths, sqft,
   available_on, latest_rent, latest_net_effective_rent, price_captured_at,
   buildings:building_id (
-    id, name, address_1, zip, lat, lng, pet_policy, parking_policy,
+    id, slug, name, address_1, zip, lat, lng, pet_policy, parking_policy,
     neighborhoods:neighborhood_id ( slug, name )
   )
 `;
