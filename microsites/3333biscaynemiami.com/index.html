@@ -55,7 +55,7 @@
   .nav-cta{font-family:var(--display);font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--aqua);text-decoration:none;padding:12px 24px;border-radius:999px;transition:all .3s}
   .nav-cta:hover{background:#fff}
 
-  .hero{position:relative;min-height:100vh;display:flex;align-items:center;color:#fff;
+  .hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;color:#fff;
     background:linear-gradient(165deg,rgba(16,34,43,0.84) 0%,rgba(31,122,102,0.5) 60%,rgba(16,34,43,0.76) 100%),
     url('img/hero.jpg') center/cover}
   .hero-inner{max-width:840px;padding:150px 0 110px}
@@ -132,7 +132,7 @@
   .fineprint a{color:var(--aqua-deep)}
 
   footer{background:var(--ink);color:var(--muted);padding:54px 0;font-size:.82rem}
-  footer .wordmark{font-size:1rem;display:inline-block;margin-bottom:18px}
+  footer .wordmark{font-size:1rem;display:inline-block;margin-bottom:18px;overflow-wrap:anywhere}
   footer a{color:var(--aqua)}
   footer p{max-width:90ch}
 
@@ -149,6 +149,31 @@
     form{padding:32px}
     .midcta .wrap{flex-direction:column;align-items:flex-start}
   }
+  /* Phones. The fixed header ran 106–133px, its button wrapped onto two or three
+     lines and ran into the wordmark, and an iPhone SE could not see the hero
+     button. One compact row (68px, 60px scrolled), a hero whose button clears the
+     fold at 375x553, a 12px floor on labels and 44px tap targets. */
+  @media(max-width:600px){
+    .wrap{padding:0 20px}
+    header{padding:12px 0}
+    header.scrolled{padding:8px 0}
+    header .wrap{gap:12px}
+    header .wordmark{font-size:min(18px,5.05vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
+    .nav-cta{flex:none;display:inline-block;line-height:44px;padding:0 16px;font-size:.75rem;letter-spacing:.05em;white-space:nowrap}
+    .nav-cta .cta-x{display:none}
+    .hero-inner{padding:88px 0 76px}
+    .chip{font-size:.75rem;letter-spacing:.08em;padding:7px 14px;margin-bottom:16px}
+    .hero h1{font-size:clamp(2rem,9.2vw,2.5rem);line-height:1.06}
+    .hero p.sub{margin:16px 0 24px;font-size:1rem;line-height:1.55}
+    .btn{padding:16px 28px}
+    .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
+    summary{min-height:44px}
+  }
+  @media(max-width:359px){
+    .wrap{padding:0 16px}
+    header .wrap{gap:10px}
+    .nav-cta{padding:0 12px}
+  }
 </style>
 </head>
 <body>
@@ -156,7 +181,7 @@
 <header id="hdr">
   <div class="wrap">
     <a class="wordmark" href="#top">3333<span>BISCAYNE</span></a>
-    <a class="nav-cta" href="#signup">Get Pricing First</a>
+    <a class="nav-cta" href="#signup">Get Pricing<span class="cta-x"> First</span></a>
   </div>
 </header>
 
@@ -250,9 +275,9 @@
       <form data-lead class="reveal">
         <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
         <label for="name">Name</label>
-        <input id="name" name="name" type="text" required placeholder="Your name">
+        <input id="name" name="name" type="text" required placeholder="Your name" autocomplete="name">
         <label for="email">Email</label>
-        <input id="email" name="email" type="email" required placeholder="you@email.com">
+        <input id="email" name="email" type="email" required placeholder="you@email.com" autocomplete="email">
         <label for="phone">Phone / WhatsApp</label>
         <input id="phone" name="phone" type="tel" required placeholder="+1 305 555 0123" autocomplete="tel" inputmode="tel">
         <label for="unit">Interested in</label>
@@ -351,31 +376,38 @@
 <!-- stacy:start (generated from microsites/_shared/stacy-widget.html; edit the template, not this block) -->
 <style>
 .stc,.stc-panel{--stc-a:#4cc3a5;--stc-ink:#10222b;letter-spacing:normal;text-transform:none;text-align:left}
-.stc{position:fixed;right:16px;bottom:16px;z-index:60;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;display:flex;gap:10px;align-items:center}
-.stc-fab{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:13px 18px;font-family:inherit;font-weight:600;font-size:15px;line-height:1;cursor:pointer;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.stc{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;display:flex;gap:10px;align-items:center;transition:opacity .2s ease,transform .2s ease}
+/* Out of the way (script below): while a hero/mid-page button, the lead form or the footer passes
+   under the launchers, while a form field has focus (the iOS keyboard is up), and while the chat is open. */
+.stc.stc-away{opacity:0;transform:translateY(14px);visibility:hidden;pointer-events:none;transition:opacity .15s ease,transform .15s ease,visibility 0s linear .15s}
+@media (prefers-reduced-motion:reduce){.stc,.stc.stc-away{transition:none}}
+.stc-fab{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:0;border-radius:999px;padding:13px 18px;font-family:inherit;font-weight:600;font-size:15px;line-height:1;cursor:pointer;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.22)}
 .stc-chat{background:var(--stc-a);color:var(--stc-ink)}
 .stc-call{background:var(--stc-ink);color:#fff}
 .stc-fab svg{width:18px;height:18px;flex:none}
-.stc-panel{position:fixed;right:16px;bottom:78px;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 110px));background:#fff;color:#111;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.3);display:none;flex-direction:column;overflow:hidden;z-index:61;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+.stc-panel{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 32px));height:min(560px,calc(100dvh - 32px));background:#fff;color:#111;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.3);display:none;flex-direction:column;overflow:hidden;z-index:61;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
 .stc-panel.open{display:flex}
 .stc-head{background:var(--stc-ink);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .stc-head b{display:block;font-size:15px}
 .stc-head small{display:block;opacity:.75;font-size:12px;margin-top:2px}
-.stc-x{background:none;border:0;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 2px}
+.stc-x{flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:-12px -12px -12px 0;background:none;border:0;border-radius:10px;color:#fff;font-size:26px;line-height:1;cursor:pointer;padding:0}
 .stc-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:#f6f7f8}
 .stc-m{max-width:85%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
 .stc-m.a{background:#fff;border:1px solid #e3e5e8;align-self:flex-start}
 .stc-m.u{background:var(--stc-ink);color:#fff;align-self:flex-end}
 .stc-m.t{color:#6b7280;font-style:italic;background:none;border:0;padding:2px 4px}
 .stc-form{display:flex;gap:8px;padding:10px;border-top:1px solid #e3e5e8;background:#fff}
-.stc-form input{flex:1;min-width:0;width:auto;height:auto;margin:0;border:1px solid #d5d8dc;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;line-height:1.3;color:#111;background:#fff;box-shadow:none;-webkit-appearance:none;appearance:none;opacity:1}
+.stc-form input{flex:1;min-width:0;width:auto;height:auto;min-height:44px;margin:0;border:1px solid #d5d8dc;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;line-height:1.3;color:#111;background:#fff;box-shadow:none;-webkit-appearance:none;appearance:none;opacity:1}
 .stc-form input::placeholder{color:#8a9097;opacity:1}
 .stc-form input:focus{outline:2px solid var(--stc-a);outline-offset:1px;border-color:transparent}
-.stc-form button{width:auto;margin:0;border:0;border-radius:10px;padding:0 14px;letter-spacing:normal;text-transform:none;background:var(--stc-a);color:var(--stc-ink);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.stc-form button{width:auto;min-height:44px;margin:0;border:0;border-radius:10px;padding:0 14px;letter-spacing:normal;text-transform:none;background:var(--stc-a);color:var(--stc-ink);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer}
 .stc-form button:disabled{opacity:.5;cursor:default}
-.stc-foot{font-size:11px;color:#6b7280;padding:0 12px 10px;background:#fff}
+.stc-foot{font-size:12px;color:#6b7280;padding:0 12px 10px;background:#fff}
 .stc-foot a{color:inherit}
-@media (max-width:520px){.stc{right:12px;bottom:12px}.stc-fab{padding:12px 15px}.stc-call span{display:none}.stc-panel{right:8px;left:8px;width:auto;bottom:70px;height:calc(100vh - 90px)}}
+@media (max-width:520px){.stc{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}.stc-fab{padding:12px 15px}.stc-call span{display:none}
+/* Full-height sheet. dvh tracks Safari's toolbar (vh alone put the header under it); the script
+   below also fits it to the visual viewport while the iOS keyboard is up. */
+.stc-panel{right:8px;left:8px;width:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px));height:calc(100vh - 16px - env(safe-area-inset-bottom,0px));height:calc(100dvh - 16px - env(safe-area-inset-bottom,0px))}}
 </style>
 <div class="stc" id="stc">
   <a class="stc-fab stc-call" href="tel:+13059521558" aria-label="Call Stacy, Staycio's AI assistant, at (305) 952-1558"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg><span>Call</span></a>
@@ -399,10 +431,41 @@
   function sid(){var k="stc_sid",v=null;try{v=sessionStorage.getItem(k);}catch(e){}
     if(!v){v=(Date.now().toString(36)+Math.random().toString(36).slice(2,10)).replace(/[^a-z0-9]/g,"");try{sessionStorage.setItem(k,v);}catch(e){}}return v;}
   function add(cls,text){var d=document.createElement("div");d.className="stc-m "+cls;d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
-  function toggle(open){panel.classList.toggle("open",open);openBtn.setAttribute("aria-expanded",open?"true":"false");
+  // The launchers step aside (.stc-away) for as long as any reason holds.
+  var away={};
+  function setAway(k,v){if(!!away[k]===!!v)return;away[k]=!!v;var on=false;for(var r in away)if(away[r])on=true;root.classList.toggle("stc-away",on);}
+  // They must never cover a primary button or the lead form (on phones they sat on the hero CTA and
+  // the phone field), nor sit over the footer at the very bottom. The observer's root is shrunk to
+  // the launchers' own box, so they only hide while one of these actually passes underneath.
+  var guards=[].slice.call(document.querySelectorAll(".hero .btn,.midcta .btn,form[data-lead],footer")),under=[],io=null,rq=0;
+  function watch(){
+    if(!window.IntersectionObserver||!guards.length)return;
+    if(io)io.disconnect();under=[];
+    var cs=getComputedStyle(root),pad=10,rt=parseFloat(cs.right)||0,bt=parseFloat(cs.bottom)||0;
+    var m=[innerHeight-bt-root.offsetHeight-pad,rt-pad,bt-pad,innerWidth-rt-root.offsetWidth-pad].map(function(n){return -Math.max(0,Math.round(n))+"px";});
+    io=new IntersectionObserver(function(es){es.forEach(function(e){var i=under.indexOf(e.target);
+      if(e.isIntersecting){if(i<0)under.push(e.target);}else if(i>-1)under.splice(i,1);});setAway("cover",under.length>0);},{rootMargin:m.join(" ")});
+    guards.forEach(function(g){io.observe(g);});
+  }
+  watch();
+  // Safari's toolbar changes innerHeight as it collapses and expands, which moves the launchers.
+  addEventListener("resize",function(){cancelAnimationFrame(rq);rq=requestAnimationFrame(watch);});
+  // A focused field means the iOS keyboard is up and the launchers would ride on top of it.
+  function field(t){return !!t&&/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)&&!panel.contains(t);}
+  document.addEventListener("focusin",function(e){if(field(e.target))setAway("focus",true);});
+  document.addEventListener("focusout",function(){setTimeout(function(){setAway("focus",field(document.activeElement));},0);});
+  // On phones the panel is a full-height sheet. While the keyboard is up iOS shrinks only the visual
+  // viewport, so size the sheet to that, or its header and close button scroll off the top.
+  var vv=window.visualViewport;
+  function fit(){var s=panel.style;
+    if(!vv||!panel.classList.contains("open")||innerWidth>520||vv.scale>1.01){s.top=s.height="";return;}
+    s.top=Math.round(vv.offsetTop+8)+"px";s.height=Math.max(240,Math.round(vv.height-16))+"px";}
+  if(vv){vv.addEventListener("resize",fit);vv.addEventListener("scroll",fit);}
+  function toggle(open){panel.classList.toggle("open",open);openBtn.setAttribute("aria-expanded",open?"true":"false");setAway("panel",open);fit();
     if(open){if(!started){started=true;add("a",GREET);}track("chat_open");setTimeout(function(){input.focus();},50);}}
   openBtn.addEventListener("click",function(){toggle(!panel.classList.contains("open"));});
   panel.querySelector(".stc-x").addEventListener("click",function(){toggle(false);});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&panel.classList.contains("open"))toggle(false);});
   root.querySelector(".stc-call").addEventListener("click",function(){track("call_click",{where:"floating"});});
   panel.querySelector(".stc-foot a").addEventListener("click",function(){track("call_click",{where:"chat"});});
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();send();}});

@@ -335,3 +335,31 @@ building, never to match the build date.
 
 `src/lib/__tests__/microsites.test.ts` enforces steps 3 and 4 and that each page
 posts under its own domain.
+
+## Phones (2026-09-25)
+
+Checked in iPhone WebKit at 393x659 and at an iPhone SE's real Safari area
+(375x553), on all 23 pages:
+
+- **Stacy's launchers step aside.** The floating Call / Ask Stacy pills sat on
+  the hero button and on the form's phone field. `_shared/stacy-widget.html`
+  now fades them out (and makes them untappable) while a hero or mid-page
+  `.btn`, the lead form or the footer passes underneath them, while any page
+  field has focus (the iOS keyboard is up), and while the chat is open. A new
+  button that must never be covered goes in the `guards` selector there. On
+  phones the chat is a full-height sheet sized in `dvh`, and to the visual
+  viewport while the keyboard is up, so its close button stays on screen.
+- **The header is one row on phones** (68px, 60px scrolled; it was 106–133px
+  with a button wrapping onto three lines). Where the full label will not fit,
+  the header button drops a word via a `.cta-x` span ("Get Pricing First" →
+  "Get Pricing"). The word stays in the DOM, so the `cta_click` label the
+  analytics log is unchanged and the label comparison above still reads the
+  same. downtown6, perrin, sentral and jade keep the full label down to 360px;
+  namdar and the generated pages use the short one on every phone. Generated
+  wordmarks are sized in `vw` from their length (`wmVw` in `build.js`) so the
+  longest names still fit at 320px.
+- The hero button clears the fold on a 375x553 SE on every page, heroes use
+  `100svh`, nothing scrolls sideways at 320–393px (namdar's residences table,
+  which made that page 540px wide, restacks into cards), labels have a 12px
+  floor (the small lines in the Jade and Perrin wordmarks excepted), tap
+  targets are 44px, and name/email carry `autocomplete`.

@@ -181,7 +181,16 @@ function page(b) {
   // the visitor actually searched for, and the form's promise (today's rents
   // and what's open, usually within a day) covers it.
   const ctaLabel = isWait ? "Get Pricing First" : "Get Current Pricing";
-  const navLabel = ctaLabel;
+  // The header button drops a word on phones so it stays on one line beside the
+  // wordmark. The hidden word stays in the DOM, so textContent (and with it the
+  // cta_click label the analytics log) is still the full label.
+  const navLabel = isWait ? 'Get Pricing<span class="cta-x"> First</span>' : 'Get <span class="cta-x">Current </span>Pricing';
+  // Phone wordmark size, in vw so it tracks the screen: the name and the "Get
+  // Pricing" button must share one row on a 360px screen (and on a 320px one,
+  // with the <=359px tier's tighter gutters). That leaves ~0.515 of the width for
+  // the name, and Sora 800 caps average under 0.85em a character. Short names
+  // hit the 18px cap; "MOHAWKAT WYNWOOD" lands near 14px.
+  const wmVw = +(51.5 / ((b.short + b.accent).length * 0.85)).toFixed(2);
   const ticker = b.ticker.join(" &nbsp;·&nbsp; ");
 
   // Gallery captions and alt text. With stock imagery the captions are
@@ -239,7 +248,7 @@ ${JSON.stringify(ld, null, 2)}
   .nav-cta{font-family:var(--display);font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--aqua);text-decoration:none;padding:12px 24px;border-radius:999px;transition:all .3s}
   .nav-cta:hover{background:#fff}
 
-  .hero{position:relative;min-height:100vh;display:flex;align-items:center;color:#fff;
+  .hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;color:#fff;
     background:linear-gradient(165deg,${hexA(p.ink, 0.84)} 0%,${hexA(p.deep, 0.5)} 60%,${hexA(p.ink, 0.76)} 100%),
     url('img/hero.jpg') center/cover}
   .hero-inner{max-width:840px;padding:150px 0 110px}
@@ -325,7 +334,7 @@ ${hasInventory ? `  /* Live availability, filled from /api/microsite-inventory. 
   .fineprint a{color:var(--aqua-deep)}
 
   footer{background:var(--ink);color:var(--muted);padding:54px 0;font-size:.82rem}
-  footer .wordmark{font-size:1rem;display:inline-block;margin-bottom:18px}
+  footer .wordmark{font-size:1rem;display:inline-block;margin-bottom:18px;overflow-wrap:anywhere}
   footer a{color:var(--aqua)}
   footer p{max-width:90ch}
 
@@ -341,6 +350,31 @@ ${hasInventory ? `  /* Live availability, filled from /api/microsite-inventory. 
     .btn-ghost{margin-left:0;margin-top:12px}
     form{padding:32px}
     .midcta .wrap{flex-direction:column;align-items:flex-start}
+  }
+  /* Phones. The fixed header ran 106–133px, its button wrapped onto two or three
+     lines and ran into the wordmark, and an iPhone SE could not see the hero
+     button. One compact row (68px, 60px scrolled), a hero whose button clears the
+     fold at 375x553, a 12px floor on labels and 44px tap targets. */
+  @media(max-width:600px){
+    .wrap{padding:0 20px}
+    header{padding:12px 0}
+    header.scrolled{padding:8px 0}
+    header .wrap{gap:12px}
+    header .wordmark{font-size:min(18px,${wmVw}vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
+    .nav-cta{flex:none;display:inline-block;line-height:44px;padding:0 16px;font-size:.75rem;letter-spacing:.05em;white-space:nowrap}
+    .nav-cta .cta-x{display:none}
+    .hero-inner{padding:88px 0 76px}
+    .chip{font-size:.75rem;letter-spacing:.08em;padding:7px 14px;margin-bottom:16px}
+    .hero h1{font-size:clamp(2rem,9.2vw,2.5rem);line-height:1.06}
+    .hero p.sub{margin:16px 0 24px;font-size:1rem;line-height:1.55}
+    .btn{padding:16px 28px}
+    .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
+    summary{min-height:44px}
+  }
+  @media(max-width:359px){
+    .wrap{padding:0 16px}
+    header .wrap{gap:10px}
+    .nav-cta{padding:0 12px}
   }
 </style>
 </head>
@@ -440,9 +474,9 @@ ${hasInventory ? `        <div class="inv" data-inv hidden>
       <form data-lead class="reveal">
         <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
         <label for="name">Name</label>
-        <input id="name" name="name" type="text" required placeholder="Your name">
+        <input id="name" name="name" type="text" required placeholder="Your name" autocomplete="name">
         <label for="email">Email</label>
-        <input id="email" name="email" type="email" required placeholder="you@email.com">
+        <input id="email" name="email" type="email" required placeholder="you@email.com" autocomplete="email">
         <label for="phone">Phone / WhatsApp</label>
         <input id="phone" name="phone" type="tel" required placeholder="+1 305 555 0123" autocomplete="tel" inputmode="tel">
         <label for="unit">Interested in</label>
