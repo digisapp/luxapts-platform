@@ -110,7 +110,7 @@ export function SendEmailDialog({
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
-          {success && <p className="text-sm text-green-600">Email sent successfully!</p>}
+          {success && <p className="text-sm text-green-400">Email sent successfully!</p>}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>

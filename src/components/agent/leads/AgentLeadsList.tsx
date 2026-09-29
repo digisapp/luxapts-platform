@@ -39,12 +39,12 @@ interface AgentLeadsListProps {
 }
 
 const statusColors: Record<string, string> = {
-  new: "bg-green-100 text-green-800",
-  contacted: "bg-blue-100 text-blue-800",
-  touring: "bg-purple-100 text-purple-800",
-  applied: "bg-yellow-100 text-yellow-800",
-  leased: "bg-emerald-100 text-emerald-800",
-  lost: "bg-gray-100 text-gray-800",
+  new: "bg-green-500/15 text-green-300",
+  contacted: "bg-blue-500/15 text-blue-300",
+  touring: "bg-purple-500/15 text-purple-300",
+  applied: "bg-yellow-500/15 text-yellow-300",
+  leased: "bg-emerald-500/15 text-emerald-300",
+  lost: "bg-white/10 text-white/80",
 };
 
 const assignmentStatusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
@@ -122,19 +122,20 @@ export function AgentLeadsList({ assignments }: AgentLeadsListProps) {
   return (
     <div className="space-y-6">
       {actionError && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-600">
+        <div role="alert" className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">
           {actionError}
         </div>
       )}
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter leads">
+        <Filter className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         {(["all", "pending", "active", "closed"] as FilterType[]).map((f) => (
           <Button
             key={f}
             variant={filter === f ? "default" : "outline"}
             size="sm"
+            aria-pressed={filter === f}
             onClick={() => setFilter(f)}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
@@ -155,22 +156,22 @@ export function AgentLeadsList({ assignments }: AgentLeadsListProps) {
             return (
               <Card key={assignment.id}>
                 <CardContent className="pt-6">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <Link
                       href={`/agent/leads/${lead.id}`}
                       className="flex-1 min-w-0"
                     >
-                      <div className="flex items-center gap-3">
-                        <p className="text-lg font-medium truncate">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <p className="min-w-0 max-w-full text-lg font-medium truncate">
                           {lead.name || "Unnamed Lead"}
                         </p>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[lead.status] || "bg-gray-100 text-gray-800"}`}>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[lead.status] || "bg-white/10 text-white/80"}`}>
                           {lead.status}
                         </span>
                         <Badge variant={aConfig.variant}>{aConfig.label}</Badge>
                       </div>
 
-                      <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                         {city && <span>{city.name}</span>}
                         {lead.beds !== null && (
                           <span className="flex items-center gap-1">
@@ -192,10 +193,10 @@ export function AgentLeadsList({ assignments }: AgentLeadsListProps) {
                         )}
                       </div>
 
-                      <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                         {lead.user_email && (
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3.5 w-3.5" />
+                          <span className="flex min-w-0 items-center gap-1 break-all">
+                            <Mail className="h-3.5 w-3.5 shrink-0" />
                             {lead.user_email}
                           </span>
                         )}
@@ -222,6 +223,7 @@ export function AgentLeadsList({ assignments }: AgentLeadsListProps) {
                             handleAssignmentAction(assignment.id, "accepted");
                           }}
                           disabled={updatingId === assignment.id}
+                          aria-busy={updatingId === assignment.id}
                         >
                           <CheckCircle className="mr-1 h-4 w-4" />
                           Accept
@@ -242,7 +244,7 @@ export function AgentLeadsList({ assignments }: AgentLeadsListProps) {
                     )}
 
                     {assignment.status === "accepted" && (
-                      <Badge variant="outline" className="shrink-0">
+                      <Badge variant="outline" className="w-fit shrink-0">
                         <Clock className="mr-1 h-3 w-3" />
                         Working
                       </Badge>

@@ -16,7 +16,7 @@ export default async function AgentSchedulePage() {
   const supabase = createAdminClient();
 
   // Get leads with upcoming move-in dates that are in touring/contacted status
-  const { data: assignments } = await supabase
+  const { data: assignments, error } = await supabase
     .from("agent_assignments")
     .select(`
       id, status,
@@ -27,6 +27,10 @@ export default async function AgentSchedulePage() {
     `)
     .eq("agent_user_id", agentId)
     .in("status", ["assigned", "accepted"]);
+
+  if (error) {
+    throw new Error(`Failed to load schedule: ${error.message}`);
+  }
 
   const upcomingLeads = (assignments || [])
     .map((a) => {
@@ -51,14 +55,14 @@ export default async function AgentSchedulePage() {
     });
 
   const statusColors: Record<string, string> = {
-    contacted: "bg-blue-100 text-blue-800",
-    touring: "bg-purple-100 text-purple-800",
+    contacted: "bg-blue-500/15 text-blue-300",
+    touring: "bg-purple-500/15 text-purple-300",
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Schedule</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Schedule</h1>
         <p className="text-muted-foreground">
           Upcoming tours and move-in dates for your active leads
         </p>
@@ -70,22 +74,22 @@ export default async function AgentSchedulePage() {
             const city = Array.isArray(lead.cities) ? lead.cities[0] : lead.cities;
 
             return (
-              <Link key={lead.id} href={`/agent/leads/${lead.id}`}>
+              <Link key={lead.id} href={`/agent/leads/${lead.id}`} className="block">
                 <Card className="transition-colors hover:bg-muted/50">
                   <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-50">
-                          <Calendar className="h-6 w-6 text-purple-600" />
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 items-center gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-purple-500/10">
+                          <Calendar className="h-6 w-6 text-purple-400" aria-hidden="true" />
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium">{lead.name || "Unnamed Lead"}</p>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate font-medium">{lead.name || "Unnamed Lead"}</p>
                             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[lead.status] || ""}`}>
                               {lead.status}
                             </span>
                           </div>
-                          <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                             {city && (
                               <span className="flex items-center gap-1">
                                 <MapPin className="h-3.5 w-3.5" />
@@ -101,7 +105,7 @@ export default async function AgentSchedulePage() {
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="pl-16 sm:pl-0 sm:text-right">
                         {lead.move_in_date ? (
                           <div>
                             <p className="text-sm font-medium">Move-in</p>

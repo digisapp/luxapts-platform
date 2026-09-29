@@ -118,10 +118,10 @@ export default function ComparePage() {
       <Header />
 
       <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto px-4 pt-20 pb-24 md:pt-24 lg:pb-8">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 pt-20 pb-24 md:pt-24 lg:pb-8">
           <Link
             href="/search"
-            className="mb-4 md:mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="mb-2 md:mb-4 inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to search
@@ -136,13 +136,16 @@ export default function ComparePage() {
             )}
           </div>
 
-          {/* Selected Buildings */}
+          {/* Selected Buildings — hidden while empty: the dashed "add" slot
+              and the empty-state card below said the same thing twice. */}
+          {buildings.length > 0 && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-8">
             {buildings.map((building) => (
               <Card key={building.id} className="relative">
                 <button
                   onClick={() => removeBuilding(building.id)}
-                  className="absolute top-2 right-2 p-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors z-10"
+                  aria-label={`Remove ${building.name} from comparison`}
+                  className="absolute top-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/70 backdrop-blur-sm hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors z-10"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -185,6 +188,7 @@ export default function ComparePage() {
               </Card>
             )}
           </div>
+          )}
 
           {/* Comparison Results */}
           {!canCompare ? (
@@ -192,14 +196,16 @@ export default function ComparePage() {
               <CardContent className="py-12 text-center">
                 <Building2 className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
                 <h2 className="text-xl font-semibold mb-2">
-                  Select at least 2 buildings to compare
+                  {buildings.length === 1
+                    ? "Add one more building to compare"
+                    : "Compare buildings side by side"}
                 </h2>
-                <p className="text-muted-foreground mb-4">
-                  Browse listings and click the compare button to add buildings.
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Tap the compare icon on any listing to add it here — rent, layouts, amenities and policies line up next to each other.
                 </p>
-                <Link href="/search">
-                  <Button>Browse Listings</Button>
-                </Link>
+                <Button asChild>
+                  <Link href="/search">Browse listings</Link>
+                </Button>
               </CardContent>
             </Card>
           ) : loading ? (

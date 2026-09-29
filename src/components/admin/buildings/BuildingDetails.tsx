@@ -266,9 +266,11 @@ export function BuildingDetails({ data, buildingId, cities = [] }: BuildingDetai
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => handleDeleteImage(img.id)}
                         disabled={deleting === img.id}
-                        className="absolute top-1.5 right-1.5 rounded-full bg-black/50 p-1 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        aria-label="Delete image"
+                        className="absolute top-1.5 right-1.5 rounded-full bg-black/50 p-1 text-white transition-opacity hover:bg-red-600 focus-visible:opacity-100 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100"
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>

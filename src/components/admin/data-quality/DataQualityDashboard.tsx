@@ -105,10 +105,10 @@ function ScoreBar({ percentage }: { percentage: number }) {
 }
 
 function GradeBadge({ percentage }: { percentage: number }) {
-  if (percentage >= 80) return <Badge className="bg-green-100 text-green-800">A</Badge>;
-  if (percentage >= 60) return <Badge className="bg-yellow-100 text-yellow-800">B</Badge>;
-  if (percentage >= 40) return <Badge className="bg-orange-100 text-orange-800">C</Badge>;
-  return <Badge className="bg-red-100 text-red-800">F</Badge>;
+  if (percentage >= 80) return <Badge variant="outline" className="border-transparent bg-green-500/15 text-green-300">A</Badge>;
+  if (percentage >= 60) return <Badge variant="outline" className="border-transparent bg-yellow-500/15 text-yellow-300">B</Badge>;
+  if (percentage >= 40) return <Badge variant="outline" className="border-transparent bg-orange-500/15 text-orange-300">C</Badge>;
+  return <Badge variant="outline" className="border-transparent bg-red-500/15 text-red-300">F</Badge>;
 }
 
 function CheckIcon({ value }: { value: boolean }) {
@@ -220,13 +220,13 @@ export function DataQualityDashboard({
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Grade A (80%+)</p>
-            <p className="mt-1 text-3xl font-bold text-green-600">{summary.grade_a}</p>
+            <p className="mt-1 text-3xl font-bold text-green-400">{summary.grade_a}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Need Work (B/C)</p>
-            <p className="mt-1 text-3xl font-bold text-yellow-600">
+            <p className="mt-1 text-3xl font-bold text-yellow-400">
               {summary.grade_b + summary.grade_c}
             </p>
           </CardContent>
@@ -234,7 +234,7 @@ export function DataQualityDashboard({
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Critical (F)</p>
-            <p className="mt-1 text-3xl font-bold text-red-600">{summary.grade_f}</p>
+            <p className="mt-1 text-3xl font-bold text-red-400">{summary.grade_f}</p>
           </CardContent>
         </Card>
       </div>
@@ -275,6 +275,7 @@ export function DataQualityDashboard({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search buildings..."
+            aria-label="Search buildings"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -284,7 +285,8 @@ export function DataQualityDashboard({
         <select
           value={cityFilter}
           onChange={(e) => setCityFilter(e.target.value)}
-          className="rounded-md border bg-background px-3 py-2 text-sm"
+          aria-label="Filter by city"
+          className="rounded-md border bg-background px-3 py-2 text-base md:text-sm"
         >
           <option value="all">All Cities</option>
           {cities.map((c) => (
@@ -380,7 +382,7 @@ export function DataQualityDashboard({
                           <div
                             key={item.label}
                             className={`flex items-center gap-2 rounded-lg border p-2 text-sm ${
-                              item.value ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950" : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950"
+                              item.value ? "border-green-500/30 bg-green-500/10" : "border-red-500/30 bg-red-500/10"
                             }`}
                           >
                             <CheckIcon value={item.value} />

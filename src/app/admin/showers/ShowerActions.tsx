@@ -67,14 +67,14 @@ export function ShowerActions({
       )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Shower actions">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {currentStatus !== "approved" && (
             <DropdownMenuItem
-              className="text-green-600"
+              className="text-green-400"
               onClick={() => executeAction("approve")}
             >
               <CheckCircle className="mr-2 h-4 w-4" />
@@ -85,7 +85,7 @@ export function ShowerActions({
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-amber-600"
+                className="text-amber-400"
                 onClick={() => { setError(null); setDialogAction("suspend"); }}
               >
                 <PauseCircle className="mr-2 h-4 w-4" />
@@ -97,7 +97,7 @@ export function ShowerActions({
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-600"
+                className="text-red-400"
                 onClick={() => { setError(null); setDialogAction("terminate"); }}
               >
                 <XCircle className="mr-2 h-4 w-4" />

@@ -44,7 +44,7 @@ export default function FavoritesPage() {
       <Header />
 
       <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto px-4 pt-20 pb-24 md:pt-24 lg:pb-8">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 pt-20 pb-24 md:pt-24 lg:pb-8">
           <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Saved Items</h1>
 
           <div className="grid gap-6 lg:gap-8 lg:grid-cols-2">
@@ -89,12 +89,12 @@ export default function FavoritesPage() {
                       <p className="text-muted-foreground mb-4">
                         No favorites yet. Start exploring and save buildings you love!
                       </p>
-                      <Link href="/search">
-                        <Button>
+                      <Button asChild>
+                        <Link href="/search">
                           <Search className="mr-2 h-4 w-4" />
                           Browse Apartments
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -202,12 +202,12 @@ export default function FavoritesPage() {
                       <p className="text-muted-foreground mb-4">
                         No saved searches. Save your search criteria to quickly find matching apartments.
                       </p>
-                      <Link href="/search">
-                        <Button>
+                      <Button asChild>
+                        <Link href="/search">
                           <Search className="mr-2 h-4 w-4" />
                           Start Searching
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -280,12 +280,12 @@ export default function FavoritesPage() {
                                 )}
                               </Button>
                             )}
-                            <Link href={buildSavedSearchUrl(search.filters)}>
-                              <Button size="sm" variant="outline" className="gap-1">
+                            <Button size="sm" variant="outline" className="gap-1" asChild>
+                              <Link href={buildSavedSearchUrl(search.filters)}>
                                 Run
                                 <ArrowRight className="h-3 w-3" />
-                              </Button>
-                            </Link>
+                              </Link>
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"

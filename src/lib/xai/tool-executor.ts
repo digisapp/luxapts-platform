@@ -6,6 +6,7 @@ import { searchRequestSchema } from "@/lib/validations";
 import { normalizeCitySlug } from "@/lib/constants/cities";
 import { getFirstRelation } from "@/lib/db-helpers";
 import { isVerifiedPrice } from "@/lib/verified-pricing";
+import { policyText, withPolicyText } from "@/lib/policy-text";
 
 // Per-request state passed through a single chat turn so tool usage can be
 // bounded (e.g. at most one lead created per conversation turn).
@@ -92,8 +93,8 @@ function compactSearchResults(res: SearchResponse, limit: number) {
         lease_term_months: p?.lease_term_months ?? null,
         price_captured_at: p?.captured_at ?? null,
         available_on: r.unit.available_on,
-        pet_policy: b.pet_policy ?? null,
-        parking_policy: b.parking_policy ?? null,
+        pet_policy: policyText(b.pet_policy),
+        parking_policy: policyText(b.parking_policy),
         image_url: image?.url ?? null,
         url: b.id ? `/buildings/${b.id}/units/${r.unit.id}` : null,
       };
@@ -150,11 +151,11 @@ function compactBuildingDetails(payload: unknown): unknown {
 
   return {
     building: {
-      ...pick(b, [
+      ...withPolicyText(pick(b, [
         "id", "name", "address_1", "zip", "year_built", "stories",
         "pet_policy", "parking_policy", "deposit_policy",
         "leasing_phone", "leasing_email", "website_url",
-      ]),
+      ])),
       price_range: rents.length ? { min: Math.min(...rents), max: Math.max(...rents) } : null,
       description: truncate(b.description, MAX_DESCRIPTION_CHARS),
       city: city ? pick(city, ["name", "slug", "state"]) : null,

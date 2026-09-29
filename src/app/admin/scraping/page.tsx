@@ -19,7 +19,7 @@ export default async function AdminScrapingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Scraping</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Scraping</h1>
         <p className="text-muted-foreground">
           Monitor and control building data scraping
         </p>

@@ -4,6 +4,7 @@ import { apiError } from "@/lib/api-helpers";
 import { getFirstRelation } from "@/lib/db-helpers";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 import { isValidUUID, safeParseInt } from "@/lib/utils";
+import { parkingAvailable, petsAllowed, policyText } from "@/lib/policy-text";
 
 // Public read-only data — let the CDN serve it (5 min fresh, 1 h stale-while-revalidate)
 const CACHE_HEADERS = {
@@ -206,8 +207,8 @@ async function processBuildings(
         minBeds: data.minBeds,
         maxBeds: data.maxBeds,
         unitCount: data.unitCount,
-        petPolicy: b.pet_policy,
-        parkingPolicy: b.parking_policy,
+        petPolicy: petsAllowed(b.pet_policy) ? policyText(b.pet_policy) : null,
+        parkingPolicy: parkingAvailable(b.parking_policy) ? policyText(b.parking_policy) : null,
       };
     })
     .slice(0, MAX_LISTINGS);

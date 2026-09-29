@@ -108,14 +108,14 @@ export function LeadPipelineActions({ lead }: { lead: LeadInfo }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Lead actions">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {canApproveDebrief && (
             <DropdownMenuItem
-              className="text-green-600"
+              className="text-green-400"
               onClick={() => setDialog("approve")}
             >
               <CheckCircle className="mr-2 h-4 w-4" />
@@ -125,7 +125,7 @@ export function LeadPipelineActions({ lead }: { lead: LeadInfo }) {
           {canApproveDebrief && canRecordCommission && <DropdownMenuSeparator />}
           {canRecordCommission && (
             <DropdownMenuItem
-              className="text-blue-600"
+              className="text-blue-400"
               onClick={() => setDialog("commission")}
             >
               <DollarSign className="mr-2 h-4 w-4" />

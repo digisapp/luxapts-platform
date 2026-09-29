@@ -88,7 +88,7 @@ export function BulkEmailDialog({ open, onOpenChange, leadIds, onSent }: BulkEma
           <div className="space-y-2 py-4">
             <p className="text-lg font-semibold">Sent to {result.sent} leads.</p>
             {result.failed > 0 && (
-              <p className="text-sm text-amber-700">{result.failed} failed to send.</p>
+              <p className="text-sm text-amber-300">{result.failed} failed to send.</p>
             )}
             <p className="text-sm text-muted-foreground">
               Those leads moved from New to Contacted.
@@ -161,7 +161,7 @@ export function BulkEmailDialog({ open, onOpenChange, leadIds, onSent }: BulkEma
               </div>
             )}
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-red-400">{error}</p>}
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>

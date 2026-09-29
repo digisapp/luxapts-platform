@@ -5,7 +5,6 @@ import { fetchAllRows } from "@/lib/db-helpers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Building2, MapPin, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -94,22 +93,22 @@ export default async function CitiesPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
 
-      <main className="flex-1 pt-16 pb-20 lg:pb-0">
+      <main className="flex-1 pt-16">
         {/* Hero */}
-        <div className="bg-gradient-to-b from-zinc-900 to-black py-16 px-6">
-          <div className="max-w-6xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+        <div className="bg-gradient-to-b from-zinc-900 to-black pt-10 pb-10 md:pt-16 md:pb-12">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+            <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-white mb-4">
               Explore Cities
             </h1>
-            <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-lg text-zinc-400 max-w-2xl">
               Discover luxury apartments across major US cities. Browse neighborhoods, compare prices, and find your perfect home.
             </p>
           </div>
         </div>
 
         {/* Cities Grid */}
-        <div className="max-w-6xl mx-auto px-6 py-12">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-4 sm:px-6 md:pt-6">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {activeCities.map((city) => {
               const stats = cityStats[city.id];
               const cityNeighborhoods = neighborhoodsByCity[city.id] || [];
@@ -117,7 +116,7 @@ export default async function CitiesPage() {
               return (
                 <Card
                   key={city.id}
-                  className="group hover:border-primary/50 transition-colors overflow-hidden"
+                  className="group overflow-hidden rounded-2xl border-white/[0.08] hover:border-white/[0.18] transition-colors"
                 >
                   <CardContent className="p-0">
                     {/* City Header */}
@@ -125,15 +124,15 @@ export default async function CitiesPage() {
                       <div className="p-6 bg-gradient-to-br from-zinc-900 to-zinc-800 group-hover:from-primary/10 group-hover:to-zinc-900 transition-colors">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h2 className="text-xl font-bold text-white group-hover:text-primary transition-colors">
+                            <h2 className="text-xl font-semibold text-white">
                               {city.name}
                             </h2>
                             <p className="text-sm text-zinc-400 flex items-center gap-1 mt-1">
-                              <MapPin className="h-3 w-3" />
+                              <MapPin className="h-3 w-3" aria-hidden="true" />
                               {city.state}
                             </p>
                           </div>
-                          <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                          <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true" />
                         </div>
 
                         <div className="flex items-center gap-4 mt-4">
@@ -141,9 +140,9 @@ export default async function CitiesPage() {
                             <Building2 className="h-4 w-4" />
                             <span>{stats.buildingCount} buildings</span>
                           </div>
-                          <Badge variant="secondary">
+                          <span className="rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-emerald-300 ring-1 ring-emerald-400/30">
                             {stats.unitCount} units available
-                          </Badge>
+                          </span>
                         </div>
                       </div>
                     </Link>
@@ -159,19 +158,19 @@ export default async function CitiesPage() {
                             <Link
                               key={n.id}
                               href={`/neighborhoods/${n.slug}?city=${city.slug}`}
+                              className="inline-flex min-h-9 items-center rounded-full border border-white/[0.08] px-3 text-xs font-medium text-white/80 transition-colors hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
                             >
-                              <Badge
-                                variant="outline"
-                                className="hover:bg-primary/10 hover:border-primary/50 transition-colors cursor-pointer"
-                              >
-                                {n.name}
-                              </Badge>
+                              {n.name}
                             </Link>
                           ))}
                           {cityNeighborhoods.length > 5 && (
-                            <Badge variant="outline" className="text-muted-foreground">
+                            <Link
+                              href={`/cities/${city.slug}`}
+                              aria-label={`All ${cityNeighborhoods.length} ${city.name} neighborhoods`}
+                              className="inline-flex min-h-9 items-center rounded-full px-3 text-xs text-white/50 transition-colors hover:text-white"
+                            >
                               +{cityNeighborhoods.length - 5} more
-                            </Badge>
+                            </Link>
                           )}
                         </div>
                       </div>

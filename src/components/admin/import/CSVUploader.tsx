@@ -113,7 +113,7 @@ export function CSVUploader() {
     <div className="space-y-6">
       {/* Error display */}
       {error && (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400">
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-red-500/10 text-red-300">
           <AlertCircle className="h-5 w-5 flex-shrink-0" />
           <p>{error}</p>
         </div>
@@ -179,7 +179,7 @@ export function CSVUploader() {
         <>
           {validation.invalidRows > 0 ? (
             <>
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-red-500/10 text-red-300">
                 <AlertCircle className="h-5 w-5" />
                 <p className="font-medium">
                   {validation.invalidRows} row(s) have errors. Please fix them
@@ -195,7 +195,7 @@ export function CSVUploader() {
             </>
           ) : (
             <>
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 text-green-300">
                 <CheckCircle className="h-5 w-5" />
                 <div>
                   <p className="font-medium">

@@ -1,6 +1,5 @@
-import Link from "next/link";
-import { Building2 } from "lucide-react";
 import { ShowerNav } from "@/components/shower/layout/ShowerNav";
+import { PortalShell } from "@/components/admin/layout/PortalShell";
 
 // The registration guard lives in (dashboard)/layout.tsx. Keeping it here
 // would redirect /shower/profile (the registration page) to itself forever.
@@ -10,24 +9,8 @@ export default function ShowerLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="hidden w-64 border-r bg-muted/30 lg:block">
-        <ShowerNav />
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1">
-        {/* Mobile Header */}
-        <header className="flex h-16 items-center border-b px-6 lg:hidden">
-          <Link href="/shower" className="flex items-center gap-2">
-            <Building2 className="h-6 w-6" />
-            <span className="text-lg font-bold">Staycio Shower</span>
-          </Link>
-        </header>
-
-        <main className="p-6">{children}</main>
-      </div>
-    </div>
+    <PortalShell nav={<ShowerNav />} brand="Staycio Shower" homeHref="/shower">
+      {children}
+    </PortalShell>
   );
 }

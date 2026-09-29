@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { groupByBuilding, bedRangeLabel } from "@/lib/search/group-by-building";
 import { formatPrice, cn } from "@/lib/utils";
 import { CompareButton } from "@/components/compare/CompareButton";
@@ -26,6 +25,7 @@ import { useCompare } from "@/hooks/useCompare";
 import { buildingPath } from "@/lib/seo/urls";
 import { AMENITY_OPTIONS } from "@/lib/constants/amenities";
 import { storageSet } from "@/lib/safe-storage";
+import { parkingAvailable, petsAllowed } from "@/lib/policy-text";
 
 // mapbox-gl is huge — load the map chunk only when the map view mounts,
 // never during SSR or in the initial bundle
@@ -821,10 +821,16 @@ function SearchContent() {
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-white/[0.02] rounded-full blur-[100px]" />
         </div>
 
-        <div className="container mx-auto px-4 pt-20 pb-24 md:pt-24 lg:pb-8">
+        {/* Footer (and the crawlable directory above it) come from
+            search/layout.tsx, so this page renders neither. */}
+        <div className="mx-auto w-full max-w-7xl px-4 pt-20 pb-12 sm:px-6 md:pt-24">
           {/* AI Search Bar */}
           <div ref={controlsRef} className="mb-4 md:mb-8">
-            {/* Mobile: search input, Smart Search toggle, search button */}
+            {/* Mobile: search input, Best-match toggle, search button.
+                Two ways to read the query: "Exact" (default) has the AI turn
+                it into filters and runs the normal filtered search; "Best
+                match" ranks whole buildings by how well their descriptions fit
+                it (semantic search — no map, sort or commute). */}
             <div className="flex gap-2 mb-2 md:hidden">
               <div className="relative min-w-0 flex-1 group">
                 {smartSearch
@@ -837,6 +843,8 @@ function SearchContent() {
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={smartSearch ? "Describe what you want" : "Try: 2BR under $3k"}
+                  aria-label={smartSearch ? "Describe the apartment you want" : "Search apartments, e.g. 2 bedroom under $3,000"}
+                  enterKeyHint="search"
                   className={`pl-9 pr-3 text-base text-ellipsis placeholder:text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-cyan-500/30" : ""}`}
                 />
               </div>
@@ -844,16 +852,18 @@ function SearchContent() {
                 type="button"
                 onClick={toggleSmartSearch}
                 aria-pressed={smartSearch}
-                aria-label="Smart Search"
-                title={smartSearch ? "Smart Search on — natural language mode" : "Turn on Smart Search for natural language queries"}
+                aria-label="Best match mode: rank buildings by how well they fit your description"
+                title={smartSearch ? "Best match is on — tap to go back to exact filters" : "Best match: rank buildings by how well they fit your description"}
                 className={`flex h-11 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors ${smartSearch ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" : "bg-white/[0.03] text-white/60 border-white/[0.08] hover:text-white/80"}`}
               >
-                <Brain className="h-4 w-4" />
-                Smart
+                <Brain className="h-4 w-4" aria-hidden="true" />
+                {/* "Match" on the narrowest phones so the query box keeps room */}
+                <span className="hidden min-[380px]:inline">Best match</span>
+                <span className="min-[380px]:hidden">Match</span>
               </button>
               <Button
                 size="icon"
-                aria-label="Search"
+                aria-label={smartSearch ? "Find best matches" : "Search"}
                 className={`shadow-lg bg-cyan-400 text-black hover:bg-cyan-300 shadow-cyan-500/20`}
                 onClick={handleAiSearch}
                 disabled={aiParsing || loading}
@@ -868,7 +878,10 @@ function SearchContent() {
               </Button>
             </div>
             {smartSearch && (
-              <p className="mb-2 text-xs text-white/40 md:hidden">Smart Search on · natural language, AI-powered</p>
+              <p className="mb-2 text-xs text-white/50 md:hidden">
+                Best match: buildings ranked by how well they fit your words. Map, sort and commute
+                work in exact search.
+              </p>
             )}
 
             {/* Mobile: compact control row — city, filters, commute, map */}
@@ -938,23 +951,55 @@ function SearchContent() {
             </div>
 
             {/* Desktop: Full search bar */}
-            <div className="hidden md:flex flex-row items-center gap-3">
-              {/* Smart Search toggle pill */}
-              <button
-                onClick={toggleSmartSearch}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 h-12 text-sm font-medium transition-all border ${smartSearch ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-sm shadow-cyan-500/20" : "bg-white/[0.03] text-white/50 border-white/[0.08] hover:text-white/60 hover:bg-white/[0.06]"}`}
-                title={smartSearch ? "Smart Search active — natural language mode" : "Enable Smart Search for natural language queries"}
+            {/* Tablet (md): two rows — mode, query and Search on top, the
+                refinements below — since one row left the query box ~170px
+                wide at 768. lg: a single row, the wrapper below dissolving
+                via `contents`. */}
+            <div className="hidden md:grid md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center gap-3 lg:flex lg:flex-row">
+              {/* Search mode: how the query below is read. A segmented pair
+                  rather than an unlabeled "Smart" toggle next to an "AI
+                  Search" button, which read as two competing features. */}
+              <div
+                role="group"
+                aria-label="Search mode"
+                className="flex h-12 shrink-0 items-center gap-1 rounded-full border border-white/[0.08] bg-white/[0.03] p-1"
               >
-                <Brain className="h-4 w-4" />
-                <span className="hidden lg:inline">Smart</span>
-              </button>
+                <button
+                  type="button"
+                  aria-pressed={!smartSearch}
+                  aria-label="Exact search: AI turns your request into filters"
+                  title="Exact — AI turns your request into filters (city, beds, budget, amenities). Every result matches them."
+                  onClick={() => { if (smartSearch) toggleSmartSearch(); }}
+                  className={cn(
+                    "flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30",
+                    !smartSearch ? "bg-white/[0.1] text-white" : "text-white/50 hover:text-white/80"
+                  )}
+                >
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                  <span>Exact</span>
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={smartSearch}
+                  aria-label="Best match: rank buildings by how well they fit your description"
+                  title="Best match — AI ranks buildings by how well they fit your description. Good for vibe, style or lifestyle requests."
+                  onClick={() => { if (!smartSearch) toggleSmartSearch(); }}
+                  className={cn(
+                    "flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40",
+                    smartSearch ? "bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-500/40" : "text-white/50 hover:text-white/80"
+                  )}
+                >
+                  <Brain className="h-4 w-4" aria-hidden="true" />
+                  <span>Best match</span>
+                </button>
+              </div>
 
-              <div className="relative flex-1 group">
+              <div className="relative min-w-0 flex-1 group">
                 <div className={`absolute -inset-1 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 bg-cyan-500/15`} />
                 <div className="relative">
                   {smartSearch
-                    ? <Brain className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" />
-                    : <Sparkles className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" />
+                    ? <Brain className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" aria-hidden="true" />
+                    : <Sparkles className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" aria-hidden="true" />
                   }
                   <Input
                     type="text"
@@ -962,13 +1007,16 @@ function SearchContent() {
                     onChange={(e) => setSearchInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder={smartSearch ? "Describe your ideal apartment in plain English…" : "Try: '2 bedroom in Miami under $3,500' or 'pet-friendly studio'"}
-                    className={`h-12 pl-10 bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-cyan-500/20" : ""}`}
+                    aria-label={smartSearch ? "Describe the apartment you want" : "Search apartments, e.g. 2 bedroom in Miami under $3,500"}
+                    enterKeyHint="search"
+                    className={`h-12 pl-10 text-ellipsis bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-cyan-500/20" : ""}`}
                   />
                 </div>
               </div>
 
+              <div className="flex items-center gap-3 md:col-span-3 md:row-start-2 lg:contents">
               <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); handleSearch({ city_slug: val, neighborhood_slugs: [] }); }}>
-                <SelectTrigger aria-label="City" className="h-12 w-[160px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                <SelectTrigger aria-label="City" className="h-12 w-[180px] shrink-0 lg:w-[160px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="Select city" />
                 </SelectTrigger>
                 <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
@@ -988,32 +1036,40 @@ function SearchContent() {
               {!smartSearch && (
                 <Button
                   variant={activeFilterCount > 0 ? "default" : "glass"}
-                  className="h-12"
+                  className="h-12 shrink-0 px-4"
+                  aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} active)` : "Filters"}
+                  aria-expanded={showFilters}
                   onClick={() => setShowFilters(!showFilters)}
                 >
-                  <SlidersHorizontal className="mr-2 h-4 w-4" />
-                  Filters
+                  <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                  <span>Filters</span>
                   {activeFilterCount > 0 && (
-                    <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-white/20">
+                    <Badge variant="secondary" className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-white/20">
                       {activeFilterCount}
                     </Badge>
                   )}
                 </Button>
               )}
 
-              <Button
-                variant={showMap ? "default" : "glass"}
-                className="h-12"
-                onClick={() => setShowMap(!showMap)}
-              >
-                {showMap ? <List className="mr-2 h-4 w-4" /> : <MapIcon className="mr-2 h-4 w-4" />}
-                {showMap ? "List" : "Map"}
-              </Button>
+              {/* Best match results are a ranked list with no map */}
+              {!smartSearch && (
+                <Button
+                  variant="glass"
+                  className="h-12 shrink-0"
+                  aria-pressed={showMap}
+                  onClick={() => setShowMap(!showMap)}
+                >
+                  {showMap ? <List className="h-4 w-4" aria-hidden="true" /> : <MapIcon className="h-4 w-4" aria-hidden="true" />}
+                  {showMap ? "List" : "Map"}
+                </Button>
+              )}
+              </div>
 
               <Button
-                className={`h-12 gap-2 shadow-lg bg-cyan-400 text-black hover:bg-cyan-300 shadow-cyan-500/20`}
+                className={`h-12 shrink-0 gap-2 shadow-lg bg-cyan-400 text-black hover:bg-cyan-300 shadow-cyan-500/20 md:col-start-3 md:row-start-1`}
                 onClick={handleAiSearch}
                 disabled={aiParsing || (smartSearch && loading)}
+                title={smartSearch ? "Rank buildings by how well they fit your description" : "Turn your request into filters and search"}
               >
                 {(aiParsing || (smartSearch && loading)) ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -1022,9 +1078,16 @@ function SearchContent() {
                 ) : (
                   <Sparkles className="h-4 w-4" />
                 )}
-                {smartSearch ? "Find Matches" : "AI Search"}
+                {smartSearch ? "Find matches" : "Search"}
               </Button>
             </div>
+
+            {smartSearch && (
+              <p className="mt-2 hidden text-sm text-white/50 md:block">
+                Best match ranks buildings by how well they fit your description. Switch to Exact
+                for filters, the map, sorting and commute times.
+              </p>
+            )}
 
             {/* AI Summary Banner */}
             {aiSummary && (
@@ -1364,18 +1427,23 @@ function SearchContent() {
               {smartSearch && semanticQuery ? (
                 <>
                   <div className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-cyan-400" />
-                    <h1 className="text-lg font-bold text-white md:text-2xl">
+                    <Brain className="h-5 w-5 text-cyan-400" aria-hidden="true" />
+                    <h2 className="text-lg font-bold text-white md:text-2xl">
                       {loading ? "Finding matches…" : `${semanticResults.length} Building${semanticResults.length !== 1 ? "s" : ""} Matched`}
-                    </h1>
+                    </h2>
                   </div>
                   <p className="text-xs text-white/50 mt-0.5 md:text-sm">
-                    Smart Search: &ldquo;{semanticQuery}&rdquo;
+                    Best match for &ldquo;{semanticQuery}&rdquo;
                   </p>
                 </>
+              ) : smartSearch ? (
+                // Best match before a query: the standard count would describe
+                // results that aren't on screen
+                <h2 className="text-lg font-bold text-white md:text-2xl">Best match</h2>
               ) : (
                 <>
-                  <h1 className="text-lg font-bold text-white md:text-2xl">
+                  {/* h2: the page's single h1 is in search/layout.tsx */}
+                  <h2 className="text-lg font-bold text-white md:text-2xl" aria-live="polite">
                     {loading ? (
                       "Searching..."
                     ) : (
@@ -1384,7 +1452,7 @@ function SearchContent() {
                         <span className="hidden md:inline"> Available</span>
                       </>
                     )}
-                  </h1>
+                  </h2>
                   {/* Phone: building count, price date and commute notes on one line */}
                   {!loading && (buildingGroups.length > 1 || capturedAt) && (
                     <p className="text-xs text-white/60 md:hidden">
@@ -1514,7 +1582,6 @@ function SearchContent() {
               inert={mobileMapOpen || undefined}
               className={`${showMap && !smartSearch ? "lg:w-1/2 xl:w-3/5" : "w-full"} ${showMap && !smartSearch ? "lg:h-[calc(100dvh-300px)] lg:overflow-y-auto lg:pr-4" : ""}`}
             >
-              <h2 className="sr-only">Results</h2>
 
               {/* Semantic results */}
               {smartSearch && (
@@ -1542,10 +1609,10 @@ function SearchContent() {
                     </div>
                   ) : semanticResults.length === 0 ? (
                     <div className="col-span-full py-10 text-center">
-                      <p className="text-white/50 text-sm">Describe what you&apos;re looking for and click Find Matches</p>
+                      <p className="text-white/50 text-sm">Describe what you&apos;re looking for and press Find matches</p>
                     </div>
                   ) : (
-                    semanticResults.map((building) => {
+                    semanticResults.map((building, index) => {
                       const score = Math.round(building.relevance_score * 100);
                       return (
                         <Link key={building.id} href={`/buildings/${building.id}`}>
@@ -1560,6 +1627,7 @@ function SearchContent() {
                                     fill
                                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                                     sizes="(max-width: 768px) 100vw, 33vw"
+                                    loading={index < 3 ? "eager" : undefined}
                                   />
                                 ) : (
                                   <div className="absolute inset-0 flex items-center justify-center">
@@ -1646,7 +1714,7 @@ function SearchContent() {
                     </p>
                   </div>
                 ) : (
-                  buildingGroups.map((group) => {
+                  buildingGroups.map((group, index) => {
                     const { building, units, lead, imageUnit } = group;
                     const primaryImage = imageUnit?.images?.[0];
                     const priceAge = priceAgeLabel(lead.pricing?.captured_at);
@@ -1686,6 +1754,10 @@ function SearchContent() {
                                   fill
                                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                  // First rows are above the fold (LCP) in both
+                                  // the 2-column map layout and the 3-column grid
+                                  loading={index < 4 ? "eager" : undefined}
+                                  fetchPriority={index === 0 ? "high" : undefined}
                                   onError={() => {
                                     setBrokenImageIds((prev) => new Set([...prev, building.id]));
                                   }}
@@ -1795,13 +1867,13 @@ function SearchContent() {
                                     {sqft}
                                   </Badge>
                                 )}
-                                {building.pet_policy && (
+                                {petsAllowed(building.pet_policy) && (
                                   <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
                                     <PawPrint className="h-3 w-3" />
                                     Pets OK
                                   </Badge>
                                 )}
-                                {building.parking_policy && (
+                                {parkingAvailable(building.parking_policy) && (
                                   <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
                                     <Car className="h-3 w-3" />
                                     Parking
@@ -1998,7 +2070,6 @@ function SearchContent() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }
@@ -2017,7 +2088,6 @@ export default function SearchPage() {
             <p className="text-white/50 text-sm">Loading apartments...</p>
           </div>
         </main>
-        <Footer />
       </div>
     }>
       <SearchContent />

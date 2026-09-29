@@ -338,8 +338,8 @@ export function EmailInbox() {
   return (
     <div className="space-y-4">
       {/* Toolbar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant={view === "inbox" ? "default" : "outline"}
             size="sm"
@@ -371,7 +371,7 @@ export function EmailInbox() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Auto-reply toggle */}
           <div className="flex items-center gap-2 mr-2 border-r pr-3 border-border/50">
             <Bot className="h-4 w-4 text-muted-foreground" />
@@ -386,16 +386,17 @@ export function EmailInbox() {
             />
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <div className="relative min-w-0 flex-1 basis-48 sm:flex-none">
+            <Search aria-hidden="true" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search emails..."
+              aria-label="Search emails"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 w-64"
+              className="w-full pl-9 sm:w-64"
             />
           </div>
-          <Button variant="outline" size="icon" onClick={fetchEmails} title="Refresh (R)">
+          <Button variant="outline" size="icon" onClick={fetchEmails} title="Refresh (R)" aria-label="Refresh inbox">
             <RefreshCw className="h-4 w-4" />
           </Button>
           <Button onClick={() => setComposeOpen(true)} title="Compose (C)">
@@ -407,7 +408,7 @@ export function EmailInbox() {
 
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-4 py-2">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 px-4 py-2">
           <span className="text-sm font-medium mr-2">
             {selectedIds.size} selected
           </span>
@@ -475,7 +476,13 @@ export function EmailInbox() {
             <div className="divide-y">
               {/* Select all header */}
               <div className="flex items-center gap-3 px-4 py-2 bg-muted/20 border-b">
-                <button onClick={toggleSelectAll} className="shrink-0">
+                <button
+                  type="button"
+                  onClick={toggleSelectAll}
+                  className="shrink-0"
+                  aria-label={allSelected ? "Deselect all emails" : "Select all emails"}
+                  aria-pressed={allSelected}
+                >
                   {allSelected ? (
                     <CheckSquare className="h-4 w-4 text-primary" />
                   ) : (
@@ -507,6 +514,7 @@ export function EmailInbox() {
                   <div
                     role="checkbox"
                     aria-checked={selectedIds.has(emailItem.id)}
+                    aria-label={`Select email: ${emailItem.subject || "(no subject)"}`}
                     tabIndex={0}
                     onClick={(e) => toggleSelect(e, emailItem.id)}
                     onKeyDown={(e) => {
@@ -546,6 +554,8 @@ export function EmailInbox() {
                   <div
                     role="button"
                     tabIndex={0}
+                    aria-label={emailItem.is_starred ? "Unstar email" : "Star email"}
+                    aria-pressed={!!emailItem.is_starred}
                     onClick={(e) => toggleStar(e, emailItem)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -566,7 +576,7 @@ export function EmailInbox() {
 
                   {/* Sender / recipient */}
                   <span
-                    className={`w-40 truncate text-sm shrink-0 ${
+                    className={`w-28 truncate text-sm shrink-0 sm:w-40 ${
                       !isRead(emailItem) ? "font-semibold" : ""
                     }`}
                   >

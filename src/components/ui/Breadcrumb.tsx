@@ -17,15 +17,17 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
     <nav
       aria-label="Breadcrumb"
       // One line that scrolls sideways on phones: wrapping split names like
-      // "Downtown Miami" across two ragged lines.
+      // "Downtown Miami" across two ragged lines. The -ml-3/pl-3 pair keeps
+      // the home icon flush with the content edge while giving its link a
+      // 40px hit area that the scroll container doesn't clip.
       className={cn(
-        "flex items-center gap-1 overflow-x-auto whitespace-nowrap text-sm text-muted-foreground [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "-ml-3 flex items-center gap-1 overflow-x-auto pl-3 whitespace-nowrap text-sm text-muted-foreground [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className
       )}
     >
       <Link
         href="/"
-        className="flex shrink-0 items-center py-2 hover:text-foreground transition-colors"
+        className="-mx-3 flex h-10 min-w-10 shrink-0 items-center justify-center rounded-md px-3 hover:text-foreground transition-colors"
         aria-label="Home"
       >
         <Home className="h-4 w-4" />
@@ -37,7 +39,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
           {item.href ? (
             <Link
               href={item.href}
-              className="py-2 hover:text-foreground transition-colors"
+              className="py-2.5 hover:text-foreground transition-colors"
             >
               {item.label}
             </Link>

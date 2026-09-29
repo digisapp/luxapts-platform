@@ -58,7 +58,7 @@ export default async function AdminLeadsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Leads</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Leads</h1>
         <p className="text-muted-foreground">
           Manage and track all incoming leads
         </p>

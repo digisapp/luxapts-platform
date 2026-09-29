@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Check, Sparkles } from "lucide-react";
+import { StaycioMark } from "@/components/brand/StaycioMark";
+import { Loader2, Check } from "lucide-react";
 
 export default function SignUpPage() {
   const { signUp } = useAuth();
@@ -103,8 +104,8 @@ export default function SignUpPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-          <Sparkles className="h-6 w-6 text-cyan-400" />
-          <span className="text-2xl font-semibold text-white">Staycio</span>
+          <StaycioMark className="h-8 w-auto text-white" />
+          <span className="text-2xl font-medium tracking-tight text-white">Staycio</span>
         </Link>
 
         {/* Card */}
@@ -118,8 +119,9 @@ export default function SignUpPage() {
 
           <form onSubmit={handleSignUp} className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/70">Name</label>
+              <label htmlFor="signup-name" className="mb-2 block text-sm font-medium text-white/70">Name</label>
               <Input
+                id="signup-name"
                 type="text"
                 autoComplete="name"
                 value={name}
@@ -130,8 +132,9 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/70">Email</label>
+              <label htmlFor="signup-email" className="mb-2 block text-sm font-medium text-white/70">Email</label>
               <Input
+                id="signup-email"
                 type="email"
                 autoComplete="email"
                 value={email}
@@ -143,8 +146,9 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/70">Password</label>
+              <label htmlFor="signup-password" className="mb-2 block text-sm font-medium text-white/70">Password</label>
               <Input
+                id="signup-password"
                 type="password"
                 autoComplete="new-password"
                 value={password}
@@ -174,7 +178,7 @@ export default function SignUpPage() {
 
           <p className="mt-6 text-center text-sm text-white/50">
             Already have an account?{" "}
-            <Link href="/auth/login" className="text-white/70 hover:text-white transition-colors">
+            <Link href="/auth/login" className="py-3 text-white/70 hover:text-white transition-colors">
               Sign in
             </Link>
           </p>

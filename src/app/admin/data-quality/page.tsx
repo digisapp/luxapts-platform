@@ -88,7 +88,7 @@ export default async function DataQualityPage() {
   if (buildingsError.message) {
     return (
       <div className="space-y-8">
-        <h1 className="text-3xl font-bold">Data Quality</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Data Quality</h1>
         <p className="text-red-500">Error: {buildingsError.message}</p>
       </div>
     );
@@ -223,7 +223,7 @@ export default async function DataQualityPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Data Quality</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Data Quality</h1>
         <p className="text-muted-foreground">
           Track building completeness and fix data gaps to improve the renter experience
         </p>

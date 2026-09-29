@@ -143,11 +143,13 @@ export function SimilarListings({
               <p className="text-xs text-muted-foreground truncate">
                 {listing.neighborhood}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs font-medium">
+              {/* Wraps between items, never inside one — in the narrow
+                  sidebar at 1024px "17 units" broke onto two lines */}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
+                <span className="whitespace-nowrap text-xs font-medium">
                   From {formatPrice(listing.minPrice)}/mo
                 </span>
-                <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                <Badge variant="secondary" className="whitespace-nowrap text-xs px-1.5 py-0">
                   {listing.unitCount} {listing.unitCount === 1 ? "unit" : "units"}
                 </Badge>
                 {listing.petPolicy && (

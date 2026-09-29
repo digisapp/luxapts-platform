@@ -32,8 +32,9 @@ export async function POST(req: Request) {
     // public insert policy, so the admin analytics dashboard read an empty
     // table. Service-role insert, deferred with after() — a bare floating
     // promise is frozen the moment the response is sent on Vercel, so most of
-    // these inserts never actually ran.
-    after(async () => {
+    // these inserts never actually ran. Skipped under `next dev`: .env.local
+    // points at the prod database, so local browsing polluted the stats.
+    if (process.env.NODE_ENV === "production") after(async () => {
       try {
         const { createAdminClient } = await import("@/lib/supabase/server");
         await createAdminClient().from("search_events").insert({

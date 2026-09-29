@@ -5,7 +5,6 @@ import { fetchAllRows } from "@/lib/db-helpers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { MapPin, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -76,8 +75,9 @@ export default async function NeighborhoodsPage() {
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Header />
       <main className="flex-1">
-        <div className="mx-auto max-w-7xl px-6 py-16">
-          <h1 className="text-3xl lg:text-4xl font-semibold tracking-tight">
+        {/* pt clears the fixed h-16 header */}
+        <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-24 sm:px-6 md:pt-28">
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
             Explore Neighborhoods
           </h1>
           <p className="mt-3 text-zinc-400 max-w-2xl">
@@ -88,18 +88,18 @@ export default async function NeighborhoodsPage() {
           <div className="mt-12 space-y-12">
             {groups.map(({ city, neighborhoods: hoods }) => (
               <section key={city.id}>
-                <div className="flex items-baseline justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <h2 className="text-xl font-medium">
                     {city.name}, {city.state}
                   </h2>
                   <Link
                     href={`/cities/${city.slug}`}
-                    className="text-sm text-zinc-400 hover:text-white transition-colors inline-flex items-center gap-1"
+                    className="inline-flex min-h-10 shrink-0 items-center gap-1 text-sm text-zinc-400 transition-colors hover:text-white"
                   >
                     City guide <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </Link>
                 </div>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
                   {hoods.map((hood) => {
                     const count = buildingCounts[hood.id] || 0;
                     return (
@@ -108,19 +108,21 @@ export default async function NeighborhoodsPage() {
                         href={`/neighborhoods/${hood.slug}?city=${city.slug}`}
                         className="group"
                       >
-                        <Card className="h-full border-zinc-800 bg-zinc-950 transition-colors group-hover:border-zinc-600">
-                          <CardContent className="flex items-center justify-between gap-3 p-4">
+                        <Card className="h-full rounded-2xl border-white/[0.08] bg-white/[0.02] transition-colors group-hover:border-white/[0.18] group-hover:bg-white/[0.04]">
+                          <CardContent className="flex h-full items-center justify-between gap-3 p-4">
                             <div className="flex items-center gap-3 min-w-0">
                               <MapPin
                                 className="h-4 w-4 shrink-0 text-zinc-500"
                                 aria-hidden="true"
                               />
-                              <span className="truncate font-medium">{hood.name}</span>
+                              {/* Wrap to two lines rather than truncating
+                                  ("Downtown Broo…", "Mockingbird Stat…") */}
+                              <span className="line-clamp-2 font-medium leading-snug">{hood.name}</span>
                             </div>
                             {count > 0 && (
-                              <Badge variant="secondary" className="shrink-0">
+                              <span className="shrink-0 whitespace-nowrap rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-white/70">
                                 {count} {count === 1 ? "building" : "buildings"}
-                              </Badge>
+                              </span>
                             )}
                           </CardContent>
                         </Card>

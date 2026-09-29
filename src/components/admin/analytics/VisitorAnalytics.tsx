@@ -134,10 +134,10 @@ export function VisitorAnalytics({ days = 30 }: Props) {
           </h3>
           <div className="space-y-2">
             {pages.top.slice(0, 8).map((page, i) => (
-              <div key={page.path} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-white/40 text-xs w-4">{i + 1}</span>
-                  <span className="text-sm text-white/80 truncate max-w-[200px]">
+              <div key={page.path} className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="text-white/40 text-xs w-4 shrink-0">{i + 1}</span>
+                  <span className="min-w-0 text-sm text-white/80 truncate">
                     {page.path === "/" ? "Homepage" : page.path}
                   </span>
                 </div>
@@ -155,11 +155,11 @@ export function VisitorAnalytics({ days = 30 }: Props) {
           </h3>
           <div className="space-y-2">
             {buildings.top_viewed.slice(0, 8).map((building, i) => (
-              <div key={building.building_id} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-white/40 text-xs w-4">{i + 1}</span>
-                  <div>
-                    <span className="text-sm text-white/80 block truncate max-w-[180px]">
+              <div key={building.building_id} className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="text-white/40 text-xs w-4 shrink-0">{i + 1}</span>
+                  <div className="min-w-0">
+                    <span className="text-sm text-white/80 block truncate">
                       {building.name}
                     </span>
                     {building.neighborhood && (

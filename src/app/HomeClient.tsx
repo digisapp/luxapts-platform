@@ -49,7 +49,18 @@ function formatBedRange(r: { min: number; max: number }): string {
   return `${r.min === 0 ? "Studio" : r.min}–${formatBeds(r.max)}`;
 }
 
-function BuildingImage({ src, seed, alt }: { src: string; seed: string; alt: string }) {
+function BuildingImage({
+  src,
+  seed,
+  alt,
+  eager = false,
+}: {
+  src: string;
+  seed: string;
+  alt: string;
+  /** The first row is above the fold on tablets and wide screens (it is the LCP there) */
+  eager?: boolean;
+}) {
   const [failed, setFailed] = useState(false);
 
   // Leasing sites delete and rename photos constantly. When one 404s, show the
@@ -63,6 +74,7 @@ function BuildingImage({ src, seed, alt }: { src: string; seed: string; alt: str
       fill
       className="object-cover group-hover:scale-105 transition-transform duration-500"
       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+      loading={eager ? "eager" : undefined}
       onError={() => setFailed(true)}
     />
   );
@@ -287,7 +299,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             `pt-28` is load-bearing, not spacing taste — the header is
             `fixed top-0 h-16`, so centered hero content taller than the
             viewport slides up underneath it and clips the badge on a phone. */}
-        <section className="relative flex min-h-[64svh] items-center justify-center px-6 pt-28 pb-14 overflow-hidden">
+        <section className="relative flex min-h-[64svh] items-center justify-center px-4 sm:px-6 pt-28 pb-14 overflow-hidden">
           {/* Real inventory as the backdrop. This page sells apartments, so the
               first screen has to contain some — the aurora on its own was a
               black rectangle with a paragraph on it, and the first photograph
@@ -314,7 +326,10 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                       className="object-cover"
                       sizes="(max-width: 640px) 25vw, 15vw"
                       quality={40}
-                      priority={i < 2}
+                      // Every tile is above the fold (up to six across on a
+                      // wide screen, where a lazy one became the LCP)
+                      loading="eager"
+                      preload={i < 2}
                     />
                   </div>
                 ))}
@@ -366,6 +381,8 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="2-bedroom in Miami under $3,500"
+                    aria-label="Describe the apartment you want"
+                    enterKeyHint="search"
                     className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-48 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/[0.14] text-white text-base placeholder:text-white/50 focus:outline-none focus:border-white/30 focus:bg-white/[0.09] transition-all duration-300"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2">
@@ -416,7 +433,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
               <Link
                 href="/search"
                 onClick={() => trackHeroEngagement("browse_link")}
-                className="text-white/60 underline underline-offset-4 decoration-white/20 hover:text-white hover:decoration-white/50 transition-colors"
+                className="py-3 text-white/60 underline underline-offset-4 decoration-white/20 hover:text-white hover:decoration-white/50 transition-colors"
               >
                 browse every listing
               </Link>
@@ -443,24 +460,24 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
         {/* Featured Residences — kept directly under the hero so the first
             thing past the gradient is an actual apartment. */}
         {featured.length > 0 && (
-          <section className="py-16 sm:py-20 px-6 relative overflow-hidden">
+          <section className="py-12 sm:py-20 relative overflow-hidden">
             {/* Background effect */}
             <div className="absolute inset-0">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-gradient-to-r from-cyan-500/5 to-cyan-500/5 rounded-full blur-[100px]" />
             </div>
 
-            <div className="relative z-10 max-w-6xl mx-auto">
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 sm:mb-10">
+            <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6">
+              <div className="flex items-end justify-between gap-4 mb-6 sm:mb-10">
                 <div>
                   {/* Solid, not gradient. The gradient belongs to the h1; when
                       every heading has it, it stops reading as an accent. */}
-                  <h2 className="text-3xl md:text-4xl font-medium text-white mb-3">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-medium text-balance text-white">
                     Buildings with the most availability
                   </h2>
                 </div>
                 <Link
                   href="/search"
-                  className="inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors shrink-0"
+                  className="inline-flex min-h-11 items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors shrink-0"
                 >
                   View all
                   <ArrowRight className="h-4 w-4" />
@@ -468,7 +485,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
               </div>
 
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {featured.map((building) => (
+                {featured.map((building, i) => (
                   <Link
                     key={building.id}
                     href={buildingPath(building)}
@@ -479,6 +496,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                         src={building.image}
                         seed={building.id}
                         alt={building.name}
+                        eager={i < 3}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                       {building.neighborhood && (
@@ -527,12 +545,12 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             instead of as two near-identical sections. These are the site's
             main internal links, so they stay on the page, just not in the
             hero competing with the search box. */}
-        <section className="py-14 sm:py-16 px-6 relative">
-          <div className="max-w-6xl mx-auto">
+        <section className="py-12 sm:py-16 relative">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
             {/* Grids, not a centred wrap. Ten and twelve chips justified to the
                 centre broke into an 8+2 and a 5/4/3 pyramid that read as a
                 layout accident; an even grid is the same links, deliberate. */}
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
+            <div className="flex items-end justify-between gap-4 mb-6 sm:mb-8">
               <div>
                 <h2 className="text-2xl md:text-3xl font-medium text-white mb-2">
                   Or browse by city
@@ -546,7 +564,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
               <Link
                 href="/cities"
                 onClick={() => trackHeroEngagement("browse_link")}
-                className="inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors shrink-0"
+                className="inline-flex min-h-11 items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors shrink-0"
               >
                 All cities
                 <ArrowRight className="h-4 w-4" />
@@ -568,7 +586,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
 
             {neighborhoods.length > 0 && (
               <>
-                <h3 className="mt-12 mb-5 text-sm uppercase tracking-wider text-white/60">
+                <h3 className="mt-10 sm:mt-12 mb-4 sm:mb-5 text-sm uppercase tracking-wider text-white/60">
                   Popular neighborhoods
                 </h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
@@ -584,10 +602,13 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                       className="px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-base text-white/90 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.18] transition-colors duration-300"
                     >
                       <span className="block truncate">{n.name}</span>
-                      <span className="block truncate text-sm text-white/60">
-                        {n.cityName}
-                        {n.cityName && <span aria-hidden="true" className="px-1 text-white/25">·</span>}
-                        <span className="text-emerald-300">{n.units} available</span>
+                      {/* Two lines on phones: a half-width tile cannot fit
+                          "Nashville · 114 available", and the count — the
+                          reason to tap — was the part that got cut off. */}
+                      <span className="block text-sm text-white/60 sm:truncate">
+                        <span className="block truncate sm:inline">{n.cityName}</span>
+                        {n.cityName && <span aria-hidden="true" className="hidden sm:inline px-1 text-white/25">·</span>}
+                        <span className="block sm:inline text-emerald-300">{n.units} available</span>
                       </span>
                     </Link>
                   ))}
@@ -599,15 +620,17 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
 
         {/* Lead capture — the homepage previously had no way to catch anyone
             who did not click straight through to search. */}
-        <section className="py-16 sm:py-20 px-6 relative overflow-hidden">
+        <section className="py-12 sm:py-20 px-4 sm:px-6 relative overflow-hidden">
           <div className="absolute inset-0">
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-r from-cyan-500/10 to-cyan-500/5 rounded-full blur-[110px]" />
           </div>
 
           <div className="relative z-10 max-w-xl mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-medium text-balance text-white mb-4">
-                Still looking? Let Stacy keep searching.
+              <h2 className="text-3xl md:text-4xl font-medium text-white mb-4">
+                Still looking?
+                <br />
+                Let Stacy keep searching.
               </h2>
               <p className="text-white/60">
                 Tell her what you&apos;re looking for, and she&apos;ll let you know when something matches — whether it&apos;s a new listing, a price drop, or new availability.

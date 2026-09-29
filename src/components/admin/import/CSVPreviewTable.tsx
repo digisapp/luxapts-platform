@@ -44,12 +44,12 @@ export function CSVPreviewTable({ data }: CSVPreviewTableProps) {
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                       row.status === "active"
-                        ? "bg-green-100 text-green-800"
+                        ? "bg-green-500/15 text-green-300"
                         : row.status === "inactive"
-                        ? "bg-gray-100 text-gray-800"
+                        ? "bg-white/10 text-white/80"
                         : row.status === "coming_soon"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-blue-100 text-blue-800"
+                        ? "bg-yellow-500/15 text-yellow-300"
+                        : "bg-blue-500/15 text-blue-300"
                     }`}
                   >
                     {row.status || "active"}

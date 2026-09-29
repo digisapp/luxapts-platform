@@ -28,22 +28,22 @@ type ShowerProfile = {
 const statusConfig: Record<string, { label: string; color: string; note: string }> = {
   pending: {
     label: "Pending Review",
-    color: "bg-yellow-100 text-yellow-700",
+    color: "bg-yellow-500/15 text-yellow-300",
     note: "Your application is under review. Approval typically takes 1–2 business days.",
   },
   approved: {
     label: "Approved",
-    color: "bg-green-100 text-green-700",
+    color: "bg-green-500/15 text-green-300",
     note: "You're active. Get certified for buildings to unlock their leads.",
   },
   suspended: {
     label: "Suspended",
-    color: "bg-red-100 text-red-700",
+    color: "bg-red-500/15 text-red-300",
     note: "Your account is suspended. Contact your manager for next steps.",
   },
   rejected: {
     label: "Not Approved",
-    color: "bg-gray-100 text-gray-600",
+    color: "bg-white/10 text-white/60",
     note: "Your application wasn't approved. Contact your manager for next steps.",
   },
 };
@@ -139,7 +139,7 @@ export default function ShowerProfilePage() {
   if (profile && !submitted) {
     const status = statusConfig[profile.status] || {
       label: profile.status,
-      color: "bg-gray-100 text-gray-600",
+      color: "bg-white/10 text-white/60",
       note: "",
     };
 
@@ -153,7 +153,7 @@ export default function ShowerProfilePage() {
               <User className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">My Profile</h1>
+              <h1 className="text-2xl font-bold sm:text-3xl">My Profile</h1>
               <p className="text-muted-foreground">Your Shower account details</p>
             </div>
           </div>
@@ -171,7 +171,7 @@ export default function ShowerProfilePage() {
                     })}
                   </CardDescription>
                 </div>
-                <Badge className={status.color}>{status.label}</Badge>
+                <Badge variant="outline" className={`shrink-0 border-transparent ${status.color}`}>{status.label}</Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -238,12 +238,12 @@ export default function ShowerProfilePage() {
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6">
-        <Card className="w-full max-w-md text-center">
+      <div className="flex items-center justify-center py-8 sm:py-12">
+        <Card className="w-full max-w-md text-center" role="status">
           <CardContent className="pt-10 pb-8 space-y-4">
             <div className="flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+                <CheckCircle className="h-8 w-8 text-green-400" />
               </div>
             </div>
             <h2 className="text-2xl font-bold">Application Submitted</h2>
@@ -261,7 +261,8 @@ export default function ShowerProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-6 bg-muted/20">
+    // Rendered inside PortalShell's padded <main>: no min-h-screen/extra padding.
+    <div className="flex items-center justify-center py-4 sm:py-8">
       <div className="w-full max-w-lg space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -270,7 +271,7 @@ export default function ShowerProfilePage() {
               <Building2 className="h-7 w-7 text-primary" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold">Become a Shower</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Become a Shower</h1>
           <p className="text-muted-foreground max-w-sm mx-auto">
             Join Staycio as an independent Shower. Get certified for buildings,
             claim showing leads, and earn $150 per showing + placement bonuses.
@@ -390,7 +391,7 @@ export default function ShowerProfilePage() {
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {error}
                 </div>

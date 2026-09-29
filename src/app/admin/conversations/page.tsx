@@ -192,7 +192,7 @@ export default async function AdminConversationsPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Chat Log</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Chat Log</h1>
         <p className="text-muted-foreground">
           Every conversation with Stacy — what renters asked, what she searched, and
           where she came up empty.
@@ -335,7 +335,7 @@ export default async function AdminConversationsPage({
                             {session.messages_count || 0} messages
                           </Badge>
                           {empties > 0 && (
-                            <Badge className="gap-1 border-amber-500/40 bg-amber-500/15 text-amber-300">
+                            <Badge variant="outline" className="gap-1 border-amber-500/40 bg-amber-500/15 text-amber-300">
                               <SearchX className="h-3 w-3" />
                               No results
                             </Badge>

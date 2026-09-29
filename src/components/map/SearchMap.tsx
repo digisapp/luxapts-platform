@@ -656,14 +656,14 @@ export function SearchMap({
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-width: 18px;
-          height: 18px;
-          padding: 0 4px;
-          border-radius: 9px;
+          min-width: 20px;
+          height: 20px;
+          padding: 0 5px;
+          border-radius: 10px;
           background: rgba(255,255,255,0.2);
           color: white;
           font-weight: 700;
-          font-size: 10px;
+          font-size: 12px;
           white-space: nowrap;
         }
         /* ── Single-unit pin ── */

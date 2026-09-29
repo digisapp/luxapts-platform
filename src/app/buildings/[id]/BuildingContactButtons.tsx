@@ -11,6 +11,8 @@ interface BuildingContactButtonsProps {
   buildingName: string;
   citySlug: string;
   leasingEmail?: string | null;
+  /** The sidebar summary card has no room (or need) for a second Share. */
+  showShare?: boolean;
 }
 
 export function BuildingContactButtons({
@@ -18,9 +20,10 @@ export function BuildingContactButtons({
   buildingName,
   citySlug,
   leasingEmail,
+  showShare = true,
 }: BuildingContactButtonsProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5">
       <ScheduleTourModal
         buildingId={buildingId}
         buildingName={buildingName}
@@ -32,7 +35,7 @@ export function BuildingContactButtons({
           </Button>
         }
       />
-      <div className="flex gap-2">
+      <div className="flex gap-2.5">
         <ContactLeasingModal
           buildingId={buildingId}
           buildingName={buildingName}
@@ -45,7 +48,8 @@ export function BuildingContactButtons({
             </Button>
           }
         />
-        <ShareButton title={buildingName} />
+        {/* Same height and type size as Contact so the row reads as one control group */}
+        {showShare && <ShareButton title={buildingName} className="h-12 rounded-lg px-5 text-base md:h-12" />}
       </div>
     </div>
   );

@@ -21,13 +21,13 @@ export function ValidationErrors({ validation }: ValidationErrorsProps) {
       {/* Summary */}
       <div className="flex gap-4">
         {validation.invalidRows > 0 && (
-          <div className="flex items-center gap-2 text-sm text-red-600">
+          <div className="flex items-center gap-2 text-sm text-red-400">
             <AlertCircle className="h-4 w-4" />
             {validation.invalidRows} row(s) with errors
           </div>
         )}
         {rowsWithIssues.filter((r) => r.warnings.length > 0).length > 0 && (
-          <div className="flex items-center gap-2 text-sm text-yellow-600">
+          <div className="flex items-center gap-2 text-sm text-yellow-400">
             <AlertTriangle className="h-4 w-4" />
             {rowsWithIssues.filter((r) => r.warnings.length > 0).length} row(s) with
             warnings
@@ -36,7 +36,7 @@ export function ValidationErrors({ validation }: ValidationErrorsProps) {
       </div>
 
       {/* Detailed errors */}
-      <div className="border rounded-lg overflow-hidden max-h-80 overflow-y-auto">
+      <div className="border rounded-lg max-h-80 overflow-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted sticky top-0">
             <tr>
@@ -55,7 +55,7 @@ export function ValidationErrors({ validation }: ValidationErrorsProps) {
                     {row.errors.map((error, i) => (
                       <div
                         key={`error-${i}`}
-                        className="flex items-center gap-2 text-red-600"
+                        className="flex items-center gap-2 text-red-400"
                       >
                         <AlertCircle className="h-3 w-3 flex-shrink-0" />
                         {error}
@@ -64,7 +64,7 @@ export function ValidationErrors({ validation }: ValidationErrorsProps) {
                     {row.warnings.map((warning, i) => (
                       <div
                         key={`warning-${i}`}
-                        className="flex items-center gap-2 text-yellow-600"
+                        className="flex items-center gap-2 text-yellow-400"
                       >
                         <AlertTriangle className="h-3 w-3 flex-shrink-0" />
                         {warning}

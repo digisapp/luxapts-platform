@@ -149,11 +149,12 @@ export function EmailCampaignsDashboard({
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <Label>Filter by Status</Label>
+              <Label htmlFor="campaign-filter-status">Filter by Status</Label>
               <select
+                id="campaign-filter-status"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm bg-background"
+                className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm bg-background"
               >
                 <option value="">All Statuses</option>
                 <option value="new">New</option>
@@ -166,11 +167,12 @@ export function EmailCampaignsDashboard({
             </div>
 
             <div>
-              <Label>Filter by Source</Label>
+              <Label htmlFor="campaign-filter-source">Filter by Source</Label>
               <select
+                id="campaign-filter-source"
                 value={filterSource}
                 onChange={(e) => setFilterSource(e.target.value)}
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm bg-background"
+                className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm bg-background"
               >
                 <option value="">All Sources</option>
                 <option value="web_form">Web Form</option>
@@ -180,11 +182,12 @@ export function EmailCampaignsDashboard({
             </div>
 
             <div>
-              <Label>Filter by City</Label>
+              <Label htmlFor="campaign-filter-city">Filter by City</Label>
               <select
+                id="campaign-filter-city"
                 value={filterCity}
                 onChange={(e) => setFilterCity(e.target.value)}
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm bg-background"
+                className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm bg-background"
               >
                 <option value="">All Cities</option>
                 {cities.map((city) => (
@@ -212,7 +215,7 @@ export function EmailCampaignsDashboard({
               </Button>
             ) : (
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-sm text-amber-600">
+                <div className="flex items-center gap-1 text-sm text-amber-400">
                   <AlertCircle className="h-4 w-4" />
                   Send to {estimatedCount} recipients?
                 </div>

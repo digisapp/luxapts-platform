@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getUserRole } from "@/lib/admin/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { getFirstRelation } from "@/lib/db-helpers";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PostLeadDialog } from "./PostLeadDialog";
@@ -23,29 +24,36 @@ type ShowingLead = {
   monthly_rent: number | null;
   created_at: string;
   buildings: { id: string; name: string; address: string | null };
-  showing_claims: Array<{
-    id: string;
-    claimed_at: string;
-    status: string;
-    showers: { id: string; display_name: string; phone: string | null; tier: string };
-  }>;
-  showing_debriefs: Array<{
-    id: string;
-    submitted_at: string;
-    admin_approved_at: string | null;
-    client_showed_up: boolean;
-    interest_level: number | null;
-    application_likelihood: string | null;
-  }>;
+  // showing_claims.showing_lead_id and showing_debriefs.showing_lead_id are
+  // UNIQUE, so PostgREST embeds each as one object (or null), not an array.
+  // Indexing them with [0] hid every claim and debrief on this page.
+  showing_claims: ShowingClaim | ShowingClaim[] | null;
+  showing_debriefs: ShowingDebrief | ShowingDebrief[] | null;
+};
+
+type ShowingClaim = {
+  id: string;
+  claimed_at: string;
+  status: string;
+  showers: { id: string; display_name: string; phone: string | null; tier: string };
+};
+
+type ShowingDebrief = {
+  id: string;
+  submitted_at: string;
+  admin_approved_at: string | null;
+  client_showed_up: boolean;
+  interest_level: number | null;
+  application_likelihood: string | null;
 };
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  open: { label: "Open", color: "bg-green-100 text-green-700", icon: MapPin },
-  claimed: { label: "Claimed", color: "bg-blue-100 text-blue-700", icon: User },
-  in_progress: { label: "In Progress", color: "bg-purple-100 text-purple-700", icon: Clock },
-  completed: { label: "Completed", color: "bg-teal-100 text-teal-700", icon: CheckCircle },
-  cancelled: { label: "Cancelled", color: "bg-gray-100 text-gray-600", icon: AlertTriangle },
-  no_show: { label: "No Show", color: "bg-red-100 text-red-600", icon: AlertTriangle },
+  open: { label: "Open", color: "bg-green-500/15 text-green-300", icon: MapPin },
+  claimed: { label: "Claimed", color: "bg-blue-500/15 text-blue-300", icon: User },
+  in_progress: { label: "In Progress", color: "bg-purple-500/15 text-purple-300", icon: Clock },
+  completed: { label: "Completed", color: "bg-teal-500/15 text-teal-300", icon: CheckCircle },
+  cancelled: { label: "Cancelled", color: "bg-white/10 text-white/60", icon: AlertTriangle },
+  no_show: { label: "No Show", color: "bg-red-500/15 text-red-400", icon: AlertTriangle },
 };
 
 export default async function AdminShowingLeadsPage() {
@@ -79,6 +87,10 @@ export default async function AdminShowingLeadsPage() {
       .order("name"),
   ]);
 
+  if (leadsRes.error) {
+    // Otherwise a failed query renders as "No showing leads yet".
+    throw new Error(`Failed to load showing leads: ${leadsRes.error.message}`);
+  }
   const leads = (leadsRes.data || []) as unknown as ShowingLead[];
   const buildings = (buildingsRes.data || []) as Array<{ id: string; name: string }>;
 
@@ -104,9 +116,9 @@ export default async function AdminShowingLeadsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Showing Leads</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Showing Leads</h1>
           <p className="text-muted-foreground">
             Post leads, track showings, approve debriefs, and record commissions.
           </p>
@@ -147,19 +159,19 @@ export default async function AdminShowingLeadsPage() {
           {leads.map((lead) => {
             const config = statusConfig[lead.status] || statusConfig.open;
             const StatusIcon = config.icon;
-            const claim = lead.showing_claims?.[0];
+            const claim = getFirstRelation(lead.showing_claims);
             const shower = claim?.showers;
-            const debrief = lead.showing_debriefs?.[0];
+            const debrief = getFirstRelation(lead.showing_debriefs);
 
             return (
               <Card key={lead.id}>
                 <CardContent className="pt-4 pb-4">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start justify-between gap-2 sm:gap-4">
                     <div className="flex-1 min-w-0 space-y-2">
                       {/* Header row */}
                       <div className="flex items-center gap-3 flex-wrap">
                         <p className="font-semibold">{lead.buildings.name}</p>
-                        <Badge className={config.color}>
+                        <Badge variant="outline" className={`border-transparent ${config.color}`}>
                           <StatusIcon className="mr-1 h-3 w-3" />
                           {config.label}
                         </Badge>
@@ -167,14 +179,14 @@ export default async function AdminShowingLeadsPage() {
                           <Badge variant="outline">{lead.unit_type}</Badge>
                         )}
                         {lead.lease_signed && (
-                          <Badge className="bg-emerald-100 text-emerald-700">
+                          <Badge variant="outline" className="border-transparent bg-emerald-500/15 text-emerald-300">
                             Lease Signed
                           </Badge>
                         )}
                       </div>
 
                       {/* Showing time */}
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
                         <Clock className="h-3.5 w-3.5" />
                         {formatDate(lead.preferred_date)} at {formatTime(lead.preferred_time)}
                         {lead.buildings.address && (
@@ -191,7 +203,7 @@ export default async function AdminShowingLeadsPage() {
                           <p className="text-xs font-medium text-muted-foreground mb-1">CLIENT</p>
                           <p>{lead.client_name}</p>
                           {lead.client_phone && <p className="text-muted-foreground">{lead.client_phone}</p>}
-                          {lead.client_email && <p className="text-muted-foreground text-xs">{lead.client_email}</p>}
+                          {lead.client_email && <p className="break-all text-muted-foreground text-xs">{lead.client_email}</p>}
                         </div>
                         {shower ? (
                           <div>
@@ -210,9 +222,9 @@ export default async function AdminShowingLeadsPage() {
 
                       {/* Debrief summary */}
                       {debrief && (
-                        <div className={`rounded-lg p-3 text-sm ${debrief.admin_approved_at ? "bg-green-50 border border-green-200" : "bg-amber-50 border border-amber-200"}`}>
+                        <div className={`rounded-lg p-3 text-sm ${debrief.admin_approved_at ? "bg-green-500/10 border border-green-500/30" : "bg-amber-500/10 border border-amber-500/30"}`}>
                           <div className="flex items-center gap-2 font-medium">
-                            <CheckCircle className={`h-4 w-4 ${debrief.admin_approved_at ? "text-green-600" : "text-amber-600"}`} />
+                            <CheckCircle className={`h-4 w-4 ${debrief.admin_approved_at ? "text-green-400" : "text-amber-400"}`} />
                             Debrief {debrief.admin_approved_at ? "Approved" : "Submitted — Pending Review"}
                           </div>
                           {debrief.client_showed_up && (
@@ -224,7 +236,7 @@ export default async function AdminShowingLeadsPage() {
                             </div>
                           )}
                           {!debrief.client_showed_up && (
-                            <p className="mt-1 text-xs text-red-600">Client no-show reported</p>
+                            <p className="mt-1 text-xs text-red-400">Client no-show reported</p>
                           )}
                         </div>
                       )}

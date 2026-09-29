@@ -124,9 +124,9 @@ export function ImageUploadDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Category</Label>
+            <Label htmlFor="image-upload-category">Category</Label>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
+              <SelectTrigger id="image-upload-category">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

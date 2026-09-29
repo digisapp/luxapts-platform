@@ -373,7 +373,7 @@ export function BuildingFormDialog({
             </Button>
             <div className="flex items-center gap-3">
               {saved && (
-                <span className="flex items-center gap-1.5 text-sm text-green-600">
+                <span className="flex items-center gap-1.5 text-sm text-green-400">
                   <CheckCircle className="h-4 w-4" />
                   {isEdit ? "Saved" : "Building created!"}
                 </span>

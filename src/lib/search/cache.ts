@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { parkingAvailable, petsAllowed, withPolicyText } from "@/lib/policy-text";
 import { createAdminClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/db-helpers";
 import { withVerifiedPricing } from "@/lib/verified-pricing";
@@ -212,25 +213,29 @@ async function executeSearch(params: SearchParams): Promise<SearchResponse> {
     neighborhoodIds = neighborhoodRes.data.map((n) => n.id as string);
   }
 
-  const buildings = await fetchAllRows<{ id: string }>((from, to) => {
+  const buildings = await fetchAllRows<{
+    id: string;
+    pet_policy: string | null;
+    parking_policy: string | null;
+  }>((from, to) => {
     let q = supabase
       .from("buildings")
-      .select("id")
+      .select("id, pet_policy, parking_policy")
       .eq("city_id", cityId)
       .eq("status", "active");
     if (neighborhoodIds) q = q.in("neighborhood_id", neighborhoodIds);
-    if (params.pet_friendly) {
-      q = q
-        .not("pet_policy", "is", null)
-        .not("pet_policy", "ilike", "%no pet%")
-        .not("pet_policy", "ilike", "%not allowed%")
-        .not("pet_policy", "ilike", "%no animal%");
-    }
+    if (params.pet_friendly) q = q.not("pet_policy", "is", null);
     if (params.parking_required) q = q.not("parking_policy", "is", null);
     return q.order("id").range(from, to);
   });
 
-  let buildingIds = buildings.map((b) => b.id);
+  // Judged in code with the same helpers as the "Pets OK" / "Parking" chips:
+  // an ILIKE approximation let "Pet policy not specified" count as pets
+  // allowed and dropped "Pets welcome, no pet rent" as a ban.
+  let buildingIds = buildings
+    .filter((b) => !params.pet_friendly || petsAllowed(b.pet_policy))
+    .filter((b) => !params.parking_required || parkingAvailable(b.parking_policy))
+    .map((b) => b.id);
   if (!buildingIds.length) return empty;
 
   // 3. Filter by amenities
@@ -395,7 +400,12 @@ export async function cachedSearch(params: SearchParams): Promise<SearchResponse
       tags: [cityTag, "search"],
     }
   )();
-  // Applied after the cache so a price that ages out is hidden on time.
-  return withVerifiedPricing(res, params);
+  // Applied after the cache so a price that ages out is hidden on time, and
+  // so policy filler is stripped from entries cached before the cleanup.
+  const verified = withVerifiedPricing(res, params);
+  return {
+    ...verified,
+    results: verified.results.map((r) => ({ ...r, building: withPolicyText(r.building) })),
+  };
 }
 

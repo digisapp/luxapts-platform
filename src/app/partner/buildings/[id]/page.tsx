@@ -279,7 +279,7 @@ export default function PartnerBuildingPage() {
   if (loadError) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-red-500">{loadError}</p>
+        <p role="alert" className="text-sm text-red-400">{loadError}</p>
       </div>
     );
   }
@@ -300,12 +300,12 @@ export default function PartnerBuildingPage() {
         </Button>
       </div>
 
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">{building.name}</h1>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold break-words sm:text-3xl">{building.name}</h1>
           <p className="text-muted-foreground">{building.address_1}</p>
         </div>
-        <Badge variant={building.status === "active" ? "default" : "secondary"} className="capitalize">
+        <Badge variant={building.status === "active" ? "default" : "secondary"} className="shrink-0 capitalize">
           {building.status}
         </Badge>
       </div>
@@ -333,9 +333,10 @@ export default function PartnerBuildingPage() {
             <div className="space-y-3">
               {saveError && <p className="text-sm text-red-500">{saveError}</p>}
               <div>
-                <label className="text-sm font-medium">Description</label>
+                <label htmlFor="pb-description" className="text-sm font-medium">Description</label>
                 <textarea
-                  className="mt-1 w-full rounded-md border px-3 py-2 text-sm min-h-[80px] resize-y"
+                  id="pb-description"
+                  className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm min-h-[80px] resize-y"
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   placeholder="Describe your building..."
@@ -343,19 +344,21 @@ export default function PartnerBuildingPage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-sm font-medium">Leasing Phone</label>
+                  <label htmlFor="pb-leasing-phone" className="text-sm font-medium">Leasing Phone</label>
                   <input
-                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                    id="pb-leasing-phone"
+                    className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm"
                     value={form.leasing_phone}
                     onChange={(e) => setForm((f) => ({ ...f, leasing_phone: e.target.value }))}
                     placeholder="+1 (555) 000-0000"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Leasing Email</label>
+                  <label htmlFor="pb-leasing-email" className="text-sm font-medium">Leasing Email</label>
                   <input
+                    id="pb-leasing-email"
                     type="email"
-                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm"
                     value={form.leasing_email}
                     onChange={(e) => setForm((f) => ({ ...f, leasing_email: e.target.value }))}
                     placeholder="leasing@example.com"
@@ -364,18 +367,20 @@ export default function PartnerBuildingPage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-sm font-medium">Pet Policy</label>
+                  <label htmlFor="pb-pet-policy" className="text-sm font-medium">Pet Policy</label>
                   <textarea
-                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm min-h-[60px] resize-y"
+                    id="pb-pet-policy"
+                    className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm min-h-[60px] resize-y"
                     value={form.pet_policy}
                     onChange={(e) => setForm((f) => ({ ...f, pet_policy: e.target.value }))}
                     placeholder="Cats and small dogs allowed..."
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Parking Policy</label>
+                  <label htmlFor="pb-parking-policy" className="text-sm font-medium">Parking Policy</label>
                   <textarea
-                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm min-h-[60px] resize-y"
+                    id="pb-parking-policy"
+                    className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm min-h-[60px] resize-y"
                     value={form.parking_policy}
                     onChange={(e) => setForm((f) => ({ ...f, parking_policy: e.target.value }))}
                     placeholder="Valet parking available..."
@@ -427,7 +432,7 @@ export default function PartnerBuildingPage() {
 
       {/* Photos */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
               <ImageIcon className="h-4 w-4" /> Photos
@@ -435,7 +440,7 @@ export default function PartnerBuildingPage() {
             <p className="text-sm text-muted-foreground mt-0.5">
               {images.length} photo{images.length !== 1 ? "s" : ""}
               {images.length === 0 && (
-                <span className="ml-2 text-amber-600 font-medium">· Add photos to attract more inquiries</span>
+                <span className="ml-2 text-amber-400 font-medium">· Add photos to attract more inquiries</span>
               )}
             </p>
           </div>
@@ -449,14 +454,20 @@ export default function PartnerBuildingPage() {
             <div className="mb-4 rounded-lg border bg-muted/20 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Add Photo by URL</p>
-                <button onClick={() => { setShowAddImage(false); setImageError(""); }} className="text-muted-foreground hover:text-foreground">
-                  <X className="h-4 w-4" />
+                <button
+                  type="button"
+                  onClick={() => { setShowAddImage(false); setImageError(""); }}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+                  aria-label="Close add photo form"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Image URL</label>
+                <label htmlFor="pb-image-url" className="text-xs font-medium text-muted-foreground">Image URL</label>
                 <input
-                  className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                  id="pb-image-url"
+                  className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm"
                   placeholder="https://..."
                   value={imageForm.url}
                   onChange={(e) => {
@@ -468,9 +479,10 @@ export default function PartnerBuildingPage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Category</label>
+                  <label htmlFor="pb-image-category" className="text-xs font-medium text-muted-foreground">Category</label>
                   <select
-                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm bg-background"
+                    id="pb-image-category"
+                    className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm bg-background"
                     value={imageForm.category}
                     onChange={(e) => setImageForm((f) => ({ ...f, category: e.target.value }))}
                   >
@@ -480,9 +492,10 @@ export default function PartnerBuildingPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Alt Text (optional)</label>
+                  <label htmlFor="pb-image-alt" className="text-xs font-medium text-muted-foreground">Alt Text (optional)</label>
                   <input
-                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                    id="pb-image-alt"
+                    className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm"
                     placeholder="Describe the image..."
                     value={imageForm.alt_text}
                     onChange={(e) => setImageForm((f) => ({ ...f, alt_text: e.target.value }))}
@@ -540,7 +553,7 @@ export default function PartnerBuildingPage() {
 
                   {/* Primary badge */}
                   {img.is_primary && (
-                    <div className="absolute top-1.5 left-1.5 flex items-center gap-1 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-medium text-amber-900">
+                    <div className="absolute top-1.5 left-1.5 flex items-center gap-1 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-medium text-black">
                       <Star className="h-2.5 w-2.5 fill-current" /> Cover
                     </div>
                   )}
@@ -553,13 +566,15 @@ export default function PartnerBuildingPage() {
                   )}
 
                   {/* Action buttons */}
-                  <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Always visible on touch screens (incl. tablets); hover-reveal only with a mouse. */}
+                  <div className="absolute top-1.5 right-1.5 flex gap-1 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-within:opacity-100">
                     {!img.is_primary && (
                       <button
                         onClick={() => setPrimary(img.id)}
                         disabled={settingPrimaryId === img.id}
                         className="rounded-full bg-white/90 p-1.5 text-amber-600 hover:bg-white"
                         title="Set as cover photo"
+                        aria-label="Set as cover photo"
                       >
                         {settingPrimaryId === img.id
                           ? <Loader2 className="h-3 w-3 animate-spin" />
@@ -572,6 +587,7 @@ export default function PartnerBuildingPage() {
                       disabled={deletingImageId === img.id}
                       className="rounded-full bg-white/90 p-1.5 text-red-500 hover:bg-white"
                       title="Delete photo"
+                      aria-label="Delete photo"
                     >
                       {deletingImageId === img.id
                         ? <Loader2 className="h-3 w-3 animate-spin" />
@@ -588,13 +604,13 @@ export default function PartnerBuildingPage() {
 
       {/* Units */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
           <div>
             <CardTitle className="text-base">Units</CardTitle>
             <p className="text-sm text-muted-foreground mt-0.5">
               {availableCount} of {units.length} available
               {dirtyUnits.length > 0 && (
-                <span className="ml-2 text-amber-600 font-medium">· {dirtyUnits.length} unsaved change{dirtyUnits.length > 1 ? "s" : ""}</span>
+                <span className="ml-2 text-amber-400 font-medium">· {dirtyUnits.length} unsaved change{dirtyUnits.length > 1 ? "s" : ""}</span>
               )}
             </p>
           </div>
@@ -623,7 +639,7 @@ export default function PartnerBuildingPage() {
                 return (
                   <div
                     key={unit.id}
-                    className={`rounded-lg border p-3 transition-colors ${edit.dirty ? "border-amber-300 bg-amber-50/40" : ""}`}
+                    className={`rounded-lg border p-3 transition-colors ${edit.dirty ? "border-amber-500/30 bg-amber-500/5" : ""}`}
                   >
                     <div className="flex items-center gap-3 flex-wrap">
                       {/* Unit info */}
@@ -640,11 +656,13 @@ export default function PartnerBuildingPage() {
 
                       {/* Available toggle */}
                       <button
+                        type="button"
+                        aria-pressed={edit.is_available}
                         onClick={() => updateUnitEdit(unit.id, { is_available: !edit.is_available })}
                         className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                           edit.is_available
-                            ? "bg-green-100 text-green-700 hover:bg-green-200"
-                            : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                            ? "bg-green-500/15 text-green-300 hover:bg-green-500/25"
+                            : "bg-white/10 text-white/60 hover:bg-white/15"
                         }`}
                       >
                         {edit.is_available
@@ -659,7 +677,8 @@ export default function PartnerBuildingPage() {
                           <span className="text-xs text-muted-foreground">From</span>
                           <input
                             type="date"
-                            className="rounded border px-2 py-1 text-xs"
+                            aria-label={`Unit ${unit.unit_number ?? ""} available from`}
+                            className="rounded border px-2 py-1 text-base md:text-xs"
                             value={edit.available_on}
                             onChange={(e) => updateUnitEdit(unit.id, { available_on: e.target.value })}
                           />
@@ -671,7 +690,8 @@ export default function PartnerBuildingPage() {
                         <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
                         <input
                           type="number"
-                          className="w-24 rounded border px-2 py-1 text-xs text-right"
+                          aria-label={`Unit ${unit.unit_number ?? ""} monthly rent`}
+                          className="w-24 rounded border px-2 py-1 text-base md:text-xs text-right"
                           value={edit.rent}
                           onChange={(e) => updateUnitEdit(unit.id, { rent: e.target.value })}
                           placeholder="Rent/mo"
@@ -688,6 +708,7 @@ export default function PartnerBuildingPage() {
                           className="h-7 px-2 text-xs"
                           onClick={() => saveUnit(unit.id)}
                           disabled={edit.saving}
+                          aria-label={`Save unit ${unit.unit_number ?? ""}`}
                         >
                           {edit.saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                         </Button>

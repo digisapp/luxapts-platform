@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { isJunkImageUrl } from "@/lib/images/quality";
 import { apiError } from "@/lib/api-helpers";
 import { safeParseInt } from "@/lib/utils";
+import { policyText } from "@/lib/policy-text";
 
 /**
  * `image_exterior` is imported data, not scraped, so it never passed the
@@ -92,7 +93,7 @@ export async function POST(req: Request) {
       zip: b.zip,
       year_built: b.year_built,
       stories: b.stories,
-      pet_policy: b.pet_policy,
+      pet_policy: policyText(b.pet_policy),
       description: b.description,
       city: b.cities,
       neighborhood: b.neighborhoods,

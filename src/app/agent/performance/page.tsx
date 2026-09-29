@@ -16,13 +16,17 @@ export default async function AgentPerformancePage() {
   const supabase = createAdminClient();
 
   // Fetch all assignments and their leads
-  const { data: assignments } = await supabase
+  const { data: assignments, error } = await supabase
     .from("agent_assignments")
     .select(`
       id, status, assigned_at,
       leads:lead_id (id, status, created_at)
     `)
     .eq("agent_user_id", agentId);
+
+  if (error) {
+    throw new Error(`Failed to load performance data: ${error.message}`);
+  }
 
   const all = assignments || [];
   const total = all.length;
@@ -61,56 +65,56 @@ export default async function AgentPerformancePage() {
       label: "Total Assignments",
       value: total,
       icon: Users,
-      color: "text-blue-600 bg-blue-50",
+      color: "text-blue-400 bg-blue-500/10",
     },
     {
       label: "Accepted",
       value: accepted,
       icon: CheckCircle,
-      color: "text-green-600 bg-green-50",
+      color: "text-green-400 bg-green-500/10",
     },
     {
       label: "Declined",
       value: declined,
       icon: XCircle,
-      color: "text-red-600 bg-red-50",
+      color: "text-red-400 bg-red-500/10",
     },
     {
       label: "Pending",
       value: pending,
       icon: Clock,
-      color: "text-amber-600 bg-amber-50",
+      color: "text-amber-400 bg-amber-500/10",
     },
     {
       label: "Leased (Closed)",
       value: leased,
       icon: Award,
-      color: "text-emerald-600 bg-emerald-50",
+      color: "text-emerald-400 bg-emerald-500/10",
     },
     {
       label: "Currently Touring",
       value: touring,
       icon: Target,
-      color: "text-purple-600 bg-purple-50",
+      color: "text-purple-400 bg-purple-500/10",
     },
     {
       label: "Conversion Rate",
       value: `${conversionRate}%`,
       icon: TrendingUp,
-      color: "text-indigo-600 bg-indigo-50",
+      color: "text-indigo-400 bg-indigo-500/10",
     },
     {
       label: "Accept Rate",
       value: `${acceptRate}%`,
       icon: BarChart3,
-      color: "text-cyan-600 bg-cyan-50",
+      color: "text-cyan-400 bg-cyan-500/10",
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Performance</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Performance</h1>
         <p className="text-muted-foreground">
           Track your lead management metrics and conversion rates
         </p>
@@ -120,8 +124,8 @@ export default async function AgentPerformancePage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
-                <Award className="h-6 w-6 text-amber-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                <Award className="h-6 w-6 text-amber-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Commission Rate</p>
@@ -132,7 +136,7 @@ export default async function AgentPerformancePage() {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (

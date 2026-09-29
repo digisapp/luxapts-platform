@@ -32,17 +32,19 @@ interface Lead {
   targeted_buildings: TargetedBuilding[];
 }
 
+// Same palette as the admin/agent lead views. Values must match the
+// leads.status check constraint (001_schema.sql) — the old list offered
+// "qualified"/"closed", which never matched, and omitted "leased".
 const STATUS_COLORS: Record<string, string> = {
-  new: "bg-blue-100 text-blue-700",
-  contacted: "bg-purple-100 text-purple-700",
-  qualified: "bg-green-100 text-green-700",
-  touring: "bg-amber-100 text-amber-700",
-  applied: "bg-emerald-100 text-emerald-700",
-  closed: "bg-gray-100 text-gray-500",
-  lost: "bg-red-100 text-red-500",
+  new: "bg-green-500/15 text-green-300",
+  contacted: "bg-blue-500/15 text-blue-300",
+  touring: "bg-purple-500/15 text-purple-300",
+  applied: "bg-yellow-500/15 text-yellow-300",
+  leased: "bg-emerald-500/15 text-emerald-300",
+  lost: "bg-white/10 text-white/70",
 };
 
-const STATUSES = ["", "new", "contacted", "qualified", "touring", "applied", "closed", "lost"];
+const STATUSES = ["", "new", "contacted", "touring", "applied", "leased", "lost"];
 const LIMIT = 20;
 
 function formatBudget(min: number | null, max: number | null) {
@@ -93,7 +95,9 @@ function InquiriesContent() {
     const params = new URLSearchParams(searchParams.toString());
     if (value) params.set(key, value);
     else params.delete(key);
-    params.delete("page");
+    // Changing a filter resets pagination; changing the page itself must not
+    // (previously this deleted the page it had just set, so paging was dead).
+    if (key !== "page") params.delete("page");
     router.push(`?${params.toString()}`);
   };
 
@@ -102,7 +106,7 @@ function InquiriesContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Inquiries</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Inquiries</h1>
         <p className="text-muted-foreground">
           {total} lead{total !== 1 ? "s" : ""} across your buildings
         </p>
@@ -113,8 +117,10 @@ function InquiriesContent() {
         {STATUSES.map((s) => (
           <button
             key={s || "all"}
+            type="button"
+            aria-pressed={status === s}
             onClick={() => setFilter("status", s)}
-            className={`rounded-full px-3 py-1 text-sm font-medium transition-colors capitalize ${
+            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors capitalize ${
               status === s
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -127,12 +133,13 @@ function InquiriesContent() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden="true" />
+          <span className="sr-only">Loading inquiries…</span>
         </div>
       ) : error ? (
         <Card>
-          <CardContent className="flex flex-col items-center py-16 text-center">
-            <p className="text-sm text-red-500">{error}</p>
+          <CardContent className="flex flex-col items-center py-16 text-center" role="alert">
+            <p className="text-sm text-red-400">{error}</p>
           </CardContent>
         </Card>
       ) : leads.length === 0 ? (
@@ -163,10 +170,10 @@ function InquiriesContent() {
                     <div className="flex-1 min-w-0 space-y-2">
                       {/* Name + status */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium">{lead.name || "Anonymous"}</p>
+                        <p className="min-w-0 break-words font-medium">{lead.name || "Anonymous"}</p>
                         <span
                           className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-                            STATUS_COLORS[lead.status] || "bg-gray-100 text-gray-500"
+                            STATUS_COLORS[lead.status] || "bg-white/10 text-white/70"
                           }`}
                         >
                           {lead.status}
@@ -181,9 +188,9 @@ function InquiriesContent() {
                         {lead.user_email && (
                           <a
                             href={`mailto:${lead.user_email}`}
-                            className="flex items-center gap-1.5 hover:text-foreground"
+                            className="flex min-w-0 items-center gap-1.5 break-all hover:text-foreground"
                           >
-                            <Mail className="h-3.5 w-3.5" />
+                            <Mail className="h-3.5 w-3.5 shrink-0" />
                             {lead.user_email}
                           </a>
                         )}
@@ -258,6 +265,7 @@ function InquiriesContent() {
               variant="outline"
               size="sm"
               disabled={page === 0}
+              aria-label="Previous page"
               onClick={() => setFilter("page", String(page - 1))}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -266,6 +274,7 @@ function InquiriesContent() {
               variant="outline"
               size="sm"
               disabled={page >= totalPages - 1}
+              aria-label="Next page"
               onClick={() => setFilter("page", String(page + 1))}
             >
               <ChevronRight className="h-4 w-4" />

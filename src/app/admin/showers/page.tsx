@@ -26,16 +26,16 @@ type ShowerRow = {
 };
 
 const statusConfig = {
-  pending: { label: "Pending", color: "bg-yellow-100 text-yellow-700", icon: Clock },
-  approved: { label: "Approved", color: "bg-green-100 text-green-700", icon: CheckCircle },
-  suspended: { label: "Suspended", color: "bg-red-100 text-red-700", icon: AlertTriangle },
-  terminated: { label: "Terminated", color: "bg-gray-100 text-gray-600", icon: AlertTriangle },
+  pending: { label: "Pending", color: "bg-yellow-500/15 text-yellow-300", icon: Clock },
+  approved: { label: "Approved", color: "bg-green-500/15 text-green-300", icon: CheckCircle },
+  suspended: { label: "Suspended", color: "bg-red-500/15 text-red-300", icon: AlertTriangle },
+  terminated: { label: "Terminated", color: "bg-white/10 text-white/60", icon: AlertTriangle },
 };
 
 const tierColors = {
-  rookie: "bg-gray-100 text-gray-600",
-  premier: "bg-blue-100 text-blue-700",
-  elite: "bg-amber-100 text-amber-700",
+  rookie: "bg-white/10 text-white/60",
+  premier: "bg-blue-500/15 text-blue-300",
+  elite: "bg-amber-500/15 text-amber-300",
 };
 
 export default async function AdminShowersPage() {
@@ -44,7 +44,7 @@ export default async function AdminShowersPage() {
 
   const adminClient = createAdminClient();
 
-  const { data: showers } = await adminClient
+  const { data: showers, error } = await adminClient
     .from("showers")
     .select(`
       id, display_name, phone, bio, status, tier,
@@ -53,6 +53,11 @@ export default async function AdminShowersPage() {
       approved_at, suspension_reason, created_at
     `)
     .order("created_at", { ascending: false });
+
+  if (error) {
+    // Otherwise a failed query renders as "No shower applications yet".
+    throw new Error(`Failed to load showers: ${error.message}`);
+  }
 
   const rows = (showers || []) as ShowerRow[];
 
@@ -72,19 +77,19 @@ export default async function AdminShowersPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Shower Management</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Shower Management</h1>
         <p className="text-muted-foreground">
           Approve applications, manage certifications, and monitor performance.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Total Showers", value: counts.total, icon: Users, color: "bg-blue-50 text-blue-600" },
-          { label: "Pending Review", value: counts.pending, icon: Clock, color: "bg-yellow-50 text-yellow-600" },
-          { label: "Active Showers", value: counts.approved, icon: CheckCircle, color: "bg-green-50 text-green-600" },
-          { label: "Suspended", value: counts.suspended, icon: AlertTriangle, color: "bg-red-50 text-red-600" },
+          { label: "Total Showers", value: counts.total, icon: Users, color: "bg-blue-500/10 text-blue-400" },
+          { label: "Pending Review", value: counts.pending, icon: Clock, color: "bg-yellow-500/10 text-yellow-400" },
+          { label: "Active Showers", value: counts.approved, icon: CheckCircle, color: "bg-green-500/10 text-green-400" },
+          { label: "Suspended", value: counts.suspended, icon: AlertTriangle, color: "bg-red-500/10 text-red-400" },
         ].map((stat) => {
           const Icon = stat.icon;
           return (
@@ -134,18 +139,18 @@ export default async function AdminShowersPage() {
           ) : (
             <div className="divide-y">
               {rows.map((shower) => (
-                <div key={shower.id} className="flex items-center justify-between px-6 py-4">
+                <div key={shower.id} className="flex items-start justify-between gap-3 px-4 py-4 sm:items-center sm:px-6">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                       <p className="font-medium truncate">{shower.display_name}</p>
-                      <Badge className={statusConfig[shower.status].color}>
+                      <Badge variant="outline" className={`border-transparent ${statusConfig[shower.status].color}`}>
                         {statusConfig[shower.status].label}
                       </Badge>
                       <Badge variant="outline" className={tierColors[shower.tier]}>
                         {shower.tier.charAt(0).toUpperCase() + shower.tier.slice(1)}
                       </Badge>
                     </div>
-                    <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                       {shower.phone && <span>{shower.phone}</span>}
                       <span>{shower.total_showings} showings</span>
                       {shower.avg_rating > 0 && (
@@ -176,11 +181,11 @@ export default async function AdminShowersPage() {
 
 function ShowerCard({ shower, formatDate }: { shower: ShowerRow; formatDate: (d: string) => string }) {
   return (
-    <Card className="border-yellow-200 bg-yellow-50/30">
+    <Card className="border-yellow-500/30 bg-yellow-500/5">
       <CardContent className="pt-4 pb-4">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 space-y-1">
-            <p className="font-semibold">{shower.display_name}</p>
+          <div className="min-w-0 flex-1 space-y-1">
+            <p className="break-words font-semibold">{shower.display_name}</p>
             {shower.phone && <p className="text-sm text-muted-foreground">{shower.phone}</p>}
             {shower.bio && <p className="text-sm text-muted-foreground line-clamp-2">{shower.bio}</p>}
             <p className="text-xs text-muted-foreground">

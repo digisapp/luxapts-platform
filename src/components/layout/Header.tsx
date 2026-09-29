@@ -10,6 +10,7 @@ import { StaycioMark } from "@/components/brand/StaycioMark";
 import { useAuth } from "@/contexts/AuthContext";
 import { openChat } from "@/lib/chat/open-chat";
 import { STACY_MAIN_LINE } from "@/lib/constants/stacy";
+import { useSitePathname } from "@/hooks/use-site-pathname";
 
 // Staff roles each have their own portal, but nothing in the UI linked to
 // them, so an admin had to type /admin by hand. Cosmetic only: every portal
@@ -20,6 +21,15 @@ const BROWSE_LINKS = [
   { href: "/cities", label: "Cities", icon: Building2 },
   { href: "/neighborhoods", label: "Neighborhoods", icon: MapPin },
   { href: "/compare", label: "Compare buildings", icon: GitCompare },
+] as const;
+
+// Desktop had no navigation at all — only favorites and sign in — so the
+// catalogue pages were reachable only from the footer.
+const DESKTOP_LINKS = [
+  { href: "/search", label: "Search" },
+  { href: "/cities", label: "Cities" },
+  { href: "/neighborhoods", label: "Neighborhoods" },
+  { href: "/compare", label: "Compare" },
 ] as const;
 
 const menuRow =
@@ -39,6 +49,7 @@ export function Header() {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { count: favoritesCount } = useFavorites();
   const { user, loading, role, signOut } = useAuth();
+  const pathname = useSitePathname();
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -77,14 +88,34 @@ export function Header() {
     <header className="fixed top-0 z-50 w-full safe-area-pt">
       {/* Glass background with subtle gradient */}
       <div className="absolute inset-0 bg-black/85 backdrop-blur-xl border-b border-white/[0.05]" />
-      <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <StaycioMark className="h-7 w-auto text-white group-hover:opacity-70 transition-opacity" />
-          <span className="text-lg font-medium tracking-tight text-white group-hover:opacity-70 transition-opacity">
-            Staycio
-          </span>
-        </Link>
+      <div className="relative mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
+        <div className="flex items-center gap-10">
+          {/* Logo */}
+          <Link href="/" className="-my-2 flex items-center gap-2 py-2 group">
+            <StaycioMark className="h-7 w-auto text-white group-hover:opacity-70 transition-opacity" />
+            <span className="text-lg font-medium tracking-tight text-white group-hover:opacity-70 transition-opacity">
+              Staycio
+            </span>
+          </Link>
+
+          <nav aria-label="Main" className="hidden md:flex items-center gap-1">
+            {DESKTOP_LINKS.map(({ href, label }) => {
+              const active = pathname === href || pathname.startsWith(`${href}/`);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
+                    active ? "bg-white/[0.08] text-white" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-4">
@@ -113,6 +144,7 @@ export function Header() {
                 }}
                 aria-expanded={userMenuOpen}
                 aria-haspopup="true"
+                aria-label={`Account menu for ${userName}`}
                 className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-zinc-600 to-zinc-800 flex items-center justify-center text-white text-sm font-medium">
@@ -176,7 +208,7 @@ export function Header() {
             <>
               <Link
                 href="/auth/login"
-                className="text-sm text-white/60 hover:text-white transition-colors"
+                className="-my-2 py-3 text-sm text-white/60 hover:text-white transition-colors"
               >
                 Sign in
               </Link>

@@ -242,13 +242,13 @@ export function ThreadView({ emailId, onBack, onRefresh }: {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <Button variant="ghost" size="icon" className="shrink-0" onClick={onBack} aria-label="Back to inbox">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h2 className="text-xl font-semibold truncate">{email.subject}</h2>
-          <Badge variant="outline" className="text-xs">
+          <h2 className="min-w-0 truncate text-lg font-semibold sm:text-xl">{email.subject}</h2>
+          <Badge variant="outline" className="shrink-0 text-xs">
             {thread.length} message{thread.length !== 1 ? "s" : ""}
           </Badge>
         </div>
@@ -265,12 +265,12 @@ export function ThreadView({ emailId, onBack, onRefresh }: {
               )}
             </span>
           )}
-          <Button variant="ghost" size="icon" onClick={toggleStar}>
+          <Button variant="ghost" size="icon" onClick={toggleStar} aria-label={email.is_starred ? "Unstar" : "Star"} aria-pressed={!!email.is_starred}>
             <Star
               className={`h-4 w-4 ${email.is_starred ? "fill-yellow-400 text-yellow-400" : ""}`}
             />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setReplyOpen(true)}>
+          <Button variant="ghost" size="icon" onClick={() => setReplyOpen(true)} aria-label="Reply">
             <Reply className="h-4 w-4" />
           </Button>
           <Button
@@ -278,6 +278,7 @@ export function ThreadView({ emailId, onBack, onRefresh }: {
             size="icon"
             onClick={handleDelete}
             disabled={deleting}
+            aria-label="Delete email"
           >
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
@@ -313,6 +314,7 @@ export function ThreadView({ emailId, onBack, onRefresh }: {
               size="icon"
               className="h-6 w-6"
               onClick={() => setDraftDismissed(true)}
+              aria-label="Dismiss draft"
             >
               <X className="h-3.5 w-3.5" />
             </Button>

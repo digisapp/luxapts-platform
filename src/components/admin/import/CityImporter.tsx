@@ -91,7 +91,7 @@ export function CityImporter() {
         <div className="text-sm text-muted-foreground">
           {totalBuildings} buildings across {CITIES.length} cities
           {doneCount > 0 && (
-            <span className="ml-2 text-green-600 font-medium">· {doneCount} imported</span>
+            <span className="ml-2 text-green-400 font-medium">· {doneCount} imported</span>
           )}
           {errorCount > 0 && (
             <span className="ml-2 text-red-500 font-medium">· {errorCount} failed</span>
@@ -141,7 +141,7 @@ export function CityImporter() {
                   {status === "done" && result && (
                     <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                       {result.buildings_created != null && result.buildings_created > 0 && (
-                        <span className="text-green-600">+{result.buildings_created} new</span>
+                        <span className="text-green-400">+{result.buildings_created} new</span>
                       )}
                       {result.buildings_updated != null && result.buildings_updated > 0 && (
                         <span>~{result.buildings_updated} updated</span>
@@ -169,7 +169,7 @@ export function CityImporter() {
                     <div className="mt-1.5">
                       <button
                         onClick={() => setState(city.slug, { expandedErrors: !expandedErrors })}
-                        className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-500"
+                        className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300"
                       >
                         {expandedErrors ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                         {result.errors.length} warning{result.errors.length !== 1 ? "s" : ""}
@@ -194,7 +194,7 @@ export function CityImporter() {
                   {status === "running" ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : status === "done" ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
                   ) : status === "error" ? (
                     <AlertCircle className="h-3.5 w-3.5" />
                   ) : (

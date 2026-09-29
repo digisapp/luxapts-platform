@@ -119,7 +119,7 @@ export function BuildingsManager({ cities, buildings: initialBuildings }: Buildi
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <BuildingStatsBar
           totalBuildings={statsSource.length}
           activeCount={activeCount}
@@ -173,18 +173,20 @@ export function BuildingsManager({ cities, buildings: initialBuildings }: Buildi
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search buildings..."
+            aria-label="Search buildings"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
           />
         </div>
-        <div className="flex items-center gap-1.5">
-          <Filter className="h-4 w-4 text-muted-foreground" />
+        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter buildings">
+          <Filter className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           {filterOptions.map((opt) => (
             <Button
               key={opt.value}
               variant={filter === opt.value ? "default" : "outline"}
               size="sm"
+              aria-pressed={filter === opt.value}
               onClick={() => setFilter(opt.value)}
             >
               {opt.label}

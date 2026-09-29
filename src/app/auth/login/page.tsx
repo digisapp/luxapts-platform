@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Sparkles } from "lucide-react";
+import { StaycioMark } from "@/components/brand/StaycioMark";
+import { Loader2 } from "lucide-react";
 
 /**
  * Resolve a ?redirect= value to a same-origin path.
@@ -67,8 +68,8 @@ function LoginForm() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-          <Sparkles className="h-6 w-6 text-cyan-400" />
-          <span className="text-2xl font-semibold text-white">Staycio</span>
+          <StaycioMark className="h-8 w-auto text-white" />
+          <span className="text-2xl font-medium tracking-tight text-white">Staycio</span>
         </Link>
 
         {/* Card */}
@@ -82,8 +83,9 @@ function LoginForm() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/70">Email</label>
+              <label htmlFor="login-email" className="mb-2 block text-sm font-medium text-white/70">Email</label>
               <Input
+                id="login-email"
                 type="email"
                 autoComplete="email"
                 value={email}
@@ -96,15 +98,16 @@ function LoginForm() {
 
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="block text-sm font-medium text-white/70">Password</label>
+                <label htmlFor="login-password" className="block text-sm font-medium text-white/70">Password</label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm text-white/50 hover:text-white/70 transition-colors"
+                  className="-my-3 py-3 text-sm text-white/50 hover:text-white/70 transition-colors"
                 >
                   Forgot password?
                 </Link>
               </div>
               <Input
+                id="login-password"
                 type="password"
                 autoComplete="current-password"
                 value={password}
@@ -133,14 +136,14 @@ function LoginForm() {
 
           <p className="mt-6 text-center text-sm text-white/50">
             Don&apos;t have an account?{" "}
-            <Link href="/auth/signup" className="text-white/70 hover:text-white transition-colors">
+            <Link href="/auth/signup" className="py-3 text-white/70 hover:text-white transition-colors">
               Sign up
             </Link>
           </p>
         </div>
 
         <p className="mt-6 text-center text-sm">
-          <Link href="/" className="text-white/50 hover:text-white/70 transition-colors">
+          <Link href="/" className="inline-flex min-h-11 items-center px-2 text-white/50 hover:text-white/70 transition-colors">
             Back to home
           </Link>
         </p>
@@ -159,8 +162,8 @@ export default function LoginPage() {
           </div>
           <div className="w-full max-w-md">
             <div className="flex items-center justify-center gap-2 mb-8">
-              <Sparkles className="h-6 w-6 text-cyan-400" />
-              <span className="text-2xl font-semibold text-white">Staycio</span>
+              <StaycioMark className="h-8 w-auto text-white" />
+              <span className="text-2xl font-medium tracking-tight text-white">Staycio</span>
             </div>
             <div className="p-8 rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]">
               <div className="flex flex-col items-center gap-4">

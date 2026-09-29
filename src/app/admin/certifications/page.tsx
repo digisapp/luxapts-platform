@@ -20,6 +20,10 @@ export default async function AdminCertificationsPage() {
     adminClient.from("building_certification_content").select("building_id, quiz_questions, shadows_required, updated_at"),
   ]);
 
+  if (buildingsRes.error) {
+    // Otherwise a failed query renders as "No buildings found".
+    throw new Error(`Failed to load buildings: ${buildingsRes.error.message}`);
+  }
   const buildings = buildingsRes.data || [];
   const contentMap = new Map(
     (contentRes.data || []).map((c) => [c.building_id, c])
@@ -28,7 +32,7 @@ export default async function AdminCertificationsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Building Certifications</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Building Certifications</h1>
         <p className="text-muted-foreground">
           Set up quiz questions and study materials for each building. Showers must complete
           these before they can claim leads.
@@ -53,25 +57,25 @@ export default async function AdminCertificationsPage() {
 
             return (
               <Card key={building.id} className="hover:shadow-sm transition-shadow">
-                <CardContent className="flex items-center justify-between py-4 px-6">
-                  <div className="flex items-center gap-4">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full shrink-0 ${isConfigured ? "bg-green-50" : "bg-amber-50"}`}>
+                <CardContent className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-full shrink-0 ${isConfigured ? "bg-green-500/10" : "bg-amber-500/10"}`}>
                       {isConfigured
-                        ? <CheckCircle className="h-5 w-5 text-green-600" />
+                        ? <CheckCircle className="h-5 w-5 text-green-400" />
                         : <AlertCircle className="h-5 w-5 text-amber-500" />
                       }
                     </div>
-                    <div>
-                      <p className="font-medium">{building.name}</p>
+                    <div className="min-w-0">
+                      <p className="break-words font-medium">{building.name}</p>
                       {building.address && (
                         <p className="text-sm text-muted-foreground">{building.address}</p>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-3 sm:shrink-0 sm:gap-4">
                     {isConfigured ? (
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                         <Badge variant="secondary" className="gap-1">
                           <BookOpen className="h-3 w-3" />
                           {questionCount} question{questionCount !== 1 ? "s" : ""}
@@ -82,7 +86,7 @@ export default async function AdminCertificationsPage() {
                         </Badge>
                       </div>
                     ) : (
-                      <span className="text-sm text-amber-600 font-medium">Not configured</span>
+                      <span className="text-sm text-amber-400 font-medium">Not configured</span>
                     )}
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/admin/certifications/${building.id}`}>

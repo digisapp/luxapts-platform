@@ -60,7 +60,7 @@ export default async function AdminAgentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Agents</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Agents</h1>
         <p className="text-muted-foreground">
           Manage agents, view performance, and toggle availability
         </p>

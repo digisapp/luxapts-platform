@@ -4,6 +4,7 @@ import { apiError } from "@/lib/api-helpers";
 import { getFirstRelation } from "@/lib/db-helpers";
 import { isValidUUID } from "@/lib/utils";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
+import { policyText, withPolicyText } from "@/lib/policy-text";
 
 interface CompareBody {
   building_a_id: string;
@@ -73,16 +74,24 @@ export async function POST(req: Request) {
       return getFirstRelation(item.amenities)?.name;
     };
 
-    const aAmenities = new Set(
-      (aAmenitiesRes.data || [])
-        .map(extractAmenityName)
-        .filter(Boolean) as string[]
-    );
-    const bAmenities = new Set(
-      (bAmenitiesRes.data || [])
-        .map(extractAmenityName)
-        .filter(Boolean) as string[]
-    );
+    // Scraped names differ only in case/spacing across (and within) buildings:
+    // "Rooftop Pool" vs "Rooftop pool" used to be two rows, each marking the
+    // other building as lacking a pool. Match on a normalized key and show one
+    // label per amenity — the first spelling seen — for both buildings.
+    const labels = new Map<string, string>();
+    const toAmenitySet = (rows: typeof aAmenitiesRes.data) =>
+      new Set(
+        (rows || [])
+          .map(extractAmenityName)
+          .filter((name): name is string => !!name && !!name.trim())
+          .map((name) => {
+            const key = name.trim().toLowerCase().replace(/\s+/g, " ");
+            if (!labels.has(key)) labels.set(key, name.trim().replace(/\s+/g, " "));
+            return labels.get(key)!;
+          })
+      );
+    const aAmenities = toAmenitySet(aAmenitiesRes.data);
+    const bAmenities = toAmenitySet(bAmenitiesRes.data);
 
     // Calculate price stats for each building from its currently available
     // units only (chunked + paged by building — no unit-id list in any URL).
@@ -144,21 +153,21 @@ export async function POST(req: Request) {
     return NextResponse.json({
       captured_at_max,
       building_a: {
-        ...aRes.data,
+        ...withPolicyText(aRes.data),
         amenities: [...aAmenities],
         policies: {
-          pets: aRes.data.pet_policy,
-          parking: aRes.data.parking_policy,
+          pets: policyText(aRes.data.pet_policy),
+          parking: policyText(aRes.data.parking_policy),
         },
         price_stats: { by_beds: aStats.by_beds },
         price_captured_at_max: aStats.captured_at_max,
       },
       building_b: {
-        ...bRes.data,
+        ...withPolicyText(bRes.data),
         amenities: [...bAmenities],
         policies: {
-          pets: bRes.data.pet_policy,
-          parking: bRes.data.parking_policy,
+          pets: policyText(bRes.data.pet_policy),
+          parking: policyText(bRes.data.parking_policy),
         },
         price_stats: { by_beds: bStats.by_beds },
         price_captured_at_max: bStats.captured_at_max,

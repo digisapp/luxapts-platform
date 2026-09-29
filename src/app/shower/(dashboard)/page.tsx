@@ -13,9 +13,9 @@ import {
 export const dynamic = "force-dynamic";
 
 const tierColors: Record<string, string> = {
-  rookie: "bg-gray-100 text-gray-700",
-  premier: "bg-blue-100 text-blue-700",
-  elite: "bg-amber-100 text-amber-700",
+  rookie: "bg-white/10 text-white/80",
+  premier: "bg-blue-500/15 text-blue-300",
+  elite: "bg-amber-500/15 text-amber-300",
 };
 
 const tierLabels: Record<string, string> = {
@@ -31,7 +31,7 @@ export default async function ShowerDashboardPage() {
   if (shower.status === "pending") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-50">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
           <Clock className="h-8 w-8 text-amber-500" />
         </div>
         <h2 className="text-2xl font-bold">Application Pending</h2>
@@ -46,7 +46,7 @@ export default async function ShowerDashboardPage() {
   if (shower.status === "suspended" || shower.status === "terminated") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
           <AlertTriangle className="h-8 w-8 text-red-500" />
         </div>
         <h2 className="text-2xl font-bold capitalize">Account {shower.status}</h2>
@@ -114,10 +114,10 @@ export default async function ShowerDashboardPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Welcome, {shower.display_name}</h1>
-          <div className="mt-1 flex items-center gap-3">
-            <Badge className={tierColors[shower.tier]}>{tierLabels[shower.tier]}</Badge>
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold break-words sm:text-3xl">Welcome, {shower.display_name}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Badge variant="outline" className={`border-transparent ${tierColors[shower.tier]}`}>{tierLabels[shower.tier]}</Badge>
             {shower.avg_rating > 0 && (
               <span className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
@@ -140,11 +140,11 @@ export default async function ShowerDashboardPage() {
           ? (lead as unknown as { buildings?: { name: string } }).buildings
           : null;
         return (
-          <Card className="border-blue-200 bg-blue-50/50">
-            <CardContent className="flex items-center justify-between pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                  <MapPin className="h-5 w-5 text-blue-600" />
+          <Card className="border-blue-500/30 bg-blue-500/5">
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-4 pb-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/15">
+                  <MapPin className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
                   <p className="font-medium">Active Showing</p>
@@ -164,12 +164,12 @@ export default async function ShowerDashboardPage() {
       })()}
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
-                <DollarSign className="h-6 w-6 text-green-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
+                <DollarSign className="h-6 w-6 text-green-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Available</p>
@@ -182,8 +182,8 @@ export default async function ShowerDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
-                <Clock className="h-6 w-6 text-amber-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                <Clock className="h-6 w-6 text-amber-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Pending</p>
@@ -196,8 +196,8 @@ export default async function ShowerDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
+                <TrendingUp className="h-6 w-6 text-blue-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">This Month</p>
@@ -210,8 +210,8 @@ export default async function ShowerDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-50">
-                <Award className="h-6 w-6 text-purple-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/10">
+                <Award className="h-6 w-6 text-purple-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Certifications</p>

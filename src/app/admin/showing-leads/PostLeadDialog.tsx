@@ -104,12 +104,12 @@ export function PostLeadDialog({ buildings }: { buildings: Building[] }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label>Building *</Label>
+            <Label htmlFor="post-lead-building">Building *</Label>
             <Select
               value={form.building_id}
               onValueChange={(v) => setForm({ ...form, building_id: v })}
             >
-              <SelectTrigger>
+              <SelectTrigger id="post-lead-building">
                 <SelectValue placeholder="Select a building..." />
               </SelectTrigger>
               <SelectContent>

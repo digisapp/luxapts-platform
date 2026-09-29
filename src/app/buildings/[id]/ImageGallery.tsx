@@ -24,6 +24,14 @@ interface ImageGalleryProps {
 const overlayButton =
   "bg-black/50 hover:bg-black/70 text-white transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus-visible:opacity-100";
 
+// Stored categories are raw slugs ("pool", "floor_plan"); title-case them.
+export function categoryLabel(category: string): string {
+  return category
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function ImageGallery({ images: allImages, buildingName }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   // Scraped photo URLs go stale when a building's site deletes them. Drop the
@@ -96,8 +104,11 @@ export function ImageGallery({ images: allImages, buildingName }: ImageGalleryPr
           alt={currentImage.alt || buildingName}
           fill
           className="object-cover"
-          sizes="(max-width: 768px) 100vw, 66vw"
-          priority
+          sizes="(max-width: 1024px) 100vw, 66vw"
+          // The first photo is the page's LCP element: fetch it eagerly and
+          // ahead of everything else (`priority` is deprecated in Next 16).
+          loading={safeIndex === 0 ? "eager" : undefined}
+          fetchPriority={safeIndex === 0 ? "high" : undefined}
           onError={() => markFailed(currentImage.url)}
         />
 
@@ -145,8 +156,8 @@ export function ImageGallery({ images: allImages, buildingName }: ImageGalleryPr
 
         {/* Category Badge */}
         {currentImage.category && (
-          <div className="absolute top-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full capitalize">
-            {currentImage.category}
+          <div className="absolute top-3 left-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
+            {categoryLabel(currentImage.category)}
           </div>
         )}
       </div>
@@ -172,6 +183,9 @@ export function ImageGallery({ images: allImages, buildingName }: ImageGalleryPr
                 fill
                 className="object-cover"
                 sizes="80px"
+                // Shares the hero's src; if it stays lazy Next's LCP check
+                // keys on it and warns that the hero is lazy-loaded.
+                loading={index === 0 ? "eager" : undefined}
                 onError={() => markFailed(image.url)}
               />
             </button>

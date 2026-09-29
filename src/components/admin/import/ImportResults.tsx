@@ -16,30 +16,30 @@ export function ImportResults({ results }: ImportResultsProps) {
           <p className="text-sm text-muted-foreground">Total Processed</p>
           <p className="text-2xl font-bold">{results.total}</p>
         </div>
-        <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950">
-          <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+        <div className="p-4 rounded-lg bg-green-500/10">
+          <div className="flex items-center gap-2 text-green-300">
             <Plus className="h-4 w-4" />
             <p className="text-sm">Created</p>
           </div>
-          <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+          <p className="text-2xl font-bold text-green-300">
             {results.created}
           </p>
         </div>
-        <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950">
-          <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+        <div className="p-4 rounded-lg bg-blue-500/10">
+          <div className="flex items-center gap-2 text-blue-300">
             <RefreshCw className="h-4 w-4" />
             <p className="text-sm">Updated</p>
           </div>
-          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+          <p className="text-2xl font-bold text-blue-300">
             {results.updated}
           </p>
         </div>
-        <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950">
-          <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+        <div className="p-4 rounded-lg bg-red-500/10">
+          <div className="flex items-center gap-2 text-red-300">
             <XCircle className="h-4 w-4" />
             <p className="text-sm">Failed</p>
           </div>
-          <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+          <p className="text-2xl font-bold text-red-300">
             {results.failed}
           </p>
         </div>
@@ -47,7 +47,7 @@ export function ImportResults({ results }: ImportResultsProps) {
 
       {/* Status Message */}
       {results.success ? (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400">
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 text-green-300">
           <CheckCircle className="h-5 w-5" />
           <p className="font-medium">
             Import completed successfully! All {results.total} buildings were
@@ -55,7 +55,7 @@ export function ImportResults({ results }: ImportResultsProps) {
           </p>
         </div>
       ) : (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-400">
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-yellow-500/10 text-yellow-300">
           <XCircle className="h-5 w-5" />
           <p className="font-medium">
             Import completed with {results.failed} error(s). Please review the
@@ -70,7 +70,7 @@ export function ImportResults({ results }: ImportResultsProps) {
           <div className="px-4 py-2 bg-muted font-medium text-sm">
             Failed Rows
           </div>
-          <div className="max-h-60 overflow-y-auto">
+          <div className="max-h-60 overflow-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 sticky top-0">
                 <tr>
@@ -84,7 +84,7 @@ export function ImportResults({ results }: ImportResultsProps) {
                   .map((row) => (
                     <tr key={row.rowIndex} className="border-t">
                       <td className="px-4 py-2">{row.rowIndex}</td>
-                      <td className="px-4 py-2 text-red-600">{row.error}</td>
+                      <td className="px-4 py-2 text-red-400">{row.error}</td>
                     </tr>
                   ))}
               </tbody>

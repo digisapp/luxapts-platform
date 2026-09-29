@@ -181,7 +181,7 @@ export default function LeadFeedPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Lead Feed</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Lead Feed</h1>
         <p className="text-muted-foreground">
           Open showings for buildings you are certified for. Claim one to see client details.
         </p>
@@ -189,10 +189,11 @@ export default function LeadFeedPage() {
 
       {/* Messages */}
       {loadError && (
-        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {loadError}
           <button
+            type="button"
             onClick={() => loadLeads()}
             className="ml-auto text-xs underline"
           >
@@ -201,17 +202,17 @@ export default function LeadFeedPage() {
         </div>
       )}
       {error && (
-        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
-          <button onClick={() => setError(null)} className="ml-auto text-xs underline">dismiss</button>
+          <button type="button" onClick={() => setError(null)} className="ml-auto text-xs underline">dismiss</button>
         </div>
       )}
       {successMsg && (
-        <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+        <div role="status" className="flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-300">
           <CheckCircle className="h-4 w-4 shrink-0" />
           {successMsg}
-          <button onClick={() => setSuccessMsg(null)} className="ml-auto text-xs underline">dismiss</button>
+          <button type="button" onClick={() => setSuccessMsg(null)} className="ml-auto text-xs underline">dismiss</button>
         </div>
       )}
 
@@ -222,11 +223,11 @@ export default function LeadFeedPage() {
           {claimedLeads.map((claim) => {
             const lead = claim.showing_leads;
             return (
-              <Card key={claim.id} className="border-blue-200 bg-blue-50/40">
+              <Card key={claim.id} className="border-blue-500/30 bg-blue-500/5">
                 <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{lead.buildings.name}</CardTitle>
-                    <Badge className="bg-blue-100 text-blue-700">Active</Badge>
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="min-w-0 text-base">{lead.buildings.name}</CardTitle>
+                    <Badge variant="outline" className="shrink-0 border-transparent bg-blue-500/15 text-blue-300">Active</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -244,20 +245,20 @@ export default function LeadFeedPage() {
                   </div>
 
                   {/* Client info (revealed after claiming) */}
-                  <div className="rounded-lg bg-white border p-4 space-y-2">
+                  <div className="rounded-lg border bg-muted p-4 space-y-2">
                     <p className="font-medium text-sm">Client Details</p>
                     <p className="text-sm flex items-center gap-2">
                       <span className="text-muted-foreground">Name:</span>
                       {lead.client_name}
                     </p>
                     {lead.client_phone && (
-                      <a href={`tel:${lead.client_phone}`} className="text-sm flex items-center gap-2 text-primary hover:underline">
+                      <a href={`tel:${lead.client_phone}`} className="text-sm flex min-w-0 items-center gap-2 break-all text-primary hover:underline">
                         <Phone className="h-3.5 w-3.5" />
                         {lead.client_phone}
                       </a>
                     )}
                     {lead.client_email && (
-                      <a href={`mailto:${lead.client_email}`} className="text-sm flex items-center gap-2 text-primary hover:underline">
+                      <a href={`mailto:${lead.client_email}`} className="text-sm flex min-w-0 items-center gap-2 break-all text-primary hover:underline">
                         <Mail className="h-3.5 w-3.5" />
                         {lead.client_email}
                       </a>
@@ -272,7 +273,7 @@ export default function LeadFeedPage() {
 
                   <Button
                     className="w-full"
-                    onClick={() => setDebriefLeadId(lead.id)}
+                    onClick={() => { setError(null); setDebriefLeadId(lead.id); }}
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     Submit Debrief
@@ -303,7 +304,7 @@ export default function LeadFeedPage() {
               </Card>
             ))}
           </div>
-        ) : openLeads.length === 0 ? (
+        ) : loadError ? null : openLeads.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12 text-center space-y-3">
               <MapPin className="h-10 w-10 text-muted-foreground/40" />
@@ -322,8 +323,8 @@ export default function LeadFeedPage() {
             {openLeads.map((lead) => (
               <Card key={lead.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
                       <CardTitle className="text-base">{lead.buildings.name}</CardTitle>
                       {lead.buildings.address && (
                         <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
@@ -332,7 +333,7 @@ export default function LeadFeedPage() {
                         </p>
                       )}
                     </div>
-                    <Badge variant="secondary">{lead.unit_type || "Any"}</Badge>
+                    <Badge variant="secondary" className="shrink-0">{lead.unit_type || "Any"}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -379,20 +380,21 @@ export default function LeadFeedPage() {
           <div className="space-y-5">
             {/* Did client show up? */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Did the client show up?</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <Label id="debrief-showed-up" className="text-sm font-medium">Did the client show up?</Label>
+              <div className="grid grid-cols-2 gap-3" role="group" aria-labelledby="debrief-showed-up">
                 {[
-                  { value: true, label: "Yes — toured the building", color: "border-green-500 bg-green-50" },
-                  { value: false, label: "No — client no-show", color: "border-red-300 bg-red-50" },
+                  { value: true, label: "Yes — toured the building", color: "border-green-500 bg-green-500/10" },
+                  { value: false, label: "No — client no-show", color: "border-red-500/30 bg-red-500/10" },
                 ].map((opt) => (
                   <button
                     key={String(opt.value)}
                     type="button"
+                    aria-pressed={debriefForm.client_showed_up === opt.value}
                     onClick={() => setDebriefForm({ ...debriefForm, client_showed_up: opt.value })}
                     className={`rounded-lg border-2 p-3 text-sm text-left transition-all ${
                       debriefForm.client_showed_up === opt.value
                         ? opt.color + " font-medium"
-                        : "border-muted hover:border-muted-foreground"
+                        : "border-white/20 hover:border-muted-foreground"
                     }`}
                   >
                     {opt.label}
@@ -405,17 +407,19 @@ export default function LeadFeedPage() {
             {debriefForm.client_showed_up === true && (
               <>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Client Interest Level</Label>
-                  <div className="flex gap-2">
+                  <Label id="debrief-interest" className="text-sm font-medium">Client Interest Level</Label>
+                  <div className="flex flex-wrap gap-2" role="group" aria-labelledby="debrief-interest">
                     {[1, 2, 3, 4, 5].map((n) => (
                       <button
                         key={n}
                         type="button"
+                        aria-pressed={debriefForm.interest_level === n}
+                        aria-label={`Interest level ${n} of 5`}
                         onClick={() => setDebriefForm({ ...debriefForm, interest_level: n })}
                         className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-sm font-medium transition-all ${
                           debriefForm.interest_level === n
                             ? "border-primary bg-primary text-primary-foreground"
-                            : "border-muted hover:border-primary"
+                            : "border-white/20 hover:border-primary"
                         }`}
                       >
                         {n}
@@ -428,8 +432,8 @@ export default function LeadFeedPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Likelihood to Apply</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <Label id="debrief-likelihood" className="text-sm font-medium">Likelihood to Apply</Label>
+                  <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="debrief-likelihood">
                     {[
                       { value: "already_interested", label: "Already Interested" },
                       { value: "high", label: "High" },
@@ -439,11 +443,12 @@ export default function LeadFeedPage() {
                       <button
                         key={opt.value}
                         type="button"
+                        aria-pressed={debriefForm.application_likelihood === opt.value}
                         onClick={() => setDebriefForm({ ...debriefForm, application_likelihood: opt.value })}
                         className={`rounded-lg border p-2 text-sm transition-all ${
                           debriefForm.application_likelihood === opt.value
                             ? "border-primary bg-primary/10 font-medium"
-                            : "border-muted hover:border-primary"
+                            : "border-white/20 hover:border-primary"
                         }`}
                       >
                         {opt.label}
@@ -498,7 +503,7 @@ export default function LeadFeedPage() {
             )}
 
             {debriefForm.client_showed_up === false && (
-              <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800 space-y-1">
+              <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-4 text-sm text-amber-300 space-y-1">
                 <div className="flex items-center gap-2 font-medium">
                   <AlertCircle className="h-4 w-4" />
                   No-Show Notice
@@ -510,6 +515,15 @@ export default function LeadFeedPage() {
               </div>
             )}
           </div>
+
+          {/* The page-level error banner sits behind the modal overlay, so
+              repeat submit failures here where the shower can see them. */}
+          {error && (
+            <p role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </p>
+          )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDebriefLeadId(null)}>

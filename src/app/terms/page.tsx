@@ -15,7 +15,7 @@ export default function TermsPage() {
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Header />
       <main className="flex-1">
-        <div className="mx-auto max-w-3xl px-6 py-16">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-28 pb-16 md:pt-32">
           <h1 className="text-3xl lg:text-4xl font-semibold tracking-tight">
             Terms of Service
           </h1>
@@ -127,7 +127,7 @@ export default function TermsPage() {
                 effect constitutes acceptance. Questions:{" "}
                 <a
                   href="mailto:hello@staycio.com"
-                  className="text-white underline underline-offset-4 hover:text-zinc-300"
+                  className="py-3 text-white underline underline-offset-4 hover:text-zinc-300"
                 >
                   hello@staycio.com
                 </a>

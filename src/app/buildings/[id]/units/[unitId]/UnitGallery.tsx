@@ -2,9 +2,10 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useSwipe } from "@/hooks/use-swipe";
+import { categoryLabel } from "../../ImageGallery";
 
 interface UnitImage {
   id: string;
@@ -18,6 +19,8 @@ interface UnitImage {
 interface UnitGalleryProps {
   images: UnitImage[];
   unitLabel: string;
+  /** Tag shown on every photo when they are not the unit's own, e.g. "Building photos". */
+  sourceLabel?: string;
 }
 
 // Arrows stay visible on touch screens (there is no hover to reveal them);
@@ -25,7 +28,7 @@ interface UnitGalleryProps {
 const arrow =
   "absolute top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white transition-opacity hover:bg-black/70 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus-visible:opacity-100";
 
-export function UnitGallery({ images: allImages, unitLabel }: UnitGalleryProps) {
+export function UnitGallery({ images: allImages, unitLabel, sourceLabel }: UnitGalleryProps) {
   const [current, setCurrent] = useState(0);
   // Scraped photo URLs go stale (the building's site deletes them). Drop any
   // that fail instead of showing a broken-image icon.
@@ -63,14 +66,26 @@ export function UnitGallery({ images: allImages, unitLabel }: UnitGalleryProps) 
           alt={image.alt_text || unitLabel}
           fill
           className="object-cover"
-          sizes="(max-width: 768px) 100vw, 66vw"
-          priority={safeIndex === 0}
+          sizes="(max-width: 1024px) 100vw, 66vw"
+          // LCP element; `priority` is deprecated in Next 16
+          loading={safeIndex === 0 ? "eager" : undefined}
+          fetchPriority={safeIndex === 0 ? "high" : undefined}
           onError={() => markFailed(image.id)}
         />
-        {image.category && (
-          <Badge className="absolute top-3 left-3 bg-black/50 text-white border-0 capitalize">
-            {image.category}
-          </Badge>
+        {(sourceLabel || image.category) && (
+          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+            {sourceLabel && (
+              <Badge className="gap-1 border border-white/20 bg-black/70 text-white backdrop-blur-sm hover:bg-black/70">
+                <Building2 className="h-3 w-3" />
+                {sourceLabel}
+              </Badge>
+            )}
+            {image.category && (
+              <Badge className="bg-black/60 text-white border-0 backdrop-blur-sm hover:bg-black/60">
+                {categoryLabel(image.category)}
+              </Badge>
+            )}
+          </div>
         )}
         {count > 1 && (
           <>
@@ -106,6 +121,8 @@ export function UnitGallery({ images: allImages, unitLabel }: UnitGalleryProps) 
                 fill
                 className="object-cover"
                 sizes="96px"
+                // Shares the hero's src — keep it eager (see ImageGallery)
+                loading={i === 0 ? "eager" : undefined}
                 onError={() => markFailed(img.id)}
               />
             </button>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Settings, Save, Loader2, CheckCircle } from "lucide-react";
 
 interface PartnerSettings {
@@ -93,7 +94,7 @@ export default function PartnerSettingsPage() {
   if (loadError) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-red-500">{loadError}</p>
+        <p role="alert" className="text-sm text-red-400">{loadError}</p>
       </div>
     );
   }
@@ -101,7 +102,7 @@ export default function PartnerSettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Settings</h1>
         <p className="text-muted-foreground">Manage your partner profile</p>
       </div>
 
@@ -109,7 +110,7 @@ export default function PartnerSettingsPage() {
       {settings && (
         <Card>
           <CardContent className="pt-5 pb-5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-medium">Account Status</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -139,9 +140,10 @@ export default function PartnerSettingsPage() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="text-sm font-medium">Company Name</label>
-              <input
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+              <label htmlFor="partner-company_name" className="text-sm font-medium">Company Name</label>
+              <Input
+                id="partner-company_name"
+                className="mt-1"
                 value={form.company_name}
                 onChange={(e) => setForm((f) => ({ ...f, company_name: e.target.value }))}
                 placeholder="Acme Properties LLC"
@@ -149,9 +151,10 @@ export default function PartnerSettingsPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Contact Name</label>
-              <input
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+              <label htmlFor="partner-contact_name" className="text-sm font-medium">Contact Name</label>
+              <Input
+                id="partner-contact_name"
+                className="mt-1"
                 value={form.contact_name}
                 onChange={(e) => setForm((f) => ({ ...f, contact_name: e.target.value }))}
                 placeholder="Jane Smith"
@@ -159,10 +162,11 @@ export default function PartnerSettingsPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Contact Phone</label>
-              <input
+              <label htmlFor="partner-contact_phone" className="text-sm font-medium">Contact Phone</label>
+              <Input
+                id="partner-contact_phone"
                 type="tel"
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                className="mt-1"
                 value={form.contact_phone}
                 onChange={(e) => setForm((f) => ({ ...f, contact_phone: e.target.value }))}
                 placeholder="+1 (555) 000-0000"
@@ -170,10 +174,11 @@ export default function PartnerSettingsPage() {
             </div>
 
             <div className="sm:col-span-2">
-              <label className="text-sm font-medium">Contact Email</label>
-              <input
+              <label htmlFor="partner-contact_email" className="text-sm font-medium">Contact Email</label>
+              <Input
+                id="partner-contact_email"
                 type="email"
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                className="mt-1"
                 value={form.contact_email}
                 onChange={(e) => setForm((f) => ({ ...f, contact_email: e.target.value }))}
                 placeholder="contact@yourcompany.com"
@@ -181,20 +186,20 @@ export default function PartnerSettingsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-3 pt-2">
             <Button onClick={save} disabled={saving}>
               {saving
                 ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 : <Save className="h-4 w-4 mr-2" />
               }
-              Save Changes
+              {saving ? "Saving…" : "Save Changes"}
             </Button>
             {saved && (
-              <span className="flex items-center gap-1.5 text-sm text-green-600">
+              <span role="status" className="flex items-center gap-1.5 text-sm text-green-400">
                 <CheckCircle className="h-4 w-4" /> Saved
               </span>
             )}
-            {saveError && <span className="text-sm text-red-500">{saveError}</span>}
+            {saveError && <span role="alert" className="text-sm text-red-400">{saveError}</span>}
           </div>
         </CardContent>
       </Card>

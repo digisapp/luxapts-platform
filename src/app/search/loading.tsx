@@ -1,13 +1,13 @@
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SearchLoading() {
   return (
     <div className="flex min-h-screen flex-col bg-black">
       <Header />
-      <main className="flex-1 pt-20">
-        <div className="container mx-auto px-4">
+      <main className="flex-1 pt-20 pb-12 md:pt-24">
+        {/* Footer comes from search/layout.tsx */}
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
           {/* Search bar skeleton */}
           <div className="mb-8">
             <Skeleton className="h-14 w-full max-w-xl rounded-full bg-white/[0.05]" />
@@ -39,7 +39,6 @@ export default function SearchLoading() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

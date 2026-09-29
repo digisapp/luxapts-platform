@@ -62,7 +62,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
         <p className="text-muted-foreground">Command center for Staycio</p>
       </div>
 
@@ -260,16 +260,16 @@ export default async function AdminDashboardPage() {
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         lead.status === "new"
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-green-500/15 text-green-300"
                           : lead.status === "contacted"
-                          ? "bg-blue-100 text-blue-800"
+                          ? "bg-blue-500/15 text-blue-300"
                           : lead.status === "touring"
-                          ? "bg-purple-100 text-purple-800"
+                          ? "bg-purple-500/15 text-purple-300"
                           : lead.status === "applied"
-                          ? "bg-yellow-100 text-yellow-800"
+                          ? "bg-yellow-500/15 text-yellow-300"
                           : lead.status === "leased"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-gray-100 text-gray-800"
+                          ? "bg-emerald-500/15 text-emerald-300"
+                          : "bg-white/10 text-white/80"
                       }`}
                     >
                       {lead.status}

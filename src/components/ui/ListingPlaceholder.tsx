@@ -50,11 +50,11 @@ export function ListingPlaceholder({
     >
       <Building2 className="h-10 w-10 text-white/20" strokeWidth={1.25} />
       {showName && name ? (
-        <span className="px-4 text-center text-[11px] font-medium uppercase tracking-[0.15em] text-white/30 line-clamp-2">
+        <span className="px-4 text-center text-xs font-medium uppercase tracking-[0.15em] text-white/40 line-clamp-2">
           {name}
         </span>
       ) : null}
-      <span className="text-[10px] uppercase tracking-[0.2em] text-white/20">Photo coming soon</span>
+      <span className="text-xs uppercase tracking-[0.2em] text-white/30">Photo coming soon</span>
     </div>
   );
 }

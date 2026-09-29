@@ -11,6 +11,7 @@ import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 import { buildingPath } from "@/lib/seo/urls";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
+import { HERO_CANDIDATES, heroImageUrl } from "@/lib/images/hero";
 
 export const revalidate = 3600;
 
@@ -89,6 +90,9 @@ async function getHomeData(): Promise<{
             building_images!left (url, is_primary, sort_order)
           `)
           .eq("status", "active")
+          .order("is_primary", { referencedTable: "building_images", ascending: false, nullsFirst: false })
+          .order("sort_order", { referencedTable: "building_images" })
+          .limit(HERO_CANDIDATES, { referencedTable: "building_images" })
           .order("id")
           .range(from, to)
       ),
@@ -140,13 +144,7 @@ async function getHomeData(): Promise<{
       return diff !== 0 ? diff : a.name.localeCompare(b.name);
     });
 
-    const primaryImageUrl = (b: HomeBuildingRow): string | null => {
-      const images = [...((b.building_images ?? []) as BuildingImageRow[])].sort((a, c) => {
-        if (a.is_primary !== c.is_primary) return a.is_primary ? -1 : 1;
-        return a.sort_order - c.sort_order;
-      });
-      return images[0]?.url ?? null;
-    };
+    const primaryImageUrl = (b: HomeBuildingRow): string | null => heroImageUrl(b.building_images);
     const perCity: Record<string, number> = {};
     const seenImages = new Set<string>();
     const seenFamilies = new Set<string>();
@@ -216,10 +214,6 @@ async function getHomeData(): Promise<{
     }
 
     const featured: FeaturedBuilding[] = picked.map((b) => {
-      const images = [...((b.building_images ?? []) as BuildingImageRow[])].sort((a, c) => {
-        if (a.is_primary !== c.is_primary) return a.is_primary ? -1 : 1;
-        return a.sort_order - c.sort_order;
-      });
       const city = getFirstRelation(b.cities);
       const neighborhood = getFirstRelation(b.neighborhoods);
 
@@ -230,7 +224,7 @@ async function getHomeData(): Promise<{
         cityName: city?.name ?? null,
         neighborhood: neighborhood?.name ?? null,
         // `eligible()` already guaranteed a real photo for every featured card.
-        image: images[0]!.url,
+        image: primaryImageUrl(b)!,
         availableUnits: unitCount[b.id] || 0,
         minPrice: minPrice[b.id] ?? null,
         bedRange: bedRange[b.id] ?? null,

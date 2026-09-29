@@ -21,7 +21,7 @@ interface ConversationFiltersProps {
 }
 
 const SELECT_CLASS =
-  "h-11 md:h-10 rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-white/20";
+  "h-11 md:h-10 rounded-lg border border-white/10 bg-white/[0.03] px-3 text-base md:text-sm outline-none focus-visible:ring-2 focus-visible:ring-white/20";
 
 /**
  * Filter bar for the Chat Log. The page itself is server-rendered from the

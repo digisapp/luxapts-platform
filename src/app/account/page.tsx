@@ -66,11 +66,15 @@ export default function AccountPage() {
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
 
-  // Redirect if not logged in
+  // Visitors who arrive logged out (a bookmarked link) are sent to sign in and
+  // brought back here. Someone who signs out while here — from this page or
+  // the header menu, both of which navigate home — is sent home too, never
+  // bounced onto the login page they just left.
+  const hadUserRef = useRef(false);
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/");
-    }
+    if (user) hadUserRef.current = true;
+    if (loading || user) return;
+    router.replace(hadUserRef.current ? "/" : "/auth/login?redirect=/account");
   }, [user, loading, router]);
 
   // Load profile
@@ -160,7 +164,7 @@ export default function AccountPage() {
       <Header />
 
       <main className="flex-1 bg-muted/20">
-        <div className="container mx-auto px-4 pt-20 pb-20 md:pt-24 max-w-4xl">
+        <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 pt-20 pb-20 md:pt-24">
           {/* Page title */}
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -312,9 +316,9 @@ export default function AccountPage() {
                   <div className="text-center py-6">
                     <Search className="mx-auto h-8 w-8 text-muted-foreground/30 mb-3" />
                     <p className="text-sm text-muted-foreground mb-3">No saved searches yet</p>
-                    <Link href="/search">
-                      <Button variant="outline" size="sm">Start searching</Button>
-                    </Link>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href="/search">Start searching</Link>
+                    </Button>
                   </div>
                 ) : (
                   <div className="divide-y">
@@ -381,9 +385,9 @@ export default function AccountPage() {
                   <div className="text-center py-6">
                     <Building2 className="mx-auto h-8 w-8 text-muted-foreground/30 mb-3" />
                     <p className="text-sm text-muted-foreground mb-3">No favorites yet</p>
-                    <Link href="/search">
-                      <Button variant="outline" size="sm">Browse buildings</Button>
-                    </Link>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href="/search">Browse buildings</Link>
+                    </Button>
                   </div>
                 ) : (
                   <div className="divide-y">

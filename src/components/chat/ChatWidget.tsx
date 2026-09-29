@@ -301,7 +301,7 @@ export function ChatWidget() {
           <MessageCircle className="h-6 w-6" />
           <span
             aria-hidden="true"
-            className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-400 text-[10px] text-black font-semibold"
+            className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-400 px-1 text-xs leading-none text-black font-semibold"
           >
             AI
           </span>
@@ -331,7 +331,7 @@ export function ChatWidget() {
               </div>
               <div>
                 <p className="text-sm font-medium text-white">Stacy</p>
-                <p className="text-[11px] leading-tight text-zinc-400">Staycio assistant</p>
+                <p className="text-xs leading-tight text-zinc-400">Staycio assistant</p>
               </div>
             </div>
             <div className="flex items-center gap-1 -mr-2 sm:mr-0">

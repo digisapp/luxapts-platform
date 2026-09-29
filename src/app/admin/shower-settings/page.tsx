@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useId } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,7 @@ function NumberField({
   prefix?: string;
   suffix?: string;
 }) {
+  const inputId = useId();
   const [local, setLocal] = useState(String(value));
   // Re-sync the draft input when the canonical value changes (e.g. after load)
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -53,11 +54,12 @@ function NumberField({
 
   return (
     <div className="space-y-1.5">
-      <Label className="text-sm font-medium">{label}</Label>
+      <Label htmlFor={inputId} className="text-sm font-medium">{label}</Label>
       {description && <p className="text-xs text-muted-foreground">{description}</p>}
       <div className="flex items-center gap-2">
         {prefix && <span className="text-sm text-muted-foreground w-4">{prefix}</span>}
         <Input
+          id={inputId}
           type="number"
           className="w-32"
           value={local}
@@ -180,21 +182,21 @@ export default function ShowerSettingsPage() {
   return (
     <div className="space-y-8 max-w-4xl">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Shower Program Settings</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Shower Program Settings</h1>
           <p className="text-muted-foreground mt-1">
             All payout rules, tier thresholds, and policies. Changes take effect immediately.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
           {saveState === "saved" && (
-            <span className="flex items-center gap-1.5 text-sm text-green-600">
+            <span role="status" className="flex items-center gap-1.5 text-sm text-green-400">
               <CheckCircle className="h-4 w-4" /> Saved
             </span>
           )}
           {saveState === "error" && (
-            <span className="flex items-center gap-1.5 text-sm text-destructive">
+            <span role="alert" className="flex items-center gap-1.5 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" /> Failed to save
             </span>
           )}
@@ -208,7 +210,7 @@ export default function ShowerSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <DollarSign className="h-4 w-4 text-green-400" />
             Payout Rules
           </CardTitle>
           <CardDescription>
@@ -257,7 +259,7 @@ export default function ShowerSettingsPage() {
               <Info className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm font-medium">Live Payout Preview</p>
             </div>
-            <div className="rounded-lg border overflow-hidden">
+            <div className="rounded-lg border overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40">
                   <tr>
@@ -265,7 +267,7 @@ export default function ShowerSettingsPage() {
                     <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Commission to Brokerage</th>
                     <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Showing Fee</th>
                     <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Placement Bonus</th>
-                    <th className="text-right px-4 py-2.5 font-medium text-green-600">Total if Lease Closes</th>
+                    <th className="text-right px-4 py-2.5 font-medium text-green-400">Total if Lease Closes</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -279,7 +281,7 @@ export default function ShowerSettingsPage() {
                         <td className="px-4 py-2.5 text-right text-muted-foreground">${commission.toLocaleString()}</td>
                         <td className="px-4 py-2.5 text-right">${settings.showing_fee}</td>
                         <td className="px-4 py-2.5 text-right">${bonus.toFixed(0)}</td>
-                        <td className="px-4 py-2.5 text-right font-semibold text-green-600">${total.toFixed(0)}</td>
+                        <td className="px-4 py-2.5 text-right font-semibold text-green-400">${total.toFixed(0)}</td>
                       </tr>
                     );
                   })}
@@ -294,7 +296,7 @@ export default function ShowerSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Clock className="h-4 w-4 text-blue-600" />
+            <Clock className="h-4 w-4 text-blue-400" />
             Payout Timelines
           </CardTitle>
           <CardDescription>
@@ -348,9 +350,9 @@ export default function ShowerSettingsPage() {
           {/* Visual tier ladder */}
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { tier: "Rookie", color: "bg-gray-100 border-gray-300 text-gray-700", desc: "Default — all approved Showers start here", req: "Approved account" },
-              { tier: "Premier", color: "bg-blue-100 border-blue-300 text-blue-700", desc: "+60 second priority claim window, +15% payout", req: `${settings.tier_premier.min_showings} showings + ${settings.tier_premier.min_rating}★` },
-              { tier: "Elite", color: "bg-amber-100 border-amber-300 text-amber-700", desc: "First access to all leads, +60% payout, can certify Showers", req: `${settings.tier_elite.min_showings} showings + ${settings.tier_elite.min_rating}★ + invite` },
+              { tier: "Rookie", color: "bg-white/10 border-white/20 text-white/80", desc: "Default — all approved Showers start here", req: "Approved account" },
+              { tier: "Premier", color: "bg-blue-500/15 border-blue-500/30 text-blue-300", desc: "+60 second priority claim window, +15% payout", req: `${settings.tier_premier.min_showings} showings + ${settings.tier_premier.min_rating}★` },
+              { tier: "Elite", color: "bg-amber-500/15 border-amber-500/30 text-amber-300", desc: "First access to all leads, +60% payout, can certify Showers", req: `${settings.tier_elite.min_showings} showings + ${settings.tier_elite.min_rating}★ + invite` },
             ].map((t) => (
               <div key={t.tier} className={`rounded-lg border-2 p-4 ${t.color}`}>
                 <p className="font-bold">{t.tier}</p>
@@ -363,7 +365,7 @@ export default function ShowerSettingsPage() {
           <div className="grid md:grid-cols-2 gap-8">
             {/* Premier */}
             <div className="space-y-4">
-              <p className="text-sm font-semibold text-blue-700 flex items-center gap-1.5">
+              <p className="text-sm font-semibold text-blue-300 flex items-center gap-1.5">
                 <Award className="h-3.5 w-3.5" /> Premier Requirements
               </p>
               <NumberField
@@ -387,7 +389,7 @@ export default function ShowerSettingsPage() {
 
             {/* Elite */}
             <div className="space-y-4">
-              <p className="text-sm font-semibold text-amber-700 flex items-center gap-1.5">
+              <p className="text-sm font-semibold text-amber-300 flex items-center gap-1.5">
                 <Award className="h-3.5 w-3.5" /> Elite Requirements
               </p>
               <NumberField
@@ -471,7 +473,7 @@ export default function ShowerSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Info className="h-4 w-4 text-purple-600" />
+            <Info className="h-4 w-4 text-purple-400" />
             Lead Feed Rules
           </CardTitle>
           <CardDescription>
@@ -512,7 +514,7 @@ export default function ShowerSettingsPage() {
       {/* Save footer */}
       <div className="flex items-center justify-end gap-3 pb-8">
         {saveState === "saved" && (
-          <span className="flex items-center gap-1.5 text-sm text-green-600">
+          <span className="flex items-center gap-1.5 text-sm text-green-400">
             <CheckCircle className="h-4 w-4" /> All changes saved
           </span>
         )}

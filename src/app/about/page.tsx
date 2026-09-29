@@ -54,7 +54,7 @@ export default function AboutPage() {
       <Header />
       <main className="flex-1">
         {/* Mission */}
-        <section className="relative overflow-hidden px-6 pt-16 pb-16 lg:pt-24">
+        <section className="relative overflow-hidden px-4 sm:px-6 pt-28 pb-16 lg:pt-36">
           <div className="absolute inset-0" aria-hidden="true">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-cyan-500/[0.07] rounded-full blur-[120px]" />
           </div>
@@ -74,7 +74,7 @@ export default function AboutPage() {
         </section>
 
         {/* Why we exist */}
-        <section className="px-6 py-16 border-t border-white/[0.06]">
+        <section className="px-4 sm:px-6 py-16 border-t border-white/[0.06]">
           <div className="mx-auto max-w-3xl">
             <p className="font-mono text-xs uppercase tracking-wider text-cyan-300">
               Why we exist
@@ -98,7 +98,7 @@ export default function AboutPage() {
         </section>
 
         {/* What makes us different */}
-        <section className="px-6 py-16 border-t border-white/[0.06]">
+        <section className="px-4 sm:px-6 py-16 border-t border-white/[0.06]">
           <div className="mx-auto max-w-3xl">
             <h2 className="text-3xl md:text-4xl font-medium">
               What we hold ourselves to
@@ -122,7 +122,7 @@ export default function AboutPage() {
         </section>
 
         {/* The name — a payoff, not the main event */}
-        <section className="relative overflow-hidden px-6 py-16 border-t border-white/[0.06]">
+        <section className="relative overflow-hidden px-4 sm:px-6 py-16 border-t border-white/[0.06]">
           <div className="absolute inset-0" aria-hidden="true">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[280px] bg-cyan-500/[0.06] rounded-full blur-[110px]" />
           </div>
@@ -170,7 +170,7 @@ export default function AboutPage() {
         </section>
 
         {/* Stacy + close */}
-        <section className="px-6 py-16 pb-24 border-t border-white/[0.06]">
+        <section className="px-4 sm:px-6 py-16 pb-24 border-t border-white/[0.06]">
           <div className="mx-auto max-w-3xl">
             <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] p-10 text-center">
               <div className="absolute inset-0" aria-hidden="true">
@@ -193,7 +193,7 @@ export default function AboutPage() {
                   href="/search"
                   className="mt-8 inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-medium text-black hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all duration-300"
                 >
-                  Your space, found.
+                  Start your search
                 </Link>
               </div>
             </div>

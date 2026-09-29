@@ -93,7 +93,12 @@ export function BuildingRow({ building, cities = [] }: BuildingRowProps) {
         className="flex cursor-pointer items-center gap-4 p-4"
         onClick={handleExpand}
       >
-        <button className="shrink-0 text-muted-foreground">
+        <button
+          type="button"
+          className="shrink-0 text-muted-foreground"
+          aria-expanded={expanded}
+          aria-label={`${expanded ? "Collapse" : "Expand"} ${building.name}`}
+        >
           {expanded ? (
             <ChevronDown className="h-4 w-4" />
           ) : (
@@ -102,9 +107,9 @@ export function BuildingRow({ building, cities = [] }: BuildingRowProps) {
         </button>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <p className="font-medium truncate">{building.name}</p>
-            <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+            <Badge variant={statusInfo.variant} className="shrink-0">{statusInfo.label}</Badge>
           </div>
           <p className="text-sm text-muted-foreground truncate">
             {building.address_1}
@@ -128,6 +133,7 @@ export function BuildingRow({ building, cities = [] }: BuildingRowProps) {
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground"
               onClick={(e) => e.stopPropagation()}
+              aria-label={`Open ${building.name} website`}
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
@@ -145,13 +151,14 @@ export function BuildingRow({ building, cities = [] }: BuildingRowProps) {
             checked={status === "active"}
             onCheckedChange={handleStatusToggle}
             disabled={updating}
+            aria-label={`${building.name} active`}
           />
         </div>
       </div>
 
       {/* Expanded Detail */}
       {expanded && (
-        <div className="border-t px-4 py-4 pl-12">
+        <div className="border-t px-4 py-4 sm:pl-12">
           {loadingDetail ? (
             <div className="space-y-3">
               <Skeleton className="h-4 w-3/4" />

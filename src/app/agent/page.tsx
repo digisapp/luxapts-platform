@@ -38,6 +38,10 @@ export default async function AgentDashboardPage() {
       .single(),
   ]);
 
+  if (assignmentsRes.error) {
+    // Surface via the portal error boundary instead of a misleading "no leads".
+    throw new Error(`Failed to load assignments: ${assignmentsRes.error.message}`);
+  }
   const assignments = assignmentsRes.data || [];
   const agentName = (profileRes.data as { full_name: string | null } | null)?.full_name || "Agent";
 
@@ -54,18 +58,18 @@ export default async function AgentDashboardPage() {
   const recentLeads = assignments.slice(0, 5);
 
   const statusColors: Record<string, string> = {
-    new: "bg-green-100 text-green-800",
-    contacted: "bg-blue-100 text-blue-800",
-    touring: "bg-purple-100 text-purple-800",
-    applied: "bg-yellow-100 text-yellow-800",
-    leased: "bg-emerald-100 text-emerald-800",
-    lost: "bg-gray-100 text-gray-800",
+    new: "bg-green-500/15 text-green-300",
+    contacted: "bg-blue-500/15 text-blue-300",
+    touring: "bg-purple-500/15 text-purple-300",
+    applied: "bg-yellow-500/15 text-yellow-300",
+    leased: "bg-emerald-500/15 text-emerald-300",
+    lost: "bg-white/10 text-white/80",
   };
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Welcome back, {agentName}</h1>
+        <h1 className="text-2xl font-bold break-words sm:text-3xl">Welcome back, {agentName}</h1>
         <p className="text-muted-foreground">
           Here&apos;s an overview of your assigned leads
         </p>
@@ -76,8 +80,8 @@ export default async function AgentDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
-                <Users className="h-6 w-6 text-blue-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
+                <Users className="h-6 w-6 text-blue-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Assigned</p>
@@ -90,8 +94,8 @@ export default async function AgentDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
-                <Clock className="h-6 w-6 text-amber-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                <Clock className="h-6 w-6 text-amber-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Pending Review</p>
@@ -104,8 +108,8 @@ export default async function AgentDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
+                <CheckCircle className="h-6 w-6 text-green-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Accepted</p>
@@ -118,8 +122,8 @@ export default async function AgentDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-50">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/10">
+                <TrendingUp className="h-6 w-6 text-purple-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Active Leads</p>
@@ -172,11 +176,11 @@ export default async function AgentDashboardPage() {
                         <p className="font-medium truncate">
                           {lead.name || "Unnamed Lead"}
                         </p>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[lead.status] || "bg-gray-100 text-gray-800"}`}>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[lead.status] || "bg-white/10 text-white/80"}`}>
                           {lead.status}
                         </span>
                       </div>
-                      <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                         {city && <span>{city.name}</span>}
                         {lead.beds !== null && (
                           <span>{lead.beds === 0 ? "Studio" : `${lead.beds} bed`}</span>
@@ -186,7 +190,7 @@ export default async function AgentDashboardPage() {
                         )}
                       </div>
                     </div>
-                    <div className="ml-4 flex items-center gap-2">
+                    <div className="ml-4 flex shrink-0 items-center gap-2" aria-hidden="true">
                       {lead.user_email && <Mail className="h-4 w-4 text-muted-foreground" />}
                       {lead.user_phone && <Phone className="h-4 w-4 text-muted-foreground" />}
                     </div>

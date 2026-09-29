@@ -7,7 +7,7 @@ import { RecentlyViewed } from "@/components/listings/RecentlyViewed";
 import { SimilarListings } from "@/components/listings/SimilarListings";
 
 // Recharts (~450KB) only loads when there's actually a chart to draw —
-// the component below renders solely inside the priceHistory.length >= 2 branch
+// BuildingPriceHistory renders nothing below two data points
 const PriceHistoryChart = dynamic(
   () => import("@/components/charts/PriceHistoryChart").then((m) => m.PriceHistoryChart),
   {
@@ -33,12 +33,14 @@ interface PriceSnapshot {
   price: number;
 }
 
-interface BuildingPageClientProps {
-  building: BuildingInfo;
-  priceHistory: PriceSnapshot[];
+/** Rent trend chart — lives in the main column, where it has room to read. */
+export function BuildingPriceHistory({ priceHistory }: { priceHistory: PriceSnapshot[] }) {
+  if (priceHistory.length < 2) return null;
+  return <PriceHistoryChart data={priceHistory} title="Price History" />;
 }
 
-export function BuildingPageClient({ building, priceHistory }: BuildingPageClientProps) {
+/** Sidebar: records the view, then similar and recently viewed buildings. */
+export function BuildingPageClient({ building }: { building: BuildingInfo }) {
   const { addItem } = useRecentlyViewed();
 
   // Track this building view
@@ -56,15 +58,6 @@ export function BuildingPageClient({ building, priceHistory }: BuildingPageClien
 
   return (
     <div className="space-y-6">
-      {/* Price History Chart */}
-      {priceHistory.length >= 2 && (
-        <PriceHistoryChart
-          data={priceHistory}
-          title="Price History"
-        />
-      )}
-
-      {/* Similar Buildings */}
       <SimilarListings
         buildingId={building.id}
         citySlug={building.citySlug}
@@ -72,7 +65,6 @@ export function BuildingPageClient({ building, priceHistory }: BuildingPageClien
         priceRange={building.priceRange}
       />
 
-      {/* Recently Viewed */}
       <RecentlyViewed currentBuildingId={building.id} />
     </div>
   );

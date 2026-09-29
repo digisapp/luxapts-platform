@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { getAgentUserId } from "@/lib/agent/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FormSubmitButton } from "@/components/admin/layout/FormSubmitButton";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/lib/utils";
@@ -99,51 +100,51 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
   }
 
   const statusColors: Record<string, string> = {
-    new: "bg-green-100 text-green-800",
-    contacted: "bg-blue-100 text-blue-800",
-    touring: "bg-purple-100 text-purple-800",
-    applied: "bg-yellow-100 text-yellow-800",
-    leased: "bg-emerald-100 text-emerald-800",
-    lost: "bg-gray-100 text-gray-800",
+    new: "bg-green-500/15 text-green-300",
+    contacted: "bg-blue-500/15 text-blue-300",
+    touring: "bg-purple-500/15 text-purple-300",
+    applied: "bg-yellow-500/15 text-yellow-300",
+    leased: "bg-emerald-500/15 text-emerald-300",
+    lost: "bg-white/10 text-white/80",
   };
 
   function renderEvent(event: { id: string; type: string; payload: Record<string, unknown>; created_at: string }) {
     const iconMap: Record<string, { icon: typeof UserPlus; color: string; label: string }> = {
       lead_created: {
         icon: UserPlus,
-        color: "text-green-600 bg-green-50",
+        color: "text-green-400 bg-green-500/10",
         label: `Lead created from ${(event.payload?.source as string) || "unknown"}`,
       },
       status_changed: {
         icon: ArrowRight,
-        color: "text-blue-600 bg-blue-50",
+        color: "text-blue-400 bg-blue-500/10",
         label: `Status changed to ${(event.payload?.new_status as string) || "unknown"}`,
       },
       agent_assigned: {
         icon: UserCheck,
-        color: "text-purple-600 bg-purple-50",
+        color: "text-purple-400 bg-purple-500/10",
         label: "Agent assigned",
       },
       email_sent: {
         icon: Send,
-        color: "text-amber-600 bg-amber-50",
+        color: "text-amber-400 bg-amber-500/10",
         label: `Email sent: ${(event.payload?.subject as string) || ""}`,
       },
       note_added: {
         icon: MessageSquare,
-        color: "text-gray-600 bg-gray-50",
+        color: "text-white/60 bg-white/5",
         label: (event.payload?.note as string) || "Note added",
       },
       conversation_summary: {
         icon: MessageCircle,
-        color: "text-cyan-600 bg-cyan-50",
+        color: "text-cyan-400 bg-cyan-500/10",
         label: `Chat: ${(event.payload?.summary as string) || "Conversation recorded"}`,
       },
     };
 
     const config = iconMap[event.type] || {
       icon: MessageSquare,
-      color: "text-gray-600 bg-gray-50",
+      color: "text-white/60 bg-white/5",
       label: event.type.replace(/_/g, " "),
     };
     const Icon = config.icon;
@@ -154,7 +155,7 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
           <Icon className="h-4 w-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm">{config.label}</p>
+          <p className="text-sm break-words">{config.label}</p>
           <p className="text-xs text-muted-foreground">
             {new Date(event.created_at).toLocaleString()}
           </p>
@@ -173,12 +174,12 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
           <ArrowLeft className="h-4 w-4" />
           Back to My Leads
         </Link>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">{lead.name || "Unnamed Lead"}</h1>
-            <p className="text-muted-foreground">Lead ID: {lead.id}</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold break-words sm:text-3xl">{lead.name || "Unnamed Lead"}</h1>
+            <p className="break-all text-sm text-muted-foreground">Lead ID: {lead.id}</p>
           </div>
-          <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusColors[lead.status]}`}>
+          <span className={`inline-flex w-fit shrink-0 items-center rounded-full px-3 py-1 text-sm font-medium ${statusColors[lead.status]}`}>
             {lead.status}
           </span>
         </div>
@@ -194,15 +195,15 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
             <CardContent className="space-y-4">
               {lead.user_email && (
                 <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-muted-foreground" />
-                  <a href={`mailto:${lead.user_email}`} className="hover:underline">
+                  <Mail className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <a href={`mailto:${lead.user_email}`} className="min-w-0 break-all hover:underline">
                     {lead.user_email}
                   </a>
                 </div>
               )}
               {lead.user_phone && (
                 <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-muted-foreground" />
+                  <Phone className="h-5 w-5 shrink-0 text-muted-foreground" />
                   <a href={`tel:${lead.user_phone}`} className="hover:underline">
                     {lead.user_phone}
                   </a>
@@ -262,7 +263,7 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
               {lead.notes && (
                 <div className="mt-4 border-t pt-4">
                   <p className="text-sm text-muted-foreground">Notes</p>
-                  <p className="mt-1">{lead.notes}</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words">{lead.notes}</p>
                 </div>
               )}
             </CardContent>
@@ -280,9 +281,9 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
                     <Link
                       key={target.id}
                       href={`/buildings/${(target.buildings as { id: string } | null)?.id || ""}`}
-                      className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                      className="flex items-center justify-between gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
                     >
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-medium">
                           {(target.buildings as { name: string } | null)?.name || "Unknown Building"}
                         </p>
@@ -326,8 +327,9 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
               <form action={updateStatus}>
                 <select
                   name="status"
+                  aria-label="Lead status"
                   defaultValue={lead.status}
-                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-base md:text-sm"
                 >
                   <option value="new">New</option>
                   <option value="contacted">Contacted</option>
@@ -336,9 +338,9 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
                   <option value="leased">Leased</option>
                   <option value="lost">Lost</option>
                 </select>
-                <Button type="submit" className="mt-3 w-full">
+                <FormSubmitButton className="mt-3 w-full">
                   Update Status
-                </Button>
+                </FormSubmitButton>
               </form>
             </CardContent>
           </Card>
@@ -352,13 +354,14 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
               <form action={addNote}>
                 <Textarea
                   name="note"
+                  aria-label="Note"
                   placeholder="Write a note about this lead..."
                   rows={3}
                 />
-                <Button type="submit" className="mt-3 w-full" variant="outline">
+                <FormSubmitButton className="mt-3 w-full" variant="outline">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   Add Note
-                </Button>
+                </FormSubmitButton>
               </form>
             </CardContent>
           </Card>

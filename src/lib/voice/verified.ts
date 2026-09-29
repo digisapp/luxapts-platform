@@ -1,4 +1,5 @@
 import { isVerifiedPrice } from "@/lib/verified-pricing";
+import { policyText } from "@/lib/policy-text";
 
 export { isVerifiedPrice };
 
@@ -16,10 +17,7 @@ export function spokenAvailability(availableOn: unknown, now: Date = new Date())
 }
 
 /** Scraper filler ("Not specified in provided HTML") is worse than silence. */
-export function policyText(value: unknown): string | null {
-  if (typeof value !== "string" || !value.trim()) return null;
-  return /not specified|provided html|n\/a/i.test(value) ? null : value.trim();
-}
+export { policyText };
 
 /** Spoken results are short: a caller cannot skim a list of 25. */
 export const MAX_SPOKEN_RESULTS = 5;

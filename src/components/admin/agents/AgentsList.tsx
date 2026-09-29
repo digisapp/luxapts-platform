@@ -24,6 +24,7 @@ interface AgentsListProps {
 export function AgentsList({ agents: initialAgents }: AgentsListProps) {
   const [agents, setAgents] = useState(initialAgents);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [toggleError, setToggleError] = useState<string | null>(null);
 
   const totalAgents = agents.length;
   const activeAgents = agents.filter((a) => a.status === "active").length;
@@ -32,6 +33,7 @@ export function AgentsList({ agents: initialAgents }: AgentsListProps) {
   async function toggleStatus(agentId: string, currentStatus: string) {
     const newStatus = currentStatus === "active" ? "paused" : "active";
     setTogglingId(agentId);
+    setToggleError(null);
 
     try {
       const res = await fetch(`/api/admin/agents/${agentId}`, {
@@ -48,9 +50,12 @@ export function AgentsList({ agents: initialAgents }: AgentsListProps) {
               : a
           )
         );
+      } else {
+        setToggleError(`Could not update agent status (${res.status}).`);
       }
     } catch {
-      // Silently fail — toggle stays at old state
+      // Toggle stays at old state; say so instead of failing silently.
+      setToggleError("Could not update agent status. Check your connection and retry.");
     } finally {
       setTogglingId(null);
     }
@@ -58,8 +63,14 @@ export function AgentsList({ agents: initialAgents }: AgentsListProps) {
 
   return (
     <div className="space-y-6">
+      {toggleError && (
+        <p role="alert" className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-300">
+          {toggleError}
+        </p>
+      )}
+
       {/* Stats Row */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold">{totalAgents}</p>
@@ -91,11 +102,11 @@ export function AgentsList({ agents: initialAgents }: AgentsListProps) {
         <div className="space-y-3">
           {agents.map((agent) => (
             <Card key={agent.user_id}>
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-4">
+              <CardContent className="flex items-center justify-between gap-3 p-4">
+                <div className="flex min-w-0 items-center gap-4">
                   <div
                     className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold",
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold",
                       agent.status === "active"
                         ? "bg-green-500/20 text-green-400"
                         : "bg-muted text-muted-foreground"
@@ -103,8 +114,8 @@ export function AgentsList({ agents: initialAgents }: AgentsListProps) {
                   >
                     {(agent.full_name || "?")[0].toUpperCase()}
                   </div>
-                  <div>
-                    <p className="font-medium">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">
                       {agent.full_name || "Unnamed Agent"}
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -114,7 +125,7 @@ export function AgentsList({ agents: initialAgents }: AgentsListProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6">
+                <div className="flex shrink-0 items-center gap-3 sm:gap-6">
                   {/* Stats */}
                   <div className="hidden text-right sm:block">
                     <p className="text-sm">
@@ -137,6 +148,7 @@ export function AgentsList({ agents: initialAgents }: AgentsListProps) {
                   {/* Status Badge */}
                   <Badge
                     variant={agent.status === "active" ? "success" : "secondary"}
+                    className="hidden sm:inline-flex"
                   >
                     {agent.status}
                   </Badge>
@@ -145,6 +157,7 @@ export function AgentsList({ agents: initialAgents }: AgentsListProps) {
                   <Switch
                     checked={agent.status === "active"}
                     disabled={togglingId === agent.user_id}
+                    aria-label={`${agent.full_name || "Agent"} active`}
                     onCheckedChange={() =>
                       toggleStatus(agent.user_id, agent.status)
                     }

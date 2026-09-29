@@ -11,7 +11,7 @@ export default async function AgentLeadsPage() {
 
   const supabase = createAdminClient();
 
-  const { data: assignments } = await supabase
+  const { data: assignments, error } = await supabase
     .from("agent_assignments")
     .select(`
       id, status, assigned_at,
@@ -24,10 +24,14 @@ export default async function AgentLeadsPage() {
     .eq("agent_user_id", agentId)
     .order("assigned_at", { ascending: false });
 
+  if (error) {
+    throw new Error(`Failed to load leads: ${error.message}`);
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">My Leads</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">My Leads</h1>
         <p className="text-muted-foreground">
           Manage your assigned leads and track progress
         </p>

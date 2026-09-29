@@ -10,7 +10,7 @@ export default function ImportPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Bulk Import</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Bulk Import</h1>
         <p className="text-muted-foreground">
           Seed cities from pre-loaded data or upload a custom CSV
         </p>
@@ -84,10 +84,10 @@ export default function ImportPage() {
                 { name: "status", required: false, desc: "active, inactive, or coming_soon" },
               ].map((col) => (
                 <div key={col.name} className="grid grid-cols-3 gap-4 py-2 border-b">
-                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded w-fit">
+                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded w-fit max-w-full break-all">
                     {col.name}
                   </code>
-                  <span className={col.required ? "text-red-600" : "text-muted-foreground"}>
+                  <span className={col.required ? "text-red-400" : "text-muted-foreground"}>
                     {col.required ? "Yes" : "No"}
                   </span>
                   <span className="text-muted-foreground">{col.desc}</span>

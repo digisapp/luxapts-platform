@@ -41,7 +41,7 @@ export default async function CertificationQuizPage({ params }: QuizPageProps) {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Knowledge Quiz</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Knowledge Quiz</h1>
           <p className="text-muted-foreground">{building.name}</p>
         </div>
       </div>

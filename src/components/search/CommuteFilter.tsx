@@ -106,6 +106,9 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
               }
             }}
             placeholder="Commute to: work, school, an address…"
+            aria-label="Commute destination: work, school or an address"
+            enterKeyHint="go"
+            autoComplete="street-address"
             className="h-11 md:h-9 w-full rounded-md border border-white/[0.08] bg-white/[0.03] pl-9 pr-3 text-base md:text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-white/30"
           />
         </div>
@@ -131,17 +134,26 @@ export function CommuteFilter({ proximity, value, onChange }: CommuteFilterProps
               <SelectItem value="60">≤ 60 min</SelectItem>
             </SelectContent>
           </Select>
+          {/* Reads as ready (solid white) once there is a destination to
+              apply; until then it is a clearly inert outline, not a
+              half-faded button that looks broken. */}
           <button
             type="button"
             onClick={applyDestination}
             disabled={geocoding || !address.trim()}
-            className="h-11 md:h-9 min-w-11 md:min-w-0 flex-1 sm:flex-none rounded-md border border-white/[0.08] bg-white/[0.06] px-3 text-sm text-white/80 hover:bg-white/[0.1] disabled:opacity-40 transition-colors"
+            aria-label={geocoding ? "Looking up address" : "Apply commute filter"}
+            title={!address.trim() ? "Enter a destination first" : undefined}
+            className="flex h-11 min-w-11 flex-1 items-center justify-center rounded-md border border-white bg-white px-4 text-sm font-medium text-black transition-colors hover:bg-white/90 disabled:cursor-not-allowed disabled:border-dashed disabled:border-white/15 disabled:bg-transparent disabled:font-normal disabled:text-white/40 sm:flex-none md:h-9 md:min-w-0"
           >
-            {geocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : "Set"}
+            {geocoding ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Apply"}
           </button>
         </div>
       </div>
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-400" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

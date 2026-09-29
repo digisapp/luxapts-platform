@@ -210,7 +210,7 @@ export function QuizClient({ buildingId }: { buildingId: string }) {
     const shadowsRequired = result.shadows_required ?? 0;
     return (
       <div className="space-y-6">
-        <Card className={result.passed ? "border-green-200" : "border-yellow-200"}>
+        <Card className={result.passed ? "border-green-500/30" : "border-yellow-500/30"}>
           <CardContent className="py-8 text-center space-y-3">
             {result.passed ? (
               <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
@@ -286,7 +286,7 @@ export function QuizClient({ buildingId }: { buildingId: string }) {
                     Your answer: {item.your_answer || "No answer"}
                   </p>
                   {!item.correct && item.correct_answer && (
-                    <p className="pl-6 text-xs text-green-700">
+                    <p className="pl-6 text-xs text-green-300">
                       Correct answer: {item.correct_answer}
                     </p>
                   )}

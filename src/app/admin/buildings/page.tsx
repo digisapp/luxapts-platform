@@ -67,7 +67,7 @@ export default async function AdminBuildingsPage() {
   if (citiesRes.error || buildingsError.message) {
     return (
       <div className="space-y-8">
-        <h1 className="text-3xl font-bold">Buildings</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Buildings</h1>
         <p className="text-red-500">
           Error loading data: {citiesRes.error?.message || buildingsError.message}
         </p>
@@ -103,7 +103,7 @@ export default async function AdminBuildingsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Buildings</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Buildings</h1>
         <p className="text-muted-foreground">
           Manage all buildings, units, and images across cities
         </p>

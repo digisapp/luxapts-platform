@@ -15,7 +15,7 @@ export default async function PartnerBuildingsPage() {
   if (!partner) redirect("/");
 
   const supabase = createAdminClient();
-  const { data: buildings } = await supabase
+  const { data: buildings, error } = await supabase
     .from("buildings")
     .select(`
       id, name, address_1, zip, status, website_url,
@@ -24,6 +24,10 @@ export default async function PartnerBuildingsPage() {
     `)
     .eq("partner_user_id", partner.user_id)
     .order("name");
+
+  if (error) {
+    throw new Error(`Failed to load buildings: ${error.message}`);
+  }
 
   const buildingIds = (buildings || []).map((b) => b.id);
 
@@ -51,7 +55,7 @@ export default async function PartnerBuildingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">My Buildings</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">My Buildings</h1>
         <p className="text-muted-foreground">
           {(buildings || []).length} propert{(buildings || []).length === 1 ? "y" : "ies"} in your portfolio
         </p>
@@ -68,7 +72,7 @@ export default async function PartnerBuildingsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {(buildings || []).map((b) => {
             const city = getFirstRelation(b.cities as { name: string; slug: string }[] | null);
             const neighborhood = getFirstRelation(b.neighborhoods as { name: string }[] | null);
@@ -96,12 +100,12 @@ export default async function PartnerBuildingsPage() {
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className={units.available > 0 ? "text-green-600 font-medium" : "text-muted-foreground"}>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                    <span className={units.available > 0 ? "text-green-400 font-medium" : "text-muted-foreground"}>
                       {units.available} available
                     </span>
                     <span className="text-muted-foreground">{units.total} total units</span>
-                    <span className={`flex items-center gap-1 ${images > 0 ? "text-muted-foreground" : "text-amber-600"}`}>
+                    <span className={`flex items-center gap-1 ${images > 0 ? "text-muted-foreground" : "text-amber-400"}`}>
                       {images > 0
                         ? <><CheckCircle className="h-3.5 w-3.5 text-green-500" /> {images} photos</>
                         : <><ImageIcon className="h-3.5 w-3.5" /> No photos</>

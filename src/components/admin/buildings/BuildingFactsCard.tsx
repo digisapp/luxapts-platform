@@ -101,9 +101,10 @@ export function BuildingFactsCard({ buildingId }: BuildingFactsCardProps) {
           <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
             <div className="flex gap-2">
               <div className="flex-1">
-                <label className="text-xs text-muted-foreground">Key</label>
+                <label htmlFor="fact-new-key" className="text-xs text-muted-foreground">Key</label>
                 <input
-                  className="mt-0.5 w-full rounded border px-2 py-1.5 text-xs font-mono bg-background"
+                  id="fact-new-key"
+                  className="mt-0.5 w-full rounded border px-2 py-1.5 text-base md:text-xs font-mono bg-background"
                   placeholder="year_built"
                   value={newKey}
                   onChange={(e) => { setNewKey(e.target.value); setError(""); }}
@@ -114,9 +115,10 @@ export function BuildingFactsCard({ buildingId }: BuildingFactsCardProps) {
                 </datalist>
               </div>
               <div className="flex-1">
-                <label className="text-xs text-muted-foreground">Value</label>
+                <label htmlFor="fact-new-value" className="text-xs text-muted-foreground">Value</label>
                 <input
-                  className="mt-0.5 w-full rounded border px-2 py-1.5 text-xs bg-background"
+                  id="fact-new-value"
+                  className="mt-0.5 w-full rounded border px-2 py-1.5 text-base md:text-xs bg-background"
                   placeholder="2019"
                   value={newValue}
                   onChange={(e) => { setNewValue(e.target.value); setError(""); }}
@@ -124,7 +126,7 @@ export function BuildingFactsCard({ buildingId }: BuildingFactsCardProps) {
                 />
               </div>
             </div>
-            {error && <p className="text-xs text-red-500">{error}</p>}
+            {error && <p role="alert" className="text-xs text-red-400">{error}</p>}
             <div className="flex gap-2">
               <Button size="sm" className="h-7 text-xs" onClick={addFact} disabled={saving}>
                 {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
@@ -150,12 +152,14 @@ export function BuildingFactsCard({ buildingId }: BuildingFactsCardProps) {
           <div className="rounded-lg border divide-y text-sm">
             {facts.map((fact) => (
               <div key={fact.key} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/30 group">
-                <code className="text-xs text-muted-foreground w-40 shrink-0 font-mono">{fact.key}</code>
-                <span className="flex-1 text-xs truncate">{fact.value}</span>
+                <code className="w-28 shrink-0 truncate font-mono text-xs text-muted-foreground sm:w-40" title={fact.key}>{fact.key}</code>
+                <span className="min-w-0 flex-1 text-xs truncate">{fact.value}</span>
                 <button
+                  type="button"
                   onClick={() => deleteFact(fact.key)}
                   disabled={deletingKey === fact.key}
-                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all"
+                  aria-label={`Delete fact ${fact.key}`}
+                  className="text-muted-foreground transition-all hover:text-red-500 focus-visible:opacity-100 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100"
                 >
                   {deletingKey === fact.key
                     ? <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -11,7 +11,7 @@ export default async function SchedulePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">My Schedule</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">My Schedule</h1>
         <p className="text-muted-foreground">
           Set your weekly availability. Renters can instantly book tours in
           these windows at buildings you&apos;re certified for.

@@ -44,6 +44,9 @@ export function AvailabilityEditor() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // If the initial load fails, don't render the editor: saving the all-off
+  // defaults would silently wipe the shower's real schedule.
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,7 +67,7 @@ export function AvailabilityEditor() {
         });
       })
       .catch(() => {
-        if (!cancelled) setError("Could not load your schedule. Refresh to try again.");
+        if (!cancelled) setLoadFailed(true);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -119,25 +122,33 @@ export function AvailabilityEditor() {
     );
   }
 
+  if (loadFailed) {
+    return (
+      <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+        Could not load your schedule. Refresh the page to try again.
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <Card>
         <CardContent className="pt-6 divide-y">
           {days.map((day, i) => (
-            <div key={DAY_LABELS[i]} className="flex items-center gap-4 py-3">
+            <div key={DAY_LABELS[i]} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
               <Switch
                 checked={day.enabled}
                 onCheckedChange={(checked) => updateDay(i, { enabled: checked })}
                 aria-label={`Available on ${DAY_LABELS[i]}`}
               />
-              <span className="w-28 text-sm font-medium">{DAY_LABELS[i]}</span>
+              <span className="w-24 text-sm font-medium sm:w-28">{DAY_LABELS[i]}</span>
               {day.enabled ? (
                 <div className="flex items-center gap-2">
                   <select
                     value={day.start}
                     onChange={(e) => updateDay(i, { start: e.target.value })}
                     aria-label={`${DAY_LABELS[i]} start time`}
-                    className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    className="h-9 rounded-md border border-input bg-background px-2 text-base md:text-sm"
                   >
                     {HOUR_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -148,7 +159,7 @@ export function AvailabilityEditor() {
                     value={day.end}
                     onChange={(e) => updateDay(i, { end: e.target.value })}
                     aria-label={`${DAY_LABELS[i]} end time`}
-                    className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    className="h-9 rounded-md border border-input bg-background px-2 text-base md:text-sm"
                   >
                     {HOUR_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -163,7 +174,7 @@ export function AvailabilityEditor() {
         </CardContent>
       </Card>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
 
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} disabled={saving}>
@@ -171,7 +182,7 @@ export function AvailabilityEditor() {
           {saving ? "Saving…" : "Save Schedule"}
         </Button>
         {saved && (
-          <span className="flex items-center gap-1 text-sm text-green-600">
+          <span role="status" className="flex items-center gap-1 text-sm text-green-400">
             <CheckCircle2 className="h-4 w-4" /> Saved
           </span>
         )}

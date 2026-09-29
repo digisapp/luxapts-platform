@@ -47,6 +47,9 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Inline/bulk write failures used to be console-only, and the inline status
+  // change was applied locally even when the API rejected it.
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Email dialog state
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
@@ -121,12 +124,18 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
   }
 
   async function handleInlineStatusChange(leadId: string, newStatus: string) {
+    setActionError(null);
     try {
-      await fetch("/api/admin/leads/bulk", {
+      const res = await fetch("/api/admin/leads/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lead_ids: [leadId], action: "status", value: newStatus }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setActionError(data.error || `Could not update status (${res.status}).`);
+        return;
+      }
       // Update locally
       setLeads((prev) =>
         prev.map((l) => (l.id === leadId ? { ...l, status: newStatus } : l))
@@ -135,20 +144,28 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
       fetchLeads(offset);
     } catch (err) {
       console.error("Status change error:", err);
+      setActionError("Could not update status. Check your connection and retry.");
     }
   }
 
   async function handleBulkAction(action: "status" | "assign", value: string) {
     const ids = Array.from(selectedIds);
+    setActionError(null);
     try {
-      await fetch("/api/admin/leads/bulk", {
+      const res = await fetch("/api/admin/leads/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lead_ids: ids, action, value }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setActionError(data.error || `Bulk update failed (${res.status}).`);
+        return;
+      }
       fetchLeads(offset);
     } catch (err) {
       console.error("Bulk action error:", err);
+      setActionError("Bulk update failed. Check your connection and retry.");
     }
   }
 
@@ -162,7 +179,8 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
   const showingEnd = Math.min(offset + LIMIT, total);
 
   return (
-    <div className="space-y-6">
+    // Leave room for the fixed BulkActionBar so it never covers the last rows.
+    <div className={`space-y-6 ${selectedIds.size > 0 ? "pb-40 sm:pb-24" : ""}`}>
       {loadError && (
         <div
           role="alert"
@@ -179,6 +197,22 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
         </div>
       )}
 
+      {actionError && (
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+        >
+          <span>{actionError}</span>
+          <button
+            type="button"
+            onClick={() => setActionError(null)}
+            className="shrink-0 rounded-md border border-red-500/40 px-3 py-1 text-xs font-medium hover:bg-red-500/20"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Status Tabs */}
       <div className="flex flex-wrap gap-2">
         {STATUS_TABS.map((tab) => {
@@ -187,6 +221,8 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
           return (
             <button
               key={tab.key}
+              type="button"
+              aria-pressed={active}
               onClick={() => setStatusFilter(tab.key)}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                 active
@@ -205,19 +241,21 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
 
       {/* Search + Source Filter */}
       <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[250px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative min-w-0 flex-1 basis-60">
+          <Search aria-hidden="true" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, email, or phone..."
+            aria-label="Search leads"
             className="pl-9"
           />
         </div>
         <select
           value={sourceFilter}
           onChange={(e) => setSourceFilter(e.target.value)}
-          className="rounded-md border px-3 py-2 text-sm bg-background"
+          aria-label="Filter by source"
+          className="rounded-md border px-3 py-2 text-base md:text-sm bg-background"
         >
           <option value="">All Sources</option>
           <option value="web_form">Web Form</option>
@@ -263,7 +301,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
 
       {/* Pagination */}
       {total > LIMIT && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
             Showing {showingStart}-{showingEnd} of {total}
           </p>

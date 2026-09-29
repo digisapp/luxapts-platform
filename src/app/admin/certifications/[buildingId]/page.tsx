@@ -205,8 +205,8 @@ export default function BuildingCertificationPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="flex items-center justify-center min-h-[40vh]" aria-busy="true">
+        <p className="text-muted-foreground" role="status">Loading...</p>
       </div>
     );
   }
@@ -218,7 +218,7 @@ export default function BuildingCertificationPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Certifications
         </Button>
-        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {loadError}
         </div>
@@ -234,7 +234,7 @@ export default function BuildingCertificationPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Certifications
         </Button>
-        <h1 className="text-3xl font-bold">{building?.name || "Building"}</h1>
+        <h1 className="text-2xl font-bold break-words sm:text-3xl">{building?.name || "Building"}</h1>
         {building?.address && (
           <p className="text-muted-foreground">{building.address}</p>
         )}
@@ -249,7 +249,7 @@ export default function BuildingCertificationPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <Label htmlFor="shadows_required" className="whitespace-nowrap">
               Shadow sessions required
             </Label>
@@ -372,6 +372,7 @@ export default function BuildingCertificationPage() {
                   size="icon"
                   className="h-7 w-7 text-muted-foreground hover:text-destructive"
                   onClick={() => removeQuestion(qIndex)}
+                  aria-label={`Remove question ${qIndex + 1}`}
                   disabled={form.quiz_questions.length === 1}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -380,8 +381,9 @@ export default function BuildingCertificationPage() {
 
               {/* Question text */}
               <div className="space-y-2">
-                <Label className="text-sm">Question</Label>
+                <Label htmlFor={`q-${qIndex}-text`} className="text-sm">Question</Label>
                 <Input
+                  id={`q-${qIndex}-text`}
                   placeholder="e.g. What floor is the rooftop pool on?"
                   value={q.question}
                   onChange={(e) => updateQuestion(qIndex, { ...q, question: e.target.value })}
@@ -409,6 +411,9 @@ export default function BuildingCertificationPage() {
                             : "border-muted-foreground/40 hover:border-green-400"
                         }`}
                         title="Mark as correct answer"
+                        role="radio"
+                        aria-checked={q.correct_index === optIndex}
+                        aria-label={`Mark option ${optIndex + 1} as the correct answer`}
                       >
                         {q.correct_index === optIndex && (
                           <div className="h-full w-full flex items-center justify-center">
@@ -417,11 +422,12 @@ export default function BuildingCertificationPage() {
                         )}
                       </button>
                       <Input
+                        aria-label={`Question ${qIndex + 1}, option ${optIndex + 1}`}
                         placeholder={`Option ${optIndex + 1}`}
                         value={opt}
                         onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
                         maxLength={200}
-                        className={q.correct_index === optIndex ? "border-green-300 bg-green-50/50" : ""}
+                        className={q.correct_index === optIndex ? "border-green-500/30 bg-green-500/5" : ""}
                       />
                       <Button
                         type="button"
@@ -429,6 +435,7 @@ export default function BuildingCertificationPage() {
                         size="icon"
                         className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
                         onClick={() => removeOption(qIndex, optIndex)}
+                        aria-label={`Remove option ${optIndex + 1}`}
                         disabled={q.options.length <= 2}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -452,10 +459,11 @@ export default function BuildingCertificationPage() {
 
               {/* Explanation (optional) */}
               <div className="space-y-1">
-                <Label className="text-sm text-muted-foreground">
+                <Label htmlFor={`q-${qIndex}-explanation`} className="text-sm text-muted-foreground">
                   Explanation after answer <span className="font-normal">(optional — shown after quiz)</span>
                 </Label>
                 <Input
+                  id={`q-${qIndex}-explanation`}
                   placeholder="e.g. The pool is on the 30th floor, accessible via the resident elevator..."
                   value={q.explanation || ""}
                   onChange={(e) => updateQuestion(qIndex, { ...q, explanation: e.target.value })}
@@ -476,20 +484,20 @@ export default function BuildingCertificationPage() {
 
       {/* Save */}
       {error && (
-        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           {form.quiz_questions.length} question{form.quiz_questions.length !== 1 ? "s" : ""} ·{" "}
           {form.shadows_required} shadow{form.shadows_required !== 1 ? "s" : ""} required
         </p>
         <div className="flex items-center gap-3">
           {saved && (
-            <span className="flex items-center gap-1.5 text-sm text-green-600">
+            <span role="status" className="flex items-center gap-1.5 text-sm text-green-400">
               <CheckCircle className="h-4 w-4" />
               Saved
             </span>

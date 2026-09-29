@@ -26,12 +26,12 @@ export interface LeadRowData {
 }
 
 const statusColors: Record<string, string> = {
-  new: "bg-green-100 text-green-800",
-  contacted: "bg-blue-100 text-blue-800",
-  touring: "bg-purple-100 text-purple-800",
-  applied: "bg-yellow-100 text-yellow-800",
-  leased: "bg-emerald-100 text-emerald-800",
-  lost: "bg-gray-100 text-gray-800",
+  new: "bg-green-500/15 text-green-300",
+  contacted: "bg-blue-500/15 text-blue-300",
+  touring: "bg-purple-500/15 text-purple-300",
+  applied: "bg-yellow-500/15 text-yellow-300",
+  leased: "bg-emerald-500/15 text-emerald-300",
+  lost: "bg-white/10 text-white/80",
 };
 
 const sourceLabels: Record<string, string> = {
@@ -58,12 +58,13 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
         type="checkbox"
         checked={selected}
         onChange={(e) => onSelect(lead.id, e.target.checked)}
-        className="h-4 w-4 rounded border-gray-300"
+        aria-label={`Select ${lead.name || "unnamed lead"}`}
+        className="h-4 w-4 rounded border-white/20"
       />
 
       <div className="flex-1 min-w-[200px]">
-        <div className="flex items-center gap-2">
-          <p className="font-medium">{lead.name || "Unnamed Lead"}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="min-w-0 break-words font-medium">{lead.name || "Unnamed Lead"}</p>
           <span
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[lead.status] || statusColors.new}`}
           >
@@ -72,8 +73,8 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
           {lead.user_email && (
-            <span className="flex items-center gap-1">
-              <Mail className="h-3 w-3" />
+            <span className="flex min-w-0 items-center gap-1 break-all">
+              <Mail className="h-3 w-3 shrink-0" />
               {lead.user_email}
             </span>
           )}
@@ -94,11 +95,12 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
         <Badge variant="secondary">{sourceLabels[lead.source] || lead.source}</Badge>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         <select
           value={lead.status}
           onChange={(e) => onStatusChange(lead.id, e.target.value)}
-          className="rounded-md border px-2 py-1 text-xs bg-background"
+          aria-label={`Status for ${lead.name || "unnamed lead"}`}
+          className="rounded-md border px-2 py-1 text-base md:text-xs bg-background"
         >
           <option value="new">New</option>
           <option value="contacted">Contacted</option>
@@ -110,12 +112,12 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
 
         {lead.user_phone && (
           <>
-            <Button size="sm" variant="ghost" asChild title={`Call ${lead.user_phone}`}>
+            <Button size="sm" variant="ghost" asChild title={`Call ${lead.user_phone}`} aria-label={`Call ${lead.user_phone}`}>
               <a href={`tel:${telHref(lead.user_phone)}`}>
                 <PhoneCall className="h-3 w-3" />
               </a>
             </Button>
-            <Button size="sm" variant="ghost" asChild title={`Text ${lead.user_phone}`}>
+            <Button size="sm" variant="ghost" asChild title={`Text ${lead.user_phone}`} aria-label={`Text ${lead.user_phone}`}>
               <a href={`sms:${telHref(lead.user_phone)}`}>
                 <MessageSquare className="h-3 w-3" />
               </a>
@@ -127,7 +129,8 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
               variant="ghost"
               asChild
               title={`WhatsApp ${lead.user_phone}`}
-              className="text-emerald-600 hover:text-emerald-700"
+              aria-label={`WhatsApp ${lead.user_phone}`}
+              className="text-emerald-400 hover:text-emerald-300"
             >
               <a
                 href={whatsappHref(lead.user_phone)}
@@ -141,7 +144,7 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
         )}
 
         {lead.user_email && (
-          <Button size="sm" variant="ghost" onClick={() => onEmail(lead)} title="Send email">
+          <Button size="sm" variant="ghost" onClick={() => onEmail(lead)} title="Send email" aria-label={`Email ${lead.name || lead.user_email}`}>
             <Send className="h-3 w-3" />
           </Button>
         )}

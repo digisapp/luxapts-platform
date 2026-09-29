@@ -104,7 +104,7 @@ export default async function AdminMicrositesPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Building Microsites</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Building Microsites</h1>
           <p className="text-sm text-muted-foreground">
             Traffic and conversions across the {MICROSITE_DOMAINS.length} owned building domains.
           </p>
@@ -114,6 +114,7 @@ export default async function AdminMicrositesPage({
             <Link
               key={d}
               href={`/admin/microsites?days=${d}`}
+              aria-current={d === days ? "page" : undefined}
               className={`rounded-md border px-3 py-1.5 text-sm ${
                 d === days ? "bg-foreground text-background" : "hover:bg-muted"
               }`}
@@ -125,13 +126,13 @@ export default async function AdminMicrositesPage({
       </div>
 
       {rpcMissing && (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-300">
           Stats function unavailable — run migration{" "}
           <code>022_microsite_analytics.sql</code>. ({statsRes.error?.message})
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
         {[
           { label: "Page views", value: totals.views },
           { label: "Visitors", value: totals.visitors },

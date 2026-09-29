@@ -31,8 +31,13 @@ export function BulkActionBar({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur px-6 py-3 shadow-lg">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4">
+    // lg:left-64 keeps the bar clear of the PortalShell sidebar on desktop.
+    <div
+      role="region"
+      aria-label="Bulk actions"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg backdrop-blur sm:px-6 lg:left-64"
+    >
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2">
         <span className="text-sm font-medium">{selectedCount} selected</span>
 
         <Button size="sm" onClick={onEmail}>
@@ -44,7 +49,8 @@ export function BulkActionBar({
           <select
             value={bulkStatus}
             onChange={(e) => setBulkStatus(e.target.value)}
-            className="rounded-md border px-2 py-1.5 text-sm bg-background"
+            aria-label="New status for selected leads"
+            className="rounded-md border px-2 py-1.5 text-base md:text-sm bg-background"
           >
             <option value="new">New</option>
             <option value="contacted">Contacted</option>
@@ -63,7 +69,8 @@ export function BulkActionBar({
             <select
               value={bulkAgent}
               onChange={(e) => setBulkAgent(e.target.value)}
-              className="rounded-md border px-2 py-1.5 text-sm bg-background"
+              aria-label="Agent to assign to selected leads"
+              className="rounded-md border px-2 py-1.5 text-base md:text-sm bg-background"
             >
               {agents.map((a) => (
                 <option key={a.user_id} value={a.user_id}>

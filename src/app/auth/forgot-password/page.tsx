@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Sparkles, MailCheck } from "lucide-react";
+import { StaycioMark } from "@/components/brand/StaycioMark";
+import { Loader2, MailCheck } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const { resetPassword } = useAuth();
@@ -35,8 +36,8 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-          <Sparkles className="h-6 w-6 text-cyan-400" />
-          <span className="text-2xl font-semibold text-white">Staycio</span>
+          <StaycioMark className="h-8 w-auto text-white" />
+          <span className="text-2xl font-medium tracking-tight text-white">Staycio</span>
         </Link>
 
         {/* Card */}
@@ -62,8 +63,9 @@ export default function ForgotPasswordPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-white/70">Email</label>
+                  <label htmlFor="forgot-password-email" className="mb-2 block text-sm font-medium text-white/70">Email</label>
                   <Input
+                    id="forgot-password-email"
                     type="email"
                     autoComplete="email"
                     value={email}
@@ -88,14 +90,14 @@ export default function ForgotPasswordPage() {
 
           <p className="mt-6 text-center text-sm text-white/50">
             Remembered your password?{" "}
-            <Link href="/auth/login" className="text-white/70 hover:text-white transition-colors">
+            <Link href="/auth/login" className="py-3 text-white/70 hover:text-white transition-colors">
               Sign in
             </Link>
           </p>
         </div>
 
         <p className="mt-6 text-center text-sm">
-          <Link href="/" className="text-white/50 hover:text-white/70 transition-colors">
+          <Link href="/" className="inline-flex min-h-11 items-center px-2 text-white/50 hover:text-white/70 transition-colors">
             Back to home
           </Link>
         </p>

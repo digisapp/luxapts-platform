@@ -251,7 +251,7 @@ export function ScrapingDashboard({ cities }: ScrapingDashboardProps) {
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <Select value={cityFilter} onValueChange={setCityFilter}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-48" aria-label="Filter by city">
             <SelectValue placeholder="All Cities" />
           </SelectTrigger>
           <SelectContent>
@@ -264,7 +264,7 @@ export function ScrapingDashboard({ cities }: ScrapingDashboardProps) {
           </SelectContent>
         </Select>
 
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Filter by scrape status">
           {["all", "pending", "success", "failed"].map((s) => (
             <Button
               key={s}

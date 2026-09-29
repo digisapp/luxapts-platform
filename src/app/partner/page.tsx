@@ -16,11 +16,15 @@ export default async function PartnerDashboardPage() {
   const supabase = createAdminClient();
 
   // Fetch partner's buildings
-  const { data: buildings } = await supabase
+  const { data: buildings, error: buildingsError } = await supabase
     .from("buildings")
     .select("id, name, status, cities:city_id(name)")
     .eq("partner_user_id", partner.user_id)
     .order("name");
+
+  if (buildingsError) {
+    throw new Error(`Failed to load buildings: ${buildingsError.message}`);
+  }
 
   const buildingIds = (buildings || []).map((b) => b.id);
 
@@ -54,10 +58,16 @@ export default async function PartnerDashboardPage() {
 
   const uniqueLeadIds = new Set((leadsRes.data || []).map((t) => t.lead_id));
   const totalInquiries = uniqueLeadIds.size;
-  const newInquiries = (leadsRes.data || []).filter((t) => {
-    const lead = Array.isArray(t.leads) ? t.leads[0] : t.leads;
-    return lead && (lead as { status: string }).status === "new";
-  }).length;
+  // Dedupe by lead: one lead targeting several of the partner's buildings
+  // must count once, same as totalInquiries (it previously could exceed it).
+  const newInquiries = new Set(
+    (leadsRes.data || [])
+      .filter((t) => {
+        const lead = Array.isArray(t.leads) ? t.leads[0] : t.leads;
+        return lead && (lead as { status: string }).status === "new";
+      })
+      .map((t) => t.lead_id)
+  ).size;
 
   const totalViews = (viewsRes.data || []).length;
 
@@ -76,7 +86,7 @@ export default async function PartnerDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-2xl font-bold sm:text-3xl">
           {partner.company_name || "Partner Dashboard"}
         </h1>
         <p className="text-muted-foreground">
@@ -85,12 +95,12 @@ export default async function PartnerDashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
-                <Building2 className="h-6 w-6 text-blue-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
+                <Building2 className="h-6 w-6 text-blue-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Buildings</p>
@@ -103,8 +113,8 @@ export default async function PartnerDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
+                <TrendingUp className="h-6 w-6 text-green-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Available Units</p>
@@ -120,14 +130,14 @@ export default async function PartnerDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-50">
-                <Users className="h-6 w-6 text-purple-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/10">
+                <Users className="h-6 w-6 text-purple-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Inquiries</p>
                 <p className="text-2xl font-bold">{totalInquiries}</p>
                 {newInquiries > 0 && (
-                  <p className="text-xs text-green-600 font-medium">{newInquiries} new</p>
+                  <p className="text-xs text-green-400 font-medium">{newInquiries} new</p>
                 )}
               </div>
             </div>
@@ -137,8 +147,8 @@ export default async function PartnerDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
-                <Eye className="h-6 w-6 text-amber-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                <Eye className="h-6 w-6 text-amber-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Views (30d)</p>
@@ -151,21 +161,21 @@ export default async function PartnerDashboardPage() {
 
       {/* Attention needed */}
       {buildingsMissingImages.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50/40">
-          <CardContent className="flex items-start gap-3 pt-5 pb-5">
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="flex flex-wrap items-start gap-3 pt-5 pb-5">
             <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-            <div className="flex-1">
-              <p className="font-medium text-amber-900">
+            <div className="min-w-0 flex-1 basis-56">
+              <p className="font-medium text-amber-300">
                 {buildingsMissingImages.length} building{buildingsMissingImages.length > 1 ? "s" : ""} missing photos
               </p>
-              <p className="text-sm text-amber-700 mt-0.5">
+              <p className="text-sm text-amber-300 mt-0.5">
                 Buildings without photos get significantly fewer inquiries.
                 {" "}
                 {buildingsMissingImages.slice(0, 3).map((b) => b.name).join(", ")}
                 {buildingsMissingImages.length > 3 ? ` and ${buildingsMissingImages.length - 3} more` : ""}.
               </p>
             </div>
-            <Button variant="outline" size="sm" asChild className="border-amber-300 shrink-0">
+            <Button variant="outline" size="sm" asChild className="border-amber-500/30 shrink-0">
               <Link href="/partner/buildings">Manage</Link>
             </Button>
           </CardContent>
@@ -197,10 +207,10 @@ export default async function PartnerDashboardPage() {
                   <Link
                     key={b.id}
                     href={`/partner/buildings/${b.id}`}
-                    className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/30 transition-colors"
+                    className="flex items-center justify-between gap-3 rounded-lg border p-3 hover:bg-muted/30 transition-colors"
                   >
-                    <div>
-                      <p className="font-medium">{b.name}</p>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{b.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {(city as { name: string } | null)?.name || ""}
                         {" · "}

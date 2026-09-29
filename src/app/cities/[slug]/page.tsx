@@ -6,7 +6,6 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 import { fetchAllRows } from "@/lib/db-helpers";
@@ -19,7 +18,8 @@ import {
 import { BED_FACETS, MIN_FACET_BUILDINGS, facetPath } from "@/lib/seo/facets";
 import { buildingPath } from "@/lib/seo/urls";
 import { formatPrice } from "@/lib/utils";
-import { Building2, MapPin, Search, ArrowRight, Star, TrendingUp } from "lucide-react";
+import { Building2, MapPin, Search, ArrowRight, TrendingUp } from "lucide-react";
+import { HERO_CANDIDATES, heroImageUrl } from "@/lib/images/hero";
 
 export const revalidate = 3600;
 
@@ -160,6 +160,9 @@ export default async function CityPage({ params }: CityPageProps) {
         `)
         .eq("city_id", city.id)
         .eq("status", "active")
+        .order("is_primary", { referencedTable: "building_images", ascending: false, nullsFirst: false })
+        .order("sort_order", { referencedTable: "building_images" })
+        .limit(HERO_CANDIDATES, { referencedTable: "building_images" })
         .order("name")
         .order("id")
         .range(from, to) as unknown as PromiseLike<{ data: CityBuilding[] | null; error: unknown }>
@@ -253,16 +256,7 @@ export default async function CityPage({ params }: CityPageProps) {
       <BuildingItemListJsonLd
         name={`Apartments for rent in ${city.name}, ${city.state}`}
         buildings={sortedBuildings.slice(0, 20).map((b) => {
-          const imgs = (b.building_images || []) as Array<{
-            url: string;
-            is_primary: boolean;
-            sort_order: number;
-          }>;
-          const hero = [...imgs].sort((x, y) => {
-            if (x.is_primary && !y.is_primary) return -1;
-            if (!x.is_primary && y.is_primary) return 1;
-            return x.sort_order - y.sort_order;
-          })[0]?.url;
+          const hero = heroImageUrl(b.building_images) ?? undefined;
           return {
             name: b.name,
             path: buildingPath(b),
@@ -276,77 +270,80 @@ export default async function CityPage({ params }: CityPageProps) {
       <Header />
 
       <main className="flex-1">
-        {/* Hero */}
-        <div className="relative h-[420px] md:h-[520px] overflow-hidden">
+        {/* Hero — content flows (no fixed height), so a long city name or a
+            wrapped stats row can never slide up under the fixed header. */}
+        <div className="relative flex min-h-[440px] flex-col justify-end overflow-hidden md:min-h-[540px]">
           {heroImage ? (
             <Image
               src={heroImage}
               alt={`${city.name} skyline`}
               fill
               className="object-cover"
-              priority
+              preload
+              fetchPriority="high"
               sizes="100vw"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-muted" />
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-zinc-900 to-black" />
           )}
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+          {/* Scrim: a bottom-up fade for the text block plus a left-side wash,
+              so white type stays legible over bright photos (Miami's neon). */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/25 to-transparent" aria-hidden="true" />
 
-          <div className="absolute inset-0 flex flex-col justify-end pb-10 px-4">
-            <div className="container mx-auto">
-              <Breadcrumb
-                items={[
-                  { label: "Cities", href: "/cities" },
-                  { label: city.name },
-                ]}
-                className="mb-4 text-white/70 [&_a]:text-white/70 [&_a:hover]:text-white"
-              />
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-2">
-                Apartments for Rent in {city.name}
-              </h1>
-              <p className="text-lg md:text-xl text-white/80 mb-6">{tagline}</p>
+          <div className="relative mx-auto w-full max-w-7xl px-4 pb-10 pt-24 sm:px-6 md:pb-14">
+            <Breadcrumb
+              items={[
+                { label: "Cities", href: "/cities" },
+                { label: city.name },
+              ]}
+              className="mb-3 text-white/80 [&_a]:text-white/80 [&_a:hover]:text-white [&_svg]:text-white/60 [&>span>span]:text-white"
+            />
+            <h1 className="mb-2 text-4xl font-semibold tracking-tight text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.45)] md:text-6xl">
+              Apartments for Rent in {city.name}
+            </h1>
+            <p className="mb-6 text-lg text-white/85 md:text-xl">{tagline}</p>
 
-              {/* Stats row */}
-              <div className="flex flex-wrap gap-4 mb-8">
-                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2 text-white">
-                  <span className="text-2xl font-bold">{totalBuildings}</span>
-                  <span className="text-sm text-white/70 ml-1">Buildings</span>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2 text-white">
-                  <span className="text-2xl font-bold">{totalUnits}</span>
-                  <span className="text-sm text-white/70 ml-1">Available Units</span>
-                </div>
-                {cityMinPrice && (
-                  <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2 text-white">
-                    <span className="text-sm text-white/70">From </span>
-                    <span className="text-2xl font-bold">{formatPrice(cityMinPrice)}</span>
-                    <span className="text-sm text-white/70">/mo</span>
-                  </div>
-                )}
+            {/* Stats: three equal tiles on phones, inline pills from sm up */}
+            <div className="mb-8 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+              <div className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white backdrop-blur-md sm:px-4">
+                <span className="block text-xl font-semibold sm:inline sm:text-2xl">{totalBuildings}</span>
+                <span className="block text-xs text-white/70 sm:ml-1.5 sm:inline sm:text-sm">Buildings</span>
               </div>
-
-              <Link href={`/search?city=${city.slug}`}>
-                <Button size="lg" className="gap-2 text-base px-8">
-                  <Search className="h-5 w-5" />
-                  Search in {city.name}
-                </Button>
-              </Link>
+              <div className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white backdrop-blur-md sm:px-4">
+                <span className="block text-xl font-semibold sm:inline sm:text-2xl">{totalUnits}</span>
+                <span className="block text-xs text-white/70 sm:ml-1.5 sm:inline sm:text-sm">Available units</span>
+              </div>
+              {cityMinPrice && (
+                <div className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white backdrop-blur-md sm:px-4">
+                  <span className="block text-xl font-semibold sm:inline sm:text-2xl">
+                    {formatPrice(cityMinPrice)}
+                  </span>
+                  <span className="block text-xs text-white/70 sm:ml-1.5 sm:inline sm:text-sm">Starting rent</span>
+                </div>
+              )}
             </div>
+
+            <Button asChild size="lg" className="w-full gap-2 px-8 text-base sm:w-auto">
+              <Link href={`/search?city=${city.slug}`}>
+                <Search className="h-5 w-5" aria-hidden="true" />
+                Search in {city.name}
+              </Link>
+            </Button>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-12 space-y-12">
+        <div className="mx-auto w-full max-w-7xl space-y-14 px-4 py-12 sm:px-6 md:py-16">
           {/* City intro copy. Suppressed when the city has nothing to show —
               prose about a market we have no listings for is worse than none. */}
           {CITY_COPY[slug] && totalBuildings > 0 && (
             <section className="max-w-3xl">
-              <h2 className="text-2xl font-bold mb-4">
+              <h2 className="text-2xl font-semibold text-white mb-4">
                 Luxury Apartments in {city.name}
               </h2>
               <div className="space-y-4">
                 {CITY_COPY[slug].map((paragraph, i) => (
-                  <p key={i} className="text-muted-foreground leading-relaxed">
+                  <p key={i} className="text-white/60 leading-relaxed">
                     {paragraph.replace(/\{count\}/g, String(totalBuildings))}
                   </p>
                 ))}
@@ -357,8 +354,8 @@ export default async function CityPage({ params }: CityPageProps) {
           {/* Neighborhoods */}
           {neighborhoods.length > 0 && (
             <section>
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-white/60" aria-hidden="true" />
                 Neighborhoods
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -367,13 +364,12 @@ export default async function CityPage({ params }: CityPageProps) {
                   // used to link into the client-rendered search view, which
                   // left every neighborhood page orphaned — in the sitemap but
                   // with no crawlable link anywhere on the site.
-                  <Link key={n.id} href={`/neighborhoods/${n.slug}?city=${city.slug}`}>
-                    <Badge
-                      variant="outline"
-                      className="px-3 py-1.5 text-sm cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                      {n.name} apartments
-                    </Badge>
+                  <Link
+                    key={n.id}
+                    href={`/neighborhoods/${n.slug}?city=${city.slug}`}
+                    className="inline-flex min-h-10 items-center rounded-full border border-white/[0.08] bg-white/[0.02] px-4 text-sm text-white/75 transition-colors hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
+                  >
+                    {n.name} apartments
                   </Link>
                 ))}
               </div>
@@ -385,22 +381,21 @@ export default async function CityPage({ params }: CityPageProps) {
               in <city>". Only rendered where inventory backs the facet. */}
           {BED_FACETS.some((f) => (facetBuildingCounts[f.slug] || 0) >= MIN_FACET_BUILDINGS) && (
             <section>
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-white/60" aria-hidden="true" />
                 Browse {city.name} apartments by layout
               </h2>
               <div className="flex flex-wrap gap-2">
                 {BED_FACETS.filter(
                   (f) => (facetBuildingCounts[f.slug] || 0) >= MIN_FACET_BUILDINGS
                 ).map((f) => (
-                  <Link key={f.slug} href={facetPath(city.slug, f.slug)}>
-                    <Badge
-                      variant="outline"
-                      className="px-3 py-1.5 text-sm cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                      {f.label} in {city.name}
-                      <span className="ml-1.5 opacity-60">{facetBuildingCounts[f.slug]}</span>
-                    </Badge>
+                  <Link
+                    key={f.slug}
+                    href={facetPath(city.slug, f.slug)}
+                    className="inline-flex min-h-10 items-center rounded-full border border-white/[0.08] bg-white/[0.02] px-4 text-sm text-white/75 transition-colors hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
+                  >
+                    {f.label} in {city.name}
+                    <span className="ml-2 text-white/40">{facetBuildingCounts[f.slug]}</span>
                   </Link>
                 ))}
               </div>
@@ -409,39 +404,30 @@ export default async function CityPage({ params }: CityPageProps) {
 
           {/* Buildings Grid */}
           <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Star className="h-6 w-6 text-primary" />
-                Featured Buildings
+            <div className="mb-6 flex items-end justify-between gap-4 md:mb-8">
+              <h2 className="text-2xl font-semibold text-white md:text-3xl">
+                {city.name} apartment buildings
               </h2>
-              <Link href={`/search?city=${city.slug}`} className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1">
-                View all <ArrowRight className="h-3 w-3" />
+              <Link
+                href={`/search?city=${city.slug}`}
+                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
+              >
+                View all <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
 
             {sortedBuildings.length === 0 ? (
-              <div className="rounded-xl border border-dashed p-12 text-center">
+              <div className="rounded-2xl border border-dashed border-white/[0.1] p-12 text-center">
                 <Building2 className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
                 <p className="text-muted-foreground">No active listings in {city.name} yet.</p>
-                <Link href="/search" className="mt-4 inline-block">
-                  <Button variant="outline" size="sm">Browse all cities</Button>
-                </Link>
+                <Button asChild variant="outline" size="sm" className="mt-4">
+                  <Link href="/cities">Browse all cities</Link>
+                </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {sortedBuildings.map((building) => {
-                  // Best image: primary first, then sort order.
-                  const images = (building.building_images || []) as Array<{
-                    url: string;
-                    is_primary: boolean;
-                    sort_order: number;
-                  }>;
-                  const heroImg =
-                    [...images].sort((a, b) => {
-                      if (a.is_primary && !b.is_primary) return -1;
-                      if (!a.is_primary && b.is_primary) return 1;
-                      return a.sort_order - b.sort_order;
-                    })[0]?.url ?? null;
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {sortedBuildings.map((building, index) => {
+                  const heroImg = heroImageUrl(building.building_images);
 
                   const neighborhood = Array.isArray(building.neighborhoods)
                     ? building.neighborhoods[0]
@@ -455,6 +441,7 @@ export default async function CityPage({ params }: CityPageProps) {
                       neighborhoodName={(neighborhood as { name: string } | null)?.name}
                       availableUnits={unitCountMap[building.id] || 0}
                       minPrice={minPriceMap[building.id] ?? null}
+                      eager={index < 3}
                     />
                   );
                 })}
@@ -462,44 +449,46 @@ export default async function CityPage({ params }: CityPageProps) {
             )}
           </section>
 
-          {/* Market Insight teaser */}
+          {/* Market snapshot: the stats sit in their own even grid (4 across
+              from sm, 2x2 on phones) and the CTA gets its own row/column, so
+              nothing wraps 3+1 beside the button. */}
           {totalBuildings > 0 && (
-            <section className="rounded-2xl border bg-muted/30 p-8">
-              <div className="flex flex-col md:flex-row md:items-center gap-6">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    {city.name} Market Snapshot
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
+            <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 md:p-8">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
+                <div className="min-w-0 flex-1">
+                  <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
+                    <TrendingUp className="h-5 w-5 text-cyan-400" aria-hidden="true" />
+                    {city.name} market snapshot
+                  </h2>
+                  <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
                     <div>
-                      <p className="text-2xl font-bold">{totalBuildings}</p>
-                      <p className="text-xs text-muted-foreground">Active buildings</p>
+                      <dt className="text-sm text-white/50">Active buildings</dt>
+                      <dd className="mt-1 text-2xl font-semibold text-white">{totalBuildings}</dd>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{totalUnits}</p>
-                      <p className="text-xs text-muted-foreground">Open units</p>
+                      <dt className="text-sm text-white/50">Open units</dt>
+                      <dd className="mt-1 text-2xl font-semibold text-white">{totalUnits}</dd>
                     </div>
                     {cityMinPrice && (
                       <div>
-                        <p className="text-2xl font-bold">{formatPrice(cityMinPrice)}</p>
-                        <p className="text-xs text-muted-foreground">Starting rent</p>
+                        <dt className="text-sm text-white/50">Starting rent</dt>
+                        <dd className="mt-1 text-2xl font-semibold text-white">{formatPrice(cityMinPrice)}</dd>
                       </div>
                     )}
                     {neighborhoods.length > 0 && (
                       <div>
-                        <p className="text-2xl font-bold">{neighborhoods.length}</p>
-                        <p className="text-xs text-muted-foreground">Neighborhoods</p>
+                        <dt className="text-sm text-white/50">Neighborhoods</dt>
+                        <dd className="mt-1 text-2xl font-semibold text-white">{neighborhoods.length}</dd>
                       </div>
                     )}
-                  </div>
+                  </dl>
                 </div>
-                <Link href={`/search?city=${city.slug}`}>
-                  <Button size="lg" className="gap-2 whitespace-nowrap">
-                    <Search className="h-4 w-4" />
+                <Button asChild size="lg" className="w-full shrink-0 gap-2 sm:w-auto">
+                  <Link href={`/search?city=${city.slug}`}>
+                    <Search className="h-4 w-4" aria-hidden="true" />
                     Find your apartment
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </section>
           )}
