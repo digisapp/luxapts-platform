@@ -54,7 +54,7 @@ export function LeadFunnelChart({ data }: LeadFunnelChartProps) {
             layout="vertical"
             margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
           >
-            <XAxis type="number" />
+            <XAxis type="number" tick={{ fontSize: 12 }} />
             <YAxis
               type="category"
               dataKey="label"

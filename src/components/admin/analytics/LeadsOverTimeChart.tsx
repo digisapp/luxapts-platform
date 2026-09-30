@@ -63,14 +63,14 @@ export function LeadsOverTimeChart({ data }: LeadsOverTimeChartProps) {
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="dateLabel"
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 12 }}
               tickLine={false}
               axisLine={false}
               interval="preserveStartEnd"
               className="text-muted-foreground"
             />
             <YAxis
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 12 }}
               tickLine={false}
               axisLine={false}
               width={30}

@@ -112,6 +112,7 @@ export function UnitsSection({ units, buildingId }: UnitsSectionProps) {
             <div key={group} className="rounded-lg border">
               <button
                 onClick={() => toggleGroup(group)}
+                aria-expanded={isExpanded}
                 className="flex w-full items-center justify-between p-3 text-sm font-medium hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
@@ -184,6 +185,11 @@ export function UnitsSection({ units, buildingId }: UnitsSectionProps) {
                             handleUnitToggle(unit.id, checked)
                           }
                           disabled={updatingUnit === unit.id}
+                          aria-label={
+                            unit.unit_number
+                              ? `Unit ${unit.unit_number} available`
+                              : "Unit available"
+                          }
                         />
                       </div>
                     </div>

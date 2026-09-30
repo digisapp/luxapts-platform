@@ -158,7 +158,7 @@ export default async function ConversationDetailPage({
       <div>
         <Link
           href="/admin/conversations"
-          className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="-mt-2.5 mb-1.5 inline-flex items-center gap-2 py-2.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Chat Log

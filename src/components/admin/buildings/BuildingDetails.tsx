@@ -257,11 +257,11 @@ export function BuildingDetails({ data, buildingId, cities = [] }: BuildingDetai
                       />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-1.5">
                         <div className="flex items-center justify-between">
-                          <Badge variant="secondary" className="text-[10px] bg-black/40 text-white border-0">
+                          <Badge variant="secondary" className="text-xs bg-black/40 text-white border-0">
                             {img.category || "other"}
                           </Badge>
                           {img.is_primary && (
-                            <Badge className="text-[10px]">Primary</Badge>
+                            <Badge className="text-xs">Primary</Badge>
                           )}
                         </div>
                       </div>

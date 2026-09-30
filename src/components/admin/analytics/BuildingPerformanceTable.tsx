@@ -23,9 +23,9 @@ export function BuildingPerformanceTable({
   const [activeTab, setActiveTab] = useState<TabType>("leads");
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
-    { id: "leads", label: "Most Popular", icon: <Building2 className="h-4 w-4" /> },
-    { id: "favorites", label: "Most Favorited", icon: <Heart className="h-4 w-4" /> },
-    { id: "available", label: "Most Available", icon: <Home className="h-4 w-4" /> },
+    { id: "leads", label: "Popular", icon: <Building2 className="h-4 w-4" /> },
+    { id: "favorites", label: "Favorited", icon: <Heart className="h-4 w-4" /> },
+    { id: "available", label: "Available", icon: <Home className="h-4 w-4" /> },
   ];
 
   const getData = () => {
@@ -50,14 +50,15 @@ export function BuildingPerformanceTable({
     }
   };
 
-  const getLabel = () => {
+  const getLabel = (count: number) => {
+    const one = count === 1;
     switch (activeTab) {
       case "leads":
-        return "Leads";
+        return one ? "lead" : "leads";
       case "favorites":
-        return "Saves";
+        return one ? "save" : "saves";
       case "available":
-        return "Units";
+        return one ? "unit" : "units";
     }
   };
 
@@ -65,17 +66,23 @@ export function BuildingPerformanceTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      {/* Three equal columns: as a flex row the "Most …" buttons were wider
+          than an iPhone and pushed the whole dashboard into sideways scroll. */}
+      <div className="grid grid-cols-3 gap-2 sm:flex" role="group" aria-label="Rank buildings by">
         {tabs.map((tab) => (
           <Button
             key={tab.id}
             variant={activeTab === tab.id ? "default" : "outline"}
             size="sm"
+            aria-pressed={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className="gap-2"
+            className="h-10 min-w-0 gap-1.5 px-2 sm:px-3"
           >
-            {tab.icon}
-            {tab.label}
+            <span className="hidden min-[400px]:inline-flex" aria-hidden="true">{tab.icon}</span>
+            <span className="truncate">
+              <span className="hidden sm:inline">Most </span>
+              {tab.label}
+            </span>
           </Button>
         ))}
       </div>
@@ -90,14 +97,14 @@ export function BuildingPerformanceTable({
             <Link
               key={building.id}
               href={`/buildings/${building.id}`}
-              className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+              className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground w-6">
                   #{index + 1}
                 </span>
-                <div>
-                  <p className="font-medium">{building.name}</p>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{building.name}</p>
                   {building.neighborhood && (
                     <p className="text-sm text-muted-foreground">
                       {building.neighborhood}
@@ -105,8 +112,8 @@ export function BuildingPerformanceTable({
                   )}
                 </div>
               </div>
-              <Badge variant="secondary">
-                {getCount(building)} {getLabel()}
+              <Badge variant="secondary" className="shrink-0 whitespace-nowrap">
+                {getCount(building)} {getLabel(getCount(building))}
               </Badge>
             </Link>
           ))}

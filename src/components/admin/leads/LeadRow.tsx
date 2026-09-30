@@ -54,13 +54,17 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
 
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
-      <input
-        type="checkbox"
-        checked={selected}
-        onChange={(e) => onSelect(lead.id, e.target.checked)}
-        aria-label={`Select ${lead.name || "unnamed lead"}`}
-        className="h-4 w-4 rounded border-white/20"
-      />
+      {/* The label's padding is a 40x40 tap target around the 16px box; the
+          negative margin cancels it so the row layout is unchanged. */}
+      <label className="-m-3 flex shrink-0 cursor-pointer items-center justify-center p-3">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={(e) => onSelect(lead.id, e.target.checked)}
+          aria-label={`Select ${lead.name || "unnamed lead"}`}
+          className="h-4 w-4 cursor-pointer rounded border-white/20"
+        />
+      </label>
 
       <div className="flex-1 min-w-[200px]">
         <div className="flex flex-wrap items-center gap-2">
@@ -81,7 +85,7 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
           {lead.user_phone && (
             <a
               href={`tel:${telHref(lead.user_phone)}`}
-              className="flex items-center gap-1 hover:text-foreground hover:underline"
+              className="-my-2.5 flex items-center gap-1 py-2.5 hover:text-foreground hover:underline"
             >
               <Phone className="h-3 w-3" />
               {lead.user_phone}
@@ -100,7 +104,7 @@ export function LeadRow({ lead, selected, onSelect, onStatusChange, onEmail }: L
           value={lead.status}
           onChange={(e) => onStatusChange(lead.id, e.target.value)}
           aria-label={`Status for ${lead.name || "unnamed lead"}`}
-          className="rounded-md border px-2 py-1 text-base md:text-xs bg-background"
+          className="h-10 rounded-md border px-2 text-base md:text-xs md:pointer-fine:h-8 bg-background"
         >
           <option value="new">New</option>
           <option value="contacted">Contacted</option>

@@ -154,7 +154,7 @@ export function EmailCampaignsDashboard({
                 id="campaign-filter-status"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm bg-background"
+                className="mt-1 h-10 w-full rounded-md border px-3 text-base md:text-sm bg-background"
               >
                 <option value="">All Statuses</option>
                 <option value="new">New</option>
@@ -172,7 +172,7 @@ export function EmailCampaignsDashboard({
                 id="campaign-filter-source"
                 value={filterSource}
                 onChange={(e) => setFilterSource(e.target.value)}
-                className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm bg-background"
+                className="mt-1 h-10 w-full rounded-md border px-3 text-base md:text-sm bg-background"
               >
                 <option value="">All Sources</option>
                 <option value="web_form">Web Form</option>
@@ -187,7 +187,7 @@ export function EmailCampaignsDashboard({
                 id="campaign-filter-city"
                 value={filterCity}
                 onChange={(e) => setFilterCity(e.target.value)}
-                className="mt-1 w-full rounded-md border px-3 py-2 text-base md:text-sm bg-background"
+                className="mt-1 h-10 w-full rounded-md border px-3 text-base md:text-sm bg-background"
               >
                 <option value="">All Cities</option>
                 {cities.map((city) => (

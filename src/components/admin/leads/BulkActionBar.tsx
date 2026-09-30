@@ -50,7 +50,7 @@ export function BulkActionBar({
             value={bulkStatus}
             onChange={(e) => setBulkStatus(e.target.value)}
             aria-label="New status for selected leads"
-            className="rounded-md border px-2 py-1.5 text-base md:text-sm bg-background"
+            className="h-10 rounded-md border px-2 text-base md:text-sm md:pointer-fine:h-8 bg-background"
           >
             <option value="new">New</option>
             <option value="contacted">Contacted</option>
@@ -70,7 +70,7 @@ export function BulkActionBar({
               value={bulkAgent}
               onChange={(e) => setBulkAgent(e.target.value)}
               aria-label="Agent to assign to selected leads"
-              className="rounded-md border px-2 py-1.5 text-base md:text-sm bg-background"
+              className="h-10 rounded-md border px-2 text-base md:text-sm md:pointer-fine:h-8 bg-background"
             >
               {agents.map((a) => (
                 <option key={a.user_id} value={a.user_id}>

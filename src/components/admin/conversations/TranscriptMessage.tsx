@@ -91,10 +91,11 @@ export function TranscriptMessage({ message }: { message: TranscriptMessageRow }
 
       {args && (
         <details className="mt-2 text-xs">
-          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+          {/* after: = invisible 40px-tall tap target; no layout change. */}
+          <summary className="relative cursor-pointer text-muted-foreground after:absolute after:inset-x-0 after:-inset-y-3.5 after:content-[''] hover:text-foreground">
             Arguments
           </summary>
-          <pre className="mt-2 max-h-72 overflow-auto rounded-md bg-black/30 p-3 text-[11px] leading-relaxed text-white/70">
+          <pre className="mt-2 max-h-72 overflow-auto rounded-md bg-black/30 p-3 text-xs leading-relaxed text-white/70">
             {args}
           </pre>
         </details>

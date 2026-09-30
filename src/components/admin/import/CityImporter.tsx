@@ -124,16 +124,16 @@ export function CityImporter() {
                 {/* Icon + name */}
                 <span className="text-xl w-7 text-center shrink-0">{city.flag}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="font-medium text-sm">{city.name}</span>
-                    <Badge variant="outline" className="text-[10px] h-4 px-1.5">
+                    <Badge variant="outline" className="px-1.5 py-0 text-xs">
                       {city.buildingCount} buildings
                     </Badge>
                     {status === "done" && (
-                      <Badge className="text-[10px] h-4 px-1.5 bg-green-600">imported</Badge>
+                      <Badge className="px-1.5 py-0 text-xs bg-green-600">imported</Badge>
                     )}
                     {status === "error" && (
-                      <Badge variant="destructive" className="text-[10px] h-4 px-1.5">failed</Badge>
+                      <Badge variant="destructive" className="px-1.5 py-0 text-xs">failed</Badge>
                     )}
                   </div>
 
@@ -168,8 +168,10 @@ export function CityImporter() {
                   {status === "done" && result?.errors && result.errors.length > 0 && (
                     <div className="mt-1.5">
                       <button
+                        type="button"
                         onClick={() => setState(city.slug, { expandedErrors: !expandedErrors })}
-                        className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300"
+                        aria-expanded={!!expandedErrors}
+                        className="-my-3 flex items-center gap-1 py-3 text-xs text-amber-400 hover:text-amber-300"
                       >
                         {expandedErrors ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                         {result.errors.length} warning{result.errors.length !== 1 ? "s" : ""}

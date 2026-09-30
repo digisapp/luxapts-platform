@@ -93,9 +93,11 @@ export function BuildingRow({ building, cities = [] }: BuildingRowProps) {
         className="flex cursor-pointer items-center gap-4 p-4"
         onClick={handleExpand}
       >
+        {/* p-3 + -m-3: a 40x40 tap target around the 16px chevron without
+            moving the row. The click bubbles to the row's handleExpand. */}
         <button
           type="button"
-          className="shrink-0 text-muted-foreground"
+          className="-m-3 flex shrink-0 items-center justify-center p-3 text-muted-foreground"
           aria-expanded={expanded}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${building.name}`}
         >
@@ -131,7 +133,7 @@ export function BuildingRow({ building, cities = [] }: BuildingRowProps) {
               href={safeUrl(building.website_url)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground"
+              className="-m-3.5 inline-flex p-3.5 text-muted-foreground hover:text-foreground"
               onClick={(e) => e.stopPropagation()}
               aria-label={`Open ${building.name} website`}
             >

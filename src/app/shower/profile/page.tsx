@@ -377,8 +377,11 @@ export default function ShowerProfilePage() {
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
+                  {/* Named by the <Label htmlFor="agreement"> below. after: adds an
+                      invisible ~42px tap target around the 16px box. */}
                   <Checkbox
                     id="agreement"
+                    className="relative after:absolute after:-inset-3.5 after:content-['']"
                     checked={form.agreement_accepted}
                     onCheckedChange={(checked) =>
                       setForm({ ...form, agreement_accepted: Boolean(checked) })

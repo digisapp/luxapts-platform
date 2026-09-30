@@ -180,7 +180,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
 
   return (
     // Leave room for the fixed BulkActionBar so it never covers the last rows.
-    <div className={`space-y-6 ${selectedIds.size > 0 ? "pb-40 sm:pb-24" : ""}`}>
+    <div className={`space-y-6 ${selectedIds.size > 0 ? "pb-52 sm:pb-24" : ""}`}>
       {loadError && (
         <div
           role="alert"
@@ -255,7 +255,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
           value={sourceFilter}
           onChange={(e) => setSourceFilter(e.target.value)}
           aria-label="Filter by source"
-          className="rounded-md border px-3 py-2 text-base md:text-sm bg-background"
+          className="h-10 rounded-md border px-3 text-base md:text-sm bg-background"
         >
           <option value="">All Sources</option>
           <option value="web_form">Web Form</option>

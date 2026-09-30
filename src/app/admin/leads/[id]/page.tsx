@@ -220,7 +220,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
       <div>
         <Link
           href="/admin/leads"
-          className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="-mt-2.5 mb-1.5 inline-flex items-center gap-2 py-2.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Leads
@@ -252,7 +252,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
               {lead.user_email && (
                 <div className="flex items-center gap-3">
                   <Mail className="h-5 w-5 shrink-0 text-muted-foreground" />
-                  <a href={`mailto:${lead.user_email}`} className="min-w-0 break-all hover:underline">
+                  <a href={`mailto:${lead.user_email}`} className="-my-2 min-w-0 break-all py-2 hover:underline">
                     {lead.user_email}
                   </a>
                 </div>
@@ -260,7 +260,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
               {lead.user_phone && (
                 <div className="flex items-center gap-3">
                   <Phone className="h-5 w-5 shrink-0 text-muted-foreground" />
-                  <a href={`tel:${lead.user_phone}`} className="hover:underline">
+                  <a href={`tel:${lead.user_phone}`} className="-my-2 py-2 hover:underline">
                     {lead.user_phone}
                   </a>
                 </div>
@@ -381,7 +381,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
                   name="status"
                   aria-label="Lead status"
                   defaultValue={lead.status}
-                  className="w-full rounded-md border bg-background px-3 py-2 text-base md:text-sm"
+                  className="h-10 w-full rounded-md border bg-background px-3 text-base md:text-sm"
                 >
                   <option value="new">New</option>
                   <option value="contacted">Contacted</option>
@@ -445,7 +445,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
                   <select
                     name="agent_user_id"
                     aria-label="Agent to assign"
-                    className="w-full rounded-md border bg-background px-3 py-2 text-base md:text-sm"
+                    className="h-10 w-full rounded-md border bg-background px-3 text-base md:text-sm"
                   >
                     {agents.map((agent) => {
                       const profile = agent.profiles as { full_name: string | null } | { full_name: string | null }[] | null;

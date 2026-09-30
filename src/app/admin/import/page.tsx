@@ -53,7 +53,7 @@ export default function ImportPage() {
           <a
             href={templateBlob}
             download="buildings-import-template.csv"
-            className="inline-flex items-center gap-2 text-primary hover:underline"
+            className="-my-2 inline-flex items-center gap-2 py-2 text-primary hover:underline"
           >
             Download Template
           </a>

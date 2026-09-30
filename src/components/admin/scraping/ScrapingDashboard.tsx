@@ -320,7 +320,10 @@ export function ScrapingDashboard({ cities }: ScrapingDashboardProps) {
                                 href={b.website_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-muted-foreground hover:text-foreground"
+                                aria-label={`Open ${b.name} website`}
+                                title="Open website"
+                                // p-3.5 + -m-3.5: 40x40 tap target, same layout.
+                                className="-m-3.5 inline-flex p-3.5 text-muted-foreground hover:text-foreground"
                               >
                                 <ExternalLink className="h-3 w-3" />
                               </a>
@@ -354,6 +357,7 @@ export function ScrapingDashboard({ cities }: ScrapingDashboardProps) {
                             checked={b.scrape_enabled}
                             disabled={togglingIds.has(b.id)}
                             onCheckedChange={(checked) => toggleScraping(b.id, checked)}
+                            aria-label={`Scraping enabled for ${b.name}`}
                           />
                         </td>
                         <td className="py-3">

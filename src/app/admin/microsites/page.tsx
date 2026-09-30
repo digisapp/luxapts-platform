@@ -176,7 +176,7 @@ export default async function AdminMicrositesPage({
                     href={`https://${r.domain}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:underline"
+                    className="-my-3.5 inline-flex items-center gap-1 py-3.5 text-xs text-muted-foreground hover:underline"
                   >
                     {r.domain} <ExternalLink className="h-3 w-3" />
                   </a>

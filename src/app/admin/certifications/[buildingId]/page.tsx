@@ -370,7 +370,8 @@ export default function BuildingCertificationPage() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  // after: = invisible 40x40 tap target around the 28px button.
+                  className="relative h-7 w-7 text-muted-foreground after:absolute after:-inset-1.5 after:content-[''] hover:text-destructive"
                   onClick={() => removeQuestion(qIndex)}
                   aria-label={`Remove question ${qIndex + 1}`}
                   disabled={form.quiz_questions.length === 1}
@@ -405,7 +406,10 @@ export default function BuildingCertificationPage() {
                       <button
                         type="button"
                         onClick={() => updateQuestion(qIndex, { ...q, correct_index: optIndex })}
-                        className={`h-5 w-5 rounded-full border-2 shrink-0 transition-all ${
+                        // after: = invisible 34x40 tap target around the 20px
+                        // radio (padding-box based, so it sits inside the 2px
+                        // border); kept short of the option input on the right.
+                        className={`relative h-5 w-5 rounded-full border-2 shrink-0 transition-all after:absolute after:-inset-y-3 after:-left-3 after:-right-1.5 after:content-[''] ${
                           q.correct_index === optIndex
                             ? "border-green-500 bg-green-500"
                             : "border-muted-foreground/40 hover:border-green-400"
@@ -433,7 +437,7 @@ export default function BuildingCertificationPage() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                        className="relative h-8 w-8 shrink-0 text-muted-foreground after:absolute after:-inset-1 after:content-[''] hover:text-destructive"
                         onClick={() => removeOption(qIndex, optIndex)}
                         aria-label={`Remove option ${optIndex + 1}`}
                         disabled={q.options.length <= 2}

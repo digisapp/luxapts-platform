@@ -96,7 +96,7 @@ export function ConversationFilters({ surface, filter, q }: ConversationFiltersP
       {hasFilters && (
         <Link
           href="/admin/conversations"
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          className="inline-flex min-h-10 items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <X className="h-3 w-3" />
           Clear

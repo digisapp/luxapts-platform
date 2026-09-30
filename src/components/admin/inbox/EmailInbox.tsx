@@ -92,7 +92,7 @@ function StatusBadge({ email }: { email: Email }) {
       failed: <XCircle className="h-3 w-3" />,
     };
     return (
-      <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${colors[email.status] || colors.sent}`}>
+      <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${colors[email.status] || colors.sent}`}>
         {icons[email.status] || icons.sent}
         {email.status.charAt(0).toUpperCase() + email.status.slice(1)}
       </span>
@@ -104,7 +104,7 @@ function StatusBadge({ email }: { email: Email }) {
     replied: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   };
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize ${colors[email.status] || ""}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${colors[email.status] || ""}`}>
       {email.status}
     </span>
   );
@@ -114,7 +114,7 @@ function CategoryBadge({ category }: { category: string | null }) {
   if (!category) return null;
   const label = category.replace(/_/g, " ");
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize ${CATEGORY_COLORS[category] || CATEGORY_COLORS.other}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${CATEGORY_COLORS[category] || CATEGORY_COLORS.other}`}>
       {category === "spam" && <ShieldAlert className="h-3 w-3" />}
       {label}
     </span>
@@ -475,11 +475,11 @@ export function EmailInbox() {
           ) : (
             <div className="divide-y">
               {/* Select all header */}
-              <div className="flex items-center gap-3 px-4 py-2 bg-muted/20 border-b">
+              <div className="flex items-center gap-3 px-3 py-2 bg-muted/20 border-b sm:px-4">
                 <button
                   type="button"
                   onClick={toggleSelectAll}
-                  className="shrink-0"
+                  className="-m-2 shrink-0 p-2"
                   aria-label={allSelected ? "Deselect all emails" : "Select all emails"}
                   aria-pressed={allSelected}
                 >
@@ -506,7 +506,7 @@ export function EmailInbox() {
                       setSelectedEmailId(emailItem.id);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 cursor-pointer ${
+                  className={`w-full flex items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-muted/50 cursor-pointer sm:px-4 ${
                     !isRead(emailItem) ? "bg-muted/20" : ""
                   } ${selectedIds.has(emailItem.id) ? "bg-primary/5" : ""}`}
                 >
@@ -523,7 +523,7 @@ export function EmailInbox() {
                         toggleSelect(e as unknown as React.MouseEvent, emailItem.id);
                       }
                     }}
-                    className="shrink-0 cursor-pointer"
+                    className="-m-2 shrink-0 cursor-pointer p-2"
                   >
                     {selectedIds.has(emailItem.id) ? (
                       <CheckSquare className="h-4 w-4 text-primary" />
@@ -532,8 +532,8 @@ export function EmailInbox() {
                     )}
                   </div>
 
-                  {/* Direction icon */}
-                  <div className="shrink-0">
+                  {/* Direction icon — phones: the tab already says which way */}
+                  <div className="hidden shrink-0 sm:block">
                     {emailItem.direction === "inbound" ? (
                       <ArrowDownLeft className="h-4 w-4 text-blue-400" />
                     ) : (
@@ -541,8 +541,8 @@ export function EmailInbox() {
                     )}
                   </div>
 
-                  {/* Read indicator */}
-                  <div className="shrink-0">
+                  {/* Read indicator — phones: unread rows are bold instead */}
+                  <div className="hidden shrink-0 sm:block">
                     {isRead(emailItem) ? (
                       <MailOpen className="h-4 w-4 text-muted-foreground" />
                     ) : (
@@ -563,7 +563,7 @@ export function EmailInbox() {
                         toggleStar(e as unknown as React.MouseEvent, emailItem);
                       }
                     }}
-                    className="shrink-0 hover:scale-110 transition-transform cursor-pointer"
+                    className="-m-2 shrink-0 cursor-pointer p-2 transition-transform hover:scale-110"
                   >
                     <Star
                       className={`h-4 w-4 ${
@@ -574,32 +574,40 @@ export function EmailInbox() {
                     />
                   </div>
 
-                  {/* Sender / recipient */}
-                  <span
-                    className={`w-28 truncate text-sm shrink-0 sm:w-40 ${
-                      !isRead(emailItem) ? "font-semibold" : ""
-                    }`}
-                  >
-                    {getDisplayName(emailItem)}
-                  </span>
-
-                  {/* Subject + AI summary */}
-                  <div className="flex-1 min-w-0">
-                    <span className={`truncate text-sm block ${!isRead(emailItem) ? "font-semibold" : ""}`}>
-                      {emailItem.subject || "(No Subject)"}
+                  {/* Sender over subject on phones (a fixed-width sender column
+                      plus badges and date overflowed a 375px screen); side by
+                      side from sm up. */}
+                  <div className="min-w-0 flex-1 sm:flex sm:items-center sm:gap-3">
+                    <span
+                      className={`block truncate text-sm sm:w-40 sm:shrink-0 ${
+                        !isRead(emailItem) ? "font-semibold" : ""
+                      }`}
+                    >
+                      {getDisplayName(emailItem)}
                     </span>
-                    {emailItem.ai_summary && (
-                      <span className="truncate text-xs text-muted-foreground block">
-                        {emailItem.ai_summary}
+
+                    {/* Subject + AI summary */}
+                    <div className="min-w-0 sm:flex-1">
+                      <span
+                        className={`truncate text-sm block ${
+                          !isRead(emailItem) ? "font-semibold" : "text-muted-foreground sm:text-foreground"
+                        }`}
+                      >
+                        {emailItem.subject || "(No Subject)"}
                       </span>
-                    )}
+                      {emailItem.ai_summary && (
+                        <span className="hidden truncate text-xs text-muted-foreground sm:block">
+                          {emailItem.ai_summary}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Badges */}
-                  <div className="shrink-0 flex items-center gap-1.5">
+                  <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
                     {/* Auto-sent badge */}
                     {emailItem.metadata && (emailItem.metadata as Record<string, unknown>).auto_sent ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium bg-violet-500/10 text-violet-400 border-violet-500/20">
+                      <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium bg-violet-500/10 text-violet-400 border-violet-500/20">
                         <Zap className="h-3 w-3" />
                         Auto
                       </span>

@@ -286,7 +286,7 @@ export function DataQualityDashboard({
           value={cityFilter}
           onChange={(e) => setCityFilter(e.target.value)}
           aria-label="Filter by city"
-          className="rounded-md border bg-background px-3 py-2 text-base md:text-sm"
+          className="h-10 rounded-md border bg-background px-3 text-base md:text-sm"
         >
           <option value="all">All Cities</option>
           {cities.map((c) => (
@@ -332,9 +332,14 @@ export function DataQualityDashboard({
                 <CardContent className="p-4">
                   {/* Main Row */}
                   <div className="flex items-center gap-4">
+                    {/* p-3 + -m-3: a 40x40 tap target around the 16px chevron
+                        without moving the row. */}
                     <button
+                      type="button"
                       onClick={() => setExpandedId(isExpanded ? null : b.id)}
-                      className="shrink-0"
+                      aria-expanded={isExpanded}
+                      aria-label={`${isExpanded ? "Collapse" : "Expand"} ${b.name}`}
+                      className="-m-3 flex shrink-0 items-center justify-center rounded-md p-3 hover:bg-muted/50"
                     >
                       {isExpanded ? (
                         <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -399,24 +404,27 @@ export function DataQualityDashboard({
                         <p className="text-sm font-medium">Quick Edit</p>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div>
-                            <label className="text-xs text-muted-foreground">Leasing Phone</label>
+                            <label htmlFor={`dq-${b.id}-phone`} className="text-xs text-muted-foreground">Leasing Phone</label>
                             <Input
+                              id={`dq-${b.id}-phone`}
                               value={getEditValue(b.id, "leasing_phone", b.leasing_phone)}
                               onChange={(e) => setEditField(b.id, "leasing_phone", e.target.value)}
                               placeholder="(305) 555-0100"
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-muted-foreground">Leasing Email</label>
+                            <label htmlFor={`dq-${b.id}-email`} className="text-xs text-muted-foreground">Leasing Email</label>
                             <Input
+                              id={`dq-${b.id}-email`}
                               value={getEditValue(b.id, "leasing_email", b.leasing_email)}
                               onChange={(e) => setEditField(b.id, "leasing_email", e.target.value)}
                               placeholder="leasing@building.com"
                             />
                           </div>
                           <div className="sm:col-span-2">
-                            <label className="text-xs text-muted-foreground">Website URL</label>
+                            <label htmlFor={`dq-${b.id}-website`} className="text-xs text-muted-foreground">Website URL</label>
                             <Input
+                              id={`dq-${b.id}-website`}
                               value={getEditValue(b.id, "website_url", b.website_url)}
                               onChange={(e) => setEditField(b.id, "website_url", e.target.value)}
                               placeholder="https://buildingname.com"
