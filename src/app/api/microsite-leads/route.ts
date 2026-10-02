@@ -7,7 +7,7 @@ import { MICROSITE_BUILDINGS } from "@/lib/microsites";
 import { autoAssignAgent } from "@/lib/leads/routing";
 import { newLeadEmail, micrositeInquiryEmail, micrositeInquirySubject } from "@/lib/email/templates";
 import { unsubscribeUrl } from "@/lib/email/unsubscribe";
-import { micrositeEmailFacts, senderIdentityFor } from "@/lib/microsites";
+import { senderIdentityFor } from "@/lib/microsites";
 import {
   getLeadNotificationRecipients,
   getReplyToAddress,
@@ -202,10 +202,9 @@ export async function POST(req: Request) {
           }
         }
 
-        // Confirmation to the person who signed up. The microsite shows
-        // "You're on the list!" client-side and, until now, nothing ever
-        // followed it — every signup went unacknowledged. The email promises
-        // a follow-up by text or call, so the team must actually make it.
+        // Reply to the person who signed up: a short personal note from Stacy
+        // asking one question, so the thread starts. Until this existed every
+        // signup went unacknowledged. Someone must answer when they write back.
         // One-click unsubscribe (RFC 8058) in the headers as well as the body:
         // Gmail and Yahoo require it for bulk senders, and it is what the
         // "Unsubscribe" button next to the sender name is wired to.
@@ -214,11 +213,18 @@ export async function POST(req: Request) {
         // signed up on the building's own site and may not know the brand,
         // and an unfamiliar sender name is what gets a confirmation reported
         // as spam. The address stays on staycio.com so DKIM still passes.
+        const reply = micrositeInquiryEmail({
+          name: body.name,
+          buildingName: buildingName,
+          city: cityRes.data.name,
+          moveIn: body.move_in ?? null,
+          unitType: body.unit_type ?? null,
+        });
         const { error: confirmError } = await resend.emails.send({
           from: senderIdentityFor(body.domain, fromEmail).from,
           to: [body.email],
           replyTo: getReplyToAddress(),
-          subject: micrositeInquirySubject(buildingName, cityRes.data.name),
+          subject: micrositeInquirySubject(buildingName, cityRes.data.name, body.unit_type ?? null),
           ...(unsubscribe
             ? {
                 headers: {
@@ -227,19 +233,8 @@ export async function POST(req: Request) {
                 },
               }
             : {}),
-          html: micrositeInquiryEmail({
-            name: body.name,
-            email: body.email,
-            phone: body.phone ?? null,
-            buildingName: buildingName,
-            city: cityRes.data.name,
-            citySlug: cityRes.data.slug ?? null,
-            domain: body.domain,
-            moveIn: body.move_in ?? null,
-            unitType: body.unit_type ?? null,
-            facts: micrositeEmailFacts(body.domain),
-            unsubscribeUrl: unsubscribe,
-          }),
+          html: reply.html,
+          text: reply.text,
         });
         if (confirmError) {
           console.error("Microsite inquiry confirmation failed:", leadId, confirmError);

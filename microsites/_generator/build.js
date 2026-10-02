@@ -653,27 +653,6 @@ fs.writeFileSync(
   JSON.stringify(Object.fromEntries(BUILDINGS.map((b) => [b.domain, stacyFacts(b)])), null, 2) + "\n"
 );
 
-// Structured facts for the waitlist confirmation email (src/lib/email/templates.ts).
-// Same source as the page, so the email can never contradict the site it came
-// from. Written to src/lib/microsite-email-facts.generated.json on every build;
-// the hand-built sites are listed by hand in src/lib/microsites.ts.
-function emailFacts(b) {
-  const leasing = tierOf(b) === "availability";
-  const dated = /^(Q[1-4] )?\d{4}/.test(b.eta || "");
-  return {
-    address: b.address !== b.hood ? b.address : null,
-    neighborhood: b.hood,
-    units: b.units || null,
-    developer: b.developer || null,
-    status: leasing ? "Leasing now" : dated ? `Expected ${b.eta}` : b.eta || "Not leasing yet",
-    leasing,
-  };
-}
-fs.writeFileSync(
-  path.join(ROOT, "..", "src", "lib", "microsite-email-facts.generated.json"),
-  JSON.stringify(Object.fromEntries(BUILDINGS.map((b) => [b.domain, emailFacts(b)])), null, 2) + "\n"
-);
-
 let made = 0;
 const work = [];
 // Buildings whose delivery date has passed while the page still runs waitlist

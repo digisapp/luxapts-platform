@@ -4,7 +4,6 @@
  * Call escHtml() on any user-supplied data before interpolating.
  */
 import { telHref } from "@/lib/utils";
-import type { MicrositeEmailFacts } from "@/lib/microsites";
 
 /**
  * The header is the wordmark as plain text, deliberately: no image. Remote
@@ -18,7 +17,6 @@ const WORDMARK_FONT =
 // Text colours on the #141414 card. Each clears WCAG AA (4.5:1) on it; the
 // earlier #777 / #555 greys did not, and dark-mode clients lowered them further.
 const INK = "#ffffff";
-const BODY = "#c6c6c6";
 const MUTED = "#9a9a9a";
 const FINE = "#8a8a8a";
 
@@ -416,124 +414,84 @@ export function priceDropAlertEmail(data: {
   return layout(content, `Price drop at ${data.buildingName}`);
 }
 
-/**
- * Subject line for the microsite inquiry confirmation; kept with the template
- * so they can't drift. The city is appended for context in a crowded inbox
- * ("Downtown 6" alone says little) unless the name already carries it, so
- * "Kenect Miami" never becomes "Kenect Miami Miami".
- */
-export function micrositeInquirySubject(buildingName: string, city?: string | null): string {
-  const place =
-    city && !buildingName.toLowerCase().includes(city.toLowerCase()) ? `${buildingName} ${city}` : buildingName;
-  return `We received your inquiry about ${place}`;
+// ─── Microsite inquiry reply ──────────────────────────────────────────────────
+//
+// Deliberately NOT a designed template. A microsite signup gets a short
+// personal note from Stacy, the way a leasing agent would write back: plain
+// paragraphs, one question, a signature. Same copy for every building,
+// whether it is leasing today or still under construction (owner's call,
+// 2026-10-02): the goal is a reply, not a status report.
+
+/** "1 Bedroom" -> "a 1-bedroom apartment", "Studio" -> "a studio apartment", else "an apartment". */
+function unitPhrase(unitType: string | null | undefined): string {
+  const t = (unitType ?? "").trim();
+  if (/^studio$/i.test(t)) return "a studio apartment";
+  const m = t.match(/^(\d+)\s*bed/i);
+  if (m) return `a ${m[1]}-bedroom apartment`;
+  return "an apartment";
 }
 
-/**
- * Confirmation sent to the person who filled in a building microsite form.
- * Until this existed, a microsite lead saw "You're on the list!" in the
- * browser and then heard nothing at all — 65 people signed up with no reply.
- *
- * Deliberately not a "waitlist" email: that tells the person to sit and wait.
- * This one says a human will reach out soon, by text or call when they left a
- * number, so they expect contact rather than silence. Same copy whether the
- * building is open or still under construction — either way the team follows
- * up with whatever pricing and availability exist.
- */
+/** " in Q4 2026", " in the next 30 days", " as soon as possible", "" when flexible or unknown. */
+function timingPhrase(moveIn: string | null | undefined): string {
+  const t = (moveIn ?? "").trim();
+  if (!t || /^(flexible|not sure)/i.test(t)) return "";
+  if (/^as soon as/i.test(t)) return " as soon as possible";
+  if (/^next\s/i.test(t)) return ` in the ${t.toLowerCase()}`;
+  if (/^early|^late|^mid/i.test(t)) return ` in ${t.charAt(0).toLowerCase()}${t.slice(1)}`;
+  return ` in ${t}`;
+}
+
+/** "Downtown 6 Miami — 1 Bedroom Availability"; city appended unless the name carries it. */
+export function micrositeInquirySubject(
+  buildingName: string,
+  city?: string | null,
+  unitType?: string | null
+): string {
+  const place =
+    city && !buildingName.toLowerCase().includes(city.toLowerCase()) ? `${buildingName} ${city}` : buildingName;
+  const t = (unitType ?? "").trim();
+  const what = t && !/^not sure/i.test(t) ? `${t} Availability` : "Availability";
+  return `${place} \u2014 ${what}`;
+}
+
 export function micrositeInquiryEmail(data: {
   name: string;
-  /** Address the confirmation went to, echoed so a typo is caught now, not at launch. */
-  email?: string | null;
-  /** When given, the promise reads "by text or call" and the number is echoed. */
-  phone?: string | null;
   buildingName: string;
   city: string;
-  domain: string;
   moveIn?: string | null;
   unitType?: string | null;
-  citySlug?: string | null;
-  /** What the building's page publishes; only name and address are shown. */
-  facts?: MicrositeEmailFacts | null;
-  /** Signed one-click link. Null (no signing secret) falls back to "reply to be removed". */
-  unsubscribeUrl?: string | null;
-}): string {
-  const browseUrl = data.citySlug
-    ? `https://staycio.com/cities/${encodeURIComponent(data.citySlug)}`
-    : "https://staycio.com";
+}): { html: string; text: string } {
   const firstName = data.name.trim().split(/\s+/)[0] || data.name;
-  const facts = data.facts ?? null;
+  const place = data.buildingName.toLowerCase().includes(data.city.toLowerCase())
+    ? data.buildingName
+    : `${data.buildingName} ${data.city}`;
+  const unit = unitPhrase(data.unitType);
+  const unitShort = unit.replace(/^an? /, "").replace(/ apartment$/, ""); // "1-bedroom", "studio", "apartment"
+  const options = unitShort === "apartment" ? "available options" : `available ${unitShort} options`;
 
-  const whereLine = facts
-    ? [facts.address, facts.neighborhood].filter(Boolean).map((v) => escHtml(v as string)).join(" &middot; ")
-    : escHtml(data.city);
+  const paragraphs = [
+    `Hi ${firstName},`,
+    `Thanks for your interest in ${place}! I saw that you\u2019re looking for ${unit}${timingPhrase(data.moveIn)}.`,
+    `Do you have an ideal move-in date?`,
+    `Once I know your timing, I can send you the ${options}, pricing, and floor plans. If you\u2019re in ${data.city}, I\u2019d also be happy to schedule a private tour and show you the available units in person.`,
+    `Just let me know what works best for you.`,
+    `Best,\nStacy`,
+  ];
 
-  // Name and address only. Status, size and developer were cut on purpose:
-  // the person just read all of that on the site they signed up from.
-  const buildingCard = `
-    <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px 24px;margin:28px 0 12px 0;">
-      <p style="color:${MUTED};font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin:0 0 10px 0;">The building</p>
-      <p style="color:${INK};font-size:17px;font-weight:700;margin:0 0 2px 0;">${escHtml(data.buildingName)}</p>
-      <p style="color:${BODY};font-size:13px;margin:0;">${whereLine}</p>
-    </div>`;
+  const text = paragraphs.join("\n\n") + "\n";
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${escHtml(micrositeInquirySubject(data.buildingName, data.city, data.unitType))}</title>
+</head>
+<body style="margin:0;padding:24px 16px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;">
+<div style="max-width:560px;">
+${paragraphs.map((p) => `<p style="margin:0 0 18px 0;">${escHtml(p).replace(/\n/g, "<br>")}</p>`).join("\n")}
+</div>
+</body>
+</html>`;
 
-  const requestRows = [
-    data.unitType ? row("Looking for", escHtml(data.unitType)) : "",
-    data.moveIn ? row("Move-in", escHtml(data.moveIn)) : "",
-    data.email || data.phone
-      ? row("We'll reach you at", [data.email, data.phone].filter(Boolean).map((v) => escHtml(v as string)).join("<br>"))
-      : "",
-  ].join("");
-
-  const requestCard = requestRows
-    ? `
-    <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px 24px;margin:0 0 28px 0;">
-      <p style="color:${MUTED};font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin:0 0 6px 0;">Your request</p>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        ${requestRows}
-      </table>
-    </div>`
-    : `<div style="height:16px;"></div>`;
-
-  const channel = data.phone ? "by text or a quick call" : "by email";
-  const promise = `A member of our team will be in touch soon ${channel} with pricing and availability for ${escHtml(data.buildingName)}.`;
-
-  const removal = data.unsubscribeUrl
-    ? `<a href="${escHtml(data.unsubscribeUrl)}" style="color:${FINE};text-decoration:underline;">Unsubscribe</a> at any time.`
-    : `Reply to this email if you&rsquo;d rather not hear from us.`;
-
-  const content = `
-    <div>
-      ${badge("Inquiry received")}
-      <h2 class="h1" style="color:${INK};font-size:26px;font-weight:700;line-height:1.25;margin:18px 0 10px 0;letter-spacing:-0.3px;">
-        Thanks, ${escHtml(firstName)}. We&rsquo;re on it.
-      </h2>
-      <p style="color:${BODY};font-size:15px;line-height:1.6;margin:0;">
-        ${promise}
-      </p>
-    </div>
-
-    ${buildingCard}
-    ${requestCard}
-
-    <p style="color:${BODY};font-size:14px;line-height:1.6;margin:0 0 16px 0;">
-      Need a place sooner? Browse ${escHtml(data.city)} apartments available now.
-    </p>
-
-    <div style="text-align:center;margin:0 0 8px 0;">
-      ${primaryButton(`Browse ${data.city} apartments`, browseUrl)}
-    </div>
-
-    <p style="color:${MUTED};font-size:13px;line-height:1.6;text-align:center;margin:20px 0 28px 0;">
-      Questions? Just reply to this email.
-    </p>
-
-    <div style="border-top:1px solid #2a2a2a;padding-top:20px;">
-      <p style="color:${FINE};font-size:12px;line-height:1.6;margin:0;">
-        You&rsquo;re receiving this because you inquired about ${escHtml(data.buildingName)} at ${escHtml(data.domain)}. ${removal}
-      </p>
-    </div>
-  `;
-
-  // No outer footer: the card's last line already names the site and carries
-  // the unsubscribe link, and a second row of links underneath read as clutter.
-  return layout(content, micrositeInquirySubject(data.buildingName, data.city), { footerLinks: [] });
+  return { html, text };
 }

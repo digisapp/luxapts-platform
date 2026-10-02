@@ -1,117 +1,69 @@
 import { describe, it, expect } from "vitest";
 import { micrositeInquiryEmail, micrositeInquirySubject } from "@/lib/email/templates";
-import { MICROSITE_BUILDINGS, micrositeEmailFacts } from "@/lib/microsites";
 
-const base = {
-  name: "Nathan Example",
-  email: "nathan@example.com",
-  buildingName: "Downtown 6",
-  city: "Miami",
-  citySlug: "miami",
-  domain: "downtown6miami.com",
-  moveIn: "December 2026",
-  unitType: "1 Bedroom",
-};
+const base = { name: "Nathan Example", buildingName: "Downtown 6", city: "Miami", moveIn: "December", unitType: "1 Bedroom" };
 
-describe("micrositeInquiryEmail", () => {
-  it("promises active follow-up rather than a wait", () => {
-    const html = micrositeInquiryEmail(base);
-    expect(html).toContain("Inquiry received");
-    expect(html).toContain("Thanks, Nathan. We&rsquo;re on it.");
-    expect(html).toContain("A member of our team will be in touch soon by email with pricing and availability for Downtown 6.");
-    expect(html).not.toMatch(/waitlist/i);
+describe("micrositeInquirySubject", () => {
+  it("names the building, city and unit type", () => {
+    expect(micrositeInquirySubject("Downtown 6", "Miami", "1 Bedroom")).toBe("Downtown 6 Miami \u2014 1 Bedroom Availability");
   });
-
-  it("promises a text or call, and echoes the number, when a phone was given", () => {
-    const html = micrositeInquiryEmail({ ...base, phone: "+1 305 555 0100" });
-    expect(html).toContain("will be in touch soon by text or a quick call");
-    expect(html).toContain("nathan@example.com<br>+1 305 555 0100");
+  it("does not repeat a city already in the name", () => {
+    expect(micrositeInquirySubject("Kenect Miami", "Miami", "Studio")).toBe("Kenect Miami \u2014 Studio Availability");
+    expect(micrositeInquirySubject("JEM Miami Worldcenter", "Miami", null)).toBe("JEM Miami Worldcenter \u2014 Availability");
   });
-
-  it("names the building and its address, nothing more", () => {
-    const html = micrositeInquiryEmail({ ...base, facts: micrositeEmailFacts(base.domain) });
-    expect(html).toContain("46 NE 6th Street &middot; Downtown Miami");
-    // Status, size and developer stay out: the person just read them on the site.
-    expect(html).not.toContain("Leasing late 2026");
-    expect(html).not.toContain("824");
-    expect(html).not.toContain("Melo Group");
-  });
-
-  it("uses the same copy for a building that is already leasing", () => {
-    const html = micrositeInquiryEmail({
-      ...base,
-      buildingName: "Midtown 5",
-      domain: "midtown5apartments.com",
-      facts: micrositeEmailFacts("midtown5apartments.com"),
-    });
-    expect(html).toContain("pricing and availability for Midtown 5");
-    expect(html).toContain("3201 NE 1st Avenue &middot; Midtown Miami");
-  });
-
-  it("still renders without facts for an unknown domain", () => {
-    const html = micrositeInquiryEmail({ ...base, facts: null });
-    expect(html).toContain("Downtown 6</p>");
-    expect(html).toContain(">Miami</p>");
-  });
-
-  it("carries a working unsubscribe link and no outer footer", () => {
-    const url = "https://staycio.com/api/email/unsubscribe?lead=abc&t=def";
-    const html = micrositeInquiryEmail({ ...base, unsubscribeUrl: url });
-    // Attribute values are HTML-escaped, so the & in the query string becomes &amp;.
-    expect(html.split(url.replace("&", "&amp;")).length - 1).toBe(1);
-    expect(html).not.toContain("Manage preferences");
-    expect(html).not.toContain("Independent apartment search");
-  });
-
-  it("falls back to reply-to-remove when no link can be signed", () => {
-    const html = micrositeInquiryEmail({ ...base, unsubscribeUrl: null });
-    expect(html).toContain("rather not hear from us");
-    expect(html).not.toContain("Unsubscribe");
-  });
-
-  it("has a text-only header: no images, no emoji", () => {
-    const html = micrositeInquiryEmail(base);
-    expect(html).not.toMatch(/<img\b/);
-    expect(html).not.toContain("🏢");
-    expect(html).toContain(">Staycio</a>");
-  });
-
-  it("keeps the fine print to one line", () => {
-    const html = micrositeInquiryEmail({ ...base, unsubscribeUrl: "https://staycio.com/u" });
-    expect(html).toContain("You&rsquo;re receiving this because you inquired about Downtown 6 at downtown6miami.com.");
-    expect(html).not.toContain("independent");
-  });
-
-  it("escapes user-supplied text", () => {
-    const html = micrositeInquiryEmail({
-      ...base,
-      name: '<img src=x onerror="alert(1)">',
-      unitType: "<b>2BR</b>",
-    });
-    expect(html).not.toContain("<img src=x");
-    expect(html).not.toContain("<b>2BR</b>");
-    expect(html).toContain("&lt;b&gt;2BR&lt;/b&gt;");
-  });
-
-  it("subject carries the city unless the name already does, and matches the preheader", () => {
-    expect(micrositeInquirySubject("Downtown 6", "Miami")).toBe("We received your inquiry about Downtown 6 Miami");
-    expect(micrositeInquirySubject("Kenect Miami", "Miami")).toBe("We received your inquiry about Kenect Miami");
-    expect(micrositeInquirySubject("JEM Miami Worldcenter", "Miami")).toBe("We received your inquiry about JEM Miami Worldcenter");
-    expect(micrositeInquirySubject("Jade Brickell", "Miami")).toBe("We received your inquiry about Jade Brickell Miami");
-    expect(micrositeInquirySubject("Downtown 6", null)).toBe("We received your inquiry about Downtown 6");
-    expect(micrositeInquiryEmail(base)).toContain("We received your inquiry about Downtown 6 Miami");
+  it("drops the unit type when the form said not sure", () => {
+    expect(micrositeInquirySubject("The Perrin", "Miami", "Not sure yet")).toBe("The Perrin Miami \u2014 Availability");
   });
 });
 
-describe("micrositeEmailFacts", () => {
-  it.each(Object.keys(MICROSITE_BUILDINGS))("%s has building facts for its confirmation email", (domain) => {
-    const facts = micrositeEmailFacts(domain);
-    expect(facts, `${domain}: add it to HAND_BUILT_EMAIL_FACTS or regenerate`).toBeTruthy();
-    expect(facts!.neighborhood.length).toBeGreaterThan(0);
+describe("micrositeInquiryEmail", () => {
+  it("is Stacy's short personal note, with a text part", () => {
+    const { html, text } = micrositeInquiryEmail(base);
+    expect(text).toBe(
+      "Hi Nathan,\n\n" +
+        "Thanks for your interest in Downtown 6 Miami! I saw that you\u2019re looking for a 1-bedroom apartment in December.\n\n" +
+        "Do you have an ideal move-in date?\n\n" +
+        "Once I know your timing, I can send you the available 1-bedroom options, pricing, and floor plans. If you\u2019re in Miami, I\u2019d also be happy to schedule a private tour and show you the available units in person.\n\n" +
+        "Just let me know what works best for you.\n\n" +
+        "Best,\nStacy\n"
+    );
+    expect(html).toContain("Hi Nathan,");
+    expect(html).toContain("Best,<br>Stacy");
+    expect(html).not.toMatch(/<img\b|<table\b/);
+    expect(html).not.toMatch(/waitlist|unsubscribe|Staycio/i);
   });
 
-  it("returns null for an unknown domain", () => {
-    expect(micrositeEmailFacts("example.com")).toBeNull();
-    expect(micrositeEmailFacts(null)).toBeNull();
+  it("reads the same whether or not the building is leasing yet", () => {
+    const a = micrositeInquiryEmail(base).text;
+    const b = micrositeInquiryEmail({ ...base, buildingName: "Midtown 5" }).text;
+    expect(b).toBe(a.replace(/Downtown 6/g, "Midtown 5"));
+  });
+
+  it("phrases the unit type and timing from the form's values", () => {
+    expect(micrositeInquiryEmail({ ...base, unitType: "Studio", moveIn: "Q4 2026" }).text).toContain(
+      "looking for a studio apartment in Q4 2026."
+    );
+    expect(micrositeInquiryEmail({ ...base, unitType: "2 Bedroom", moveIn: "As soon as possible" }).text).toContain(
+      "looking for a 2-bedroom apartment as soon as possible."
+    );
+    expect(micrositeInquiryEmail({ ...base, unitType: "3 Bedroom", moveIn: "Next 30 days" }).text).toContain(
+      "looking for a 3-bedroom apartment in the next 30 days."
+    );
+    expect(micrositeInquiryEmail({ ...base, moveIn: "Early 2027" }).text).toContain("in early 2027.");
+    expect(micrositeInquiryEmail({ ...base, unitType: "Not sure yet", moveIn: "Flexible" }).text).toContain(
+      "looking for an apartment.\n"
+    );
+    expect(micrositeInquiryEmail({ ...base, unitType: null, moveIn: null }).text).toContain("the available options, pricing");
+    expect(micrositeInquiryEmail({ ...base, unitType: "Studio" }).text).toContain("the available studio options");
+  });
+
+  it("does not repeat the city when the building name has it", () => {
+    expect(micrositeInquiryEmail({ ...base, buildingName: "Kenect Miami" }).text).toContain("interest in Kenect Miami!");
+  });
+
+  it("escapes user-supplied text in the html", () => {
+    const { html } = micrositeInquiryEmail({ ...base, name: "<img src=x onerror=\"alert(1)\">", unitType: "<b>2BR</b>" });
+    expect(html).not.toContain("<img src=x");
+    expect(html).not.toContain("<b>2BR</b>");
   });
 });
