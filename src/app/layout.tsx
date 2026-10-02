@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
@@ -8,16 +7,6 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
 import { CompareBar } from "@/components/compare/CompareBar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { WebsiteJsonLd } from "@/components/seo/JsonLd";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -71,7 +60,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-black`}
+        className="antialiased min-h-screen bg-black"
       >
         <WebsiteJsonLd />
         <AuthProvider>

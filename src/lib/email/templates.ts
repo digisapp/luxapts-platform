@@ -8,12 +8,12 @@ import type { MicrositeEmailFacts } from "@/lib/microsites";
 
 /**
  * The header is the wordmark as plain text, deliberately: no image. Remote
- * images and inline attachments both count against a sender in spam scoring,
- * and the site's Geist face can't be loaded by Gmail or Outlook anyway, so
- * the stack below picks the closest system sans on each platform.
+ * images and inline attachments both count against a sender in spam scoring.
+ * The stack is the same system-font stack the site uses (SF Pro on Apple,
+ * Segoe UI on Windows, Roboto on Android), so email and site match.
  */
 const WORDMARK_FONT =
-  "'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+  "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 // Text colours on the #141414 card. Each clears WCAG AA (4.5:1) on it; the
 // earlier #777 / #555 greys did not, and dark-mode clients lowered them further.
