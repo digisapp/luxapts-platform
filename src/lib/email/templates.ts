@@ -4,6 +4,23 @@
  * Call escHtml() on any user-supplied data before interpolating.
  */
 import { telHref } from "@/lib/utils";
+import type { MicrositeEmailFacts } from "@/lib/microsites";
+
+/**
+ * The header is the wordmark as plain text, deliberately: no image. Remote
+ * images and inline attachments both count against a sender in spam scoring,
+ * and the site's Geist face can't be loaded by Gmail or Outlook anyway, so
+ * the stack below picks the closest system sans on each platform.
+ */
+const WORDMARK_FONT =
+  "'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+// Text colours on the #141414 card. Each clears WCAG AA (4.5:1) on it; the
+// earlier #777 / #555 greys did not, and dark-mode clients lowered them further.
+const INK = "#ffffff";
+const BODY = "#c6c6c6";
+const MUTED = "#9a9a9a";
+const FINE = "#8a8a8a";
 
 export function escHtml(str: string | null | undefined): string {
   if (!str) return "";
@@ -18,47 +35,78 @@ export function escHtml(str: string | null | undefined): string {
 
 // ─── Shared layout wrapper ────────────────────────────────────────────────────
 
-function layout(content: string, preheader = ""): string {
+interface LayoutOptions {
+  /**
+   * Footer links. Defaults suit account holders; transactional mail to
+   * non-members passes its own, and an empty array drops the footer entirely
+   * (for mail whose card already carries its own fine print).
+   */
+  footerLinks?: { label: string; href: string }[];
+}
+
+function layout(content: string, preheader = "", options: LayoutOptions = {}): string {
+  const links = options.footerLinks ?? [
+    { label: "Manage preferences", href: "https://staycio.com/account" },
+    { label: "Visit site", href: "https://staycio.com" },
+  ];
+  const footerLinks = links
+    .map(
+      (l) =>
+        `<a href="${escHtml(l.href)}" style="color:${FINE};text-decoration:underline;">${escHtml(l.label)}</a>`
+    )
+    .join("\n            &nbsp;&middot;&nbsp;\n            ");
+
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="x-apple-disable-message-reformatting" />
+<meta name="color-scheme" content="dark" />
+<meta name="supported-color-schemes" content="dark" />
 <title>Staycio</title>
+<style>
+  :root { color-scheme: dark; supported-color-schemes: dark; }
+  a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
+  @media only screen and (max-width: 620px) {
+    .card { padding: 28px 20px 24px 20px !important; }
+    .h1 { font-size: 22px !important; }
+  }
+</style>
+<!--[if mso]>
+<noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+<![endif]-->
 </head>
-<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escHtml(preheader)}</div>` : ""}
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px;">
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#0a0a0a;">${escHtml(preheader)}${"&zwnj;&nbsp;".repeat(40)}</div>` : ""}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0a0a0a;padding:40px 16px;">
   <tr><td align="center">
-    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
 
       <!-- Header -->
       <tr>
-        <td style="padding:0 0 32px 0;text-align:center;">
-          <a href="https://staycio.com" style="text-decoration:none;">
-            <span style="font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">🏢 Staycio</span>
-          </a>
+        <td style="padding:0 0 28px 0;text-align:center;">
+          <a href="https://staycio.com" style="text-decoration:none;display:inline-block;font-family:${WORDMARK_FONT};font-size:24px;font-weight:700;color:${INK};letter-spacing:-0.6px;line-height:32px;">Staycio</a>
         </td>
       </tr>
 
       <!-- Card -->
       <tr>
-        <td style="background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:40px 40px 32px 40px;">
+        <td class="card" style="background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:40px 40px 32px 40px;">
           ${content}
         </td>
       </tr>
 
+${links.length > 0 ? `
       <!-- Footer -->
       <tr>
-        <td style="padding:24px 0 0 0;text-align:center;color:#555;font-size:12px;line-height:1.6;">
-          <p style="margin:0 0 8px 0;">Staycio · AI-Powered Luxury Apartment Search</p>
+        <td style="padding:24px 0 0 0;text-align:center;color:${FINE};font-size:12px;line-height:1.6;">
+          <p style="margin:0 0 8px 0;">Staycio &middot; Independent apartment search for Miami</p>
           <p style="margin:0;">
-            <a href="https://staycio.com/account" style="color:#555;text-decoration:underline;">Manage preferences</a>
-            &nbsp;·&nbsp;
-            <a href="https://staycio.com" style="color:#555;text-decoration:underline;">Visit site</a>
+            ${footerLinks}
           </p>
         </td>
-      </tr>
+      </tr>` : ""}
 
     </table>
   </td></tr>
@@ -69,18 +117,38 @@ ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:al
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function badge(text: string, color = "#1a2a1a", textColor = "#4ade80"): string {
-  return `<span style="display:inline-block;background:${color};color:${textColor};font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;letter-spacing:0.5px;text-transform:uppercase;">${escHtml(text)}</span>`;
+function badge(text: string, color = "#262626", textColor = INK): string {
+  return `<span style="display:inline-block;background:${color};color:${textColor};font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;letter-spacing:0.6px;text-transform:uppercase;line-height:1.4;">${escHtml(text)}</span>`;
 }
 
+/**
+ * Table-wrapped button. Outlook on Windows drops padding on a styled anchor,
+ * so the colour and size live on the cell and the VML block draws the pill.
+ */
 function primaryButton(label: string, href: string): string {
-  return `<a href="${escHtml(href)}" style="display:inline-block;background:#ffffff;color:#000000;font-size:14px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:99px;margin-top:8px;">${escHtml(label)}</a>`;
+  const safeHref = escHtml(href);
+  const safeLabel = escHtml(label);
+  return `<!--[if mso]>
+<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${safeHref}" style="height:44px;v-text-anchor:middle;width:260px;" arcsize="50%" strokecolor="#ffffff" fillcolor="#ffffff">
+<w:anchorlock/>
+<center style="color:#000000;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;">${safeLabel}</center>
+</v:roundrect>
+<![endif]-->
+<!--[if !mso]><!-->
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-table;">
+  <tr>
+    <td align="center" style="background:#ffffff;border-radius:99px;mso-padding-alt:0;">
+      <a href="${safeHref}" style="display:inline-block;background:#ffffff;color:#000000;font-size:14px;font-weight:600;text-decoration:none;padding:13px 28px;border-radius:99px;line-height:18px;">${safeLabel}</a>
+    </td>
+  </tr>
+</table>
+<!--<![endif]-->`;
 }
 
 function row(label: string, value: string): string {
   return `<tr>
-    <td style="padding:8px 0;color:#777;font-size:13px;width:140px;vertical-align:top;">${escHtml(label)}</td>
-    <td style="padding:8px 0;color:#e5e5e5;font-size:13px;">${value}</td>
+    <td style="padding:7px 0;color:${MUTED};font-size:13px;width:120px;vertical-align:top;">${escHtml(label)}</td>
+    <td style="padding:7px 0;color:#e8e8e8;font-size:13px;">${value}</td>
   </tr>`;
 }
 
@@ -349,57 +417,123 @@ export function priceDropAlertEmail(data: {
 }
 
 /**
- * Waitlist confirmation sent to the person who filled in a building microsite
- * form. Until this existed, a microsite lead saw "You're on the list!" in the
- * browser and then heard nothing at all — 65 people signed up with no reply.
+ * Subject line for the microsite inquiry confirmation; kept with the template
+ * so they can't drift. The city is appended for context in a crowded inbox
+ * ("Downtown 6" alone says little) unless the name already carries it, so
+ * "Kenect Miami" never becomes "Kenect Miami Miami".
  */
-export function micrositeWaitlistEmail(data: {
+export function micrositeInquirySubject(buildingName: string, city?: string | null): string {
+  const place =
+    city && !buildingName.toLowerCase().includes(city.toLowerCase()) ? `${buildingName} ${city}` : buildingName;
+  return `We received your inquiry about ${place}`;
+}
+
+/**
+ * Confirmation sent to the person who filled in a building microsite form.
+ * Until this existed, a microsite lead saw "You're on the list!" in the
+ * browser and then heard nothing at all — 65 people signed up with no reply.
+ *
+ * Deliberately not a "waitlist" email: that tells the person to sit and wait.
+ * This one says a human will reach out soon, by text or call when they left a
+ * number, so they expect contact rather than silence. Same copy whether the
+ * building is open or still under construction — either way the team follows
+ * up with whatever pricing and availability exist.
+ */
+export function micrositeInquiryEmail(data: {
   name: string;
+  /** Address the confirmation went to, echoed so a typo is caught now, not at launch. */
+  email?: string | null;
+  /** When given, the promise reads "by text or call" and the number is echoed. */
+  phone?: string | null;
   buildingName: string;
   city: string;
   domain: string;
   moveIn?: string | null;
   unitType?: string | null;
   citySlug?: string | null;
+  /** What the building's page publishes; only name and address are shown. */
+  facts?: MicrositeEmailFacts | null;
+  /** Signed one-click link. Null (no signing secret) falls back to "reply to be removed". */
+  unsubscribeUrl?: string | null;
 }): string {
   const browseUrl = data.citySlug
     ? `https://staycio.com/cities/${encodeURIComponent(data.citySlug)}`
     : "https://staycio.com";
+  const firstName = data.name.trim().split(/\s+/)[0] || data.name;
+  const facts = data.facts ?? null;
+
+  const whereLine = facts
+    ? [facts.address, facts.neighborhood].filter(Boolean).map((v) => escHtml(v as string)).join(" &middot; ")
+    : escHtml(data.city);
+
+  // Name and address only. Status, size and developer were cut on purpose:
+  // the person just read all of that on the site they signed up from.
+  const buildingCard = `
+    <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px 24px;margin:28px 0 12px 0;">
+      <p style="color:${MUTED};font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin:0 0 10px 0;">The building</p>
+      <p style="color:${INK};font-size:17px;font-weight:700;margin:0 0 2px 0;">${escHtml(data.buildingName)}</p>
+      <p style="color:${BODY};font-size:13px;margin:0;">${whereLine}</p>
+    </div>`;
+
+  const requestRows = [
+    data.unitType ? row("Looking for", escHtml(data.unitType)) : "",
+    data.moveIn ? row("Move-in", escHtml(data.moveIn)) : "",
+    data.email || data.phone
+      ? row("We'll reach you at", [data.email, data.phone].filter(Boolean).map((v) => escHtml(v as string)).join("<br>"))
+      : "",
+  ].join("");
+
+  const requestCard = requestRows
+    ? `
+    <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px 24px;margin:0 0 28px 0;">
+      <p style="color:${MUTED};font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin:0 0 6px 0;">Your request</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        ${requestRows}
+      </table>
+    </div>`
+    : `<div style="height:16px;"></div>`;
+
+  const channel = data.phone ? "by text or a quick call" : "by email";
+  const promise = `A member of our team will be in touch soon ${channel} with pricing and availability for ${escHtml(data.buildingName)}.`;
+
+  const removal = data.unsubscribeUrl
+    ? `<a href="${escHtml(data.unsubscribeUrl)}" style="color:${FINE};text-decoration:underline;">Unsubscribe</a> at any time.`
+    : `Reply to this email if you&rsquo;d rather not hear from us.`;
 
   const content = `
-    <div style="margin-bottom:24px;">
-      ${badge("Waitlist Confirmed")}
-      <h2 style="color:#ffffff;font-size:24px;font-weight:700;margin:16px 0 4px 0;">
-        You&rsquo;re on the list, ${escHtml(data.name)}.
+    <div>
+      ${badge("Inquiry received")}
+      <h2 class="h1" style="color:${INK};font-size:26px;font-weight:700;line-height:1.25;margin:18px 0 10px 0;letter-spacing:-0.3px;">
+        Thanks, ${escHtml(firstName)}. We&rsquo;re on it.
       </h2>
-      <p style="color:#777;font-size:14px;margin:0;">
-        We&rsquo;ll email you the moment pricing and availability for ${escHtml(data.buildingName)} go live.
+      <p style="color:${BODY};font-size:15px;line-height:1.6;margin:0;">
+        ${promise}
       </p>
     </div>
 
-    <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px 24px;margin:24px 0;">
-      <p style="color:#aaa;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin:0 0 12px 0;">What you asked about</p>
-      <table width="100%" cellpadding="0" cellspacing="0">
-        ${row("Building", escHtml(data.buildingName))}
-        ${row("City", escHtml(data.city))}
-        ${data.unitType ? row("Looking for", escHtml(data.unitType)) : ""}
-        ${data.moveIn ? row("Move-in", escHtml(data.moveIn)) : ""}
-      </table>
+    ${buildingCard}
+    ${requestCard}
+
+    <p style="color:${BODY};font-size:14px;line-height:1.6;margin:0 0 16px 0;">
+      Need a place sooner? Browse ${escHtml(data.city)} apartments available now.
+    </p>
+
+    <div style="text-align:center;margin:0 0 8px 0;">
+      ${primaryButton(`Browse ${data.city} apartments`, browseUrl)}
     </div>
 
-    <p style="color:#aaa;font-size:14px;line-height:1.6;margin:0 0 24px 0;">
-      ${escHtml(data.buildingName)} isn&rsquo;t leasing yet, so while you wait you can browse
-      apartments in ${escHtml(data.city)} that are available right now, with pricing we verify
-      against each building&rsquo;s own site.
+    <p style="color:${MUTED};font-size:13px;line-height:1.6;text-align:center;margin:20px 0 28px 0;">
+      Questions? Just reply to this email.
     </p>
 
-    ${primaryButton(`Browse ${data.city} apartments →`, browseUrl)}
-
-    <p style="color:#555;font-size:12px;line-height:1.6;margin:24px 0 0 0;">
-      You received this because you joined the waitlist at ${escHtml(data.domain)}, operated by Staycio.
-      Reply to this email if you&rsquo;d rather not hear from us.
-    </p>
+    <div style="border-top:1px solid #2a2a2a;padding-top:20px;">
+      <p style="color:${FINE};font-size:12px;line-height:1.6;margin:0;">
+        You&rsquo;re receiving this because you inquired about ${escHtml(data.buildingName)} at ${escHtml(data.domain)}. ${removal}
+      </p>
+    </div>
   `;
 
-  return layout(content, `You're on the waitlist for ${data.buildingName}`);
+  // No outer footer: the card's last line already names the site and carries
+  // the unsubscribe link, and a second row of links underneath read as clutter.
+  return layout(content, micrositeInquirySubject(data.buildingName, data.city), { footerLinks: [] });
 }

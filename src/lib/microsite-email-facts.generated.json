@@ -1,0 +1,138 @@
+{
+  "2600biscaynemiami.com": {
+    "address": "2600 Biscayne Blvd",
+    "neighborhood": "Edgewater",
+    "units": 399,
+    "developer": "Oak Row Equities",
+    "status": "Leasing now",
+    "leasing": true
+  },
+  "jemmiamiapartments.com": {
+    "address": "1016 NE 2nd Ave",
+    "neighborhood": "Miami Worldcenter",
+    "units": 530,
+    "developer": "Naftali Group",
+    "status": "Expected Q4 2027",
+    "leasing": false
+  },
+  "kenectmiamiapartments.com": {
+    "address": null,
+    "neighborhood": "Miami Worldcenter",
+    "units": 450,
+    "developer": "Akara Partners",
+    "status": "Under construction",
+    "leasing": false
+  },
+  "3333biscaynemiami.com": {
+    "address": "3333 Biscayne Blvd",
+    "neighborhood": "Edgewater",
+    "units": 667,
+    "developer": "Beitel Group",
+    "status": "Expected 2028",
+    "leasing": false
+  },
+  "biscayne18.com": {
+    "address": "331 NE 18th St",
+    "neighborhood": "Edgewater",
+    "units": 1178,
+    "developer": "Melo Group",
+    "status": "Expected 2029–2030",
+    "leasing": false
+  },
+  "urban22edgewater.com": {
+    "address": "2222 NE 2nd Ave",
+    "neighborhood": "Edgewater",
+    "units": 441,
+    "developer": "Melo Group",
+    "status": "Leasing now",
+    "leasing": true
+  },
+  "downtown5miami.com": {
+    "address": "55 NE 5th St",
+    "neighborhood": "Downtown Miami",
+    "units": 1042,
+    "developer": "Melo Group",
+    "status": "Leasing now",
+    "leasing": true
+  },
+  "panoramatowerbrickell.com": {
+    "address": "1100 Brickell Bay Dr",
+    "neighborhood": "Brickell",
+    "units": 821,
+    "developer": "Florida East Coast Realty",
+    "status": "Leasing now",
+    "leasing": true
+  },
+  "maizonbrickell.com": {
+    "address": "221 SW 12th St",
+    "neighborhood": "Brickell",
+    "units": null,
+    "developer": null,
+    "status": "Leasing now",
+    "leasing": true
+  },
+  "muzemet.com": {
+    "address": "340 SE 3rd St",
+    "neighborhood": "Downtown Miami",
+    "units": 391,
+    "developer": null,
+    "status": "Leasing now",
+    "leasing": true
+  },
+  "remitheriver.com": {
+    "address": "999 NW 7th St",
+    "neighborhood": "Miami River District",
+    "units": 342,
+    "developer": "Greystar",
+    "status": "Leasing now",
+    "leasing": true
+  },
+  "artplazaapartments.com": {
+    "address": "58 NE 14th St",
+    "neighborhood": "Arts & Entertainment District",
+    "units": 667,
+    "developer": "Melo Group",
+    "status": "Leasing now",
+    "leasing": true
+  },
+  "miamiworldtowerapartments.com": {
+    "address": "710 NE 1st Ave",
+    "neighborhood": "Miami Worldcenter",
+    "units": 560,
+    "developer": "Lalezarian Properties",
+    "status": "Leasing now",
+    "leasing": true
+  },
+  "mohawkwynwood.com": {
+    "address": "56 NE 29th St",
+    "neighborhood": "Wynwood",
+    "units": 300,
+    "developer": "Rilea Group",
+    "status": "Expected 2028",
+    "leasing": false
+  },
+  "mohawkmiami.com": {
+    "address": "56 NE 29th St",
+    "neighborhood": "Wynwood",
+    "units": 300,
+    "developer": "Rilea Group",
+    "status": "Expected 2028",
+    "leasing": false
+  },
+  "2900terrace.com": {
+    "address": "401 NE 29th St",
+    "neighborhood": "Edgewater",
+    "units": 324,
+    "developer": "Oak Row Equities and LNDMRK Development",
+    "status": "Expected Q4 2027",
+    "leasing": false
+  },
+  "neoedgewatermiami.com": {
+    "address": "2600 Biscayne Blvd",
+    "neighborhood": "Edgewater",
+    "units": 399,
+    "developer": "Oak Row Equities",
+    "status": "Leasing now",
+    "leasing": true
+  }
+}

@@ -1,3 +1,5 @@
+import generatedEmailFacts from "./microsite-email-facts.generated.json";
+
 /**
  * Building name per microsite domain. Single source of truth — the admin
  * dashboard labels and the sender identity for outbound mail both read it.
@@ -106,3 +108,91 @@ export const MICROSITE_GUIDES: MicrositeGuide[] = [
   { domain: "artplazaapartments.com", name: "Art Plaza", neighborhood: "arts-district", blurb: "Availability & rents" },
   { domain: "remitheriver.com", name: "Remi on the River", neighborhood: "river-district", blurb: "Availability & rents" },
 ];
+
+// ─── Building facts for outbound mail ─────────────────────────────────────────
+
+/**
+ * What the waitlist confirmation says about the building itself. Each entry
+ * restates only what that building's page publishes, so the email can never
+ * contradict the site the person just signed up on.
+ */
+export interface MicrositeEmailFacts {
+  /** Street address, or null when the page only names the district. */
+  address: string | null;
+  neighborhood: string;
+  units: number | null;
+  developer: string | null;
+  /** One line, as the page states it: "Leasing now", "Leasing late 2026", "Expected 2028". */
+  status: string;
+  /** True when the building is open and leasing today. */
+  leasing: boolean;
+  /** One short extra line the page leads with, e.g. "Topped off March 2026 · 2 blocks to MiamiCentral". */
+  note?: string;
+}
+
+/**
+ * The hand-built sites. The 17 generated sites are emitted by
+ * microsites/_generator/build.js into microsite-email-facts.generated.json;
+ * regenerate, never edit that file. Update an entry here whenever its page
+ * changes — the figures below are the page's own, checked 2026-10-02.
+ */
+const HAND_BUILT_EMAIL_FACTS: Record<string, MicrositeEmailFacts> = {
+  "downtown6miami.com": {
+    address: "46 NE 6th Street",
+    neighborhood: "Downtown Miami",
+    units: 824,
+    developer: "Melo Group",
+    status: "Leasing late 2026",
+    leasing: false,
+    note: "Topped off March 2026 · 2 blocks to MiamiCentral",
+  },
+  "namdartowers.com": {
+    address: "55 NE 2nd Street",
+    neighborhood: "Downtown Miami",
+    units: 680,
+    developer: "Namdar Group",
+    status: "Leasing now as CMPND Miami",
+    leasing: true,
+  },
+  "perrinbrickell.com": {
+    address: "244 SW 9th Street",
+    neighborhood: "Brickell",
+    units: 310,
+    developer: "Empira Group",
+    status: "Opening 2027",
+    leasing: false,
+    note: "Topped out May 2026",
+  },
+  "jadebrickell.com": {
+    address: "1331 Brickell Bay Drive",
+    neighborhood: "Brickell",
+    units: 340,
+    developer: null,
+    status: "Rentals and sales listed by owners",
+    leasing: true,
+  },
+  "sentralbrickell.com": {
+    address: null,
+    neighborhood: "One Twenty Brickell",
+    units: 537,
+    developer: "PMG",
+    status: "Expected 2028",
+    leasing: false,
+  },
+  "midtown5apartments.com": {
+    address: "3201 NE 1st Avenue",
+    neighborhood: "Midtown Miami",
+    units: 400,
+    developer: null,
+    status: "Leasing now",
+    leasing: true,
+  },
+};
+
+const GENERATED_EMAIL_FACTS: Record<string, MicrositeEmailFacts> = generatedEmailFacts;
+
+/** Facts for a microsite's building, or null for a domain we don't know. */
+export function micrositeEmailFacts(domain: string | null | undefined): MicrositeEmailFacts | null {
+  if (!domain) return null;
+  return HAND_BUILT_EMAIL_FACTS[domain] ?? GENERATED_EMAIL_FACTS[domain] ?? null;
+}

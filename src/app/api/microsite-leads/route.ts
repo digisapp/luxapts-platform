@@ -5,7 +5,9 @@ import { micrositeLeadSchema } from "@/lib/validations";
 import { corsHeaders, isAllowedOrigin, originMatches } from "@/lib/microsite-cors";
 import { MICROSITE_BUILDINGS } from "@/lib/microsites";
 import { autoAssignAgent } from "@/lib/leads/routing";
-import { newLeadEmail, micrositeWaitlistEmail } from "@/lib/email/templates";
+import { newLeadEmail, micrositeInquiryEmail, micrositeInquirySubject } from "@/lib/email/templates";
+import { unsubscribeUrl } from "@/lib/email/unsubscribe";
+import { micrositeEmailFacts, senderIdentityFor } from "@/lib/microsites";
 import {
   getLeadNotificationRecipients,
   getReplyToAddress,
@@ -202,24 +204,45 @@ export async function POST(req: Request) {
 
         // Confirmation to the person who signed up. The microsite shows
         // "You're on the list!" client-side and, until now, nothing ever
-        // followed it — every waitlist signup went unacknowledged.
+        // followed it — every signup went unacknowledged. The email promises
+        // a follow-up by text or call, so the team must actually make it.
+        // One-click unsubscribe (RFC 8058) in the headers as well as the body:
+        // Gmail and Yahoo require it for bulk senders, and it is what the
+        // "Unsubscribe" button next to the sender name is wired to.
+        const unsubscribe = unsubscribeUrl(leadId);
+        // Sent as the building ("Downtown 6"), not as Staycio: the person
+        // signed up on the building's own site and may not know the brand,
+        // and an unfamiliar sender name is what gets a confirmation reported
+        // as spam. The address stays on staycio.com so DKIM still passes.
         const { error: confirmError } = await resend.emails.send({
-          from: fromEmail,
+          from: senderIdentityFor(body.domain, fromEmail).from,
           to: [body.email],
           replyTo: getReplyToAddress(),
-          subject: `You're on the waitlist for ${buildingName}`,
-          html: micrositeWaitlistEmail({
+          subject: micrositeInquirySubject(buildingName, cityRes.data.name),
+          ...(unsubscribe
+            ? {
+                headers: {
+                  "List-Unsubscribe": `<${unsubscribe}>`,
+                  "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                },
+              }
+            : {}),
+          html: micrositeInquiryEmail({
             name: body.name,
+            email: body.email,
+            phone: body.phone ?? null,
             buildingName: buildingName,
             city: cityRes.data.name,
             citySlug: cityRes.data.slug ?? null,
             domain: body.domain,
             moveIn: body.move_in ?? null,
             unitType: body.unit_type ?? null,
+            facts: micrositeEmailFacts(body.domain),
+            unsubscribeUrl: unsubscribe,
           }),
         });
         if (confirmError) {
-          console.error("Microsite waitlist confirmation failed:", leadId, confirmError);
+          console.error("Microsite inquiry confirmation failed:", leadId, confirmError);
         }
       } catch (emailError) {
         console.error("Microsite lead email failed:", emailError);

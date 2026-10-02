@@ -75,3 +75,8 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+// RFC 8058 one-click unsubscribe: mail clients POST to the List-Unsubscribe
+// URL with `List-Unsubscribe=One-Click` in the body. The lead and token are in
+// the query string either way, so the GET handler answers it unchanged.
+export { GET as POST };
