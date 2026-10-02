@@ -7,12 +7,8 @@ import { MICROSITE_BUILDINGS } from "@/lib/microsites";
 import { autoAssignAgent } from "@/lib/leads/routing";
 import { newLeadEmail, micrositeInquiryEmail, micrositeInquirySubject } from "@/lib/email/templates";
 import { unsubscribeUrl } from "@/lib/email/unsubscribe";
-import { senderIdentityFor } from "@/lib/microsites";
-import {
-  getLeadNotificationRecipients,
-  getReplyToAddress,
-  recordInternalLeadAlert,
-} from "@/lib/email/recipients";
+import { getAdminInboxService } from "@/lib/email/admin-inbox";
+import { getLeadNotificationRecipients, recordInternalLeadAlert } from "@/lib/email/recipients";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 // Cross-origin lead capture from the building microsites. Each microsite is a
@@ -203,16 +199,11 @@ export async function POST(req: Request) {
         }
 
         // Reply to the person who signed up: a short personal note from Stacy
-        // asking one question, so the thread starts. Until this existed every
-        // signup went unacknowledged. Someone must answer when they write back.
-        // One-click unsubscribe (RFC 8058) in the headers as well as the body:
-        // Gmail and Yahoo require it for bulk senders, and it is what the
-        // "Unsubscribe" button next to the sender name is wired to.
+        // asking one question, so the thread starts. It goes through the admin
+        // inbox service: sent as the building, stored as the thread's first
+        // message, with a plus-addressed Reply-To so the answer lands in the
+        // same thread on /admin/email. Someone must answer when they write back.
         const unsubscribe = unsubscribeUrl(leadId);
-        // Sent as the building ("Downtown 6"), not as Staycio: the person
-        // signed up on the building's own site and may not know the brand,
-        // and an unfamiliar sender name is what gets a confirmation reported
-        // as spam. The address stays on staycio.com so DKIM still passes.
         const reply = micrositeInquiryEmail({
           name: body.name,
           buildingName: buildingName,
@@ -220,24 +211,26 @@ export async function POST(req: Request) {
           moveIn: body.move_in ?? null,
           unitType: body.unit_type ?? null,
         });
-        const { error: confirmError } = await resend.emails.send({
-          from: senderIdentityFor(body.domain, fromEmail).from,
-          to: [body.email],
-          replyTo: getReplyToAddress(),
+        const sent = await getAdminInboxService().sendNewEmail({
+          to: body.email,
           subject: micrositeInquirySubject(buildingName, cityRes.data.name, body.unit_type ?? null),
+          bodyHtml: reply.bodyHtml,
+          bodyText: reply.text,
+          leadId,
+          // One-click unsubscribe (RFC 8058): Gmail and Yahoo require it for
+          // bulk senders, and it is what the Unsubscribe button next to the
+          // sender name is wired to.
           ...(unsubscribe
             ? {
-                headers: {
+                extraHeaders: {
                   "List-Unsubscribe": `<${unsubscribe}>`,
                   "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
                 },
               }
             : {}),
-          html: reply.html,
-          text: reply.text,
         });
-        if (confirmError) {
-          console.error("Microsite inquiry confirmation failed:", leadId, confirmError);
+        if (!sent.success) {
+          console.error("Microsite inquiry confirmation failed:", leadId, sent.error);
         }
       } catch (emailError) {
         console.error("Microsite lead email failed:", emailError);

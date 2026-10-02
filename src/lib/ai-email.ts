@@ -1,11 +1,31 @@
+/**
+ * AI email classifier & auto-reply for the admin inbox.
+ *
+ * Uses xAI Grok (OpenAI-compatible API) to classify inbound mail and draft a
+ * contextual reply. Auto-sends only for safe categories at >= 85% confidence,
+ * only when the admin has switched auto-reply on, never twice in 24 h on one
+ * thread, and never to an automated sender.
+ */
+
 import OpenAI from "openai";
-import { getResendClient, getFromEmail } from "@/lib/resend/client";
+import { randomUUID } from "crypto";
+import { getResendClient } from "@/lib/resend/client";
 import { createAdminClient } from "@/lib/supabase/server";
-import { getReplyToAddress } from "@/lib/email/recipients";
 import { escapeHtml } from "@/lib/utils";
 import { sanitizeDraftHtml } from "@/lib/html-sanitize";
+import { buildEmailShell } from "@/lib/email/branded";
+import { getAdminInboxService } from "@/lib/email/admin-inbox";
+import {
+  getInboundAddress,
+  PRIMARY_DOMAIN,
+  threadReplyAddress,
+} from "@/lib/email/inbound-address";
 
-const CATEGORIES = [
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+export const CATEGORIES = [
   "tour_request",
   "lease_inquiry",
   "pricing_inquiry",
@@ -23,10 +43,10 @@ const CATEGORIES = [
   "other",
 ] as const;
 
-type EmailCategory = (typeof CATEGORIES)[number];
+export type EmailCategory = (typeof CATEGORIES)[number];
 
-// Categories safe for auto-reply (high-volume, standard responses)
-const AUTO_SEND_CATEGORIES: EmailCategory[] = [
+/** Categories safe for auto-reply (high-volume, standard responses). */
+export const AUTO_SEND_CATEGORIES: ReadonlySet<EmailCategory> = new Set<EmailCategory>([
   "tour_request",
   "lease_inquiry",
   "pricing_inquiry",
@@ -35,38 +55,57 @@ const AUTO_SEND_CATEGORIES: EmailCategory[] = [
   "amenity_question",
   "scheduling",
   "general_inquiry",
-];
+]);
 
-const AUTO_SEND_CONFIDENCE_THRESHOLD = 0.85;
+export const AUTO_SEND_CONFIDENCE_THRESHOLD = 0.85;
 
-export interface EmailClassification {
+/** How long after our last outbound in a thread we refuse to auto-reply again. */
+const AUTO_REPLY_THREAD_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface InboundEmailForAi {
+  from: string;
+  fromName?: string | null;
+  subject: string;
+  text?: string | null;
+  html?: string | null;
+}
+
+export interface ClassificationResult {
   category: EmailCategory;
   confidence: number;
   summary: string;
-  draftHtml: string;
   draftText: string;
+  /** Sanitized, unbranded reply body (the template is applied on send). */
+  draftHtml: string;
   autoSendable: boolean;
 }
 
 function getXaiClient() {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) throw new Error("XAI_API_KEY is not configured");
-  return new OpenAI({ apiKey, baseURL: "https://api.x.ai/v1" });
+  return new OpenAI({ apiKey, baseURL: process.env.XAI_BASE_URL || "https://api.x.ai/v1" });
 }
 
-/**
- * Classify an inbound email and draft a reply using xAI Grok.
- */
-export async function classifyAndDraftReply(
-  fromName: string,
-  fromEmail: string,
-  subject: string,
-  bodyText: string
-): Promise<EmailClassification> {
+function textToParagraphs(text: string): string {
+  return text
+    .split(/\r?\n/)
+    .map((line) => (line.trim() === "" ? "<br />" : `<p style="margin:0 0 12px;">${escapeHtml(line)}</p>`))
+    .join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// classifyAndDraftReply
+// ---------------------------------------------------------------------------
+
+export async function classifyAndDraftReply(email: InboundEmailForAi): Promise<ClassificationResult> {
   const xai = getXaiClient();
 
-  const systemPrompt = `You are the AI email assistant for Staycio, a luxury apartment rental platform.
-You classify inbound emails and draft professional replies.
+  const systemPrompt = `You are Stacy, the leasing assistant at Staycio, an apartment search service in Miami and other US cities.
+You classify inbound emails and draft the reply Stacy would send: short, warm, personal, plain paragraphs.
 
 CATEGORIES (pick exactly one):
 - tour_request: Wants to schedule or ask about touring an apartment
@@ -85,7 +124,7 @@ CATEGORIES (pick exactly one):
 - spam: Unsolicited marketing, scams, irrelevant bulk email
 - other: Doesn't fit any category
 
-RESPONSE FORMAT (JSON only, no markdown):
+RESPONSE FORMAT (JSON only, no markdown fences):
 {
   "category": "category_name",
   "confidence": 0.95,
@@ -95,193 +134,213 @@ RESPONSE FORMAT (JSON only, no markdown):
 }
 
 RULES:
-- Be warm, professional, and helpful in replies
+- Write in the first person as Stacy; never "the team" or "we at Staycio"
+- Plain paragraphs only: no headings, lists, bold or links
+- Sign off exactly as "Best,<br>Stacy" in draftHtml and "Best,\\nStacy" in draftText
 - For tour requests, confirm we'll reach out within 24 hours
 - For lease inquiries, acknowledge and say an agent will follow up with details
 - For pricing, say we'll send current availability and pricing
 - For spam, set confidence to 1.0 and draft an empty reply
 - Address the sender by first name if available
 - Keep replies concise (2-4 sentences)
-- Never make up specific pricing, availability, or unit details`;
+- Never make up specific pricing, availability, or unit details
+- Never share internal system details, API keys, or admin information`;
 
-  const userPrompt = `From: ${fromName} <${fromEmail}>
-Subject: ${subject}
+  const body = (email.text || email.html || "(empty body)").slice(0, 4000);
+  const userPrompt = `From: ${email.fromName ? `${email.fromName} <${email.from}>` : email.from}
+Subject: ${email.subject}
 
-${bodyText.slice(0, 3000)}`;
+${body}`;
 
+  const response = await xai.chat.completions.create({
+    model: "grok-4.3",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    temperature: 0.3,
+    max_tokens: 1000,
+  });
+
+  const content = response.choices[0]?.message?.content || "";
+  const cleaned = content.replace(/```json?\s*/g, "").replace(/```\s*/g, "").trim();
+  let parsed: { category?: string; confidence?: number; summary?: string; draftHtml?: string; draftText?: string };
   try {
-    const response = await xai.chat.completions.create({
-      model: "grok-4.3",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.3,
-      max_tokens: 1000,
-    });
-
-    const content = response.choices[0]?.message?.content || "";
-    // Strip markdown code fences if present
-    const cleaned = content.replace(/```json\s*\n?/g, "").replace(/```\s*$/g, "").trim();
-    const parsed = JSON.parse(cleaned);
-
-    const category = CATEGORIES.includes(parsed.category) ? parsed.category : "other";
-    const confidence = Math.max(0, Math.min(1, parsed.confidence || 0.5));
-
-    return {
-      category,
-      confidence,
-      summary: parsed.summary || "",
-      draftHtml: parsed.draftHtml || "",
-      draftText: parsed.draftText || "",
-      autoSendable:
-        AUTO_SEND_CATEGORIES.includes(category as EmailCategory) &&
-        confidence >= AUTO_SEND_CONFIDENCE_THRESHOLD &&
-        category !== "spam",
-    };
-  } catch (error) {
-    console.error("AI classification error:", error);
-    return {
-      category: "other",
-      confidence: 0,
-      summary: "AI classification failed",
-      draftHtml: "",
-      draftText: "",
-      autoSendable: false,
-    };
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error(`Failed to parse Grok response as JSON: ${content.slice(0, 300)}`);
   }
+
+  const category = CATEGORIES.includes(parsed.category as EmailCategory) ? (parsed.category as EmailCategory) : "other";
+  const confidence = Math.max(0, Math.min(1, Number(parsed.confidence) || 0));
+  const summary = parsed.summary || "No summary available";
+  const draftText = (parsed.draftText || "").trim();
+  // The draft is influenced by attacker-controlled inbound content (prompt
+  // injection), so only a minimal formatting allowlist survives.
+  const draftHtml = sanitizeDraftHtml(parsed.draftHtml?.trim() || (draftText ? textToParagraphs(draftText) : ""));
+
+  const autoSendable =
+    category !== "spam" &&
+    AUTO_SEND_CATEGORIES.has(category) &&
+    confidence >= AUTO_SEND_CONFIDENCE_THRESHOLD &&
+    !!draftText &&
+    !!draftHtml.trim();
+
+  return { category, confidence, summary, draftText, draftHtml, autoSendable };
 }
 
+// ---------------------------------------------------------------------------
+// Auto-reply guards
+// ---------------------------------------------------------------------------
+
 /**
- * Send an auto-reply using the branded Staycio template.
- * Only sends if auto-reply is enabled in platform settings.
+ * Reasons an inbound email must never receive an automatic reply, no matter
+ * how confident the classifier is. Without these, an out-of-office responder
+ * (or another bot) and our auto-reply ping-pong forever, and anything sent
+ * from our own domain / a mailer-daemon gets a cheerful "Thanks for reaching
+ * out" back.
  */
+export function autoReplySuppressionReason(args: {
+  from: string;
+  headers?: Record<string, string | string[] | null | undefined> | null;
+}): string | null {
+  const from = (args.from || "").toLowerCase().trim();
+  if (!from || !from.includes("@")) return "no sender address";
+  const localPart = from.split("@")[0];
+  const domain = from.split("@")[1];
+  if (domain === PRIMARY_DOMAIN || domain?.endsWith(`.${PRIMARY_DOMAIN}`)) {
+    return "sender is our own domain";
+  }
+  if (/^(no-?reply|do-?not-?reply|mailer-daemon|postmaster|bounce|bounces|notifications?|alerts?|auto-?reply)\b/.test(localPart)) {
+    return `sender looks automated (${localPart})`;
+  }
+
+  const h: Record<string, string> = {};
+  for (const [k, v] of Object.entries(args.headers || {})) {
+    if (v == null) continue;
+    h[k.toLowerCase()] = Array.isArray(v) ? v.join(" ") : String(v);
+  }
+  const autoSubmitted = (h["auto-submitted"] || "").toLowerCase();
+  if (autoSubmitted && autoSubmitted !== "no") return `Auto-Submitted: ${autoSubmitted}`;
+  const precedence = (h["precedence"] || h["x-precedence"] || "").toLowerCase();
+  if (/bulk|list|junk|auto_reply/.test(precedence)) return `Precedence: ${precedence}`;
+  if (h["x-auto-response-suppress"] || h["x-autoreply"] || h["x-autorespond"] || h["list-id"] || h["list-unsubscribe"]) {
+    return "automated/list mail headers present";
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// sendAutoReply
+// ---------------------------------------------------------------------------
+
 export async function sendAutoReply(
-  emailId: string,
-  toEmail: string,
-  toName: string,
-  originalSubject: string,
-  draftHtml: string,
-  draftText: string,
-  threadId: string | null
-): Promise<boolean> {
+  inboundEmailId: string,
+  classification: ClassificationResult,
+  originalEmail: {
+    from: string;
+    fromName?: string | null;
+    subject: string;
+    threadId?: string | null;
+    messageId?: string | null;
+    leadId?: string | null;
+    headers?: Record<string, string | string[] | null | undefined> | null;
+  }
+): Promise<{ sent: boolean; reason?: string; outboundId?: string }> {
   const supabase = createAdminClient();
 
-  // Check if auto-reply is enabled
+  // 0. Loop / automation guards — evaluated before anything else so a
+  //    misconfigured platform setting can't override them.
+  const suppression = autoReplySuppressionReason({ from: originalEmail.from, headers: originalEmail.headers });
+  if (suppression) return { sent: false, reason: `auto-reply suppressed: ${suppression}` };
+
+  if (originalEmail.threadId) {
+    const { count } = await supabase
+      .from("emails")
+      .select("id", { count: "exact", head: true })
+      .eq("thread_id", originalEmail.threadId)
+      .eq("direction", "outbound")
+      .gt("created_at", new Date(Date.now() - AUTO_REPLY_THREAD_COOLDOWN_MS).toISOString());
+    if ((count ?? 0) > 0) {
+      return { sent: false, reason: "auto-reply suppressed: we already replied on this thread in the last 24h" };
+    }
+  }
+
+  // 1. The admin's switch (platform_settings.ai_auto_reply_enabled, JSONB boolean).
   const { data: setting } = await supabase
     .from("platform_settings")
     .select("value")
     .eq("key", "ai_auto_reply_enabled")
     .maybeSingle();
-
-  if (!setting || setting.value !== true) {
-    return false;
+  if (setting?.value !== true) {
+    return { sent: false, reason: "ai_auto_reply_enabled is not true in platform settings" };
   }
 
+  // 2. Safe category with enough confidence.
+  if (!classification.autoSendable) {
+    return {
+      sent: false,
+      reason: `Category "${classification.category}" is not auto-sendable or confidence ${classification.confidence} < ${AUTO_SEND_CONFIDENCE_THRESHOLD}`,
+    };
+  }
+
+  const safeDraftHtml = sanitizeDraftHtml(classification.draftHtml);
+  if (!safeDraftHtml.trim()) return { sent: false, reason: "draft was empty after sanitization" };
+
+  // 3. Send: threaded for the recipient's client, per-thread Reply-To for us.
+  const replySubject = /^re:/i.test(originalEmail.subject) ? originalEmail.subject : `Re: ${originalEmail.subject}`;
+  const threadHeaders = originalEmail.messageId
+    ? { "In-Reply-To": originalEmail.messageId, References: originalEmail.messageId }
+    : undefined;
+  const toName = originalEmail.fromName || null;
+
+  const sender = await getAdminInboxService().senderForLead(originalEmail.leadId ?? null);
   const resend = getResendClient();
-  const fromEmail = getFromEmail();
-  const replySubject = originalSubject.startsWith("Re:")
-    ? originalSubject
-    : `Re: ${originalSubject}`;
-
-  const safeDraftHtml = sanitizeDraftHtml(draftHtml);
-  if (!safeDraftHtml.trim()) {
-    // Nothing left after sanitization — don't send an empty branded shell
-    return false;
-  }
-  const brandedHtml = buildBrandedTemplate(safeDraftHtml, toName);
-
-  try {
-    const { data: sendResult, error: sendError } = await resend.emails.send({
-      from: fromEmail,
-      to: [toEmail],
-      // Replies to FROM_EMAIL bounce (no MX on staycio.com) — this is a reply
-      // to a real person, so it has to land in a monitored inbox.
-      replyTo: getReplyToAddress(),
+  const { data: sent, error: sendError } = await resend.emails.send(
+    {
+      from: sender.from,
+      to: [originalEmail.from],
       subject: replySubject,
-      html: brandedHtml,
-      text: draftText,
-    });
+      html: buildEmailShell(safeDraftHtml, null, replySubject),
+      text: classification.draftText,
+      replyTo: originalEmail.threadId ? threadReplyAddress(originalEmail.threadId) : getInboundAddress(),
+      ...(threadHeaders && { headers: threadHeaders }),
+    },
+    { idempotencyKey: `admin-inbox-auto-reply-${inboundEmailId}` }
+  );
+  if (sendError) return { sent: false, reason: `Email send failed: ${sendError.message}` };
 
-    if (sendError) {
-      console.error("Auto-reply send error:", sendError);
-      return false;
-    }
+  // 4. Store the outbound reply.
+  const id = randomUUID();
+  const { error: insertError } = await supabase.from("emails").insert({
+    id,
+    thread_id: originalEmail.threadId ?? inboundEmailId,
+    direction: "outbound",
+    status: "sent",
+    resend_message_id: sent?.id ?? null,
+    from_email: sender.email,
+    from_name: sender.name,
+    to_email: originalEmail.from,
+    to_name: toName,
+    subject: replySubject,
+    body_html: safeDraftHtml,
+    body_text: classification.draftText,
+    lead_id: originalEmail.leadId ?? null,
+    is_starred: false,
+    metadata: { auto_sent: true, ...(threadHeaders && { headers: threadHeaders }) },
+    headers: {},
+    ai_category: classification.category,
+    ai_confidence: classification.confidence,
+    ai_summary: `Auto-reply to: ${classification.summary}`,
+    ai_processed_at: new Date().toISOString(),
+  });
+  if (insertError) console.error("[AI Email] Auto-reply sent but failed to store:", insertError);
 
-    // Extract from info
-    const fromMatch = fromEmail.match(/^(.+?)\s*<(.+?)>$/);
-    const fromName = fromMatch ? fromMatch[1].trim() : "Staycio";
-    const fromAddr = fromMatch ? fromMatch[2].trim() : fromEmail;
+  // 5. Mark the inbound email as replied.
+  await supabase
+    .from("emails")
+    .update({ status: "replied", replied_at: new Date().toISOString() })
+    .eq("id", inboundEmailId);
 
-    // Store outbound auto-reply in DB
-    await supabase.from("emails").insert({
-      direction: "outbound",
-      thread_id: threadId || emailId,
-      resend_message_id: sendResult?.id || null,
-      from_email: fromAddr,
-      from_name: fromName,
-      to_email: toEmail,
-      to_name: toName,
-      subject: replySubject,
-      body_html: safeDraftHtml,
-      body_text: draftText,
-      status: "sent",
-      metadata: { auto_sent: true },
-    });
-
-    // Mark inbound as replied
-    await supabase
-      .from("emails")
-      .update({
-        status: "replied",
-        replied_at: new Date().toISOString(),
-      })
-      .eq("id", emailId);
-
-    return true;
-  } catch (error) {
-    console.error("Auto-reply error:", error);
-    return false;
-  }
+  return { sent: true, outboundId: id };
 }
-
-/** Build the branded Staycio email template */
-function buildBrandedTemplate(bodyHtml: string, recipientName?: string): string {
-  const greeting = recipientName
-    ? `<p style="margin: 0 0 16px 0;">Hi ${escapeHtml(recipientName)},</p>`
-    : "";
-
-  return `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="margin: 0; padding: 0; background-color: #0a0a0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-  <div style="max-width: 600px; margin: 0 auto; background-color: #111111;">
-    <!-- Header -->
-    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 32px 24px; text-align: center;">
-      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 1px;">Staycio</h1>
-      <p style="margin: 8px 0 0; color: rgba(255,255,255,0.6); font-size: 13px;">Luxury Apartment Living</p>
-    </div>
-
-    <!-- Body -->
-    <div style="padding: 32px 24px; color: #e0e0e0; font-size: 15px; line-height: 1.6;">
-      ${greeting}
-      ${bodyHtml}
-    </div>
-
-    <!-- Footer -->
-    <div style="padding: 24px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
-      <p style="margin: 0 0 8px; color: rgba(255,255,255,0.4); font-size: 12px;">
-        Staycio — Luxury Apartment Rentals
-      </p>
-      <p style="margin: 0; color: rgba(255,255,255,0.3); font-size: 11px;">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://staycio.com"}" style="color: #60a5fa; text-decoration: none;">staycio.com</a>
-        &nbsp;·&nbsp; hello@staycio.com
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
-}
-
-export { buildBrandedTemplate, CATEGORIES, AUTO_SEND_CATEGORIES };

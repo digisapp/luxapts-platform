@@ -1,381 +1,229 @@
 import { NextResponse, after } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
 import { Webhook } from "svix";
+import { getAdminInboxService } from "@/lib/email/admin-inbox";
+import { getResendClient } from "@/lib/resend/client";
 import { classifyAndDraftReply, sendAutoReply } from "@/lib/ai-email";
-import { sanitizeInboundEmailHtml } from "@/lib/html-sanitize";
-import crypto from "crypto";
+import {
+  findOurRecipient,
+  parseEmailAddress,
+  parseThreadIdFromAddresses,
+  senderDisplayName,
+} from "@/lib/email/inbound-address";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /**
- * Resend Webhook — handles inbound emails and delivery status updates.
- * Uses Svix for signature verification, fetches full body from Resend API,
- * runs AI classification via xAI Grok, and triggers auto-reply when safe.
+ * Resend webhook for the admin inbox.
+ *
+ * Inbound: Resend receives mail for ANY address on a receiving domain and
+ * POSTs `email.received`. That event carries METADATA ONLY — ids, bare from,
+ * to[], subject, attachment names. The body and the headers must be fetched
+ * from GET /emails/receiving/{email_id}. Replies to mail we sent arrive at
+ * replies+<threadId>@inbound.staycio.com (see inbound-address.ts), which
+ * threads them exactly.
+ *
+ * Resend webhooks are account-wide: receiving domains of OTHER projects on
+ * the same account (Digis, EXA, Mayells, Cannes Swim Week) fire here too.
+ * Only mail with a recipient on our domains is stored; the rest is
+ * acknowledged and dropped before the (paid, rate-limited) body fetch.
+ *
+ * Delivery: `email.delivered` / `email.bounced` / `email.failed` /
+ * `email.complained` update the status of the outbound row with that Resend
+ * email id.
+ *
+ * Ops: the endpoint registered in Resend must be the apex
+ * https://staycio.com host. www 308s to the apex, and Svix treats every 3xx
+ * as a failed delivery.
  */
-export async function POST(req: Request) {
-  try {
-    const rawBody = await req.text();
 
-    // ── Verify webhook signature with Svix ──
+type ReceivedEmail = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getResendClient>["emails"]["receiving"]["get"]>>["data"]
+>;
+
+function lowercaseKeys(h: Record<string, unknown> | null | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(h || {})) {
+    if (v == null) continue;
+    out[k.toLowerCase()] = Array.isArray(v) ? v.join(" ") : String(v);
+  }
+  return out;
+}
+
+function toList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === "string" && !!v);
+  return typeof value === "string" && value ? [value] : [];
+}
+
+export async function POST(request: Request) {
+  try {
+    // Everything downstream trusts the sender field (admin inbox, LLM
+    // classification, auto-replies from hello@staycio.com), so an unverified
+    // payload is an email-spoofing + outbound-spam vector. Fail closed.
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      console.error("RESEND_WEBHOOK_SECRET is not configured — rejecting webhook");
+      console.error("[Resend Inbound] RESEND_WEBHOOK_SECRET is not set — rejecting");
       return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
     }
-    {
-      const svixId = req.headers.get("svix-id");
-      const svixTimestamp = req.headers.get("svix-timestamp");
-      const svixSignature = req.headers.get("svix-signature");
 
-      if (!svixId || !svixTimestamp || !svixSignature) {
-        return NextResponse.json({ error: "Missing signature headers" }, { status: 401 });
-      }
-
-      const wh = new Webhook(webhookSecret);
-      try {
-        wh.verify(rawBody, {
-          "svix-id": svixId,
-          "svix-timestamp": svixTimestamp,
-          "svix-signature": svixSignature,
-        });
-      } catch {
-        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-      }
+    // Signature is over the raw body — read text first, parse after verify.
+    const rawBody = await request.text();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let body: any;
+    try {
+      // svix verifies signature + timestamp tolerance (replay window) together.
+      body = new Webhook(webhookSecret).verify(rawBody, {
+        "svix-id": request.headers.get("svix-id") ?? "",
+        "svix-timestamp": request.headers.get("svix-timestamp") ?? "",
+        "svix-signature": request.headers.get("svix-signature") ?? "",
+      });
+    } catch {
+      console.warn("[Resend Inbound] Invalid webhook signature");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    const body = JSON.parse(rawBody);
-    const eventType = body.type as string;
-    const supabase = createAdminClient();
+    const eventType: string = body?.type;
+    const inbox = getAdminInboxService();
 
-    // ── Inbound email ──
     if (eventType === "email.received") {
-      const data = body.data;
-      const resendEmailId = data.email_id || data.id;
-      const fromEmail = (data.from?.email || data.from || "").toLowerCase().trim();
-      const fromName = data.from?.name || "";
-      const toEmail = (Array.isArray(data.to) ? data.to[0] : data.to || "").toLowerCase().trim();
-      const subject = data.subject || "(No Subject)";
+      const data = body.data ?? {};
+      const emailId: string | undefined = data.email_id || data.id;
 
-      if (!fromEmail || !toEmail) {
-        console.log("Missing from/to email in webhook payload");
-        return NextResponse.json({ error: "Missing from or to email" }, { status: 400 });
+      // Cheap pre-filter on the event's own recipients: mail for another
+      // project's domain never needs the fetch.
+      const eventRecipients = [...toList(data.received_for), ...toList(data.to), ...toList(data.cc), ...toList(data.bcc)];
+      if (eventRecipients.length > 0 && !findOurRecipient(eventRecipients)) {
+        return NextResponse.json({ received: true, ignored: "not our domain" });
       }
 
-      // Reject malformed addresses. Besides being invalid, a value containing
-      // PostgREST filter metacharacters ( , ( ) " ) could otherwise alter the
-      // .or() filter grammar used below (filter injection).
-      const emailRe = /^[^\s,"()]+@[^\s,"()]+\.[^\s,"()]+$/;
-      if (!emailRe.test(fromEmail) || !emailRe.test(toEmail)) {
-        console.log(`Invalid from/to email in webhook payload: from=${fromEmail} to=${toEmail}`);
-        return NextResponse.json({ error: "Invalid from or to email" }, { status: 400 });
-      }
-      const cc = data.cc || null;
-      const replyTo = data.reply_to || null;
-      const incomingHeaders = data.headers || {};
-
-      // Svix delivers at least once. A retry (e.g. after a slow body fetch)
-      // stored the email again and could send a second AI auto-reply.
-      if (resendEmailId) {
-        const { data: existing } = await supabase
-          .from("emails")
-          .select("id")
-          .eq("resend_message_id", resendEmailId)
-          .eq("direction", "inbound")
-          .limit(1)
-          .maybeSingle();
-        if (existing) {
-          return NextResponse.json({ success: true, duplicate: true, email_id: existing.id });
+      // The webhook has no body/headers. Fetch the full message; without it
+      // there is nothing to read or classify, so a fetch failure is returned
+      // as 5xx so Svix retries (dedup in the service makes retries safe).
+      let full: ReceivedEmail | null = null;
+      if (emailId && process.env.RESEND_API_KEY) {
+        const { data: fetched, error } = await getResendClient().emails.receiving.get(emailId);
+        if (error || !fetched) {
+          console.error(`[Resend Inbound] Failed to fetch received email ${emailId}:`, error?.message);
+          return NextResponse.json({ error: "Failed to fetch email content" }, { status: 502 });
         }
+        full = fetched;
+      } else if (!process.env.RESEND_API_KEY) {
+        console.warn("[Resend Inbound] RESEND_API_KEY missing — storing webhook metadata only");
       }
 
-      // ── Fetch full email body from Resend API ──
-      let bodyHtml = data.html || data.body || "";
-      let bodyText = data.text || "";
+      const recipients: string[] = [
+        ...toList(data.received_for),
+        ...toList(full?.received_for),
+        ...toList(full?.to ?? data.to),
+        ...toList(full?.cc ?? data.cc),
+        ...toList(full?.bcc ?? data.bcc),
+      ];
+      const to = findOurRecipient(recipients);
+      if (!to) {
+        return NextResponse.json({ received: true, ignored: "not our domain" });
+      }
 
-      if (resendEmailId && (!bodyHtml || bodyHtml.length < 10) && process.env.RESEND_API_KEY) {
-        try {
-          const resendRes = await fetch(
-            `https://api.resend.com/emails/receiving/${resendEmailId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-              },
-            }
-          );
-          if (resendRes.ok) {
-            const fullEmail = await resendRes.json();
-            bodyHtml = fullEmail.html || fullEmail.body || bodyHtml;
-            bodyText = fullEmail.text || bodyText;
+      const headers = lowercaseKeys(full?.headers);
+      const rawFrom: string = full?.from ?? (typeof data.from === "string" ? data.from : data.from?.email ?? "");
+      const { email: from } = parseEmailAddress(rawFrom);
+      // Resend's `from` is the bare address; the display name only survives
+      // in the raw From header.
+      const fromName = senderDisplayName(headers["from"], rawFrom) ?? (typeof data.from?.name === "string" ? data.from.name : null);
+      const subject: string = full?.subject || data.subject || "(No Subject)";
+      const messageId: string = headers["message-id"] || full?.message_id || data.message_id || "";
+      const inReplyTo = headers["in-reply-to"] || "";
+      const references = headers["references"] || "";
+      const threadIdHint = parseThreadIdFromAddresses(recipients);
+      const replyTo = toList(full?.reply_to ?? data.reply_to).map((r) => parseEmailAddress(r).email)[0] ?? null;
+      const attachments = (
+        (full?.attachments ?? data.attachments ?? []) as Array<{
+          id: string;
+          filename?: string | null;
+          content_type?: string;
+          size?: number;
+        }>
+      ).map((a) => ({ id: a.id, filename: a.filename || "attachment", contentType: a.content_type || "", size: a.size }));
+
+      if (!from) {
+        console.warn(`[Resend Inbound] Ignoring email ${emailId} with no sender`);
+        return NextResponse.json({ received: true, ignored: "no sender" });
+      }
+
+      console.log(`[Resend Inbound] Email received from ${from} for ${to}: ${subject}`);
+
+      const stored = await inbox.storeInboundEmail({
+        from,
+        fromName,
+        to,
+        subject,
+        text: full?.text || "",
+        html: full?.html || "",
+        messageId,
+        inReplyToHeader: inReplyTo || undefined,
+        referencesHeader: references || undefined,
+        threadIdHint,
+        resendEmailId: emailId,
+        replyTo,
+        cc: toList(full?.cc ?? data.cc).map((c) => parseEmailAddress(c).email),
+        attachments,
+      });
+
+      // AI classification + (optional) auto-reply run after the 200 is sent.
+      // after() keeps the serverless function alive until they finish — a
+      // bare floating promise gets frozen once the response returns.
+      if (stored && stored.is_spam !== true && process.env.XAI_API_KEY) {
+        const text = full?.text || "";
+        const html = full?.html || "";
+        after(async () => {
+          try {
+            const result = await classifyAndDraftReply({ from, fromName, subject, text, html });
+            await inbox.updateAiFields(stored.id, {
+              aiCategory: result.category,
+              aiConfidence: result.confidence,
+              aiSummary: result.summary,
+              aiDraftText: result.draftText,
+              aiDraftHtml: result.draftHtml,
+            });
+            const auto = await sendAutoReply(stored.id, result, {
+              from,
+              fromName,
+              subject,
+              threadId: stored.thread_id ?? stored.id,
+              messageId: stored.headers?.["message-id"] ?? (messageId || null),
+              leadId: stored.lead_id,
+              headers,
+            });
+            if (!auto.sent) console.log(`[AI Email] No auto-reply for ${stored.id}: ${auto.reason}`);
+          } catch (err) {
+            console.error("[AI Email] Classification failed:", err);
           }
-        } catch (err) {
-          console.error("Failed to fetch full email body from Resend:", err);
-        }
+        });
       }
 
-      const inReplyTo = incomingHeaders["in-reply-to"] || "";
-      const references = incomingHeaders["references"] || "";
-
-      // ── Spam filtering ──
-      if (isSpam(fromEmail, subject, bodyText || bodyHtml)) {
-        console.log(`Spam filtered: from=${fromEmail} subject="${subject}"`);
-        return NextResponse.json({ success: true, filtered: "spam" });
-      }
-
-      let threadId: string | null = null;
-      let leadId: string | null = null;
-
-      // 1. Match thread via In-Reply-To header (most reliable)
-      if (inReplyTo) {
-        const { data: referencedEmail } = await supabase
-          .from("emails")
-          .select("thread_id, lead_id")
-          .eq("headers->message-id", inReplyTo)
-          .limit(1)
-          .maybeSingle();
-
-        if (referencedEmail) {
-          threadId = referencedEmail.thread_id;
-          leadId = referencedEmail.lead_id;
-        }
-      }
-
-      // 2. Fallback: match by normalized subject + sender
-      if (!threadId) {
-        const normalizedSubject = normalizeSubject(subject);
-        if (normalizedSubject) {
-          const { data: subjectMatch } = await supabase
-            .from("emails")
-            .select("thread_id, lead_id")
-            .or(`from_email.eq.${fromEmail},to_email.eq.${fromEmail}`)
-            .ilike("subject", `%${normalizedSubject}%`)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (subjectMatch) {
-            threadId = subjectMatch.thread_id;
-            leadId = subjectMatch.lead_id;
-          }
-        }
-      }
-
-      // 3. Fallback: match by sender email alone
-      if (!threadId) {
-        const { data: priorEmail } = await supabase
-          .from("emails")
-          .select("thread_id, lead_id")
-          .or(`from_email.eq.${fromEmail},to_email.eq.${fromEmail}`)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (priorEmail) {
-          threadId = priorEmail.thread_id;
-          leadId = priorEmail.lead_id;
-        }
-      }
-
-      // 4. New thread
-      if (!threadId) {
-        threadId = crypto.randomUUID();
-      }
-
-      // Try to match sender to a lead
-      if (!leadId) {
-        const { data: lead } = await supabase
-          .from("leads")
-          .select("id")
-          .eq("user_email", fromEmail)
-          .limit(1)
-          .maybeSingle();
-        if (lead) leadId = lead.id;
-      }
-
-      // Sanitize HTML before storing to prevent stored XSS in the admin inbox
-      const safeBodyHtml = bodyHtml ? sanitizeInboundEmailHtml(bodyHtml) : "";
-
-      // Insert the inbound email
-      const { data: inserted, error: insertError } = await supabase
-        .from("emails")
-        .insert({
-          thread_id: threadId,
-          direction: "inbound",
-          status: "received",
-          resend_message_id: resendEmailId || null,
-          from_email: fromEmail,
-          from_name: fromName,
-          to_email: toEmail,
-          subject,
-          body_html: safeBodyHtml,
-          body_text: bodyText,
-          reply_to: replyTo,
-          cc,
-          lead_id: leadId,
-          is_starred: false,
-          headers: {
-            "message-id": incomingHeaders["message-id"] || null,
-            "in-reply-to": inReplyTo || null,
-            references: references || null,
-          },
-        })
-        .select("id")
-        .single();
-
-      if (insertError) {
-        console.error("Failed to store inbound email:", insertError);
-        return NextResponse.json({ error: "Failed to store email" }, { status: 500 });
-      }
-
-      const emailId = inserted.id;
-
-      // ── Async AI classification + auto-reply (non-blocking) ──
-      // after() keeps the work alive past the response: a floating promise is
-      // frozen as soon as the webhook is acknowledged on Vercel, so
-      // classification and auto-replies were being dropped mid-flight.
-      after(() =>
-        processAIClassification(
-          emailId,
-          fromName,
-          fromEmail,
-          subject,
-          bodyText || bodyHtml,
-          threadId,
-          !isAutomatedEmail(incomingHeaders)
-        ).catch((err) => console.error("AI classification pipeline error:", err))
-      );
-
-      return NextResponse.json({ success: true, thread_id: threadId, email_id: emailId });
+      return NextResponse.json({ received: true, stored: !!stored });
     }
 
-    // ── Delivery status events ──
+    // Delivery status events for mail we sent. Other projects' sends on the
+    // same account arrive here too; the update is keyed by Resend id + our
+    // outbound direction, so they match nothing.
     if (
       eventType === "email.delivered" ||
       eventType === "email.bounced" ||
+      eventType === "email.failed" ||
       eventType === "email.complained"
     ) {
-      const resendId = body.data?.email_id;
-      if (resendId) {
-        const statusMap: Record<string, string> = {
-          "email.delivered": "delivered",
-          "email.bounced": "bounced",
-          "email.complained": "failed",
-        };
-        await supabase
-          .from("emails")
-          .update({ status: statusMap[eventType] })
-          .eq("resend_message_id", resendId);
+      const id: string | undefined = body.data?.email_id;
+      if (id) {
+        const status = eventType === "email.delivered" ? "delivered" : eventType === "email.bounced" ? "bounced" : "failed";
+        await inbox.updateDeliveryStatus(id, status);
       }
-      return NextResponse.json({ success: true, type: eventType });
+      return NextResponse.json({ received: true });
     }
 
-    // Acknowledge other events
-    return NextResponse.json({ success: true, type: eventType });
+    // For other event types, just acknowledge.
+    return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Resend webhook error:", error);
-    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
+    console.error("[Resend Inbound] Webhook error:", error);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
-
-// ── AI classification pipeline ──
-
-/**
- * Out-of-office replies, bounces and list mail (RFC 3834 Auto-Submitted, or
- * the older Precedence / X-Autoreply conventions). Auto-replying to them lets
- * Stacy ping-pong with another robot.
- */
-function isAutomatedEmail(headers: Record<string, unknown>): boolean {
-  const get = (name: string) => {
-    for (const [key, value] of Object.entries(headers)) {
-      if (key.toLowerCase() === name) return String(value ?? "").toLowerCase().trim();
-    }
-    return "";
-  };
-  const autoSubmitted = get("auto-submitted");
-  if (autoSubmitted && autoSubmitted !== "no") return true;
-  if (["bulk", "junk", "list", "auto_reply"].includes(get("precedence"))) return true;
-  return Boolean(get("x-autoreply") || get("x-autorespond") || get("x-auto-response-suppress"));
-}
-
-async function processAIClassification(
-  emailId: string,
-  fromName: string,
-  fromEmail: string,
-  subject: string,
-  bodyText: string,
-  threadId: string,
-  allowAutoReply: boolean
-) {
-  const supabase = createAdminClient();
-
-  const result = await classifyAndDraftReply(fromName, fromEmail, subject, bodyText);
-
-  // Store AI results on the email
-  await supabase
-    .from("emails")
-    .update({
-      ai_category: result.category,
-      ai_confidence: result.confidence,
-      ai_summary: result.summary,
-      ai_draft_html: result.draftHtml,
-      ai_draft_text: result.draftText,
-      ai_processed_at: new Date().toISOString(),
-    })
-    .eq("id", emailId);
-
-  // Auto-reply if safe — at most once per thread, and never to a robot
-  if (result.autoSendable && allowAutoReply) {
-    const { count: priorAutoReplies } = await supabase
-      .from("emails")
-      .select("id", { count: "exact", head: true })
-      .eq("thread_id", threadId)
-      .eq("direction", "outbound")
-      .eq("metadata->>auto_sent", "true");
-    if ((priorAutoReplies ?? 0) > 0) return;
-
-    const toName = fromName || fromEmail.split("@")[0];
-    await sendAutoReply(
-      emailId,
-      fromEmail,
-      toName,
-      subject,
-      result.draftHtml,
-      result.draftText,
-      threadId
-    );
-  }
-}
-
-// ── Helpers ──
-
-function normalizeSubject(subject: string): string {
-  return subject
-    .replace(/^(re|fwd|fw)\s*:\s*/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function isSpam(fromEmail: string, subject: string, body: string): boolean {
-  const spamTlds = [".xyz", ".top", ".buzz", ".click", ".gdn", ".icu"];
-  if (spamTlds.some((tld) => fromEmail.endsWith(tld))) return true;
-
-  const blockedPrefixes = ["noreply@", "no-reply@", "mailer-daemon@", "postmaster@"];
-  if (blockedPrefixes.some((p) => fromEmail.startsWith(p))) return true;
-
-  const spamPatterns = [
-    /\bcrypto\s*(investment|trading|profit)\b/i,
-    /\bunsubscribe\b.*\bclick\s*here\b/i,
-    /\b(viagra|cialis|pharmacy)\b/i,
-    /\bwin\s+(a\s+)?\$?\d/i,
-    /\bcongratulations.*you('ve| have)\s+won\b/i,
-    /\bact\s+now\b.*\blimited\s+time\b/i,
-    /\bnigerian?\s+prince\b/i,
-    /\b(bitcoin|btc|ethereum)\s*(giveaway|doubl)/i,
-  ];
-
-  const textToCheck = `${subject} ${body}`.toLowerCase();
-  if (spamPatterns.some((p) => p.test(textToCheck))) return true;
-
-  const linkCount = (body.match(/https?:\/\//gi) || []).length;
-  const wordCount = body.split(/\s+/).length;
-  if (linkCount > 10 && wordCount < 200) return true;
-
-  return false;
 }

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getInboundAddress } from "./inbound-address";
 
 const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
 
@@ -77,14 +78,12 @@ export async function recordInternalLeadAlert(
  * Reply-To for renter-facing mail (tour confirmations, alerts, welcome).
  *
  * Replies must not go to FROM_EMAIL: staycio.com has no MX record, so they
- * would bounce. They go to the Resend inbound domain instead, which lands the
- * reply in the admin inbox threaded against the lead. REPLY_TO_EMAIL
- * overrides it once a real mailbox exists on the apex.
+ * would bounce. They go to the admin inbox address on the Resend inbound
+ * domain instead (replies@inbound.staycio.com, `REPLY_TO_EMAIL` override),
+ * which lands the reply in /admin/email threaded against the lead. See
+ * inbound-address.ts — the admin inbox's own replies use a per-thread
+ * plus-address on the same mailbox.
  */
-const DEFAULT_REPLY_TO = "replies@inbound.staycio.com";
-
-export function getReplyToAddress(): string | undefined {
-  const configured = extractAddress(process.env.REPLY_TO_EMAIL || "");
-  if (EMAIL_RE.test(configured)) return configured;
-  return DEFAULT_REPLY_TO;
+export function getReplyToAddress(): string {
+  return getInboundAddress();
 }

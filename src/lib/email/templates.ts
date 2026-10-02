@@ -4,6 +4,7 @@
  * Call escHtml() on any user-supplied data before interpolating.
  */
 import { telHref } from "@/lib/utils";
+import { buildEmailShell } from "@/lib/email/branded";
 
 /**
  * The header is the wordmark as plain text, deliberately: no image. Remote
@@ -460,7 +461,7 @@ export function micrositeInquiryEmail(data: {
   city: string;
   moveIn?: string | null;
   unitType?: string | null;
-}): { html: string; text: string } {
+}): { html: string; text: string; bodyHtml: string } {
   const firstName = data.name.trim().split(/\s+/)[0] || data.name;
   const place = data.buildingName.toLowerCase().includes(data.city.toLowerCase())
     ? data.buildingName
@@ -479,19 +480,8 @@ export function micrositeInquiryEmail(data: {
   ];
 
   const text = paragraphs.join("\n\n") + "\n";
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>${escHtml(micrositeInquirySubject(data.buildingName, data.city, data.unitType))}</title>
-</head>
-<body style="margin:0;padding:24px 16px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;">
-<div style="max-width:560px;">
-${paragraphs.map((p) => `<p style="margin:0 0 18px 0;">${escHtml(p).replace(/\n/g, "<br>")}</p>`).join("\n")}
-</div>
-</body>
-</html>`;
+  const bodyHtml = paragraphs.map((p) => `<p style="margin:0 0 18px 0;">${escHtml(p).replace(/\n/g, "<br>")}</p>`).join("\n");
+  const html = buildEmailShell(bodyHtml, null, micrositeInquirySubject(data.buildingName, data.city, data.unitType));
 
-  return { html, text };
+  return { html, text, bodyHtml };
 }

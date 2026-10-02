@@ -1,171 +1,115 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState } from "react";
+import { ChevronDown, ChevronUp, Send, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2 } from "lucide-react";
-import { SandboxedEmail } from "./SandboxedEmail";
+import type { ComposeState } from "@/hooks/useAdminInbox";
 
 interface ComposeModalProps {
-  open: boolean;
+  compose: ComposeState;
+  from: string;
+  sending: boolean;
+  onField: (_field: "to" | "subject" | "bodyText", _value: string) => void;
+  onSend: () => void;
   onClose: () => void;
-  onSent: () => void;
-  replyTo?: {
-    threadId: string;
-    to: string;
-    subject: string;
-    leadId?: string;
-    quotedHtml?: string;
-  };
-  defaultBody?: string;
+  onDiscard: () => void;
 }
 
-export function ComposeModal({ open, onClose, onSent, replyTo, defaultBody }: ComposeModalProps) {
-  const [to, setTo] = useState("");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Reset fields when modal opens with new data
-  useEffect(() => {
-    if (open) {
-      setTo(replyTo?.to || "");
-      setSubject(
-        replyTo?.subject
-          ? replyTo.subject.startsWith("Re:")
-            ? replyTo.subject
-            : `Re: ${replyTo.subject}`
-          : ""
-      );
-      setBody(defaultBody || "");
-      setError(null);
-    }
-  }, [open, replyTo, defaultBody]);
-
-  async function handleSend() {
-    if (!to || !subject || !body) {
-      setError("All fields are required");
-      return;
-    }
-
-    setSending(true);
-    setError(null);
-
-    // Build HTML with quoted original if replying
-    let fullHtml = body.replace(/\n/g, "<br>");
-    if (replyTo?.quotedHtml) {
-      fullHtml += `
-        <br><br>
-        <div style="border-left: 2px solid #ccc; padding-left: 12px; margin-top: 16px; color: #666;">
-          ${replyTo.quotedHtml}
-        </div>
-      `;
-    }
-
-    try {
-      const res = await fetch("/api/admin/emails", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to,
-          subject,
-          bodyHtml: fullHtml,
-          threadId: replyTo?.threadId,
-          leadId: replyTo?.leadId,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to send");
-      }
-
-      onSent();
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send email");
-    } finally {
-      setSending(false);
-    }
-  }
+export function ComposeModal({ compose, from, sending, onField, onSend, onClose, onDiscard }: ComposeModalProps) {
+  const [showQuoted, setShowQuoted] = useState(false);
+  const isReply = !!compose.replyToEmailId;
+  const canSend = !!(compose.to.trim() && compose.subject.trim() && compose.bodyText.trim()) && !sending;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog open={compose.open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-[640px]">
         <DialogHeader>
-          <DialogTitle>{replyTo ? "Reply" : "Compose Email"}</DialogTitle>
+          <DialogTitle>{isReply ? "Reply" : "New email"}</DialogTitle>
+          <DialogDescription>
+            From <span className="font-medium text-foreground">{from}</span>. Replies come back to this inbox.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (canSend) onSend();
+          }}
+        >
           <div className="space-y-2">
-            <Label htmlFor="to">To</Label>
+            <Label htmlFor="compose-to">To</Label>
             <Input
-              id="to"
+              id="compose-to"
               type="email"
-              placeholder="recipient@example.com"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              disabled={!!replyTo}
+              autoComplete="off"
+              value={compose.to}
+              onChange={(e) => onField("to", e.target.value)}
+              placeholder="name@example.com"
+              readOnly={isReply}
+              className={isReply ? "opacity-70" : ""}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subject">Subject</Label>
-            <Input
-              id="subject"
-              placeholder="Email subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-            />
+            <Label htmlFor="compose-subject">Subject</Label>
+            <Input id="compose-subject" value={compose.subject} onChange={(e) => onField("subject", e.target.value)} placeholder="Subject" maxLength={200} />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="body">Message</Label>
+            <Label htmlFor="compose-body">Message</Label>
             <Textarea
-              id="body"
-              placeholder="Write your message..."
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={8}
-              className="resize-none"
+              id="compose-body"
+              value={compose.bodyText}
+              onChange={(e) => onField("bodyText", e.target.value)}
+              placeholder="Write your message…"
+              rows={10}
+              autoFocus={isReply}
+              className="min-h-[160px] resize-y leading-relaxed"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSend) {
+                  e.preventDefault();
+                  onSend();
+                }
+              }}
             />
+            <p className="text-xs text-muted-foreground">⌘/Ctrl+Enter sends. Line breaks are kept; the Staycio template is wrapped around it.</p>
           </div>
 
-          {/* Quoted original preview */}
-          {replyTo?.quotedHtml && (
-            <div className="rounded border border-border/50 bg-muted/30 p-3 max-h-32 overflow-hidden">
-              <p className="text-xs text-muted-foreground mb-1 font-medium">Quoted original:</p>
-              <SandboxedEmail html={replyTo.quotedHtml} className="opacity-60" />
+          {compose.quotedText && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowQuoted((v) => !v)}
+                className="mb-1.5 flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {showQuoted ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                {showQuoted ? "Hide" : "Show"} quoted message
+              </button>
+              {showQuoted && (
+                <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 font-sans text-xs leading-relaxed text-muted-foreground">
+                  {compose.quotedText}
+                </pre>
+              )}
             </div>
           )}
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose} disabled={sending}>
-              Cancel
-            </Button>
-            <Button onClick={handleSend} disabled={sending}>
-              {sending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="mr-2 h-4 w-4" />
-              )}
-              Send
-            </Button>
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <button type="button" onClick={onDiscard} className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-red-300">
+              <X className="h-4 w-4" /> Discard
+            </button>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>Close</Button>
+              <Button type="submit" disabled={!canSend}>
+                <Send className="h-4 w-4" /> {sending ? "Sending…" : "Send"}
+              </Button>
+            </div>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -62,6 +62,11 @@ export const AuditAction = {
 
   // Email
   EMAIL_CAMPAIGN_SEND: "email_campaign.send",
+  INBOX_SEND: "inbox.send",
+  INBOX_REPLY: "inbox.reply",
+  INBOX_SEND_AI_DRAFT: "inbox.send_ai_draft",
+  INBOX_DELETE: "inbox.delete",
+  INBOX_SETTING: "inbox.setting",
 
   // Settings
   SETTINGS_UPDATE: "settings.update",
