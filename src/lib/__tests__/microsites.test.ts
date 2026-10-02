@@ -62,6 +62,18 @@ describe("microsite registry", () => {
     expect(html, `${domain}: label should mention WhatsApp`).toContain("Phone / WhatsApp");
   });
 
+  // Google shows a favicon beside every mobile result; without one the site
+  // gets a generic globe. None of the 23 had one until 2026-10-02.
+  it.each(siteDirs)("%s declares a favicon and ships the files", (domain) => {
+    const html = readFileSync(join(ROOT, domain, "index.html"), "utf8");
+    expect(html).toContain('<link rel="icon" href="/favicon.ico" sizes="any">');
+    expect(html).toContain('<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">');
+    expect(html).toContain('<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">');
+    for (const f of ["favicon.ico", "favicon-32.png", "favicon-48.png", "apple-touch-icon.png"]) {
+      expect(existsSync(join(ROOT, domain, f)), `${domain}: missing ${f}`).toBe(true);
+    }
+  });
+
   it.each(siteDirs)("%s canonical URL matches its domain", (domain) => {
     const html = readFileSync(join(ROOT, domain, "index.html"), "utf8");
     expect(html).toContain(`<link rel="canonical" href="https://${domain}/">`);

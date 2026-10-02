@@ -10,6 +10,7 @@ const crypto = require("crypto");
 const sharp = require("sharp");
 const BUILDINGS = require("./buildings.js");
 const { stacyBlock, stacyGreeting } = require("../_shared/stacy.js");
+const { monogram, writeFavicons, faviconTags } = require("./favicon.js");
 
 const ROOT = path.join(__dirname, "..");
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -212,6 +213,7 @@ function page(b) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+${faviconTags(p.ink)}
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="https://${b.domain}/">
@@ -707,6 +709,9 @@ for (const b of BUILDINGS) {
 `);
   fs.writeFileSync(path.join(dir, `${VERIFY}.txt`), VERIFY + "\n");
   fs.writeFileSync(path.join(dir, ".gitignore"), ".vercel\n");
+  // Tab icon and Google's result-page icon. None of the 23 sites had one
+  // until 2026-10-02: a generic globe next to every ranking result.
+  work.push(writeFavicons(dir, { ink: b.palette.ink, accent: b.palette.a, mono: monogram(b.name) }));
   const pool = POOL[THEME[b.domain]];
   // Every site in a theme used to take pool[0] as its hero, so six operating
   // buildings opened on the same kitchen and five pre-construction pages on the
