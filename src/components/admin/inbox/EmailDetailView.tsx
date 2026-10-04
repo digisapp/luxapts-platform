@@ -74,11 +74,13 @@ function Message({ msg, isLast }: { msg: EmailDetail; isLast: boolean }) {
       </header>
 
       {msg.bodyHtml ? (
-        <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02] p-2">
+        // No padding here: the frame carries its own, so a white "paper"
+        // email fills the card edge to edge instead of sitting in a dark rim.
+        <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
           <SandboxedEmail html={msg.bodyHtml} />
         </div>
       ) : (
-        <div className="whitespace-pre-wrap rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 text-sm leading-relaxed text-foreground/90">
+        <div className="whitespace-pre-wrap rounded-xl border border-white/[0.08] bg-white/[0.02] px-[18px] py-4 text-[15px] leading-relaxed text-foreground/90">
           {msg.bodyText || <span className="text-muted-foreground">(no content)</span>}
         </div>
       )}
