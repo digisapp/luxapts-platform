@@ -3,8 +3,10 @@ import { Webhook } from "svix";
 import { getAdminInboxService } from "@/lib/email/admin-inbox";
 import { getResendClient } from "@/lib/resend/client";
 import { classifyAndDraftReply, sendAutoReply } from "@/lib/ai-email";
+import { sendInboxAlert } from "@/lib/email/inbox-notify";
 import {
   findOurRecipient,
+  getAdminFromAddress,
   parseEmailAddress,
   parseThreadIdFromAddresses,
   senderDisplayName,
@@ -168,34 +170,65 @@ export async function POST(request: Request) {
         attachments,
       });
 
-      // AI classification + (optional) auto-reply run after the 200 is sent.
-      // after() keeps the serverless function alive until they finish — a
-      // bare floating promise gets frozen once the response returns.
-      if (stored && stored.is_spam !== true && process.env.XAI_API_KEY) {
+      // AI classification, the (optional) auto-reply and the owner's phone
+      // alert run after the 200 is sent. after() keeps the serverless function
+      // alive until they finish — a bare floating promise gets frozen once
+      // the response returns.
+      if (stored && stored.is_spam !== true) {
         const text = full?.text || "";
         const html = full?.html || "";
         after(async () => {
+          let summary: string | null = null;
+          let autoReplied = false;
+          if (process.env.XAI_API_KEY) {
+            try {
+              const result = await classifyAndDraftReply({ from, fromName, subject, text, html });
+              summary = result.summary || null;
+              await inbox.updateAiFields(stored.id, {
+                aiCategory: result.category,
+                aiConfidence: result.confidence,
+                aiSummary: result.summary,
+                aiDraftText: result.draftText,
+                aiDraftHtml: result.draftHtml,
+              });
+              const auto = await sendAutoReply(stored.id, result, {
+                from,
+                fromName,
+                subject,
+                threadId: stored.thread_id ?? stored.id,
+                messageId: stored.headers?.["message-id"] ?? (messageId || null),
+                leadId: stored.lead_id,
+                headers,
+              });
+              autoReplied = auto.sent;
+              if (!auto.sent) console.log(`[AI Email] No auto-reply for ${stored.id}: ${auto.reason}`);
+            } catch (err) {
+              console.error("[AI Email] Classification failed:", err);
+            }
+          }
+
+          // Tell the owner. Runs last so the alert can say what Stacy made of
+          // the message and whether she already answered it; it still goes
+          // out when the AI is off or failed.
           try {
-            const result = await classifyAndDraftReply({ from, fromName, subject, text, html });
-            await inbox.updateAiFields(stored.id, {
-              aiCategory: result.category,
-              aiConfidence: result.confidence,
-              aiSummary: result.summary,
-              aiDraftText: result.draftText,
-              aiDraftHtml: result.draftHtml,
-            });
-            const auto = await sendAutoReply(stored.id, result, {
+            const sender = await inbox.senderForLead(stored.lead_id).catch(() => null);
+            const alert = await sendInboxAlert({
+              id: stored.id,
               from,
               fromName,
+              to,
               subject,
-              threadId: stored.thread_id ?? stored.id,
-              messageId: stored.headers?.["message-id"] ?? (messageId || null),
-              leadId: stored.lead_id,
+              text,
+              html,
+              summary,
+              autoReplied,
+              // Only a microsite lead has a building; everyone else is "Staycio".
+              building: sender && sender.email !== getAdminFromAddress() ? sender.name : null,
               headers,
             });
-            if (!auto.sent) console.log(`[AI Email] No auto-reply for ${stored.id}: ${auto.reason}`);
+            if (!alert.sent) console.log(`[Inbox Alert] Not sent for ${stored.id}: ${alert.reason}`);
           } catch (err) {
-            console.error("[AI Email] Classification failed:", err);
+            console.error("[Inbox Alert] Failed:", err);
           }
         });
       }

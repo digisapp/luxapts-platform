@@ -20,9 +20,13 @@ vi.mock("@/lib/resend/client", () => ({
 const storeInboundEmail = vi.fn();
 const updateDeliveryStatus = vi.fn();
 const updateAiFields = vi.fn();
+const senderForLead = vi.fn();
 vi.mock("@/lib/email/admin-inbox", () => ({
-  getAdminInboxService: () => ({ storeInboundEmail, updateDeliveryStatus, updateAiFields }),
+  getAdminInboxService: () => ({ storeInboundEmail, updateDeliveryStatus, updateAiFields, senderForLead }),
 }));
+
+const sendInboxAlert = vi.fn();
+vi.mock("@/lib/email/inbox-notify", () => ({ sendInboxAlert }));
 
 const classify = vi.fn();
 const sendAutoReply = vi.fn();
@@ -58,6 +62,10 @@ describe("POST /api/webhooks/resend", () => {
     verify.mockReset();
     receivingGet.mockReset();
     storeInboundEmail.mockReset();
+    senderForLead.mockReset();
+    senderForLead.mockResolvedValue({ from: "Staycio <hello@staycio.com>", email: "hello@staycio.com", name: "Staycio" });
+    sendInboxAlert.mockReset();
+    sendInboxAlert.mockResolvedValue({ sent: true });
     updateDeliveryStatus.mockReset();
     classify.mockReset();
     sendAutoReply.mockReset();
@@ -123,6 +131,10 @@ describe("POST /api/webhooks/resend", () => {
         resendEmailId: "r3",
         attachments: [{ id: "att1", filename: "id.png", contentType: "image/png", size: 1234 }],
       })
+    );
+    // The owner is alerted for every stored message, AI or not.
+    expect(sendInboxAlert).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "e3", from: "jane@example.com", fromName: "Jane Doe", text: "Thanks!", autoReplied: false, building: null })
     );
     // No XAI_API_KEY → no classification attempted.
     expect(classify).not.toHaveBeenCalled();

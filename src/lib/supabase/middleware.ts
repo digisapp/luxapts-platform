@@ -54,7 +54,12 @@ export async function updateSession(request: NextRequest) {
   if (!user && (isAdminRoute || isAgentRoute || isPartnerRoute || isShowerRoute)) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
-    url.searchParams.set("redirect", request.nextUrl.pathname);
+    // Carry the whole destination, query included: an inbox alert links to
+    // /admin/email?email=<id>, and dropping the query landed a signed-out
+    // owner on the inbox list instead of the conversation. The login page
+    // only follows same-origin paths (safeRedirectPath).
+    url.search = "";
+    url.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
 

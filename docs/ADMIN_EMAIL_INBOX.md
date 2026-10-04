@@ -150,3 +150,19 @@ paragraphs signed Stacy) is sent through `sendNewEmail` too, so it is the
 thread's first message in the Sent folder, goes out as the building, and
 carries the plus-addressed Reply-To. When the person answers, the reply
 threads under it on `/admin/email` and the AI draft is written as Stacy.
+
+
+## Phone alerts
+
+Every stored inbound message (not spam) also sends a short alert to the
+owner's own mailbox — `INBOX_NOTIFY_EMAIL`, defaulting to `LEAD_NOTIFY_EMAIL`
+— so new mail is seen without `/admin/email` being open. The alert leads with
+the sender's own words, then Stacy's summary, whether she already replied, and
+a link (`/admin/email?email=<id>`) that opens that conversation; the sign-in
+redirect keeps the query, so the link survives a login.
+
+Code: `src/lib/email/inbox-notify.ts`, sent from the webhook's `after()`.
+Loop guards: alert recipients on our own receiving domains are dropped; mail
+from our own domain, from an alert recipient, or carrying
+`X-Staycio-Inbox-Alert` raises no alert. One alert per message
+(idempotency key `inbox-alert-<id>`).

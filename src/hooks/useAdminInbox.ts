@@ -216,6 +216,23 @@ export function useAdminInbox() {
     [patchFlags]
   );
 
+  // An alert email links to /admin/email?email=<id>: open that conversation
+  // once on arrival, then drop the parameter so a refresh or a back/forward
+  // doesn't keep reopening it. Read from window (not useSearchParams) so the
+  // page needs no Suspense boundary.
+  const openedFromLink = useRef(false);
+  useEffect(() => {
+    if (openedFromLink.current) return;
+    openedFromLink.current = true;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("email");
+    if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return;
+    params.delete("email");
+    const rest = params.toString();
+    window.history.replaceState(null, "", window.location.pathname + (rest ? `?${rest}` : ""));
+    void selectEmail(id);
+  }, [selectEmail]);
+
   const closeDetail = useCallback(() => {
     setSelectedId(null);
     setSelectedEmail(null);
