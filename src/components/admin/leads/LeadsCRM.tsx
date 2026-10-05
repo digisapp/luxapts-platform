@@ -10,6 +10,7 @@ import { LeadRow, type LeadRowData } from "./LeadRow";
 import { BulkActionBar } from "./BulkActionBar";
 import { BulkEmailDialog } from "./BulkEmailDialog";
 import { SendEmailDialog } from "./SendEmailDialog";
+import { DeleteLeadsDialog } from "./DeleteLeadsDialog";
 
 interface Agent {
   user_id: string;
@@ -50,6 +51,10 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
   // Inline/bulk write failures used to be console-only, and the inline status
   // change was applied locally even when the API rejected it.
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  // Shared clock for the rows' "3h ago" ages; see LeadRow's `now` prop.
+  const [now, setNow] = useState<number | null>(null);
 
   // Email dialog state
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
@@ -57,6 +62,19 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
   const [bulkEmailOpen, setBulkEmailOpen] = useState(false);
 
   const requestIdRef = useRef(0);
+  const selectAllRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!actionNotice) return;
+    const timer = setTimeout(() => setActionNotice(null), 5000);
+    return () => clearTimeout(timer);
+  }, [actionNotice]);
 
   // Debounce search
   useEffect(() => {
@@ -114,6 +132,20 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
     fetchLeads(0);
   }, [fetchLeads]);
 
+  const pageIds = leads.map((l) => l.id);
+  const selectedOnPage = pageIds.filter((id) => selectedIds.has(id)).length;
+  const allOnPageSelected = pageIds.length > 0 && selectedOnPage === pageIds.length;
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = selectedOnPage > 0 && !allOnPageSelected;
+    }
+  }, [selectedOnPage, allOnPageSelected]);
+
+  function handleSelectAll(checked: boolean) {
+    setSelectedIds(checked ? new Set(pageIds) : new Set());
+  }
+
   function handleSelect(id: string, checked: boolean) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -169,6 +201,18 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
     }
   }
 
+  function handleDeleted(deletedCount: number) {
+    const deletedIds = selectedIds;
+    setSelectedIds(new Set());
+    setLeads((prev) => prev.filter((l) => !deletedIds.has(l.id)));
+    setActionError(null);
+    setActionNotice(`Deleted ${deletedCount} ${deletedCount === 1 ? "lead" : "leads"}.`);
+    // Emptying the last page would otherwise leave "No leads" on screen with
+    // earlier pages still full.
+    const remaining = total - deletedCount;
+    fetchLeads(offset > 0 && offset >= remaining ? Math.max(0, offset - LIMIT) : offset);
+  }
+
   function handleOpenEmail(lead: LeadRowData) {
     setEmailTarget(lead);
     setEmailDialogOpen(true);
@@ -193,6 +237,22 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
             className="shrink-0 rounded-md border border-red-500/40 px-3 py-1 text-xs font-medium hover:bg-red-500/20"
           >
             Retry
+          </button>
+        </div>
+      )}
+
+      {actionNotice && (
+        <div
+          role="status"
+          className="flex items-center justify-between gap-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300"
+        >
+          <span>{actionNotice}</span>
+          <button
+            type="button"
+            onClick={() => setActionNotice(null)}
+            className="shrink-0 rounded-md border border-emerald-500/40 px-3 py-1 text-xs font-medium hover:bg-emerald-500/20"
+          >
+            Dismiss
           </button>
         </div>
       )}
@@ -231,7 +291,12 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
               }`}
             >
               {tab.label}
-              <Badge variant={active ? "secondary" : "outline"} className="ml-1 text-xs">
+              {/* The secondary badge is white text on a 6% white fill, which
+                  vanished on the white active pill. */}
+              <Badge
+                variant="outline"
+                className={`ml-1 text-xs ${active ? "border-black/15 bg-black/10 text-black" : ""}`}
+              >
                 {count}
               </Badge>
             </button>
@@ -242,7 +307,9 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
       {/* Search + Source Filter */}
       <div className="flex flex-wrap gap-3">
         <div className="relative min-w-0 flex-1 basis-60">
-          <Search aria-hidden="true" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          {/* z-10: the Input's backdrop-blur makes it a stacking context that
+              paints over (and blurs) an earlier absolute sibling. */}
+          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -268,9 +335,32 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
       {/* Leads List */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Leads</span>
-            {loading && <span className="text-sm font-normal text-muted-foreground">Loading...</span>}
+          {/* pl matches a row's border + p-4, so this box sits over theirs. */}
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3 pl-[17px] text-base">
+            <label
+              className={`-m-3 flex items-center gap-3 p-3 ${leads.length > 0 ? "cursor-pointer" : "opacity-50"}`}
+            >
+              <input
+                ref={selectAllRef}
+                type="checkbox"
+                checked={allOnPageSelected}
+                disabled={leads.length === 0}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                aria-label="Select all leads on this page"
+                className="h-4 w-4 cursor-pointer rounded border-white/20"
+              />
+              <span>
+                {total} {total === 1 ? "lead" : "leads"}
+                {(statusFilter || sourceFilter || searchDebounced) && (
+                  <span className="font-normal text-muted-foreground"> matching</span>
+                )}
+              </span>
+            </label>
+            {loading && (
+              <span role="status" className="text-sm font-normal text-muted-foreground">
+                Loading...
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -281,6 +371,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
                   key={lead.id}
                   lead={lead}
                   selected={selectedIds.has(lead.id)}
+                  now={now}
                   onSelect={handleSelect}
                   onStatusChange={handleInlineStatusChange}
                   onEmail={handleOpenEmail}
@@ -335,6 +426,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
         agents={agents}
         onApply={handleBulkAction}
         onEmail={() => setBulkEmailOpen(true)}
+        onDelete={() => setDeleteOpen(true)}
         onClear={() => setSelectedIds(new Set())}
       />
 
@@ -346,6 +438,18 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStatusCounts, agen
           setSelectedIds(new Set());
           fetchLeads(offset);
         }}
+      />
+
+      <DeleteLeadsDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        leadIds={Array.from(selectedIds)}
+        leadName={
+          selectedIds.size === 1
+            ? leads.find((l) => selectedIds.has(l.id))?.name ?? null
+            : null
+        }
+        onDeleted={handleDeleted}
       />
 
       {/* Email Dialog */}
