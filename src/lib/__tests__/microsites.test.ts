@@ -440,3 +440,20 @@ describe("microsite delivery dates", () => {
     }
   });
 });
+
+// What Google shows: the title, the description and the share-card tags. Owner's
+// call (2026-10-05), after perrinbrickell.com appeared in results as "New Rental
+// Apartments Coming 2027 | Waitlist": a delivery year, "coming" or "waitlist"
+// there reads as nothing to rent for years. The page body still gives the date.
+describe("microsite search snippets", () => {
+  const snippet = (html: string) =>
+    [
+      html.match(/<title>([^<]*)<\/title>/)?.[1],
+      ...[...html.matchAll(/<meta (?:name="description"|property="og:(?:title|description)") content="([^"]*)"/g)].map((m) => m[1]),
+    ].join(" | ");
+
+  it.each(siteDirs)("%s does not sell a wait in its title or description", (domain) => {
+    const text = snippet(readFileSync(join(ROOT, domain, "index.html"), "utf8"));
+    expect(text, `${domain}: ${text}`).not.toMatch(/\b(coming|waitlist|wait list|interest list|opening soon)\b|\b20(2[7-9]|[3-9]\d)\b|'2[7-9]\b/i);
+  });
+});
