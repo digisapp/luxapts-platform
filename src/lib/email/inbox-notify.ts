@@ -3,7 +3,6 @@ import { escapeHtml } from "@/lib/utils";
 import { buildEmailShell, htmlToText } from "./branded";
 import { getAdminFromAddress, isOurInboundAddress, parseEmailAddress } from "./inbound-address";
 import { formatPhone } from "./phone-capture";
-import { getLeadNotificationRecipients } from "./recipients";
 import { getAppUrl } from "./unsubscribe";
 
 /**
@@ -25,17 +24,17 @@ export const INBOX_ALERT_HEADER = "X-Staycio-Inbox-Alert";
 const EMAIL_RE = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/;
 
 /**
- * Who gets alerted. INBOX_NOTIFY_EMAIL (comma-separated) overrides; otherwise
- * the same mailbox that receives new-lead alerts (LEAD_NOTIFY_EMAIL). Our own
+ * Who gets alerted: INBOX_NOTIFY_EMAIL (comma-separated), and nobody when it
+ * is unset. Off by default since 2026-10-05: the owner works from
+ * /admin/email and doesn't want inbox mail in a personal mailbox. Our own
  * receiving addresses are dropped: alerting them would feed the inbox its
  * own alerts.
  */
 export function getInboxAlertRecipients(): string[] {
-  const override = (process.env.INBOX_NOTIFY_EMAIL || "")
+  const list = (process.env.INBOX_NOTIFY_EMAIL || "")
     .split(/[,;\s]+/)
     .map((raw) => parseEmailAddress(raw).email)
     .filter((email) => EMAIL_RE.test(email));
-  const list = override.length > 0 ? override : getLeadNotificationRecipients();
   return Array.from(new Set(list.map((e) => e.toLowerCase()))).filter((e) => !isOurInboundAddress(e));
 }
 
@@ -45,7 +44,7 @@ export function inboxAlertSkipReason(args: {
   headers?: Record<string, string | string[] | null | undefined> | null;
   recipients: string[];
 }): string | null {
-  if (args.recipients.length === 0) return "no alert recipient configured (LEAD_NOTIFY_EMAIL / INBOX_NOTIFY_EMAIL)";
+  if (args.recipients.length === 0) return "email alerts are off (INBOX_NOTIFY_EMAIL is not set)";
   const from = parseEmailAddress(args.from).email.toLowerCase();
   if (!from) return "no sender address";
   const headerNames = Object.keys(args.headers || {}).map((k) => k.toLowerCase());

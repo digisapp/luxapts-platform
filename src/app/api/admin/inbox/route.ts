@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { apiError } from "@/lib/api-helpers";
 import { isValidUUID, safeParseInt } from "@/lib/utils";
-import { getAdminInboxService, isBulkAction, isInboxFolder } from "@/lib/email/admin-inbox";
+import { checkOutgoingAttachments, getAdminInboxService, isBulkAction, isInboxFolder } from "@/lib/email/admin-inbox";
 import { htmlToText, textToHtml } from "@/lib/email/branded";
 import { logAuditEvent, AuditAction } from "@/lib/admin/audit";
 
@@ -58,6 +58,8 @@ export async function POST(req: NextRequest) {
     if (!to.trim() || !subject.trim() || !bodyText.trim()) {
       return apiError("To, subject and message are required");
     }
+    const files = checkOutgoingAttachments(body.attachments);
+    if (!files.ok) return apiError(files.error);
 
     const result = await getAdminInboxService().sendNewEmail({
       to,
@@ -66,6 +68,7 @@ export async function POST(req: NextRequest) {
       bodyText,
       replyToEmailId,
       sentBy: auth.userId,
+      attachments: files.files,
     });
     if (!result.success) return apiError(result.error, result.status ?? 502);
 

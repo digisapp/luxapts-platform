@@ -22,8 +22,9 @@ const updateDeliveryStatus = vi.fn();
 const updateAiFields = vi.fn();
 const senderForLead = vi.fn();
 const captureLeadPhone = vi.fn();
+const getLeadContext = vi.fn();
 vi.mock("@/lib/email/admin-inbox", () => ({
-  getAdminInboxService: () => ({ storeInboundEmail, updateDeliveryStatus, updateAiFields, senderForLead, captureLeadPhone }),
+  getAdminInboxService: () => ({ storeInboundEmail, updateDeliveryStatus, updateAiFields, senderForLead, captureLeadPhone, getLeadContext }),
 }));
 
 const sendInboxAlert = vi.fn();
@@ -69,6 +70,12 @@ describe("POST /api/webhooks/resend", () => {
     sendInboxAlert.mockResolvedValue({ sent: true });
     captureLeadPhone.mockReset();
     captureLeadPhone.mockImplementation(async (_leadId: string, phone: string | null) => phone);
+    getLeadContext.mockReset();
+    getLeadContext.mockImplementation(async (leadId: string | null) =>
+      leadId
+        ? { id: leadId, name: "Jillian Hughson", email: "jillian@example.com", phone: null, status: "contacted", domain: "downtown6miami.com", building: "Downtown 6", city: "Miami", unitType: "2 Bedroom", moveIn: "Q4 2026", sender: '"Downtown 6" <downtown6miami@staycio.com>', createdAt: "2026-08-06T00:00:00Z" }
+        : null
+    );
     updateDeliveryStatus.mockReset();
     classify.mockReset();
     sendAutoReply.mockReset();
@@ -170,7 +177,7 @@ describe("POST /api/webhooks/resend", () => {
     expect(captureLeadPhone).toHaveBeenCalledWith("lead-9", "+17865550142");
     // after() work is not awaited by the route; wait for it to finish.
     await vi.waitFor(() =>
-      expect(sendInboxAlert).toHaveBeenCalledWith(expect.objectContaining({ id: "e9", phoneSaved: "+17865550142" }))
+      expect(sendInboxAlert).toHaveBeenCalledWith(expect.objectContaining({ id: "e9", phoneSaved: "+17865550142", building: "Downtown 6" }))
     );
   });
 

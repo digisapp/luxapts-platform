@@ -18,8 +18,9 @@ afterEach(() => {
 });
 
 describe("getInboxAlertRecipients", () => {
-  it("defaults to the lead-alert mailbox", () => {
-    expect(getInboxAlertRecipients()).toEqual(["owner@example.com"]);
+  it("is off unless INBOX_NOTIFY_EMAIL is set, even with a lead-alert mailbox", () => {
+    // The owner works from /admin/email and asked for no mail alerts.
+    expect(getInboxAlertRecipients()).toEqual([]);
   });
 
   it("lets INBOX_NOTIFY_EMAIL override, with several addresses", () => {
@@ -41,7 +42,7 @@ describe("inboxAlertSkipReason", () => {
   });
 
   it("stays quiet with nobody to alert", () => {
-    expect(inboxAlertSkipReason({ from: "jane@gmail.com", recipients: [] })).toMatch(/no alert recipient/);
+    expect(inboxAlertSkipReason({ from: "jane@gmail.com", recipients: [] })).toMatch(/alerts are off/);
   });
 
   it("stays quiet for our own mail, the owner's own mail, and returning alerts", () => {
