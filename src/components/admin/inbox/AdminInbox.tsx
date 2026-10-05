@@ -100,7 +100,7 @@ export function AdminInbox() {
           })}
         </div>
         <div className="relative lg:w-80">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <Input type="search" value={d.search} onChange={(e) => d.setSearch(e.target.value)} placeholder="Search subject, sender, text…" aria-label="Search emails" className="pl-9" />
         </div>
       </div>

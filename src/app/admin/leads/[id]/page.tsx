@@ -13,6 +13,7 @@ import {
   UserPlus, ArrowRight, UserCheck, Send, MessageSquare, MessageCircle,
 } from "lucide-react";
 import { LeadEmailButton } from "./LeadEmailButton";
+import { LeadDeleteButton } from "./LeadDeleteButton";
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>;
@@ -237,6 +238,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
             {lead.user_email && (
               <LeadEmailButton leadId={lead.id} leadName={lead.name} leadEmail={lead.user_email} />
             )}
+            <LeadDeleteButton leadId={lead.id} leadName={lead.name} />
           </div>
         </div>
       </div>

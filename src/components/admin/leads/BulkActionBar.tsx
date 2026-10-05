@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, X } from "lucide-react";
+import { Mail, Trash2, X } from "lucide-react";
 
 interface Agent {
   user_id: string;
@@ -15,6 +15,7 @@ interface BulkActionBarProps {
   agents: Agent[];
   onApply: (action: "status" | "assign", value: string) => void;
   onEmail: () => void;
+  onDelete: () => void;
   onClear: () => void;
 }
 
@@ -23,6 +24,7 @@ export function BulkActionBar({
   agents,
   onApply,
   onEmail,
+  onDelete,
   onClear,
 }: BulkActionBarProps) {
   const [bulkStatus, setBulkStatus] = useState("contacted");
@@ -83,6 +85,16 @@ export function BulkActionBar({
             </Button>
           </div>
         )}
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onDelete}
+          className="border-red-500/40 text-red-300 hover:border-red-500/60 hover:bg-red-500/10"
+        >
+          <Trash2 className="mr-1 h-3 w-3" />
+          Delete
+        </Button>
 
         <Button size="sm" variant="ghost" onClick={onClear}>
           <X className="mr-1 h-3 w-3" />

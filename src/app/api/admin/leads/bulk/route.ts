@@ -15,20 +15,16 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { lead_ids, action, value } = body as {
       lead_ids: string[];
-      action: "status" | "assign";
-      value: string;
+      action: "status" | "assign" | "delete";
+      value?: string;
     };
 
     if (!Array.isArray(lead_ids) || lead_ids.length === 0) {
       return apiError("lead_ids required");
     }
 
-    if (!["status", "assign"].includes(action)) {
+    if (!["status", "assign", "delete"].includes(action)) {
       return apiError("Invalid action");
-    }
-
-    if (!value) {
-      return apiError("value required");
     }
 
     // Validate all UUIDs
@@ -37,6 +33,61 @@ export async function POST(req: Request) {
     }
 
     const supabase = createAdminClient();
+
+    if (action === "delete") {
+      // Deleting nulls emails.lead_id (010), so clear the "New lead" alerts
+      // first; afterwards they could no longer be matched to these leads and
+      // would sit in the inbox's Unread for good.
+      await getAdminInboxService()
+        .markLeadAlertsRead(lead_ids)
+        .catch((err) => console.error("Could not clear lead alerts:", err));
+
+      // A tour request was bridged to an open showing lead (019). Deleting
+      // only nulls its source_lead_id, leaving showers able to claim a tour
+      // for a lead that no longer exists, so those get cancelled. They are
+      // looked up now (the link is gone after the delete) but cancelled only
+      // once the delete succeeds. Claimed ones are left alone: a shower is
+      // already working them.
+      const { data: openShowings, error: showingError } = await supabase
+        .from("showing_leads")
+        .select("id")
+        .in("source_lead_id", lead_ids)
+        .eq("status", "open");
+      if (showingError) {
+        console.error("Bulk delete showing-lead lookup error:", showingError);
+        return apiError("Failed to delete", 500);
+      }
+
+      // lead_events, lead_targets and agent_assignments cascade; emails and
+      // chat_sessions keep their rows with lead_id set to null.
+      const { data: deleted, error } = await supabase
+        .from("leads")
+        .delete()
+        .in("id", lead_ids)
+        .select("id");
+
+      if (error) {
+        console.error("Bulk delete error:", error);
+        return apiError("Failed to delete", 500);
+      }
+
+      if (openShowings && openShowings.length > 0) {
+        const { error: cancelError } = await supabase
+          .from("showing_leads")
+          .update({ status: "cancelled" })
+          .in("id", openShowings.map((s) => s.id))
+          .eq("status", "open");
+        if (cancelError) {
+          console.error("Could not cancel showing leads of deleted leads:", cancelError);
+        }
+      }
+
+      return NextResponse.json({ deleted: deleted?.length ?? 0 });
+    }
+
+    if (!value) {
+      return apiError("value required");
+    }
 
     if (action === "status") {
       const validStatuses = ["new", "contacted", "touring", "applied", "leased", "lost"];
