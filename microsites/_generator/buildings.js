@@ -65,6 +65,8 @@ const BUILDINGS = [
   },
   {
     domain: "jemmiamiapartments.com", name: "JEM Miami Worldcenter", short: "JEM", accent: "MIAMI",
+    // Owner's wording (2026-10-05).
+    title: "JEM Miami Worldcenter — Luxury Rental Apartments",
     captions: ["Residences","Rooftop Pool","Under Construction"], credit: "Renderings courtesy of Naftali Group; construction photography via Florida YIMBY",
     mode: "waitlist", palette: { ink:"#1a1329", a:"#c9a84c", deep:"#8a6f22", pale:"#f7f0dc" },
     hood: "Miami Worldcenter", address: "1016 NE 2nd Ave", zip: "33132", units: 530, stories: 67,
@@ -506,7 +508,7 @@ const BUILDINGS = [
     captions: ["The Paseo","NE 29th Street","Skyline Aerial"], credit: "Renderings courtesy of Rilea Group",
     // Overridden because mohawkwynwood.com covers the same building: left to
     // derive, both pages would ship the identical title and description.
-    title: "Mohawk Miami — Wynwood Rental Apartments & Amenities",
+    title: "Mohawk Miami — Wynwood Rental Apartments",
     ogTitle: "Mohawk Miami — Wynwood Rentals & Amenities",
     desc: "Mohawk at Wynwood: 300 rentals at 56 NE 29th St by Rilea Group, with a hammam spa, padel court and rooftop dog park. Get pricing and floor plans first.",
     // Same building as mohawkwynwood.com, deliberately a different page: this
