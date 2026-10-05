@@ -105,6 +105,14 @@ describe("buildInboxAlert", () => {
     expect(buildInboxAlert({ ...base, autoReplied: true }).text).toContain("Stacy already replied.");
   });
 
+  it("says when a phone number was saved, with text and call links", () => {
+    const alert = buildInboxAlert({ ...base, phoneSaved: "+17865550142" });
+    expect(alert.text).toContain("Phone number saved to the lead: (786) 555-0142");
+    expect(alert.html).toContain('href="sms:+17865550142"');
+    expect(alert.html).toContain('href="tel:+17865550142"');
+    expect(buildInboxAlert(base).text).not.toContain("Phone number saved");
+  });
+
   it("warns that replying to the alert does not reach the sender", () => {
     expect(buildInboxAlert(base).text).toContain("Replying to this alert does not reach Jane.");
     expect(buildInboxAlert({ ...base, fromName: null }).text).toContain("does not reach them.");

@@ -872,6 +872,23 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       if (error) throw new Error(error.message);
     },
 
+    /**
+     * Save a phone number a lead sent by email onto the lead, only when the
+     * lead has none yet: a number typed into the form is never overwritten.
+     * Returns the number when it was saved.
+     */
+    async captureLeadPhone(leadId: string | null, phone: string | null): Promise<string | null> {
+      if (!leadId || !phone) return null;
+      const { data, error } = await supabase
+        .from("leads")
+        .update({ user_phone: phone })
+        .eq("id", leadId)
+        .or("user_phone.is.null,user_phone.eq.")
+        .select("id");
+      if (error) throw new Error(error.message);
+      return (data as unknown[] | null)?.length ? phone : null;
+    },
+
     /** platform_settings.value is JSONB; the inbox keys hold a boolean. */
     async getSetting(key: InboxSettingKey): Promise<boolean> {
       const { data } = await supabase.from("platform_settings").select("value").eq("key", key).maybeSingle();

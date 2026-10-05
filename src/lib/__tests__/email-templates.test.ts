@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { micrositeInquiryEmail, micrositeInquirySubject } from "@/lib/email/templates";
+import {
+  firstNameOf,
+  micrositeFollowUpEmail,
+  micrositeInquiryEmail,
+  micrositeInquirySubject,
+  normalizeMoveIn,
+  normalizeUnitType,
+} from "@/lib/email/templates";
 
 const base = { name: "Nathan Example", buildingName: "Downtown 6", city: "Miami", moveIn: "December", unitType: "1 Bedroom" };
 
@@ -65,5 +72,71 @@ describe("micrositeInquiryEmail", () => {
     const { html } = micrositeInquiryEmail({ ...base, name: "<img src=x onerror=\"alert(1)\">", unitType: "<b>2BR</b>" });
     expect(html).not.toContain("<img src=x");
     expect(html).not.toContain("<b>2BR</b>");
+  });
+});
+
+describe("browser-translated form values", () => {
+  it("maps translated unit labels back to the form's English options", () => {
+    expect(normalizeUnitType("2 habitaciones")).toBe("2 Bedroom");
+    expect(normalizeUnitType("1 dormitorio")).toBe("1 Bedroom");
+    expect(normalizeUnitType("3 quartos")).toBe("3 Bedroom");
+    expect(normalizeUnitType("Estudio")).toBe("Studio");
+    expect(normalizeUnitType("1 Bedroom")).toBe("1 Bedroom");
+    expect(normalizeUnitType("No estoy seguro todavía")).toBeNull();
+    expect(normalizeUnitType("Not sure yet")).toBeNull();
+  });
+
+  it("drops a move-in value that is not one of the English options", () => {
+    expect(normalizeMoveIn("Q4 2026")).toBe("Q4 2026");
+    expect(normalizeMoveIn("Next 30 days")).toBe("Next 30 days");
+    expect(normalizeMoveIn("Cuarto trimestre de 2026")).toBeNull();
+    expect(normalizeMoveIn("Flexible")).toBeNull();
+  });
+
+  it("no longer puts Spanish into the English subject (the Perrin case)", () => {
+    expect(micrositeInquirySubject("The Perrin", "Miami", "2 habitaciones")).toBe("The Perrin Miami \u2014 2 Bedroom Availability");
+    expect(micrositeInquiryEmail({ ...base, unitType: "2 habitaciones", moveIn: "Cuarto trimestre de 2026" }).text).toContain(
+      "looking for a 2-bedroom apartment.\n"
+    );
+  });
+});
+
+describe("firstNameOf", () => {
+  it("greets by first name, recapitalising only all-lowercase names", () => {
+    expect(firstNameOf("jillian hughson")).toBe("Jillian");
+    expect(firstNameOf("DeShawn Smith")).toBe("DeShawn");
+    expect(firstNameOf("ROBERT CABRERA")).toBe("Robert");
+    expect(firstNameOf("TJ Peterson")).toBe("TJ");
+    expect(firstNameOf("Noa & Kay Scholer")).toBe("Noa & Kay");
+    expect(firstNameOf("Barbie")).toBe("Barbie");
+    expect(firstNameOf("")).toBeNull();
+    expect(firstNameOf("someone@gmail.com")).toBeNull();
+  });
+});
+
+describe("micrositeFollowUpEmail", () => {
+  it("is the owner's note: inquiry, move-in date, tour, phone number, signed Stacy", () => {
+    const { text, html } = micrositeFollowUpEmail({ name: "jillian hughson", buildingName: "Downtown 6", city: "Miami", unitType: "2 Bedroom" });
+    expect(text).toBe(
+      "Hi Jillian,\n\n" +
+        "We received your inquiry about a 2-bedroom at Downtown 6 Miami. When is your ideal move-in date?\n\n" +
+        "I can send you the available options, and once a unit is ready I can schedule an in-person tour for you.\n\n" +
+        "What\u2019s your phone number? I can text you.\n\n" +
+        "Best,\nStacy\n"
+    );
+    expect(html).toContain("background:#ffffff");
+    expect(html).not.toMatch(/<img|<table|unsubscribe/i);
+  });
+
+  it("reads naturally without a unit type or a usable name", () => {
+    const studio = micrositeFollowUpEmail({ name: "Ana", buildingName: "The Perrin", city: "Miami", unitType: "Studio" }).text;
+    expect(studio).toContain("about a studio at The Perrin Miami.");
+    const unsure = micrositeFollowUpEmail({ name: "", buildingName: "Namdar Towers", city: "Miami", unitType: "Not sure yet" }).text;
+    expect(unsure.startsWith("Hi there,\n\nWe received your inquiry about Namdar Towers Miami.")).toBe(true);
+  });
+
+  it("escapes the lead's name in the html", () => {
+    const { html } = micrositeFollowUpEmail({ name: "<b>x</b>", buildingName: "Downtown 6", city: "Miami" });
+    expect(html).not.toContain("<b>x</b>");
   });
 });

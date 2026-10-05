@@ -21,8 +21,9 @@ const storeInboundEmail = vi.fn();
 const updateDeliveryStatus = vi.fn();
 const updateAiFields = vi.fn();
 const senderForLead = vi.fn();
+const captureLeadPhone = vi.fn();
 vi.mock("@/lib/email/admin-inbox", () => ({
-  getAdminInboxService: () => ({ storeInboundEmail, updateDeliveryStatus, updateAiFields, senderForLead }),
+  getAdminInboxService: () => ({ storeInboundEmail, updateDeliveryStatus, updateAiFields, senderForLead, captureLeadPhone }),
 }));
 
 const sendInboxAlert = vi.fn();
@@ -66,6 +67,8 @@ describe("POST /api/webhooks/resend", () => {
     senderForLead.mockResolvedValue({ from: "Staycio <hello@staycio.com>", email: "hello@staycio.com", name: "Staycio" });
     sendInboxAlert.mockReset();
     sendInboxAlert.mockResolvedValue({ sent: true });
+    captureLeadPhone.mockReset();
+    captureLeadPhone.mockImplementation(async (_leadId: string, phone: string | null) => phone);
     updateDeliveryStatus.mockReset();
     classify.mockReset();
     sendAutoReply.mockReset();
@@ -133,11 +136,42 @@ describe("POST /api/webhooks/resend", () => {
       })
     );
     // The owner is alerted for every stored message, AI or not.
-    expect(sendInboxAlert).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "e3", from: "jane@example.com", fromName: "Jane Doe", text: "Thanks!", autoReplied: false, building: null })
+    await vi.waitFor(() =>
+      expect(sendInboxAlert).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "e3", from: "jane@example.com", fromName: "Jane Doe", text: "Thanks!", autoReplied: false, building: null })
+      )
     );
     // No XAI_API_KEY → no classification attempted.
     expect(classify).not.toHaveBeenCalled();
+  });
+
+  it("saves a phone number a lead sends in reply, and tells the owner", async () => {
+    receivingGet.mockResolvedValue({
+      data: {
+        id: "r9",
+        from: "jillian@example.com",
+        to: [`replies+${T}@inbound.staycio.com`],
+        cc: [],
+        received_for: [`replies+${T}@inbound.staycio.com`],
+        reply_to: null,
+        subject: "Re: Downtown 6 Miami — 2 Bedroom Availability",
+        text: "Hi Stacy, move-in around January. My cell is (786) 555-0142.\n\nOn Mon, Oct 5, 2026 at 9:00 AM Downtown 6 <downtown6miami@staycio.com> wrote:\n> What's your phone number? I can text you.",
+        html: "",
+        message_id: "<m9@example.com>",
+        headers: { From: "Jillian <jillian@example.com>", "Message-ID": "<m9@example.com>" },
+        attachments: [],
+      },
+      error: null,
+    });
+    storeInboundEmail.mockResolvedValue({ id: "e9", is_spam: false, thread_id: T, headers: {}, lead_id: "lead-9" });
+
+    const res = await post({ type: "email.received", data: { email_id: "r9", from: "jillian@example.com", to: [`replies+${T}@inbound.staycio.com`] } });
+    expect(res.status).toBe(200);
+    expect(captureLeadPhone).toHaveBeenCalledWith("lead-9", "+17865550142");
+    // after() work is not awaited by the route; wait for it to finish.
+    await vi.waitFor(() =>
+      expect(sendInboxAlert).toHaveBeenCalledWith(expect.objectContaining({ id: "e9", phoneSaved: "+17865550142" }))
+    );
   });
 
   it("answers 502 when the body fetch fails so Resend retries", async () => {

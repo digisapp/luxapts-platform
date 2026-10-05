@@ -423,19 +423,69 @@ export function priceDropAlertEmail(data: {
 // whether it is leasing today or still under construction (owner's call,
 // 2026-10-02): the goal is a reply, not a status report.
 
+/**
+ * The form's unit choice in its canonical English form, or null when the
+ * visitor was unsure or the value is unrecognised.
+ *
+ * The microsite <option>s carry no value attribute, so a visitor using the
+ * browser's page translation submits the translated label: "2 habitaciones"
+ * reached the database and then a subject line. Common translations are
+ * mapped back here.
+ */
+export function normalizeUnitType(raw: string | null | undefined): string | null {
+  const t = (raw ?? "").trim().toLowerCase();
+  if (!t) return null;
+  if (/^(studio|estudio|monoambiente|est[uú]dio|kitnet)\b/.test(t)) return "Studio";
+  const m = t.match(/^(\d+)\s*(bed|br\b|habitaci|dormitori|rec[aá]mara|cuarto|quarto|chambre|pi[eè]ce|zimmer|camer)/);
+  if (m) return `${m[1]} Bedroom`;
+  return null;
+}
+
+/**
+ * The form's move-in choice when it is one of the English options the forms
+ * offer, else null. A translated value ("Cuarto trimestre de 2026") is dropped
+ * rather than pasted into an English sentence.
+ */
+export function normalizeMoveIn(raw: string | null | undefined): string | null {
+  const t = (raw ?? "").trim();
+  if (/^(q[1-4]\s+\d{4}|(early|mid|late)\s+\d{4}|\d{4}|as soon as possible|next \d+ days)$/i.test(t)) return t;
+  if (/^(january|february|march|april|may|june|july|august|september|october|november|december)(\s+\d{4})?$/i.test(t)) return t;
+  return null;
+}
+
+/**
+ * "jillian hughson" -> "Jillian", "Noa & Kay Scholer" -> "Noa & Kay", and
+ * null for an empty name or an email address typed into the name field.
+ * Only an all-lowercase or ALL-CAPS name is recapitalised ("ROBERT" ->
+ * "Robert"); "DeShawn" and two-letter initials like "TJ" are left alone.
+ */
+export function firstNameOf(name: string | null | undefined): string | null {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0 || parts[0].includes("@")) return null;
+  const cap = (w: string) => {
+    if (w === w.toLowerCase()) return w.charAt(0).toUpperCase() + w.slice(1);
+    if (w === w.toUpperCase() && w.length > 2) return w.charAt(0) + w.slice(1).toLowerCase();
+    return w;
+  };
+  if ((parts[1] === "&" || parts[1]?.toLowerCase() === "and") && parts[2]) {
+    return `${cap(parts[0])} ${parts[1]} ${cap(parts[2])}`;
+  }
+  return cap(parts[0]);
+}
+
 /** "1 Bedroom" -> "a 1-bedroom apartment", "Studio" -> "a studio apartment", else "an apartment". */
 function unitPhrase(unitType: string | null | undefined): string {
-  const t = (unitType ?? "").trim();
-  if (/^studio$/i.test(t)) return "a studio apartment";
-  const m = t.match(/^(\d+)\s*bed/i);
+  const t = normalizeUnitType(unitType);
+  if (t === "Studio") return "a studio apartment";
+  const m = t?.match(/^(\d+) Bedroom$/);
   if (m) return `a ${m[1]}-bedroom apartment`;
   return "an apartment";
 }
 
 /** " in Q4 2026", " in the next 30 days", " as soon as possible", "" when flexible or unknown. */
 function timingPhrase(moveIn: string | null | undefined): string {
-  const t = (moveIn ?? "").trim();
-  if (!t || /^(flexible|not sure)/i.test(t)) return "";
+  const t = normalizeMoveIn(moveIn) ?? "";
+  if (!t) return "";
   if (/^as soon as/i.test(t)) return " as soon as possible";
   if (/^next\s/i.test(t)) return ` in the ${t.toLowerCase()}`;
   if (/^early|^late|^mid/i.test(t)) return ` in ${t.charAt(0).toLowerCase()}${t.slice(1)}`;
@@ -450,9 +500,51 @@ export function micrositeInquirySubject(
 ): string {
   const place =
     city && !buildingName.toLowerCase().includes(city.toLowerCase()) ? `${buildingName} ${city}` : buildingName;
-  const t = (unitType ?? "").trim();
-  const what = t && !/^not sure/i.test(t) ? `${t} Availability` : "Availability";
+  const t = normalizeUnitType(unitType);
+  const what = t ? `${t} Availability` : "Availability";
   return `${place} \u2014 ${what}`;
+}
+
+/** "Downtown 6" + "Miami" -> "Downtown 6 Miami"; "Kenect Miami" stays as is. */
+function placeName(buildingName: string, city: string): string {
+  return buildingName.toLowerCase().includes(city.toLowerCase()) ? buildingName : `${buildingName} ${city}`;
+}
+
+function paragraphsToEmail(paragraphs: string[], subject: string): { html: string; text: string; bodyHtml: string } {
+  const text = paragraphs.join("\n\n") + "\n";
+  const bodyHtml = paragraphs.map((p) => `<p style="margin:0 0 18px 0;">${escHtml(p).replace(/\n/g, "<br>")}</p>`).join("\n");
+  return { html: buildEmailShell(bodyHtml, null, subject), text, bodyHtml };
+}
+
+/**
+ * Follow-up to a microsite lead who left an email but no phone number (the
+ * forms only started asking for one in September). Same plain note from
+ * Stacy, asking the two things the team needs to work the lead: the move-in
+ * date and a number to text. Owner's wording, 2026-10-05.
+ */
+export function micrositeFollowUpEmail(data: {
+  name: string | null;
+  buildingName: string;
+  city: string;
+  unitType?: string | null;
+}): { html: string; text: string; bodyHtml: string } {
+  const firstName = firstNameOf(data.name);
+  const unit = normalizeUnitType(data.unitType);
+  const about =
+    unit === "Studio"
+      ? `a studio at ${placeName(data.buildingName, data.city)}`
+      : unit
+        ? `a ${unit.replace(" Bedroom", "-bedroom")} at ${placeName(data.buildingName, data.city)}`
+        : placeName(data.buildingName, data.city);
+
+  const paragraphs = [
+    firstName ? `Hi ${firstName},` : "Hi there,",
+    `We received your inquiry about ${about}. When is your ideal move-in date?`,
+    `I can send you the available options, and once a unit is ready I can schedule an in-person tour for you.`,
+    `What\u2019s your phone number? I can text you.`,
+    `Best,\nStacy`,
+  ];
+  return paragraphsToEmail(paragraphs, micrositeInquirySubject(data.buildingName, data.city, data.unitType));
 }
 
 export function micrositeInquiryEmail(data: {
@@ -462,10 +554,8 @@ export function micrositeInquiryEmail(data: {
   moveIn?: string | null;
   unitType?: string | null;
 }): { html: string; text: string; bodyHtml: string } {
-  const firstName = data.name.trim().split(/\s+/)[0] || data.name;
-  const place = data.buildingName.toLowerCase().includes(data.city.toLowerCase())
-    ? data.buildingName
-    : `${data.buildingName} ${data.city}`;
+  const firstName = firstNameOf(data.name) ?? "there";
+  const place = placeName(data.buildingName, data.city);
   const unit = unitPhrase(data.unitType);
   const unitShort = unit.replace(/^an? /, "").replace(/ apartment$/, ""); // "1-bedroom", "studio", "apartment"
   const options = unitShort === "apartment" ? "available options" : `available ${unitShort} options`;
@@ -479,9 +569,5 @@ export function micrositeInquiryEmail(data: {
     `Best,\nStacy`,
   ];
 
-  const text = paragraphs.join("\n\n") + "\n";
-  const bodyHtml = paragraphs.map((p) => `<p style="margin:0 0 18px 0;">${escHtml(p).replace(/\n/g, "<br>")}</p>`).join("\n");
-  const html = buildEmailShell(bodyHtml, null, micrositeInquirySubject(data.buildingName, data.city, data.unitType));
-
-  return { html, text, bodyHtml };
+  return paragraphsToEmail(paragraphs, micrositeInquirySubject(data.buildingName, data.city, data.unitType));
 }

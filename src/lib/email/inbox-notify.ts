@@ -2,6 +2,7 @@ import { getResendClient } from "@/lib/resend/client";
 import { escapeHtml } from "@/lib/utils";
 import { buildEmailShell, htmlToText } from "./branded";
 import { getAdminFromAddress, isOurInboundAddress, parseEmailAddress } from "./inbound-address";
+import { formatPhone } from "./phone-capture";
 import { getLeadNotificationRecipients } from "./recipients";
 import { getAppUrl } from "./unsubscribe";
 
@@ -92,6 +93,8 @@ export interface InboxAlertInput {
   autoReplied?: boolean;
   /** The building the lead came from ("Downtown 6"), when known. */
   building?: string | null;
+  /** A phone number found in the message and saved to the lead (E.164). */
+  phoneSaved?: string | null;
 }
 
 export function buildInboxAlert(input: InboxAlertInput): { subject: string; html: string; text: string; link: string } {
@@ -103,11 +106,14 @@ export function buildInboxAlert(input: InboxAlertInput): { subject: string; html
     ? "Stacy already replied. No action needed unless you want to add something."
     : "Waiting for your reply.";
 
+  const phoneLine = input.phoneSaved ? `Phone number saved to the lead: ${formatPhone(input.phoneSaved)}` : null;
+
   // The message comes first: the lock screen previews the first line.
   const lines = [
     snippet,
     `${who} <${input.from}>${input.building ? ` · ${input.building}` : ""}, to ${input.to}`,
     ...(input.summary ? [`Stacy's read: ${input.summary}`] : []),
+    ...(phoneLine ? [phoneLine] : []),
     status,
     `Open it: ${link}`,
     `Answer from the inbox. Replying to this alert does not reach ${firstName}.`,
@@ -122,6 +128,9 @@ export function buildInboxAlert(input: InboxAlertInput): { subject: string; html
       true
     ),
     ...(input.summary ? [p(`Stacy&rsquo;s read: ${escapeHtml(input.summary)}`, true)] : []),
+    ...(phoneLine && input.phoneSaved
+      ? [p(`<strong>${escapeHtml(phoneLine)}</strong> &middot; <a href="sms:${escapeHtml(input.phoneSaved)}" style="color:#1a56db;">Text</a> &middot; <a href="tel:${escapeHtml(input.phoneSaved)}" style="color:#1a56db;">Call</a>`)]
+      : []),
     p(`<strong>${escapeHtml(status)}</strong>`),
     p(`<a href="${escapeHtml(link)}" style="color:#1a56db;">Open this conversation in the inbox</a>`),
     p(`Answer from the inbox. Replying to this alert does not reach ${escapeHtml(firstName)}.`, true),

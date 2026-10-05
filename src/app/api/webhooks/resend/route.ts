@@ -4,6 +4,7 @@ import { getAdminInboxService } from "@/lib/email/admin-inbox";
 import { getResendClient } from "@/lib/resend/client";
 import { classifyAndDraftReply, sendAutoReply } from "@/lib/ai-email";
 import { sendInboxAlert } from "@/lib/email/inbox-notify";
+import { extractPhone, stripQuotedHistory } from "@/lib/email/phone-capture";
 import {
   findOurRecipient,
   getAdminFromAddress,
@@ -210,6 +211,19 @@ export async function POST(request: Request) {
           // Tell the owner. Runs last so the alert can say what Stacy made of
           // the message and whether she already answered it; it still goes
           // out when the AI is off or failed.
+          // A lead who answers the "what's your phone number?" follow-up gets
+          // that number on their lead, so the team can text or call. Never
+          // overwrites a number from the form.
+          let phoneSaved: string | null = null;
+          if (stored.lead_id) {
+            try {
+              phoneSaved = await inbox.captureLeadPhone(stored.lead_id, extractPhone(stripQuotedHistory(text, html)));
+              if (phoneSaved) console.log(`[Inbox] Saved phone from email reply to lead ${stored.lead_id}`);
+            } catch (err) {
+              console.error("[Inbox] Phone capture failed:", err);
+            }
+          }
+
           try {
             const sender = await inbox.senderForLead(stored.lead_id).catch(() => null);
             const alert = await sendInboxAlert({
@@ -224,6 +238,7 @@ export async function POST(request: Request) {
               autoReplied,
               // Only a microsite lead has a building; everyone else is "Staycio".
               building: sender && sender.email !== getAdminFromAddress() ? sender.name : null,
+              phoneSaved,
               headers,
             });
             if (!alert.sent) console.log(`[Inbox Alert] Not sent for ${stored.id}: ${alert.reason}`);
