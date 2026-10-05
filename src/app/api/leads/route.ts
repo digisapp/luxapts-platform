@@ -14,6 +14,7 @@ import {
 } from "@/lib/email/recipients";
 import { rateLimit, getClientIp, RATE_LIMITS, isInternalRequest } from "@/lib/rate-limit";
 import type { CreateLeadResponse } from "@/types/database";
+import { getLeadStats } from "@/lib/leads/stats";
 
 function isSameOrigin(req: Request): boolean {
   try {
@@ -316,39 +317,19 @@ export async function GET(req: Request) {
       }
     }
 
-    // Status counts come from head counts, one per status. Selecting every
-    // lead's status and tallying in JS was capped at 1000 rows by PostgREST,
-    // so the dashboard totals froze once the table grew past that.
-    const STATUSES = ["new", "contacted", "touring", "applied", "leased", "lost"] as const;
-
-    const [leadsResult, ...countResults] = await Promise.all([
-      query,
-      ...STATUSES.map((s) =>
-        supabase
-          .from("leads")
-          .select("id", { count: "exact", head: true })
-          .eq("status", s)
-      ),
-    ]);
+    const [leadsResult, stats] = await Promise.all([query, getLeadStats(supabase)]);
 
     if (leadsResult.error) {
       console.error("List leads query error:", leadsResult.error);
       return apiError("Internal server error", 500);
     }
 
-    const status_counts: Record<string, number> = {};
-    STATUSES.forEach((s, i) => {
-      const res = countResults[i];
-      if (res.error) console.error(`Lead status count error (${s}):`, res.error.message);
-      status_counts[s] = res.count ?? 0;
-    });
-
     return NextResponse.json({
       leads: leadsResult.data,
       total: leadsResult.count,
       limit,
       offset,
-      status_counts,
+      ...stats,
     });
   } catch (error) {
     console.error("List leads error:", error);
