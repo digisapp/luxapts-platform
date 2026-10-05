@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Mail, Trash2, X } from "lucide-react";
+import { ChevronDown, CircleDot, Mail, Trash2, UserPlus, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { PopoverMenu } from "./PopoverMenu";
+import { STATUS_META, STATUS_ORDER } from "./lead-format";
 
 interface Agent {
   user_id: string;
@@ -11,7 +12,6 @@ interface Agent {
 
 interface BulkActionBarProps {
   selectedCount: number;
-  selectedIds: string[];
   agents: Agent[];
   onApply: (action: "status" | "assign", value: string) => void;
   onEmail: () => void;
@@ -19,6 +19,13 @@ interface BulkActionBarProps {
   onClear: () => void;
 }
 
+const action =
+  "inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-foreground/90 transition-colors hover:bg-white/[0.08] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 sm:h-9";
+
+/**
+ * Floating toolbar for the ticked leads. Status and agent are menus that
+ * apply on pick, instead of a select plus a separate "Update" button each.
+ */
 export function BulkActionBar({
   selectedCount,
   agents,
@@ -27,79 +34,89 @@ export function BulkActionBar({
   onDelete,
   onClear,
 }: BulkActionBarProps) {
-  const [bulkStatus, setBulkStatus] = useState("contacted");
-  const [bulkAgent, setBulkAgent] = useState(agents[0]?.user_id || "");
-
   if (selectedCount === 0) return null;
 
   return (
-    // lg:left-64 keeps the bar clear of the PortalShell sidebar on desktop.
-    <div
-      role="region"
-      aria-label="Bulk actions"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg backdrop-blur sm:px-6 lg:left-64"
-    >
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="text-sm font-medium">{selectedCount} selected</span>
+    // lg:left-64 keeps the bar centred on the content, clear of the sidebar.
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-[max(1rem,env(safe-area-inset-bottom))] lg:left-64">
+      <div
+        role="region"
+        aria-label="Bulk actions"
+        className="pointer-events-auto flex max-w-full animate-rise-in flex-wrap items-center gap-1 rounded-2xl border border-white/[0.12] bg-zinc-900/90 p-1.5 shadow-2xl shadow-black/60 backdrop-blur-xl"
+      >
+        <span className="flex h-10 items-center gap-2 pl-3 pr-2 text-sm font-semibold tabular-nums sm:h-9">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-400 px-1.5 text-[11px] font-bold text-black">
+            {selectedCount}
+          </span>
+          selected
+        </span>
 
-        <Button size="sm" onClick={onEmail}>
-          <Mail className="mr-1 h-3 w-3" />
-          Email {selectedCount}
-        </Button>
+        <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" aria-hidden="true" />
 
-        <div className="flex items-center gap-2">
-          <select
-            value={bulkStatus}
-            onChange={(e) => setBulkStatus(e.target.value)}
-            aria-label="New status for selected leads"
-            className="h-10 rounded-md border px-2 text-base md:text-sm md:pointer-fine:h-8 bg-background"
-          >
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="touring">Touring</option>
-            <option value="applied">Applied</option>
-            <option value="leased">Leased</option>
-            <option value="lost">Lost</option>
-          </select>
-          <Button size="sm" onClick={() => onApply("status", bulkStatus)}>
-            Update Status
-          </Button>
-        </div>
+        <button type="button" onClick={onEmail} className={action}>
+          <Mail className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          Email
+        </button>
+
+        <PopoverMenu
+          label="Set status for selected leads"
+          triggerClassName={action}
+          triggerContent={
+            <>
+              <CircleDot className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              Status
+              <ChevronDown className="h-3.5 w-3.5 opacity-50" aria-hidden="true" />
+            </>
+          }
+          items={STATUS_ORDER.map((key) => ({
+            key,
+            text: STATUS_META[key].label,
+            label: STATUS_META[key].label,
+            icon: <span className={cn("h-2 w-2 shrink-0 rounded-full", STATUS_META[key].dot)} aria-hidden="true" />,
+          }))}
+          onSelect={(key) => onApply("status", key)}
+        />
 
         {agents.length > 0 && (
-          <div className="flex items-center gap-2">
-            <select
-              value={bulkAgent}
-              onChange={(e) => setBulkAgent(e.target.value)}
-              aria-label="Agent to assign to selected leads"
-              className="h-10 rounded-md border px-2 text-base md:text-sm md:pointer-fine:h-8 bg-background"
-            >
-              {agents.map((a) => (
-                <option key={a.user_id} value={a.user_id}>
-                  {a.full_name || a.user_id}
-                </option>
-              ))}
-            </select>
-            <Button size="sm" onClick={() => onApply("assign", bulkAgent)}>
-              Assign Agent
-            </Button>
-          </div>
+          <PopoverMenu
+            label="Assign selected leads to an agent"
+            triggerClassName={action}
+            triggerContent={
+              <>
+                <UserPlus className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                Assign
+                <ChevronDown className="h-3.5 w-3.5 opacity-50" aria-hidden="true" />
+              </>
+            }
+            items={agents.map((a) => ({
+              key: a.user_id,
+              text: a.full_name || a.user_id,
+              label: a.full_name || a.user_id,
+            }))}
+            onSelect={(id) => onApply("assign", id)}
+          />
         )}
 
-        <Button
-          size="sm"
-          variant="outline"
+        <button
+          type="button"
           onClick={onDelete}
-          className="border-red-500/40 text-red-300 hover:border-red-500/60 hover:bg-red-500/10"
+          className={cn(action, "text-red-300 hover:bg-red-500/15 hover:text-red-200")}
         >
-          <Trash2 className="mr-1 h-3 w-3" />
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
           Delete
-        </Button>
+        </button>
 
-        <Button size="sm" variant="ghost" onClick={onClear}>
-          <X className="mr-1 h-3 w-3" />
-          Clear
-        </Button>
+        <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" aria-hidden="true" />
+
+        <button
+          type="button"
+          onClick={onClear}
+          className={cn(action, "w-10 justify-center px-0 text-muted-foreground sm:w-9")}
+          aria-label="Clear selection"
+          title="Clear selection"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
