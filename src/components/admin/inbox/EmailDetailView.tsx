@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowLeft, Reply, Star, Trash2, ShieldAlert, ShieldCheck, MailOpen, Bot, Send, PenLine, Paperclip, ExternalLink, Loader2, Zap } from "lucide-react";
+import { ArrowLeft, Reply, Star, Trash2, ShieldAlert, ShieldCheck, MailOpen, Bot, Send, PenLine, Paperclip, Loader2, Zap, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SandboxedEmail } from "./SandboxedEmail";
 import { ToneBadge } from "./ToneBadge";
-import type { EmailDetail } from "./types";
+import { LeadCard } from "./LeadCard";
+import type { LeadStatus } from "@/types/database";
+import type { EmailDetail, LeadContext } from "./types";
 import { AI_CATEGORY_LABELS, STATUS_LABELS, formatBytes, formatFullDate } from "./types";
 
 interface EmailDetailViewProps {
@@ -24,6 +25,15 @@ interface EmailDetailViewProps {
   onDelete: (_id: string) => void;
   onUseAiDraft: (_id: string) => void;
   onEditAiDraft: (_email: EmailDetail) => void;
+  onRegenerateDraft: (_id: string) => void;
+  regenerating: boolean;
+  lead: LeadContext | null;
+  onSetLeadStatus: (_status: LeadStatus) => void;
+}
+
+/** "replies+<thread id>@inbound.staycio.com" -> "replies@inbound.staycio.com". */
+function shortAddress(address: string): string {
+  return address.replace(/\+[0-9a-f-]{36}@/i, "@");
 }
 
 function Message({ msg, isLast }: { msg: EmailDetail; isLast: boolean }) {
@@ -53,17 +63,9 @@ function Message({ msg, isLast }: { msg: EmailDetail; isLast: boolean }) {
                 </ToneBadge>
               )}
               {msg.isTest && <ToneBadge>Test</ToneBadge>}
-              {!outbound && msg.leadId && (
-                <Link
-                  href={`/admin/leads/${msg.leadId}`}
-                  className="inline-flex items-center gap-0.5 rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-black transition-colors hover:bg-white/80"
-                >
-                  <ExternalLink className="h-3 w-3" /> Open lead
-                </Link>
-              )}
             </div>
             <p className="truncate text-xs text-muted-foreground">
-              To: {msg.toName ? `${msg.toName} <${msg.toAddress}>` : msg.toAddress}
+              To: {msg.toName ? `${msg.toName} <${shortAddress(msg.toAddress)}>` : shortAddress(msg.toAddress)}
               {msg.cc.length > 0 && ` · Cc: ${msg.cc.join(", ")}`}
             </p>
           </div>
@@ -87,20 +89,33 @@ function Message({ msg, isLast }: { msg: EmailDetail; isLast: boolean }) {
 
       {msg.attachments.length > 0 && (
         <ul className="mt-3 flex flex-wrap gap-2">
-          {msg.attachments.map((a) => (
-            <li key={a.id}>
-              <a
-                href={`/api/admin/inbox/${msg.id}/attachments/${a.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs text-foreground/90 transition-colors hover:bg-white/[0.08]"
-              >
+          {msg.attachments.map((a) => {
+            const inner = (
+              <>
                 <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="max-w-[220px] truncate">{a.filename}</span>
                 {a.size ? <span className="text-muted-foreground">{formatBytes(a.size)}</span> : null}
-              </a>
-            </li>
-          ))}
+              </>
+            );
+            const chip = "inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs text-foreground/90";
+            return (
+              <li key={a.id}>
+                {a.sent ? (
+                  // A file we sent has nothing to download back from Resend.
+                  <span className={chip} title="Sent with this email">{inner}</span>
+                ) : (
+                  <a
+                    href={`/api/admin/inbox/${msg.id}/attachments/${a.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(chip, "transition-colors hover:bg-white/[0.08]")}
+                  >
+                    {inner}
+                  </a>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </article>
@@ -110,6 +125,7 @@ function Message({ msg, isLast }: { msg: EmailDetail; isLast: boolean }) {
 export function EmailDetailView({
   email, thread, loading, error, sending,
   onBack, onRetry, onReply, onToggleStar, onMarkUnread, onSetSpam, onDelete, onUseAiDraft, onEditAiDraft,
+  onRegenerateDraft, regenerating, lead, onSetLeadStatus,
 }: EmailDetailViewProps) {
   if (loading && !email) {
     return (
@@ -141,7 +157,9 @@ export function EmailDetailView({
   const iconBtn = "rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground";
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
+    // min-w-0: a flex item otherwise grows to its widest child (a long
+    // subject, an email's layout table) and the pane scrolls sideways.
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col">
       {/* Toolbar */}
       <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2.5 sm:px-4">
         <button onClick={onBack} className={cn(iconBtn, "lg:hidden")} aria-label="Back to list">
@@ -188,6 +206,8 @@ export function EmailDetailView({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
+        {lead && <LeadCard lead={lead} onSetStatus={onSetLeadStatus} />}
+
         {/* AI summary + draft */}
         {inbound && (email.aiSummary || canUseDraft) && (
           <div className="space-y-3 border-b border-white/[0.06] bg-white/[0.02] px-4 py-3 sm:px-5">
@@ -206,10 +226,21 @@ export function EmailDetailView({
                     <Bot className="h-3.5 w-3.5" /> Suggested reply
                   </span>
                   <div className="flex items-center gap-1.5">
-                    <Button size="sm" variant="outline" onClick={() => onEditAiDraft(email)} disabled={sending}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onRegenerateDraft(email.id)}
+                      disabled={sending || regenerating}
+                      aria-label="Write a new draft"
+                      title="Write a new draft"
+                    >
+                      <RefreshCw className={cn("h-3.5 w-3.5", regenerating && "animate-spin")} />
+                      <span className="hidden sm:inline">New draft</span>
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => onEditAiDraft(email)} disabled={sending || regenerating}>
                       <PenLine className="h-3.5 w-3.5" /> Edit
                     </Button>
-                    <Button size="sm" onClick={() => onUseAiDraft(email.id)} disabled={sending}>
+                    <Button size="sm" onClick={() => onUseAiDraft(email.id)} disabled={sending || regenerating}>
                       <Send className="h-3.5 w-3.5" /> {sending ? "Sending…" : "Send as is"}
                     </Button>
                   </div>

@@ -3,11 +3,11 @@ import { Webhook } from "svix";
 import { getAdminInboxService } from "@/lib/email/admin-inbox";
 import { getResendClient } from "@/lib/resend/client";
 import { classifyAndDraftReply, sendAutoReply } from "@/lib/ai-email";
+import { draftContextFor } from "@/lib/leads/draft-context";
 import { sendInboxAlert } from "@/lib/email/inbox-notify";
 import { extractPhone, stripQuotedHistory } from "@/lib/email/phone-capture";
 import {
   findOurRecipient,
-  getAdminFromAddress,
   parseEmailAddress,
   parseThreadIdFromAddresses,
   senderDisplayName,
@@ -171,19 +171,37 @@ export async function POST(request: Request) {
         attachments,
       });
 
-      // AI classification, the (optional) auto-reply and the owner's phone
-      // alert run after the 200 is sent. after() keeps the serverless function
-      // alive until they finish — a bare floating promise gets frozen once
-      // the response returns.
+      // Phone capture, the AI draft, the (optional) auto-reply and the
+      // (optional) email alert run after the 200 is sent. after() keeps the
+      // serverless function alive until they finish — a bare floating
+      // promise gets frozen once the response returns.
       if (stored && stored.is_spam !== true) {
         const text = full?.text || "";
         const html = full?.html || "";
         after(async () => {
+          // A lead who answers the "what's your phone number?" follow-up gets
+          // that number on their lead, so the team can text or call. Never
+          // overwrites a number from the form. Runs first so the draft knows
+          // the number is on file.
+          let phoneSaved: string | null = null;
+          if (stored.lead_id) {
+            try {
+              phoneSaved = await inbox.captureLeadPhone(stored.lead_id, extractPhone(stripQuotedHistory(text, html)));
+              if (phoneSaved) console.log(`[Inbox] Saved phone from email reply to lead ${stored.lead_id}`);
+            } catch (err) {
+              console.error("[Inbox] Phone capture failed:", err);
+            }
+          }
+
+          const lead = await inbox.getLeadContext(stored.lead_id).catch(() => null);
+
           let summary: string | null = null;
           let autoReplied = false;
           if (process.env.XAI_API_KEY) {
             try {
-              const result = await classifyAndDraftReply({ from, fromName, subject, text, html });
+              // The lead and their building's published facts, so the draft
+              // never promises pricing a building hasn't released.
+              const result = await classifyAndDraftReply({ from, fromName, subject, text, html }, draftContextFor(lead));
               summary = result.summary || null;
               await inbox.updateAiFields(stored.id, {
                 aiCategory: result.category,
@@ -208,24 +226,9 @@ export async function POST(request: Request) {
             }
           }
 
-          // Tell the owner. Runs last so the alert can say what Stacy made of
-          // the message and whether she already answered it; it still goes
-          // out when the AI is off or failed.
-          // A lead who answers the "what's your phone number?" follow-up gets
-          // that number on their lead, so the team can text or call. Never
-          // overwrites a number from the form.
-          let phoneSaved: string | null = null;
-          if (stored.lead_id) {
-            try {
-              phoneSaved = await inbox.captureLeadPhone(stored.lead_id, extractPhone(stripQuotedHistory(text, html)));
-              if (phoneSaved) console.log(`[Inbox] Saved phone from email reply to lead ${stored.lead_id}`);
-            } catch (err) {
-              console.error("[Inbox] Phone capture failed:", err);
-            }
-          }
-
+          // Email alert to the owner's own mailbox. Off unless
+          // INBOX_NOTIFY_EMAIL is set (the owner works from /admin/email).
           try {
-            const sender = await inbox.senderForLead(stored.lead_id).catch(() => null);
             const alert = await sendInboxAlert({
               id: stored.id,
               from,
@@ -236,8 +239,7 @@ export async function POST(request: Request) {
               html,
               summary,
               autoReplied,
-              // Only a microsite lead has a building; everyone else is "Staycio".
-              building: sender && sender.email !== getAdminFromAddress() ? sender.name : null,
+              building: lead?.building ?? null,
               phoneSaved,
               headers,
             });

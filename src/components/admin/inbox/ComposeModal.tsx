@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp, Send, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, ChevronUp, Paperclip, Send, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { ComposeState } from "@/hooks/useAdminInbox";
+import { COMPOSE_MAX_BYTES, type ComposeState } from "@/hooks/useAdminInbox";
+import { formatBytes } from "./types";
 
 interface ComposeModalProps {
   compose: ComposeState;
@@ -17,16 +18,41 @@ interface ComposeModalProps {
   onSend: () => void;
   onClose: () => void;
   onDiscard: () => void;
+  onAddFiles: (_files: FileList | File[]) => void;
+  onRemoveFile: (_index: number) => void;
 }
 
-export function ComposeModal({ compose, from, sending, onField, onSend, onClose, onDiscard }: ComposeModalProps) {
+const ACCEPT = ".pdf,.png,.jpg,.jpeg,.gif,.webp,.heic,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt";
+
+export function ComposeModal({ compose, from, sending, onField, onSend, onClose, onDiscard, onAddFiles, onRemoveFile }: ComposeModalProps) {
   const [showQuoted, setShowQuoted] = useState(false);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const isReply = !!compose.replyToEmailId;
   const canSend = !!(compose.to.trim() && compose.subject.trim() && compose.bodyText.trim()) && !sending;
+  const files = compose.attachments ?? [];
+  const totalBytes = files.reduce((n, f) => n + f.size, 0);
+
+  // A reply opens greeted and signed ("Hi Chris, … Best, Stacy"): put the
+  // caret on the empty line between, ready to type.
+  useEffect(() => {
+    if (!compose.open || !isReply) return;
+    const t = setTimeout(() => {
+      const el = bodyRef.current;
+      if (!el) return;
+      const gap = el.value.indexOf("\n\n");
+      const at = gap >= 0 && /\n\nBest,\nStacy$/.test(el.value) ? gap + 2 : el.value.length;
+      el.focus();
+      el.setSelectionRange(at, at);
+    }, 0);
+    return () => clearTimeout(t);
+    // Only when the window opens for a new reply, not on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compose.open, compose.replyToEmailId]);
 
   return (
     <Dialog open={compose.open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-[640px]">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-[640px]">
         <DialogHeader>
           <DialogTitle>{isReply ? "Reply" : "New email"}</DialogTitle>
           <DialogDescription>
@@ -64,12 +90,13 @@ export function ComposeModal({ compose, from, sending, onField, onSend, onClose,
             <Label htmlFor="compose-body">Message</Label>
             <Textarea
               id="compose-body"
+              ref={bodyRef}
               value={compose.bodyText}
               onChange={(e) => onField("bodyText", e.target.value)}
               placeholder="Write your message…"
               rows={10}
-              autoFocus={isReply}
-              className="min-h-[160px] resize-y leading-relaxed"
+              // 16px on phones: iOS Safari zooms into any field smaller than that.
+              className="min-h-[160px] resize-y text-base leading-relaxed sm:text-[15px]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSend) {
                   e.preventDefault();
@@ -77,7 +104,45 @@ export function ComposeModal({ compose, from, sending, onField, onSend, onClose,
                 }
               }}
             />
-            <p className="text-xs text-muted-foreground">⌘/Ctrl+Enter sends. Line breaks are kept; the Staycio template is wrapped around it.</p>
+            <p className="text-xs text-muted-foreground">Sent as plain paragraphs, line breaks kept. ⌘/Ctrl+Enter sends.</p>
+          </div>
+
+          <div className="space-y-2">
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              accept={ACCEPT}
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) onAddFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button type="button" size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+                <Paperclip className="h-3.5 w-3.5" /> Attach files
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                {files.length > 0
+                  ? `${formatBytes(totalBytes)} of ${formatBytes(COMPOSE_MAX_BYTES)}`
+                  : "Floor plans, photos, PDFs. Up to 3 MB in total."}
+              </span>
+            </div>
+            {files.length > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {files.map((f, i) => (
+                  <li key={`${f.filename}-${i}`} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] py-1 pl-2.5 pr-1 text-xs text-foreground/90">
+                    <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="max-w-[200px] truncate">{f.filename}</span>
+                    <span className="text-muted-foreground">{formatBytes(f.size)}</span>
+                    <button type="button" onClick={() => onRemoveFile(i)} className="rounded p-1 text-muted-foreground hover:text-foreground" aria-label={`Remove ${f.filename}`}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {compose.quotedText && (

@@ -9,6 +9,7 @@ import type {
   InboxFolder,
 } from "@/lib/email/admin-inbox";
 import type { InboxStatus } from "@/lib/email/inbox-status";
+import type { LeadContext } from "@/lib/leads/lead-context";
 
 export type {
   BulkAction,
@@ -20,6 +21,7 @@ export type {
   FolderCounts,
   InboxFolder,
   InboxStatus,
+  LeadContext,
 };
 
 export type BadgeTone = "neutral" | "accent" | "amber" | "green" | "red" | "dark";

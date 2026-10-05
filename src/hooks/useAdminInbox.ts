@@ -2,8 +2,38 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "@/contexts/ToastContext";
-import type { BulkAction, EmailDetail, EmailListItem, FolderCounts, InboxFolder, InboxStatus } from "@/components/admin/inbox/types";
+import type { BulkAction, EmailDetail, EmailListItem, FolderCounts, InboxFolder, InboxStatus, LeadContext } from "@/components/admin/inbox/types";
 import { quoteText, replySubject } from "@/components/admin/inbox/types";
+import { firstNameOf } from "@/lib/email/names";
+import type { LeadStatus } from "@/types/database";
+
+/** A file picked in the compose window, read to base64 in the browser. */
+export interface ComposeAttachment {
+  filename: string;
+  contentType: string;
+  size: number;
+  /** Base64, no data: prefix. */
+  content: string;
+}
+
+/** Matches MAX_ATTACHMENT_BYTES / MAX_ATTACHMENTS on the server. */
+export const COMPOSE_MAX_BYTES = 3 * 1024 * 1024;
+export const COMPOSE_MAX_FILES = 5;
+
+function readAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]*,/, ""));
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
+/** A reply starts already greeted and signed, with the caret between. */
+export function replyStarter(name: string | null | undefined): string {
+  const first = firstNameOf(name);
+  return `${first ? `Hi ${first},` : "Hi,"}\n\n\n\nBest,\nStacy`;
+}
 
 export interface ComposeState {
   open: boolean;
@@ -12,6 +42,9 @@ export interface ComposeState {
   bodyText: string;
   replyToEmailId?: string;
   quotedText?: string;
+  /** Who this goes out as: the building for a microsite lead. */
+  from?: string;
+  attachments?: ComposeAttachment[];
 }
 
 const EMPTY_COMPOSE: ComposeState = { open: false, to: "", subject: "", bodyText: "" };
@@ -46,6 +79,8 @@ export function useAdminInbox() {
   const [thread, setThread] = useState<EmailDetail[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [lead, setLead] = useState<LeadContext | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
 
   // ── Compose ──
   const [compose, setCompose] = useState<ComposeState>(EMPTY_COMPOSE);
@@ -198,6 +233,7 @@ export function useAdminInbox() {
         const email: EmailDetail = data.email;
         setSelectedEmail(email);
         setThread(data.thread ?? [email]);
+        setLead(data.lead ?? null);
 
         if (email.direction === "inbound" && !email.isRead) {
           await patchFlags(id, { isRead: true }).catch(() => {});
@@ -234,6 +270,7 @@ export function useAdminInbox() {
   }, [selectEmail]);
 
   const closeDetail = useCallback(() => {
+    setLead(null);
     setSelectedId(null);
     setSelectedEmail(null);
     setThread([]);
@@ -374,13 +411,15 @@ export function useAdminInbox() {
   // ── Compose ──
   const openCompose = useCallback((replyTo?: EmailDetail | null) => {
     if (replyTo) {
+      const inbound = replyTo.direction === "inbound";
       setCompose({
         open: true,
-        to: replyTo.direction === "inbound" ? replyTo.fromAddress : replyTo.toAddress,
+        to: inbound ? replyTo.fromAddress : replyTo.toAddress,
         subject: replySubject(replyTo.subject),
-        bodyText: "",
+        bodyText: replyStarter(lead?.name ?? (inbound ? replyTo.fromName : replyTo.toName)),
         replyToEmailId: replyTo.id,
         quotedText: quoteText(replyTo),
+        from: lead?.sender,
       });
     } else {
       // Reopen a half-written new email rather than wiping it.
@@ -388,7 +427,7 @@ export function useAdminInbox() {
         !prev.replyToEmailId && (prev.to || prev.subject || prev.bodyText) ? { ...prev, open: true } : { ...EMPTY_COMPOSE, open: true }
       );
     }
-  }, []);
+  }, [lead]);
 
   const setComposeField = useCallback((field: "to" | "subject" | "bodyText", value: string) => {
     setCompose((prev) => ({ ...prev, [field]: value }));
@@ -397,6 +436,36 @@ export function useAdminInbox() {
   /** Hide the window but keep what was typed. */
   const closeCompose = useCallback(() => setCompose((prev) => ({ ...prev, open: false })), []);
   const discardCompose = useCallback(() => setCompose(EMPTY_COMPOSE), []);
+
+  const addAttachments = useCallback(
+    async (files: FileList | File[]) => {
+      const picked = Array.from(files);
+      if (picked.length === 0) return;
+      const current = compose.attachments ?? [];
+      if (current.length + picked.length > COMPOSE_MAX_FILES) {
+        showError(`Attach at most ${COMPOSE_MAX_FILES} files`);
+        return;
+      }
+      const total = current.reduce((n, a) => n + a.size, 0) + picked.reduce((n, f) => n + f.size, 0);
+      if (total > COMPOSE_MAX_BYTES) {
+        showError("Attachments can be 3 MB in total");
+        return;
+      }
+      try {
+        const read = await Promise.all(
+          picked.map(async (f) => ({ filename: f.name, contentType: f.type || "application/octet-stream", size: f.size, content: await readAsBase64(f) }))
+        );
+        setCompose((prev) => ({ ...prev, attachments: [...(prev.attachments ?? []), ...read] }));
+      } catch {
+        showError("Could not read that file");
+      }
+    },
+    [compose.attachments, showError]
+  );
+
+  const removeAttachment = useCallback((index: number) => {
+    setCompose((prev) => ({ ...prev, attachments: (prev.attachments ?? []).filter((_, i) => i !== index) }));
+  }, []);
 
   const handleSend = useCallback(async () => {
     const to = compose.to.trim();
@@ -409,7 +478,13 @@ export function useAdminInbox() {
       const res = await fetch("/api/admin/inbox", {
         method: "POST",
         headers: JSON_HEADERS,
-        body: JSON.stringify({ to, subject, bodyText, replyToEmailId: compose.replyToEmailId }),
+        body: JSON.stringify({
+          to,
+          subject,
+          bodyText,
+          replyToEmailId: compose.replyToEmailId,
+          attachments: (compose.attachments ?? []).map(({ filename, contentType, content }) => ({ filename, contentType, content })),
+        }),
       });
       if (!res.ok) throw new Error(await readError(res, "Failed to send"));
       const wasReply = compose.replyToEmailId;
@@ -456,8 +531,53 @@ export function useAdminInbox() {
       bodyText: email.aiDraftText,
       replyToEmailId: email.id,
       quotedText: quoteText(email),
+      from: lead?.sender,
     });
-  }, []);
+  }, [lead]);
+
+  /** A fresh draft written with the lead's and the building's current facts. */
+  const regenerateDraft = useCallback(
+    async (id: string) => {
+      setRegenerating(true);
+      try {
+        const res = await fetch(`/api/admin/inbox/${id}`, { method: "PATCH", headers: JSON_HEADERS, body: JSON.stringify({ regenerateDraft: true }) });
+        if (!res.ok) throw new Error(await readError(res, "Could not write a new draft"));
+        const data = await res.json();
+        const fresh: EmailDetail | null = data.email ?? null;
+        if (fresh) {
+          setSelectedEmail((prev) => (prev && prev.id === id ? fresh : prev));
+          setThread((prev) => prev.map((m) => (m.id === id ? fresh : m)));
+        }
+        showSuccess("New draft ready");
+      } catch (err) {
+        showError(err instanceof Error ? err.message : "Could not write a new draft");
+      } finally {
+        setRegenerating(false);
+      }
+    },
+    [showSuccess, showError]
+  );
+
+  /** Move the conversation's lead through the pipeline from the lead card. */
+  const setLeadStatus = useCallback(
+    async (status: LeadStatus) => {
+      if (!lead) return;
+      const previous = lead.status;
+      setLead({ ...lead, status });
+      try {
+        const res = await fetch("/api/admin/leads/bulk", {
+          method: "POST",
+          headers: JSON_HEADERS,
+          body: JSON.stringify({ lead_ids: [lead.id], action: "status", value: status }),
+        });
+        if (!res.ok) throw new Error(await readError(res, "Could not update the lead"));
+      } catch (err) {
+        setLead((prev) => (prev && prev.id === lead.id ? { ...prev, status: previous } : prev));
+        showError(err instanceof Error ? err.message : "Could not update the lead");
+      }
+    },
+    [lead, showError]
+  );
 
   // ── Test email ──
   const sendTest = useCallback(async () => {
@@ -491,7 +611,8 @@ export function useAdminInbox() {
     selectedId, selectedEmail, thread, detailLoading, detailError, selectEmail, closeDetail,
     toggleStar, markUnread, setSpam, requestDelete, cancelDelete, confirmDelete, pendingDelete,
     selectedIds, toggleSelect, selectAllOnPage, clearSelection, bulk, bulkActing,
-    useAiDraft, editAiDraft,
+    useAiDraft, editAiDraft, regenerateDraft, regenerating,
+    lead, setLeadStatus, addAttachments, removeAttachment,
     autoReplyEnabled, autoReplyLoading, setAutoReply,
     compose, setComposeField, openCompose, closeCompose, discardCompose, sending, handleSend,
     status, statusLoading, refreshStatus: () => fetchStatus(true), sendTest, sendingTest,

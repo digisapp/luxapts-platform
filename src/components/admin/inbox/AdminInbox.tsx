@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bot, ChevronLeft, ChevronRight, Info, Inbox as InboxIcon, Loader2, MailOpen, Mail, Plus, RefreshCw, Search, ShieldAlert, ShieldCheck, Star, StarOff, Trash2, X,
 } from "lucide-react";
@@ -27,13 +27,19 @@ export function AdminInbox() {
   const inSpam = d.folder === "spam";
   const from = d.status?.from ?? "Staycio <hello@staycio.com>";
 
+  // Unread count in the browser tab, so new mail is visible from any tab.
+  useEffect(() => {
+    const base = "Inbox · Staycio Admin";
+    document.title = d.counts.unread > 0 ? `(${d.counts.unread}) ${base}` : base;
+  }, [d.counts.unread]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold sm:text-3xl">Email inbox</h1>
           <p className="text-sm text-muted-foreground">
-            Mail to <span className="font-mono">{d.status?.inboundAddress ?? "the reply address"}</span> and every new lead lands here; replies go out as {from}.
+            Mail to any staycio.com address and every new lead lands here. Replies to a microsite lead go out as their building; everything else as {from}.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -194,6 +200,10 @@ export function AdminInbox() {
                 onDelete={(id) => d.requestDelete([id])}
                 onUseAiDraft={d.useAiDraft}
                 onEditAiDraft={d.editAiDraft}
+                onRegenerateDraft={d.regenerateDraft}
+                regenerating={d.regenerating}
+                lead={d.lead}
+                onSetLeadStatus={d.setLeadStatus}
               />
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center p-8 text-center text-muted-foreground">
@@ -206,7 +216,17 @@ export function AdminInbox() {
         </div>
       </Card>
 
-      <ComposeModal compose={d.compose} from={from} sending={d.sending} onField={d.setComposeField} onSend={d.handleSend} onClose={d.closeCompose} onDiscard={d.discardCompose} />
+      <ComposeModal
+        compose={d.compose}
+        from={d.compose.from ?? from}
+        sending={d.sending}
+        onField={d.setComposeField}
+        onSend={d.handleSend}
+        onClose={d.closeCompose}
+        onDiscard={d.discardCompose}
+        onAddFiles={d.addAttachments}
+        onRemoveFile={d.removeAttachment}
+      />
 
       {/* Confirm delete */}
       <Dialog open={!!d.pendingDelete} onOpenChange={(v) => !v && d.cancelDelete()}>

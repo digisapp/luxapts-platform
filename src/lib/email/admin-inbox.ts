@@ -6,6 +6,7 @@ import { sanitizeInboundEmailHtml } from "@/lib/html-sanitize";
 import { isValidUUID } from "@/lib/utils";
 import { buildEmailShell, htmlToText } from "./branded";
 import { senderIdentityFor } from "@/lib/microsites";
+import { toLeadContext, type LeadContext, type LeadRowForContext } from "@/lib/leads/lead-context";
 import {
   getAdminFrom,
   isValidEmail,
@@ -35,6 +36,49 @@ export interface EmailAttachmentMeta {
   filename: string;
   contentType: string;
   size?: number;
+  /** True on a file we sent: it has no Resend id to download it back from. */
+  sent?: boolean;
+}
+
+/** A file attached to an outgoing email, base64-encoded by the browser. */
+export interface OutgoingAttachment {
+  filename: string;
+  contentType: string;
+  /** Base64, no data: prefix. */
+  content: string;
+}
+
+/** Vercel caps a request at 4.5 MB; base64 adds a third. */
+export const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
+export const MAX_ATTACHMENTS = 5;
+const ATTACHMENT_TYPES = /^(application\/pdf|image\/(png|jpe?g|gif|webp|heic|heif)|text\/(plain|csv)|application\/(msword|vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet|presentationml\.presentation)|vnd\.ms-excel))$/i;
+
+/** Decoded size of a base64 string, padding included in the reckoning. */
+function base64Bytes(content: string): number {
+  const padding = content.endsWith("==") ? 2 : content.endsWith("=") ? 1 : 0;
+  return Math.floor((content.length * 3) / 4) - padding;
+}
+
+/** Validates outgoing attachments. Returns the cleaned list or a reason it can't be sent. */
+export function checkOutgoingAttachments(raw: unknown): { ok: true; files: OutgoingAttachment[] } | { ok: false; error: string } {
+  if (raw == null) return { ok: true, files: [] };
+  if (!Array.isArray(raw)) return { ok: false, error: "Attachments must be a list" };
+  if (raw.length > MAX_ATTACHMENTS) return { ok: false, error: `Attach at most ${MAX_ATTACHMENTS} files` };
+  const files: OutgoingAttachment[] = [];
+  let total = 0;
+  for (const item of raw) {
+    const f = item as Partial<OutgoingAttachment>;
+    const filename = typeof f.filename === "string" ? f.filename.replace(/[\\/\r\n"]/g, "_").trim().slice(0, 120) : "";
+    const contentType = typeof f.contentType === "string" ? f.contentType.trim() : "";
+    const content = typeof f.content === "string" ? f.content.replace(/^data:[^,]*,/, "") : "";
+    if (!filename || !content) return { ok: false, error: "An attachment is missing its name or content" };
+    if (!ATTACHMENT_TYPES.test(contentType)) return { ok: false, error: `${filename}: only PDFs, images and Office files can be attached` };
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(content)) return { ok: false, error: `${filename}: could not read the file` };
+    total += base64Bytes(content);
+    files.push({ filename, contentType, content });
+  }
+  if (total > MAX_ATTACHMENT_BYTES) return { ok: false, error: "Attachments are over 3 MB in total" };
+  return { ok: true, files };
 }
 
 /** JSON in `emails.metadata`. */
@@ -530,6 +574,7 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       sentBy,
       leadId: knownLeadId,
       extraHeaders,
+      attachments = [],
       test = false,
     }: {
       to: string;
@@ -543,6 +588,8 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       leadId?: string | null;
       /** Extra SMTP headers, e.g. List-Unsubscribe on a first-contact note. */
       extraHeaders?: Record<string, string>;
+      /** Already validated with checkOutgoingAttachments. */
+      attachments?: OutgoingAttachment[];
       test?: boolean;
     }): Promise<
       | { success: true; id: string; threadId: string; resendId: string | null }
@@ -617,6 +664,13 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
           // Per-thread plus-address: the reply comes back tagged with this thread.
           replyTo: threadReplyAddress(threadId),
           ...(Object.keys(headers).length > 0 && { headers }),
+          ...(attachments.length > 0 && {
+            attachments: attachments.map((a) => ({
+              filename: a.filename,
+              content: Buffer.from(a.content, "base64"),
+              contentType: a.contentType,
+            })),
+          }),
         },
         { idempotencyKey: `admin-inbox-${id}` }
       );
@@ -628,6 +682,15 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       const meta: EmailMetadata = {};
       if (Object.keys(headers).length > 0) meta.headers = headers;
       if (test) meta.test = true;
+      if (attachments.length > 0) {
+        meta.attachments = attachments.map((a, i) => ({
+          id: `sent-${i}`,
+          filename: a.filename,
+          contentType: a.contentType,
+          size: base64Bytes(a.content),
+          sent: true,
+        }));
+      }
 
       const { error: insertError } = await supabase.from("emails").insert({
         id,
@@ -654,6 +717,11 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       }
 
       if (replyToEmailId) await service.markReplied(replyToEmailId);
+      // Writing to a lead is contacting them: move "new" to "contacted" so
+      // the leads list shows who has been worked. Later stages are kept.
+      if (leadId && !test) {
+        await supabase.from("leads").update({ status: "contacted" }).eq("id", leadId).eq("status", "new");
+      }
 
       return { success: true, id, threadId, resendId: sent?.id ?? null };
     },
@@ -870,6 +938,18 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
         })
         .eq("id", id);
       if (error) throw new Error(error.message);
+    },
+
+    /** The lead behind a conversation, for the inbox's lead card and the AI draft. */
+    async getLeadContext(leadId: string | null | undefined): Promise<LeadContext | null> {
+      if (!leadId || !isValidUUID(leadId)) return null;
+      const { data, error } = await supabase
+        .from("leads")
+        .select("id, name, user_email, user_phone, status, source_detail, notes, created_at, city:city_id(name)")
+        .eq("id", leadId)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ? toLeadContext(data as unknown as LeadRowForContext, getAdminFrom()) : null;
     },
 
     /**

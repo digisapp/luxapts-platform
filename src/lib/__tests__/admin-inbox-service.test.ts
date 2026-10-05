@@ -14,7 +14,7 @@ vi.mock("@/lib/resend/client", () => ({
 }));
 vi.mock("@/lib/supabase/server", () => ({ createAdminClient: () => { throw new Error("not used"); } }));
 
-const { createAdminInboxService, _resetInboxSchemaCache, isLikelySpam, toListItem } = await import("@/lib/email/admin-inbox");
+const { createAdminInboxService, _resetInboxSchemaCache, isLikelySpam, toListItem, checkOutgoingAttachments } = await import("@/lib/email/admin-inbox");
 
 const T = "3f2504e0-4f89-11d3-9a0c-0305e82c3301";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -254,6 +254,33 @@ describe("sendNewEmail", () => {
     expect(row).toMatchObject({ from_email: "downtown6miami@staycio.com", from_name: "Downtown 6", lead_id: "lead-1" });
   });
 
+  it("sends attachments to Resend, records them as sent, and moves a new lead to contacted", async () => {
+    const { client, calls } = fakeSupabase([
+      { table: "leads", op: "select", result: { data: { source_detail: "perrinbrickell.com" } } },
+      insertOk,
+    ]);
+    const content = Buffer.from("%PDF-1.4 plan").toString("base64");
+    const r = await createAdminInboxService(client).sendNewEmail({
+      to: "cgparker44@gmail.com",
+      subject: "Re: The Perrin Miami — 2 Bedroom Availability",
+      bodyHtml: "<p>Floor plans attached.</p>",
+      bodyText: "Floor plans attached.",
+      leadId: "lead-7",
+      attachments: [{ filename: "Plan B.pdf", contentType: "application/pdf", content }],
+    });
+    expect(r.success).toBe(true);
+    const [payload] = send.mock.calls.at(-1)!;
+    expect(payload.attachments).toEqual([{ filename: "Plan B.pdf", content: Buffer.from(content, "base64"), contentType: "application/pdf" }]);
+    const row = calls.find((c) => c.op === "insert")!.args[0] as Record<string, unknown>;
+    expect((row.metadata as { attachments: unknown[] }).attachments).toEqual([
+      { id: "sent-0", filename: "Plan B.pdf", contentType: "application/pdf", size: 13, sent: true },
+    ]);
+    const statusUpdate = calls.find((c) => c.table === "leads" && c.op === "update")!;
+    expect(statusUpdate.args[0]).toEqual({ status: "contacted" });
+    // Only a "new" lead moves; touring/applied/leased are left alone.
+    expect(statusUpdate.filters).toEqual(expect.arrayContaining([["eq", "id", "lead-7"], ["eq", "status", "new"]]));
+  });
+
   it("replies inside the original's thread with In-Reply-To/References and marks it replied", async () => {
     const original = {
       id: "orig-1",
@@ -310,5 +337,29 @@ describe("toListItem", () => {
     expect(item.preview).toBe("Jordan & Sam Downtown 6");
     expect(item.isLeadAlert).toBe(true);
     expect(item.isRead).toBe(false);
+  });
+});
+
+describe("checkOutgoingAttachments", () => {
+  const pdf = { filename: "Floor plan B.pdf", contentType: "application/pdf", content: Buffer.from("%PDF-1.4 test").toString("base64") };
+
+  it("accepts PDFs and images and strips a data: prefix", () => {
+    const r = checkOutgoingAttachments([{ ...pdf, content: `data:application/pdf;base64,${pdf.content}` }]);
+    expect(r).toEqual({ ok: true, files: [pdf] });
+    expect(checkOutgoingAttachments(undefined)).toEqual({ ok: true, files: [] });
+  });
+
+  it("refuses executables, too many files, oversize totals and garbage", () => {
+    expect(checkOutgoingAttachments([{ ...pdf, contentType: "application/x-msdownload", filename: "x.exe" }])).toMatchObject({ ok: false });
+    expect(checkOutgoingAttachments(Array(6).fill(pdf))).toMatchObject({ ok: false, error: expect.stringMatching(/at most 5/) });
+    const big = { ...pdf, content: "A".repeat(4.2 * 1024 * 1024) };
+    expect(checkOutgoingAttachments([big])).toMatchObject({ ok: false, error: expect.stringMatching(/3 MB/) });
+    expect(checkOutgoingAttachments([{ ...pdf, content: "not base64!!" }])).toMatchObject({ ok: false });
+    expect(checkOutgoingAttachments("x")).toMatchObject({ ok: false });
+  });
+
+  it("cleans a filename that could break a header", () => {
+    const r = checkOutgoingAttachments([{ ...pdf, filename: 'a"b/c\\d\r\n.pdf' }]);
+    expect(r.ok && r.files[0].filename).toBe("a_b_c_d__.pdf");
   });
 });
