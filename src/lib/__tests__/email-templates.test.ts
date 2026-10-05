@@ -119,9 +119,9 @@ describe("micrositeFollowUpEmail", () => {
     const { text, html } = micrositeFollowUpEmail({ name: "jillian hughson", buildingName: "Downtown 6", city: "Miami", unitType: "2 Bedroom" });
     expect(text).toBe(
       "Hi Jillian,\n\n" +
-        "We received your inquiry about a 2-bedroom at Downtown 6 Miami. When is your ideal move-in date?\n\n" +
-        "I can send you the available options, and once a unit is ready I can schedule an in-person tour for you.\n\n" +
-        "What\u2019s your phone number? I can text you.\n\n" +
+        "We received your inquiry about a 2-bedroom at Downtown 6 Miami. When are you looking to move in?\n\n" +
+        "I can send you the available options and schedule an in-person tour once we find a unit that works for you.\n\n" +
+        "What\u2019s the best phone number to reach you? I can also text you the options directly.\n\n" +
         "Best,\nStacy\n"
     );
     expect(html).toContain("background:#ffffff");

@@ -539,9 +539,9 @@ export function micrositeFollowUpEmail(data: {
 
   const paragraphs = [
     firstName ? `Hi ${firstName},` : "Hi there,",
-    `We received your inquiry about ${about}. When is your ideal move-in date?`,
-    `I can send you the available options, and once a unit is ready I can schedule an in-person tour for you.`,
-    `What\u2019s your phone number? I can text you.`,
+    `We received your inquiry about ${about}. When are you looking to move in?`,
+    `I can send you the available options and schedule an in-person tour once we find a unit that works for you.`,
+    `What\u2019s the best phone number to reach you? I can also text you the options directly.`,
     `Best,\nStacy`,
   ];
   return paragraphsToEmail(paragraphs, micrositeInquirySubject(data.buildingName, data.city, data.unitType));
