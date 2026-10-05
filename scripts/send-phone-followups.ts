@@ -101,9 +101,23 @@ async function buildRecipients(): Promise<{ recipients: Recipient[]; skipped: Re
     return name.split(" ").length >= 2 ? `${name}|${building}` : null; // "Jordan" alone is not unique
   };
 
+  // A person already written to under one address must not get the note again
+  // at their other address (Natashalee Dunn signed up twice).
+  const contactedPeople = new Set<string>();
+  for (const lead of all) {
+    const building = lead.source_detail ? MICROSITE_BUILDINGS[lead.source_detail] : undefined;
+    const key = building ? personKey(lead, building) : null;
+    if (key && everEmailed.has((lead.user_email ?? "").trim().toLowerCase())) contactedPeople.add(key);
+  }
+
   for (const lead of all) {
     const building = lead.source_detail ? MICROSITE_BUILDINGS[lead.source_detail] : undefined;
     if (!building) continue; // not a microsite lead (phone line, main site)
+    const key = personKey(lead, building);
+    if (key && contactedPeople.has(key) && !everEmailed.has((lead.user_email ?? "").trim().toLowerCase())) {
+      skip("already emailed at another address");
+      continue;
+    }
     if ((lead.user_phone ?? "").trim()) continue; // has a number: text them instead
     const email = (lead.user_email ?? "").trim().toLowerCase();
     if (!email) continue;
