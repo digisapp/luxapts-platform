@@ -35,6 +35,11 @@ export function textToHtml(text: string): string {
 /** HTML → readable plain text, for the text/plain part and list previews. */
 export function htmlToText(html: string): string {
   return html
+    // The <head> (title) and HTML comments (Outlook's <!--[if mso]> blocks,
+    // whose PixelsPerInch "96" leaked into every lead-alert preview) are
+    // never message text.
+    .replace(/<head[\s\S]*?<\/head>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<br\s*\/?>/gi, "\n")

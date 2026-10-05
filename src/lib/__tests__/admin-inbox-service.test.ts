@@ -265,7 +265,7 @@ describe("sendNewEmail", () => {
       subject: "Re: The Perrin Miami — 2 Bedroom Availability",
       bodyHtml: "<p>Floor plans attached.</p>",
       bodyText: "Floor plans attached.",
-      leadId: "lead-7",
+      leadId: "77777777-7777-4777-8777-777777777777",
       attachments: [{ filename: "Plan B.pdf", contentType: "application/pdf", content }],
     });
     expect(r.success).toBe(true);
@@ -275,10 +275,14 @@ describe("sendNewEmail", () => {
     expect((row.metadata as { attachments: unknown[] }).attachments).toEqual([
       { id: "sent-0", filename: "Plan B.pdf", contentType: "application/pdf", size: 13, sent: true },
     ]);
+    // Their "New lead" alert stops counting as unread.
+    const alertClear = calls.find((c) => c.table === "emails" && c.op === "update")!;
+    expect(alertClear.args[0]).toMatchObject({ status: "read" });
+    expect(alertClear.filters).toEqual(expect.arrayContaining([["in", "lead_id", ["77777777-7777-4777-8777-777777777777"]], ["eq", "metadata->>kind", "lead_alert"]]));
     const statusUpdate = calls.find((c) => c.table === "leads" && c.op === "update")!;
     expect(statusUpdate.args[0]).toEqual({ status: "contacted" });
     // Only a "new" lead moves; touring/applied/leased are left alone.
-    expect(statusUpdate.filters).toEqual(expect.arrayContaining([["eq", "id", "lead-7"], ["eq", "status", "new"]]));
+    expect(statusUpdate.filters).toEqual(expect.arrayContaining([["eq", "id", "77777777-7777-4777-8777-777777777777"], ["eq", "status", "new"]]));
   });
 
   it("replies inside the original's thread with In-Reply-To/References and marks it replied", async () => {

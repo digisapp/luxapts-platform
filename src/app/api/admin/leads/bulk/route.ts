@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import { getAdminInboxService } from "@/lib/email/admin-inbox";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { isValidUUID } from "@/lib/utils";
 import { apiError } from "@/lib/api-helpers";
@@ -52,6 +53,14 @@ export async function POST(req: Request) {
       if (error) {
         console.error("Bulk status update error:", error);
         return apiError("Failed to update", 500);
+      }
+
+      // A lead past "new" has been worked: its "New lead" alert in the
+      // inbox no longer belongs in Unread.
+      if (value !== "new") {
+        await getAdminInboxService()
+          .markLeadAlertsRead(lead_ids)
+          .catch((err) => console.error("Could not clear lead alerts:", err));
       }
 
       // Insert lead events for each
