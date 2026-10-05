@@ -38,9 +38,7 @@ export function AdminInbox() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold sm:text-3xl">Email inbox</h1>
-          <p className="text-sm text-muted-foreground">
-            Mail to any staycio.com address and every new lead lands here. Replies to a microsite lead go out as their building; everything else as {from}.
-          </p>
+          <p className="text-sm text-muted-foreground">Every new lead and every reply lands here.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {!d.autoReplyLoading && (

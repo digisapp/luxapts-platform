@@ -59,7 +59,7 @@ export function InboxSetupCard({ status, loading, onRecheck, onSendTest, sending
         <p className="flex items-center gap-2 text-sm text-emerald-200">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>
-            Receiving is on for <span className="font-mono">{status.inboundDomain}</span>. Replies go out as {status.from}.
+            Receiving is on for every staycio.com address. Replies to a microsite lead go out as their building; everything else as {status.from}.
           </span>
         </p>
         <Button size="sm" variant="outline" onClick={onSendTest} disabled={sendingTest}>

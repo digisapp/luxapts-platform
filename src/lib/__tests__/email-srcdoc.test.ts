@@ -73,3 +73,14 @@ describe("buildEmailSrcdoc", () => {
     expect(doc).toContain('img[width="1"]');
   });
 });
+
+describe("list previews", () => {
+  it("never shows the Outlook block or the head as message text", async () => {
+    const { htmlToText } = await import("@/lib/email/branded");
+    const html =
+      '<!DOCTYPE html><html><head><title>Staycio</title><!--[if mso]><noscript><xml><o:PixelsPerInch>96</o:PixelsPerInch></xml></noscript><![endif]--></head><body><a href="https://staycio.com">Staycio</a><p>New lead from Klaudia in Miami</p></body></html>';
+    const text = htmlToText(html);
+    expect(text).not.toContain("96");
+    expect(text.replace(/\s+/g, " ").trim()).toBe("Staycio New lead from Klaudia in Miami");
+  });
+});

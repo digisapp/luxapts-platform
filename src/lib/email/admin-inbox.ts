@@ -244,7 +244,9 @@ export function readMetadata(raw: EmailMetadata | string | null | undefined): Em
 
 function preview(row: Pick<EmailRow, "body_text" | "body_html">): string {
   const text = row.body_text?.trim() ? row.body_text : row.body_html ? htmlToText(row.body_html) : "";
-  return text.replace(/\s+/g, " ").trim().slice(0, 160);
+  // Our own designed emails (lead alerts) open with the "Staycio" wordmark;
+  // the preview should start with what the email says.
+  return text.replace(/\s+/g, " ").trim().replace(/^Staycio\b\s*/, "").slice(0, 160);
 }
 
 function threadKeyOf(row: Pick<EmailRow, "id" | "thread_id">): string {
@@ -468,6 +470,24 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
         .order("created_at", { ascending: true });
       if (error) throw new Error(`Load thread failed: ${error.message}`);
       return ((data ?? []) as EmailRow[]).map(toDetail);
+    },
+
+    /**
+     * A "New lead" alert is a to-do: it stays unread until the lead is worked.
+     * Once a lead moves past "new" (emailed, texted, called), its alerts are
+     * marked read, so Unread holds only leads still waiting and real replies.
+     */
+    async markLeadAlertsRead(leadIds: string[]) {
+      const ids = leadIds.filter((id) => isValidUUID(id));
+      if (ids.length === 0) return;
+      const { error } = await supabase
+        .from("emails")
+        .update({ status: "read", read_at: nowIso() })
+        .in("lead_id", ids)
+        .eq("direction", "inbound")
+        .eq("status", "received")
+        .eq("metadata->>kind", "lead_alert");
+      if (error) throw new Error(error.message);
     },
 
     async markRead(id: string, isRead: boolean) {
@@ -721,6 +741,7 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       // the leads list shows who has been worked. Later stages are kept.
       if (leadId && !test) {
         await supabase.from("leads").update({ status: "contacted" }).eq("id", leadId).eq("status", "new");
+        await service.markLeadAlertsRead([leadId]).catch((err) => console.error("[Inbox] Could not clear lead alert:", err));
       }
 
       return { success: true, id, threadId, resendId: sent?.id ?? null };
