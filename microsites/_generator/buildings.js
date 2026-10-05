@@ -506,9 +506,9 @@ const BUILDINGS = [
     captions: ["The Paseo","NE 29th Street","Skyline Aerial"], credit: "Renderings courtesy of Rilea Group",
     // Overridden because mohawkwynwood.com covers the same building: left to
     // derive, both pages would ship the identical title and description.
-    title: "Mohawk Miami Apartments — Amenities, Rents & 2028 Waitlist",
-    ogTitle: "Mohawk Miami — Amenities & 2028 Rents",
-    desc: "Mohawk at Wynwood: 300 rentals at 56 NE 29th St by Rilea Group, with a hammam spa, padel court and rooftop dog park. Delivering 2028 — join the waitlist.",
+    title: "Mohawk Miami — Wynwood Rental Apartments & Amenities",
+    ogTitle: "Mohawk Miami — Wynwood Rentals & Amenities",
+    desc: "Mohawk at Wynwood: 300 rentals at 56 NE 29th St by Rilea Group, with a hammam spa, padel court and rooftop dog park. Get pricing and floor plans first.",
     // Same building as mohawkwynwood.com, deliberately a different page: this
     // one is written for the amenity-and-comparison search ("mohawk miami
     // apartments"), that one for the neighborhood search. Different palette,

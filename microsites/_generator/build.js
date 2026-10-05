@@ -138,32 +138,34 @@ function page(b) {
   // Distinct body copy is not enough on its own; an entry in a pair overrides
   // these so each page targets the search its domain is actually named for.
   // Google shows about 60 characters of a title and 155 of a description, and
-  // less on the phones that carry most of this traffic. The old derivations ran
-  // 80–106 and 130–210 characters, so the words that earn the click — "Rents",
-  // "Waitlist", the delivery date — were exactly the words cut off. Candidates
-  // are tried in order and the first that fits wins; the last is the floor.
+  // less on the phones that carry most of this traffic. Candidates are tried in
+  // order and the first that fits wins; the last is the floor.
+  //
+  // Pre-leasing titles and descriptions never carry the delivery year,
+  // "coming", "opening soon" or "waitlist" (owner's call, 2026-10-05). In a
+  // search result those read as "nothing to rent here for years" and the
+  // searcher picks the next link. The result names the building as rental
+  // apartments and the description leads with pricing; the page itself still
+  // states the real delivery date in the chip, ticker, stats and FAQ.
   const inName = (s) => b.name.toLowerCase().includes(s.toLowerCase());
   const city = inName("Miami") ? "" : " Miami";
   const hood = inName(b.hood) ? null : b.hood;
-  const dated = b.delivers || /\d{4}/.test(b.eta); // "Under construction" is not a date
-  const when = dated ? b.etaShort + " " : "";
   const units = b.units ? b.units.toLocaleString() + " " : "";
-  const title = b.title || fit(63, isSoon
-    ? [`${b.name} Apartments, ${hood} — Rents & Floor Plans, Opening Soon`,
-       `${b.name} Apartments${city} — Rents & Floor Plans, Opening Soon`,
-       `${b.name} — Rents & Floor Plans, Opening Soon`]
-    : isWait
-    ? [`${b.name} Apartments, ${hood} — Rents & ${when}Waitlist`,
-       `${b.name} Apartments${city} — Rents & ${when}Waitlist`,
-       `${b.name} — Rents & Waitlist`]
+  // Kenect has no street address yet, only "Miami Worldcenter", which is also its hood.
+  const at = b.address === b.hood ? b.hood : `${b.address}, ${b.hood}`;
+  const title = b.title || fit(63, isWait
+    ? (inName("Miami")
+      ? [`${b.name} — ${hood} Rental Apartments`,
+         `${b.name} — Rental Apartments`]
+      : [`${b.name} ${hood} — Miami Rental Apartments`,
+         `${b.name} — Miami Rental Apartments`])
     : [`${b.name} Apartments — ${hood} | Rents & Availability`,
        `${b.name} Apartments${city} — Rents & Availability`,
        `${b.name} — Rents & Availability`]);
   const desc = b.desc || fit(155, isWait
-    ? [`${b.name}: ${units}rental apartments at ${b.address}, ${b.hood}, Miami${b.developer ? ", by " + b.developer : ""}. ${b.eta}. Join the waitlist for rents and floor plans.`,
-       `${b.name}: ${units}rental apartments at ${b.address}, ${b.hood}, Miami. ${b.eta}. Join the waitlist for rents and floor plans.`,
-       `${b.name}: ${units}rental apartments in ${b.hood}, Miami, ${b.eta.toLowerCase()}. Join the waitlist for rents and floor plans.`,
-       `${b.name}: ${units}new apartments in ${b.hood}, Miami. Join the waitlist for rents and floor plans.`]
+    ? [`${b.name}: ${units}new rental apartments at ${at}, Miami${b.developer ? ", by " + b.developer : ""}. Get pricing and floor plans first.`,
+       `${b.name}: ${units}new rental apartments at ${at}, Miami. Get pricing and floor plans first.`,
+       `${b.name}: ${units}new rental apartments in ${b.hood}, Miami. Get pricing and floor plans first.`]
     : [`${b.name}: ${units}rental residences at ${b.address}, ${b.hood}, Miami. Check live availability, rents and floor plans.`,
        `${b.name}: ${units}rental residences in ${b.hood}, Miami. Check live availability, rents and floor plans.`,
        `${b.name} apartments in ${b.hood}, Miami. Check live availability, rents and floor plans.`]);
