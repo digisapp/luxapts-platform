@@ -93,6 +93,7 @@ describe("storeInboundEmail", () => {
       { table: "emails", op: "select", result: { data: null } }, // resend-id dedupe
       spamProbeOk,
       { table: "emails", op: "select", result: { data: [{ id: T, thread_id: T, lead_id: "lead-1" }] } }, // tag lookup
+      { table: "emails", op: "select", result: { data: [{ direction: "outbound", from_email: "hello@staycio.com", to_email: "Jane@Example.com" }] } }, // who the thread is with
       insertOk,
     ]);
     const svc = createAdminInboxService(client);
@@ -114,6 +115,34 @@ describe("storeInboundEmail", () => {
     expect(row.headers).toEqual({ "message-id": "<m1@x>", "in-reply-to": null, references: null });
     // No lead lookup when the thread already carries one.
     expect(calls.some((c) => c.table === "leads")).toBe(false);
+  });
+
+  it("never lets a stranger join a thread, even with its real plus tag and Message-ID", async () => {
+    const { client, calls } = fakeSupabase([
+      { table: "emails", op: "select", result: { data: null } },
+      { table: "emails", op: "select", result: { data: null } },
+      spamProbeOk,
+      { table: "emails", op: "select", result: { data: [{ id: T, thread_id: T, lead_id: "lead-1" }] } }, // tag lookup
+      { table: "emails", op: "select", result: { data: [{ direction: "outbound", from_email: "hello@staycio.com", to_email: "jane@example.com" }] } }, // thread is with jane
+      { table: "emails", op: "select", result: { data: [{ id: T, thread_id: T, lead_id: "lead-1" }] } }, // in-reply-to lookup
+      { table: "emails", op: "select", result: { data: [{ direction: "outbound", from_email: "hello@staycio.com", to_email: "jane@example.com" }] } }, // still jane
+      { table: "emails", op: "select", result: { data: [] } }, // subject fallback: miss
+      insertOk,
+    ]);
+    const svc = createAdminInboxService(client);
+    await svc.storeInboundEmail({
+      from: "stranger@evil.test",
+      to: `replies+${T}@inbound.staycio.com`,
+      subject: "Re: Tour",
+      text: "quoting jane's message id",
+      messageId: "<m9@x>",
+      resendEmailId: "r9",
+      inReplyToHeader: "<m1@x>",
+      threadIdHint: T,
+    });
+    const row = calls.find((c) => c.op === "insert")!.args[0] as Record<string, unknown>;
+    expect(row.thread_id).toBe(row.id); // its own thread
+    expect(row.lead_id).toBeNull(); // not jane's lead
   });
 
   it("falls back to In-Reply-To, then to subject + counterpart, else opens its own thread", async () => {

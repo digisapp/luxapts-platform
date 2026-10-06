@@ -13,6 +13,7 @@ import { getResendClient } from "@/lib/resend/client";
 import { createAdminClient } from "@/lib/supabase/server";
 import { escapeHtml } from "@/lib/utils";
 import { sanitizeDraftHtml } from "@/lib/html-sanitize";
+import { parseAuthResults, senderAuthenticated } from "@/lib/email/sender-auth";
 import { buildEmailShell } from "@/lib/email/branded";
 import { getAdminInboxService } from "@/lib/email/admin-inbox";
 import {
@@ -266,6 +267,11 @@ export function autoReplySuppressionReason(args: {
   if (/bulk|list|junk|auto_reply/.test(precedence)) return `Precedence: ${precedence}`;
   if (h["x-auto-response-suppress"] || h["x-autoreply"] || h["x-autorespond"] || h["list-id"] || h["list-unsubscribe"]) {
     return "automated/list mail headers present";
+  }
+  // From is trivially forged; a reply to a forged From lands on a third
+  // party. Only answer a sender whose address passed DMARC (sender-auth.ts).
+  if (!senderAuthenticated(parseAuthResults(h["authentication-results"]))) {
+    return "sender not authenticated (no DMARC pass)";
   }
   return null;
 }
