@@ -182,6 +182,19 @@ describe("storeInboundEmail", () => {
     expect(calls.some((c) => c.op === "insert")).toBe(false);
   });
 
+  it("treats a lost insert race (unique inbound resend id, 23505) as a duplicate, not a failure", async () => {
+    const { client } = fakeSupabase([
+      { table: "emails", op: "select", result: { data: null } }, // message-id dedupe
+      { table: "emails", op: "select", result: { data: null } }, // resend-id dedupe
+      spamProbeOk,
+      { table: "emails", op: "insert", result: { data: null, error: { code: "23505", message: "duplicate key value violates unique constraint" } } },
+    ]);
+    const svc = createAdminInboxService(client);
+    await expect(
+      svc.storeInboundEmail({ from: "a@b.com", to: "replies@inbound.staycio.com", subject: "s", messageId: "<m@x>", resendEmailId: "rcv_1" }),
+    ).resolves.toBeNull();
+  });
+
   it("stores spam into the Spam folder after migration 029, drops it before", async () => {
     const spam = { from: "x@scam.xyz", to: "replies@inbound.staycio.com", subject: "s", text: "t", messageId: "<s@x>" };
 
