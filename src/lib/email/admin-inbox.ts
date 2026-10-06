@@ -934,6 +934,12 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       if (spamColumn) row.is_spam = spam;
 
       const { data: stored, error } = await supabase.from("emails").insert(row).select("*").single();
+      if (error?.code === "23505") {
+        // The unique index on inbound resend_message_id (031): a concurrent
+        // delivery of the same message won the race. A duplicate, not a failure.
+        console.log(`[Inbox] Skipping duplicate email (concurrent delivery) resendEmailId=${resendEmailId}`);
+        return null;
+      }
       if (error) throw new Error(`Store inbound email failed: ${error.message}`);
       return stored as EmailRow;
     },
