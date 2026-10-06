@@ -90,6 +90,9 @@ describe("buildingArea", () => {
       "Brickell, Miami"
     );
     expect(buildingArea({ neighborhoods: null, cities: { name: "Miami" } })).toBe("Miami");
+    expect(buildingArea({ neighborhoods: { name: "Downtown Miami" }, cities: { name: "Miami" } })).toBe(
+      "Downtown Miami"
+    );
     expect(buildingArea(null)).toBeNull();
   });
 });

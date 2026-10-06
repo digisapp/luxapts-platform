@@ -64,10 +64,17 @@ export function linkedBuilding(row: Pick<BrokerIncentive, "buildings">): Incenti
   return one(row.buildings);
 }
 
-/** "Brickell, Miami" for a linked building; null when unlinked. */
+/**
+ * "Brickell, Miami" for a linked building; null when unlinked. The city is
+ * dropped when the neighborhood already names it ("Downtown Miami", not
+ * "Downtown Miami, Miami").
+ */
 export function buildingArea(b: Pick<IncentiveBuilding, "neighborhoods" | "cities"> | null): string | null {
   if (!b) return null;
-  const parts = [one(b.neighborhoods)?.name, one(b.cities)?.name].filter(Boolean);
+  const hood = one(b.neighborhoods)?.name?.trim();
+  const city = one(b.cities)?.name?.trim();
+  if (hood && city && hood.toLowerCase().includes(city.toLowerCase())) return hood;
+  const parts = [hood, city].filter(Boolean);
   return parts.length ? parts.join(", ") : null;
 }
 
