@@ -206,11 +206,13 @@ function IncentiveRow({
       {/* Building */}
       <div className="min-w-0">
         <p className="break-words font-medium">{i.building_name}</p>
+        {/* Its own line, so no separator is left hanging when the row wraps. */}
+        {building && building.name !== i.building_name && (
+          <p className="mt-0.5 break-words text-xs text-muted-foreground">Listed as {building.name}</p>
+        )}
         <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
           {building ? (
             <>
-              {building.name !== i.building_name && <span>Listed as {building.name}</span>}
-              {building.name !== i.building_name && area && <span aria-hidden="true">·</span>}
               {area && <span>{area}</span>}
               {listingHref && (
                 <Link
