@@ -829,6 +829,27 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
         leadId = row.lead_id;
       };
 
+      // A thread is a conversation with one person. Mail only joins it when it
+      // comes from that person (the thread's counterpart), however the thread
+      // was found. Otherwise anyone who learns a plus tag or a Message-ID could
+      // attach mail to someone else's conversation, take over its lead link
+      // (and, through phone capture, write a number onto that lead), and draw
+      // replies that quote the other person's messages.
+      const me = from.trim().toLowerCase();
+      const fromCounterpart = async (rows: Array<Pick<EmailRow, "id" | "thread_id" | "lead_id">> | null) => {
+        const row = rows?.[0];
+        if (!row) return false;
+        const key = threadKeyOf(row);
+        const { data: members } = await supabase
+          .from("emails")
+          .select("direction, from_email, to_email")
+          .or(`thread_id.eq.${key},id.eq.${key}`)
+          .limit(500);
+        return (members ?? []).some((m) =>
+          (m.direction === "inbound" ? m.from_email : m.to_email)?.trim().toLowerCase() === me
+        );
+      };
+
       // 1. Plus-address tag — we set it on every outbound Reply-To, so this
       //    is exact. Verify the thread exists so a guessed or forged tag
       //    can't attach mail to nothing.
@@ -839,7 +860,7 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
           .or(`thread_id.eq.${threadIdHint},id.eq.${threadIdHint}`)
           .order("created_at", { ascending: false })
           .limit(1);
-        threadOf(data as EmailRow[] | null);
+        if (await fromCounterpart(data as EmailRow[] | null)) threadOf(data as EmailRow[] | null);
       }
 
       // 2. In-Reply-To header → a message we have stored.
@@ -849,7 +870,7 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
           .select("id, thread_id, lead_id")
           .eq("headers->>message-id", inReplyToHeader)
           .limit(1);
-        threadOf(data as EmailRow[] | null);
+        if (await fromCounterpart(data as EmailRow[] | null)) threadOf(data as EmailRow[] | null);
       }
 
       // 3. Last resort: subject with the Re: prefix stripped + the counterpart.
