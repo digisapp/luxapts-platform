@@ -151,6 +151,16 @@ thread's first message in the Sent folder, goes out as the building, and
 carries the plus-addressed Reply-To. When the person answers, the reply
 threads under it on `/admin/email` and the AI draft is written as Stacy.
 
+It does not leave right away. `src/lib/email/send-window.ts` picks a send
+time 10–20 minutes after the signup, or between 8:15 and 9:00 the next
+morning (Miami time) for a signup outside 8 AM–9 PM, and `sendNewEmail`
+hands that time to Resend as `scheduledAt`. Until then the row shows in
+Sent with an amber **Scheduled** badge and the time it will leave; the
+webhook's `email.delivered` flips it to Delivered as usual. Writing to the
+same person by hand before it leaves (any immediate `sendNewEmail` to that
+address) cancels the queued note on Resend and marks the row **Cancelled**,
+so a real reply is never followed by the canned one.
+
 
 ## Phone alerts
 

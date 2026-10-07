@@ -8,8 +8,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const send = vi.fn();
+const cancel = vi.fn();
 vi.mock("@/lib/resend/client", () => ({
-  getResendClient: () => ({ emails: { send } }),
+  getResendClient: () => ({ emails: { send, cancel } }),
   getFromEmail: () => "Staycio <hello@staycio.com>",
 }));
 vi.mock("@/lib/supabase/server", () => ({ createAdminClient: () => { throw new Error("not used"); } }));
@@ -367,6 +368,85 @@ describe("sendNewEmail", () => {
     const r = await createAdminInboxService(client).sendNewEmail({ to: "a@b.co", subject: "s", bodyHtml: "<p>x</p>", bodyText: "x" });
     expect(r).toMatchObject({ success: false, error: "Domain not verified", status: 502 });
     expect(calls.some((c) => c.op === "insert")).toBe(false);
+  });
+
+  it("hands a scheduled note to Resend with its send time and records it, without cancelling anything", async () => {
+    cancel.mockReset();
+    const at = new Date(Date.now() + 15 * 60_000);
+    const { client, calls } = fakeSupabase([{ table: "leads", op: "select", result: { data: { source_detail: "perrinbrickell.com" } } }, insertOk]);
+    const r = await createAdminInboxService(client).sendNewEmail({
+      to: "john@example.com",
+      subject: "The Perrin Miami — 2 Bedroom Availability",
+      bodyHtml: "<p>Hi John,</p>",
+      bodyText: "Hi John,",
+      leadId: "lead-9",
+      scheduledAt: at,
+    });
+    expect(r.success).toBe(true);
+    const [payload] = send.mock.calls.at(-1)!;
+    expect(payload.scheduledAt).toBe(at.toISOString());
+    const row = calls.find((c) => c.op === "insert")!.args[0] as Record<string, unknown>;
+    expect(row).toMatchObject({ status: "sent", metadata: { scheduled_at: at.toISOString() } });
+    // Only an immediate send looks for queued notes to pull back.
+    expect(calls.filter((c) => c.table === "emails" && c.op === "select")).toHaveLength(0);
+    expect(cancel).not.toHaveBeenCalled();
+  });
+
+  it("ignores a send time already in the past", async () => {
+    const { client, calls } = fakeSupabase([{ table: "leads", op: "select", result: { data: null } }, insertOk]);
+    await createAdminInboxService(client).sendNewEmail({ to: "a@b.co", subject: "s", bodyHtml: "<p>x</p>", bodyText: "x", scheduledAt: new Date(Date.now() - 1000) });
+    expect(send.mock.calls.at(-1)![0]).not.toHaveProperty("scheduledAt");
+    const row = calls.find((c) => c.op === "insert")!.args[0] as Record<string, unknown>;
+    expect(row.metadata).not.toHaveProperty("scheduled_at");
+  });
+
+  it("pulls back a queued note to the same person before an immediate send", async () => {
+    cancel.mockReset();
+    cancel.mockResolvedValue({ data: { object: "email", id: "em_sched" }, error: null });
+    const future = new Date(Date.now() + 10 * 60_000).toISOString();
+    const { client, calls } = fakeSupabase([
+      // cancelScheduledTo: the queued note, still pending
+      { table: "emails", op: "select", result: { data: [{ id: "sched-1", resend_message_id: "em_sched", metadata: { scheduled_at: future, headers: { "List-Unsubscribe": "<u>" } } }], error: null } },
+      { table: "emails", op: "update", result: { error: null } },
+      { table: "leads", op: "select", result: { data: { source_detail: "perrinbrickell.com" } } },
+      insertOk,
+    ]);
+    const r = await createAdminInboxService(client).sendNewEmail({
+      to: "John@Example.com",
+      subject: "Re: The Perrin",
+      bodyHtml: "<p>Hi John, I just saw your note.</p>",
+      bodyText: "Hi John, I just saw your note.",
+      sentBy: "admin-1",
+    });
+    expect(r.success).toBe(true);
+    expect(cancel).toHaveBeenCalledWith("em_sched");
+    const lookup = calls.find((c) => c.table === "emails" && c.op === "select")!;
+    expect(lookup.filters).toEqual(
+      expect.arrayContaining([["eq", "direction", "outbound"], ["eq", "to_email", "john@example.com"], ["is", "metadata->>cancelled_at", null]])
+    );
+    expect(lookup.filters.some(([f, col]) => f === "gt" && col === "metadata->>scheduled_at")).toBe(true);
+    const pulled = calls.find((c) => c.table === "emails" && c.op === "update")!;
+    const meta = (pulled.args[0] as { metadata: Record<string, unknown> }).metadata;
+    expect(meta.scheduled_at).toBe(future);
+    expect(meta.headers).toEqual({ "List-Unsubscribe": "<u>" }); // the rest of the metadata survives
+    expect(typeof meta.cancelled_at).toBe("string");
+    expect(pulled.filters).toEqual(expect.arrayContaining([["eq", "id", "sched-1"]]));
+    // The real reply still goes out.
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the row alone when Resend says the note already left", async () => {
+    cancel.mockReset();
+    cancel.mockResolvedValue({ data: null, error: { message: "Email is already sent" } });
+    const future = new Date(Date.now() + 60_000).toISOString();
+    const { client, calls } = fakeSupabase([
+      { table: "emails", op: "select", result: { data: [{ id: "sched-2", resend_message_id: "em_gone", metadata: { scheduled_at: future } }], error: null } },
+      { table: "leads", op: "select", result: { data: null } },
+      insertOk,
+    ]);
+    const r = await createAdminInboxService(client).sendNewEmail({ to: "a@b.co", subject: "s", bodyHtml: "<p>x</p>", bodyText: "x" });
+    expect(r.success).toBe(true);
+    expect(calls.filter((c) => c.table === "emails" && c.op === "update")).toHaveLength(0);
   });
 });
 

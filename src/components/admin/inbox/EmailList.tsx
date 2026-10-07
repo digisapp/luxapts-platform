@@ -1,10 +1,10 @@
 "use client";
 
-import { Star, Paperclip, Inbox as InboxIcon, Zap, UserPlus } from "lucide-react";
+import { Star, Paperclip, Inbox as InboxIcon, Zap, UserPlus, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ToneBadge } from "./ToneBadge";
 import type { EmailListItem, InboxFolder } from "./types";
-import { AI_CATEGORY_LABELS, STATUS_LABELS, counterpart, formatListDate } from "./types";
+import { AI_CATEGORY_LABELS, STATUS_LABELS, counterpart, formatListDate, outboundStatus } from "./types";
 
 interface EmailListProps {
   emails: EmailListItem[];
@@ -45,8 +45,10 @@ export function EmailList({ emails, folder, selectedId, onSelect, onToggleStar, 
         const unread = email.direction === "inbound" && !email.isRead;
         const who = counterpart(email);
         const cat = email.aiCategory ? AI_CATEGORY_LABELS[email.aiCategory] : null;
-        const st = STATUS_LABELS[email.status];
-        const showStatus = email.direction === "outbound" ? email.status !== "sent" : email.status === "replied";
+        const st = email.direction === "outbound" ? outboundStatus(email) : { ...STATUS_LABELS[email.status], pending: false };
+        const showStatus = email.direction === "outbound" ? email.status !== "sent" || st.pending || !!email.cancelledAt : email.status === "replied";
+        // A held note is listed under the time it will leave, not the time it was queued.
+        const when = st.pending && email.scheduledAt ? email.scheduledAt : email.createdAt;
 
         return (
           <li
@@ -68,7 +70,10 @@ export function EmailList({ emails, folder, selectedId, onSelect, onToggleStar, 
                   {email.direction === "outbound" && <span className="font-normal text-muted-foreground">To: </span>}
                   {who.name}
                 </span>
-                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{formatListDate(email.createdAt)}</span>
+                <span className={cn("shrink-0 text-xs tabular-nums", st.pending ? "text-amber-300" : "text-muted-foreground")}>
+                  {st.pending && <Clock className="mr-1 inline h-3 w-3 align-[-2px]" aria-label="Sends at" />}
+                  {formatListDate(when)}
+                </span>
               </div>
               <p className={cn("mt-0.5 truncate pl-4 text-sm", unread ? "font-semibold text-foreground" : "text-foreground/80")}>
                 {email.subject || "(no subject)"}

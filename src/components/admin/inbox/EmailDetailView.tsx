@@ -8,7 +8,7 @@ import { ToneBadge } from "./ToneBadge";
 import { LeadCard } from "./LeadCard";
 import type { LeadStatus } from "@/types/database";
 import type { EmailDetail, LeadContext } from "./types";
-import { AI_CATEGORY_LABELS, STATUS_LABELS, formatBytes, formatFullDate } from "./types";
+import { AI_CATEGORY_LABELS, STATUS_LABELS, formatBytes, formatFullDate, outboundStatus } from "./types";
 
 interface EmailDetailViewProps {
   email: EmailDetail | null;
@@ -38,7 +38,7 @@ function shortAddress(address: string): string {
 
 function Message({ msg, isLast }: { msg: EmailDetail; isLast: boolean }) {
   const outbound = msg.direction === "outbound";
-  const st = STATUS_LABELS[msg.status];
+  const st = outbound ? outboundStatus(msg) : { ...STATUS_LABELS[msg.status], pending: false };
 
   return (
     <article className={cn("px-4 py-4 sm:px-5", !isLast && "border-b border-white/[0.06]")}>
@@ -70,9 +70,15 @@ function Message({ msg, isLast }: { msg: EmailDetail; isLast: boolean }) {
             </p>
           </div>
         </div>
-        <time dateTime={msg.createdAt} className="shrink-0 text-xs text-muted-foreground">
-          {formatFullDate(msg.createdAt)}
-        </time>
+        {st.pending && msg.scheduledAt ? (
+          <time dateTime={msg.scheduledAt} className="shrink-0 text-xs text-amber-300">
+            Sends {formatFullDate(msg.scheduledAt)}
+          </time>
+        ) : (
+          <time dateTime={msg.createdAt} className="shrink-0 text-xs text-muted-foreground">
+            {formatFullDate(msg.createdAt)}
+          </time>
+        )}
       </header>
 
       {msg.bodyHtml ? (
