@@ -500,16 +500,21 @@ function paragraphsToEmail(paragraphs: string[], subject: string): { html: strin
 }
 
 /**
- * Follow-up to a microsite lead who left an email but no phone number (the
- * forms only started asking for one in September). Same plain note from
- * Stacy, asking the two things the team needs to work the lead: the move-in
- * date and a number to text. Owner's wording, 2026-10-05.
+ * Follow-up to a microsite lead who signed up before the forms sent an
+ * automatic reply (2026-10-02). Same plain note from Stacy, asking the two
+ * things the team needs to work the lead: the move-in date and a number to
+ * text. Owner's wording, 2026-10-05.
+ *
+ * With `phone` (the number they left, already formatted for display) the note
+ * stops asking for one and offers to text them at it instead. Second wave,
+ * 2026-10-06.
  */
 export function micrositeFollowUpEmail(data: {
   name: string | null;
   buildingName: string;
   city: string;
   unitType?: string | null;
+  phone?: string | null;
 }): { html: string; text: string; bodyHtml: string } {
   const firstName = firstNameOf(data.name);
   const unit = normalizeUnitType(data.unitType);
@@ -524,7 +529,9 @@ export function micrositeFollowUpEmail(data: {
     firstName ? `Hi ${firstName},` : "Hi there,",
     `We received your inquiry about ${about}. When are you looking to move in?`,
     `I can send you the available options and schedule an in-person tour once we find a unit that works for you.`,
-    `What\u2019s the best phone number to reach you? I can also text you the options directly.`,
+    data.phone
+      ? `I can also text you the options at ${data.phone} if that\u2019s easier.`
+      : `What\u2019s the best phone number to reach you? I can also text you the options directly.`,
     `Best,\nStacy`,
   ];
   return paragraphsToEmail(paragraphs, micrositeInquirySubject(data.buildingName, data.city, data.unitType));

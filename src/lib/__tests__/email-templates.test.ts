@@ -139,4 +139,10 @@ describe("micrositeFollowUpEmail", () => {
     const { html } = micrositeFollowUpEmail({ name: "<b>x</b>", buildingName: "Downtown 6", city: "Miami" });
     expect(html).not.toContain("<b>x</b>");
   });
+
+  it("offers to text the number they left instead of asking for one", () => {
+    const { text } = micrositeFollowUpEmail({ name: "Trumaine E", buildingName: "The Perrin", city: "Miami", unitType: "1 Bedroom", phone: "(786) 315-6324" });
+    expect(text).toContain("I can also text you the options at (786) 315-6324 if that\u2019s easier.");
+    expect(text).not.toContain("best phone number");
+  });
 });
