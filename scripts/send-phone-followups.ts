@@ -1,16 +1,25 @@
 /**
- * Follow up with microsite leads who left an email but no phone number.
+ * Follow up with microsite leads who signed up before the forms started
+ * replying automatically (2026-10-02) and have never been written to.
  *
- * The forms only started asking for a phone in September, so the earlier
- * leads can't be texted or called. Each gets Stacy's short note
- * (micrositeFollowUpEmail) asking for a move-in date and a number to text,
- * sent as their building through the admin inbox, so it is the first message
- * of a thread in Sent and the reply lands under it. When they answer with a
- * number, the Resend webhook saves it to the lead (phone-capture.ts).
+ * Default (first wave, sent 2026-10-05): leads who left an email but no phone
+ * number. The forms only started asking for a phone in September, so these
+ * can't be texted or called. Each gets Stacy's short note
+ * (micrositeFollowUpEmail) asking for a move-in date and a number to text.
+ * When they answer with a number, the Resend webhook saves it to the lead
+ * (phone-capture.ts).
+ *
+ * --has-phone (second wave, 2026-10-06): the remaining leads, who did leave a
+ * number. Same note, except the last line offers to text them at that number
+ * instead of asking for one.
+ *
+ * Either way the note is sent as their building through the admin inbox, so
+ * it is the first message of a thread in Sent and the reply lands under it.
  *
  *   npx tsx --env-file=.env.local scripts/send-phone-followups.ts                 # dry run: list who would get it
  *   npx tsx --env-file=.env.local scripts/send-phone-followups.ts --preview you@x  # one real rendering to you, nothing stored
  *   npx tsx --env-file=.env.local scripts/send-phone-followups.ts --send          # send, one every ~60s
+ *   npx tsx --env-file=.env.local scripts/send-phone-followups.ts --has-phone ... # same three forms, for the leads with a number
  *
  * Options: --limit N, --delay-sec S (default 60, randomised ±25%).
  *
@@ -24,6 +33,7 @@ import { unsubscribeUrl } from "@/lib/email/unsubscribe";
 import { MICROSITE_BUILDINGS, senderIdentityFor } from "@/lib/microsites";
 import { getResendClient, getFromEmail } from "@/lib/resend/client";
 import { getReplyToAddress } from "@/lib/email/recipients";
+import { extractPhone, formatPhone } from "@/lib/email/phone-capture";
 
 const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(`--${name}`);
@@ -33,6 +43,7 @@ const opt = (name: string) => {
 };
 
 const SEND = flag("send");
+const HAS_PHONE = flag("has-phone");
 const PREVIEW_TO = opt("preview");
 const LIMIT = Number(opt("limit") ?? Infinity);
 const DELAY_SEC = Number(opt("delay-sec") ?? 60);
@@ -60,6 +71,8 @@ interface Recipient {
   building: string;
   city: string;
   unitType: string | null;
+  /** "(786) 315-6324": the number they left, only in --has-phone mode. */
+  phone: string | null;
 }
 
 /** "[downtown6miami.com] Downtown 6 — Unit: 2 Bedroom · Move-in: Q4 2026" -> "2 Bedroom". */
@@ -118,14 +131,20 @@ async function buildRecipients(): Promise<{ recipients: Recipient[]; skipped: Re
       skip("already emailed at another address");
       continue;
     }
-    if ((lead.user_phone ?? "").trim()) continue; // has a number: text them instead
+    const rawPhone = (lead.user_phone ?? "").trim();
+    if (!HAS_PHONE && rawPhone) continue; // first wave: has a number, not this wave
+    if (HAS_PHONE && !rawPhone) continue; // second wave: no number, first wave already covered them
     const email = (lead.user_email ?? "").trim().toLowerCase();
-    if (!email) continue;
+    if (!email) continue; // phone-only (voice line): nothing to email
+    // Numbers were typed free-form ("(305) 9759050", "13056094719"); show a
+    // clean one or none, never the raw string.
+    const e164 = HAS_PHONE ? extractPhone(rawPhone) : null;
+    if (HAS_PHONE && !e164) { skip("unreadable phone number"); continue; }
     if (TEST_ADDRESSES.has(email)) { skip("owner test signup"); continue; }
     if (!EMAIL_RE.test(email)) { skip("invalid email"); continue; }
     if (lead.unsubscribed_at) { skip("unsubscribed"); continue; }
     if (lead.status !== "new") { skip(`status ${lead.status}`); continue; }
-    if (hasPhone.has(email)) { skip("same person has a phone on another lead"); continue; }
+    if (!HAS_PHONE && hasPhone.has(email)) { skip("same person has a phone on another lead"); continue; }
     if (everEmailed.has(email)) { skip("already emailed from the inbox"); continue; }
     if (byEmail.has(email)) skip("duplicate signup (newest kept)");
     byEmail.set(email, {
@@ -134,6 +153,7 @@ async function buildRecipients(): Promise<{ recipients: Recipient[]; skipped: Re
       building,
       city: lead.city?.name || "Miami",
       unitType: unitTypeFromNotes(lead.notes),
+      phone: e164 ? formatPhone(e164) : null,
     });
   }
 
@@ -157,13 +177,13 @@ async function main() {
   const { recipients, skipped } = await buildRecipients();
   const batch = recipients.slice(0, Number.isFinite(LIMIT) ? LIMIT : undefined);
 
-  console.log(`Email-only microsite leads to follow up: ${recipients.length}`);
+  console.log(`${HAS_PHONE ? "Microsite leads with a phone number" : "Email-only microsite leads"} to follow up: ${recipients.length}`);
   console.log(`Skipped: ${JSON.stringify(skipped)}`);
 
   if (PREVIEW_TO) {
     const r = batch[0];
     if (!r) return console.log("Nobody to preview.");
-    const note = micrositeFollowUpEmail({ name: r.lead.name, buildingName: r.building, city: r.city, unitType: r.unitType });
+    const note = micrositeFollowUpEmail({ name: r.lead.name, buildingName: r.building, city: r.city, unitType: r.unitType, phone: r.phone });
     const subject = micrositeInquirySubject(r.building, r.city, r.unitType);
     const { data, error } = await getResendClient().emails.send({
       from: senderIdentityFor(r.lead.source_detail, getFromEmail()).from,
@@ -180,7 +200,7 @@ async function main() {
   }
 
   for (const r of batch) {
-    console.log(`  ${r.lead.created_at.slice(0, 10)}  ${(r.lead.name ?? "").padEnd(24).slice(0, 24)}  ${r.building.padEnd(14)}  ${r.unitType ?? "-"}`);
+    console.log(`  ${r.lead.created_at.slice(0, 10)}  ${(r.lead.name ?? "").padEnd(24).slice(0, 24)}  ${r.building.padEnd(18)}  ${(r.unitType ?? "-").padEnd(10)}  ${r.email.padEnd(34)}  ${r.phone ?? ""}`);
   }
   if (!SEND) {
     console.log(`\nDry run. Nothing sent. Add --send to send ${batch.length} emails, one every ~${DELAY_SEC}s.`);
@@ -192,7 +212,7 @@ async function main() {
   let ok = 0;
   let failed = 0;
   for (const [i, r] of batch.entries()) {
-    const note = micrositeFollowUpEmail({ name: r.lead.name, buildingName: r.building, city: r.city, unitType: r.unitType });
+    const note = micrositeFollowUpEmail({ name: r.lead.name, buildingName: r.building, city: r.city, unitType: r.unitType, phone: r.phone });
     const unsubscribe = unsubscribeUrl(r.lead.id);
     const result = await inbox.sendNewEmail({
       to: r.email,
