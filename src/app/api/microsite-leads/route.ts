@@ -7,6 +7,7 @@ import { MICROSITE_BUILDINGS } from "@/lib/microsites";
 import { autoAssignAgent } from "@/lib/leads/routing";
 import { newLeadEmail, micrositeInquiryEmail, micrositeInquirySubject } from "@/lib/email/templates";
 import { unsubscribeUrl } from "@/lib/email/unsubscribe";
+import { scheduleReplyAt } from "@/lib/email/send-window";
 import { getAdminInboxService } from "@/lib/email/admin-inbox";
 import { getLeadNotificationRecipients, recordInternalLeadAlert } from "@/lib/email/recipients";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
@@ -203,7 +204,12 @@ export async function POST(req: Request) {
         // inbox service: sent as the building, stored as the thread's first
         // message, with a plus-addressed Reply-To so the answer lands in the
         // same thread on /admin/email. Someone must answer when they write back.
+        //
+        // It leaves 10–20 minutes from now, or the next morning for a
+        // night-time signup (send-window.ts), so it reads as a person
+        // answering rather than an autoresponder. Resend holds it until then.
         const unsubscribe = unsubscribeUrl(leadId);
+        const scheduledAt = scheduleReplyAt();
         const reply = micrositeInquiryEmail({
           name: body.name,
           buildingName: buildingName,
@@ -217,6 +223,7 @@ export async function POST(req: Request) {
           bodyHtml: reply.bodyHtml,
           bodyText: reply.text,
           leadId,
+          scheduledAt,
           // One-click unsubscribe (RFC 8058): Gmail and Yahoo require it for
           // bulk senders, and it is what the Unsubscribe button next to the
           // sender name is wired to.

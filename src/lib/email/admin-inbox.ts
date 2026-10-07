@@ -95,6 +95,14 @@ export interface EmailMetadata {
   attachments?: EmailAttachmentMeta[];
   /** Set on the "Send me a test" row so the UI can label it. */
   test?: boolean;
+  /**
+   * Outbound handed to Resend with a future send time (send-window.ts). The
+   * row exists from the moment it is scheduled; `status` moves to "delivered"
+   * through the webhook once it actually leaves.
+   */
+  scheduled_at?: string | null;
+  /** A scheduled note pulled back before it left (someone wrote to the lead first). */
+  cancelled_at?: string | null;
 }
 
 /** One row of `emails` as PostgREST returns it. */
@@ -152,6 +160,10 @@ export interface EmailListItem {
   isTest: boolean;
   hasAttachments: boolean;
   createdAt: string;
+  /** When Resend will send it (outbound only); null for an immediate send. */
+  scheduledAt: string | null;
+  /** Set when a scheduled note was pulled back before it left. */
+  cancelledAt: string | null;
   aiCategory: string | null;
   aiConfidence: number | null;
   aiSummary: string | null;
@@ -275,6 +287,8 @@ export function toListItem(row: EmailRow): EmailListItem {
     isTest: meta.test === true,
     hasAttachments: (meta.attachments?.length ?? 0) > 0,
     createdAt: row.created_at,
+    scheduledAt: typeof meta.scheduled_at === "string" ? meta.scheduled_at : null,
+    cancelledAt: typeof meta.cancelled_at === "string" ? meta.cancelled_at : null,
     aiCategory: row.ai_category,
     aiConfidence: row.ai_confidence,
     aiSummary: row.ai_summary,
@@ -596,6 +610,7 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       extraHeaders,
       attachments = [],
       test = false,
+      scheduledAt = null,
     }: {
       to: string;
       subject: string;
@@ -611,6 +626,13 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       /** Already validated with checkOutgoingAttachments. */
       attachments?: OutgoingAttachment[];
       test?: boolean;
+      /**
+       * Hand the email to Resend now but have it leave at this instant
+       * (send-window.ts picks it for the automatic form reply). Resend allows
+       * up to 72 hours ahead. A scheduled note is pulled back automatically
+       * if someone writes to the same person before it leaves.
+       */
+      scheduledAt?: Date | null;
     }): Promise<
       | { success: true; id: string; threadId: string; resendId: string | null }
       | { success: false; error: string; status?: number }
@@ -624,6 +646,7 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       if (!bodyText.trim() && !bodyHtml.trim()) {
         return { success: false, error: "Message is required", status: 400 };
       }
+      const scheduledIso = scheduledAt && scheduledAt.getTime() > Date.now() ? scheduledAt.toISOString() : null;
 
       let threadId: string | null = null;
       let toName: string | null = null;
@@ -669,6 +692,13 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       const id = randomUUID();
       if (!threadId) threadId = id;
 
+      // A person being written to right now must not also get a canned note
+      // that is still waiting in Resend's queue; it would arrive after the
+      // real one and read as a bot.
+      if (!scheduledIso && !test) {
+        await service.cancelScheduledTo(recipient).catch((err) => console.error("[Inbox] Could not cancel scheduled note:", err));
+      }
+
       // Sent as the building when the lead came from a microsite ("Downtown 6"
       // <downtown6miami@staycio.com>), as Staycio otherwise: the person wrote
       // to the name they know, and the answer must come from the same name.
@@ -684,6 +714,7 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
           // Per-thread plus-address: the reply comes back tagged with this thread.
           replyTo: threadReplyAddress(threadId),
           ...(Object.keys(headers).length > 0 && { headers }),
+          ...(scheduledIso && { scheduledAt: scheduledIso }),
           ...(attachments.length > 0 && {
             attachments: attachments.map((a) => ({
               filename: a.filename,
@@ -702,6 +733,7 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       const meta: EmailMetadata = {};
       if (Object.keys(headers).length > 0) meta.headers = headers;
       if (test) meta.test = true;
+      if (scheduledIso) meta.scheduled_at = scheduledIso;
       if (attachments.length > 0) {
         meta.attachments = attachments.map((a, i) => ({
           id: `sent-${i}`,
@@ -745,6 +777,48 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       }
 
       return { success: true, id, threadId, resendId: sent?.id ?? null };
+    },
+
+    /**
+     * Pull back every note to `recipient` that Resend is still holding for a
+     * later send. Called before any immediate send to the same person, so a
+     * hand-written reply is never followed by the canned one. Returns how
+     * many were cancelled.
+     */
+    async cancelScheduledTo(recipient: string): Promise<number> {
+      const nowIso = new Date().toISOString();
+      const { data: pending, error } = await supabase
+        .from("emails")
+        .select("id, resend_message_id, metadata")
+        .eq("direction", "outbound")
+        .eq("to_email", recipient.trim().toLowerCase())
+        .gt("metadata->>scheduled_at", nowIso)
+        .is("metadata->>cancelled_at", null)
+        .limit(20);
+      if (error) throw new Error(error.message);
+      const rows = (pending ?? []) as Array<Pick<EmailRow, "id" | "resend_message_id" | "metadata">>;
+      let cancelled = 0;
+      for (const row of rows) {
+        if (row.resend_message_id) {
+          // Resend answers 422 "Email is not scheduled" for a fraction of a
+          // second after accepting a scheduled send, before the schedule is
+          // registered; one short retry covers that. The same 422 later
+          // means it already left or was already cancelled: nothing to pull back.
+          let { error: cancelError } = await getResendClient().emails.cancel(row.resend_message_id);
+          if (cancelError) {
+            await new Promise((r) => setTimeout(r, 1500));
+            ({ error: cancelError } = await getResendClient().emails.cancel(row.resend_message_id));
+          }
+          if (cancelError) {
+            console.error(`[Inbox] Could not cancel scheduled email ${row.id}:`, cancelError);
+            continue;
+          }
+        }
+        const meta: EmailMetadata = { ...readMetadata(row.metadata), cancelled_at: nowIso };
+        await supabase.from("emails").update({ metadata: meta }).eq("id", row.id);
+        cancelled++;
+      }
+      return cancelled;
     },
 
     /**

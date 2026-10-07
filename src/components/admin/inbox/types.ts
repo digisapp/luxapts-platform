@@ -71,6 +71,21 @@ export const STATUS_LABELS: Record<EmailStatus, { label: string; tone: BadgeTone
   failed: { label: "Failed", tone: "red" },
 };
 
+/**
+ * An outbound row's badge: Resend is still holding it ("Scheduled"), it was
+ * pulled back before it left ("Cancelled"), or the delivery status.
+ */
+export function outboundStatus(
+  email: Pick<EmailListItem, "status" | "scheduledAt" | "cancelledAt">,
+  now: Date = new Date()
+): { label: string; tone: BadgeTone; pending: boolean } {
+  if (email.cancelledAt) return { label: "Cancelled", tone: "neutral", pending: false };
+  if (email.scheduledAt && email.status === "sent" && new Date(email.scheduledAt).getTime() > now.getTime()) {
+    return { label: "Scheduled", tone: "amber", pending: true };
+  }
+  return { ...STATUS_LABELS[email.status], pending: false };
+}
+
 export function formatBytes(n: number) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
