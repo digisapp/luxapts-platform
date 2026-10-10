@@ -31,6 +31,9 @@ export const MICROSITE_BUILDINGS: Record<string, string> = {
   "2900terrace.com": "2900 Terrace",
   "neoedgewatermiami.com": "Neo Edgewater",
   "hamiltonhousemiami.com": "Hamilton House",
+  // Same tower as downtown6miami.com under its leasing name; a lead from here
+  // should hear from "Central Tower", the name they searched.
+  "centraltowermiami.com": "Central Tower",
 };
 
 /**
@@ -88,6 +91,7 @@ export const MICROSITE_GUIDES: MicrositeGuide[] = [
   { domain: "maizonbrickell.com", name: "Maizon Brickell", neighborhood: "brickell", blurb: "Availability & rents" },
   // Downtown Miami
   { domain: "downtown6miami.com", name: "Downtown 6", neighborhood: "downtown", blurb: "Pre-leasing waitlist" },
+  { domain: "centraltowermiami.com", name: "Central Tower", neighborhood: "downtown", blurb: "Same tower as Downtown 6" },
   { domain: "downtown5miami.com", name: "Downtown 5th", neighborhood: "downtown", blurb: "Availability & rents" },
   { domain: "namdartowers.com", name: "Namdar Towers", neighborhood: "downtown", blurb: "Availability & rents" },
   { domain: "muzemet.com", name: "Muze at Met", neighborhood: "downtown", blurb: "Availability & rents" },

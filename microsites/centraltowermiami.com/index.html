@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#17151f">
+<title>Central Tower Miami — Worldcenter Rental Apartments</title>
+<meta name="description" content="Central Tower, 46 NE 6th St: Melo Group's 824 rentals in Miami Worldcenter. 1–3 bedrooms from 732 sq ft, with balconies. Get pricing and floor plans first.">
+<link rel="canonical" href="https://centraltowermiami.com/">
+<link rel="preload" as="image" href="img/hero.jpg" fetchpriority="high">
+<meta property="og:title" content="Central Tower — Melo Group Rentals at Miami Worldcenter">
+<meta property="og:description" content="Central Tower, 46 NE 6th St: Melo Group's 824 rentals in Miami Worldcenter. 1–3 bedrooms from 732 sq ft, with balconies. Get pricing and floor plans first.">
+<meta property="og:image" content="https://centraltowermiami.com/img/hero.jpg">
+<meta property="og:url" content="https://centraltowermiami.com/">
+<meta property="og:type" content="website">
+<meta name="robots" content="index,follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ApartmentComplex",
+  "name": "Central Tower",
+  "description": "Central Tower, 46 NE 6th St: Melo Group's 824 rentals in Miami Worldcenter. 1–3 bedrooms from 732 sq ft, with balconies. Get pricing and floor plans first.",
+  "image": "https://centraltowermiami.com/img/hero.jpg",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "46 NE 6th St",
+    "addressLocality": "Miami",
+    "addressRegion": "FL",
+    "postalCode": "33132",
+    "addressCountry": "US"
+  },
+  "url": "https://centraltowermiami.com/",
+  "numberOfAccommodationUnits": 824
+}
+</script>
+<style>
+  :root{
+    --ink:#17151f; --aqua:#f2a65a; --aqua-deep:#b8682a; --aqua-pale:#fdf0e3;
+    --white:#ffffff; --off:#f6f9fa; --muted:#8a9aa0; --muted-dark:#46585d;
+    --display:'Sora',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--body);font-weight:300;color:var(--ink);background:var(--white);line-height:1.7;font-size:1.02rem}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+  img{max-width:100%;display:block}
+
+  header{position:fixed;top:0;left:0;right:0;z-index:50;transition:all .35s;padding:20px 0}
+  header.scrolled{background:rgba(23,21,31,0.96);backdrop-filter:blur(12px);padding:12px 0}
+  header .wrap{display:flex;align-items:center;justify-content:space-between}
+  .wordmark{font-family:var(--display);font-weight:800;font-size:1.25rem;color:#fff;text-decoration:none;letter-spacing:-.01em}
+  .wordmark span{color:var(--aqua)}
+  .nav-cta{font-family:var(--display);font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--aqua);text-decoration:none;padding:12px 24px;border-radius:999px;transition:all .3s}
+  .nav-cta:hover{background:#fff}
+
+  .hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;color:#fff;
+    background:linear-gradient(165deg,rgba(23,21,31,0.84) 0%,rgba(184,104,42,0.5) 60%,rgba(23,21,31,0.76) 100%),
+    url('img/hero.jpg') center/cover}
+  .hero-inner{max-width:840px;padding:150px 0 110px}
+  .chip{display:inline-block;font-family:var(--display);font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;background:rgba(242,166,90,0.18);border:1px solid rgba(242,166,90,0.5);color:#fdf0e3;padding:8px 18px;border-radius:999px;margin-bottom:28px}
+  .hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,6.2vw,4.6rem);line-height:1.05;letter-spacing:-.03em}
+  .hero h1 .aqua{color:var(--aqua)}
+  .hero p.sub{margin:26px 0 38px;font-size:1.15rem;color:rgba(255,255,255,.85);max-width:580px}
+  .btn{display:inline-block;font-family:var(--display);font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;padding:17px 36px;border-radius:999px;transition:all .3s;cursor:pointer;border:none}
+  .btn-aqua{background:var(--aqua);color:var(--ink)}
+  .btn-aqua:hover{background:#fff}
+  .btn-ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.4);margin-left:14px}
+  .btn-ghost:hover{border-color:var(--aqua);color:var(--aqua)}
+  .hero-ticker{position:absolute;bottom:0;left:0;right:0;background:var(--aqua);color:var(--ink);font-family:var(--display);font-weight:600;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;padding:13px 0;white-space:nowrap;overflow:hidden}
+  .hero-ticker div{display:inline-block;animation:tick 30s linear infinite}
+  @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+  .stats{background:var(--ink);color:#fff;padding:70px 0}
+  .stats .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:36px}
+  .stat{border-left:2px solid var(--aqua);padding-left:22px}
+  .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
+  .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+
+  section{padding:104px 0}
+  .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
+  h2{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,3.6vw,2.7rem);line-height:1.12;letter-spacing:-.02em;margin-bottom:20px}
+  .prose{color:var(--muted-dark);max-width:58ch}
+  .prose+.prose{margin-top:16px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
+  .split img{width:100%;height:540px;object-fit:cover;border-radius:24px}
+
+  .alt{background:var(--off)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;margin-top:46px}
+  .card{background:#fff;border-radius:20px;padding:36px 32px;border:1px solid #e6eef0;transition:transform .3s,box-shadow .3s}
+  .card:hover{transform:translateY(-4px);box-shadow:0 18px 42px rgba(23,21,31,0.09)}
+  .card .num{font-family:var(--display);font-weight:800;font-size:.85rem;color:var(--aqua-deep);letter-spacing:.14em}
+  .card b{display:block;font-family:var(--display);font-weight:700;font-size:1.15rem;margin:12px 0 8px;letter-spacing:-.01em}
+  .card p{color:var(--muted-dark);font-size:.95rem}
+
+  .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .gallery-grid figure{overflow:hidden;border-radius:22px;position:relative}
+  .gallery-grid img{width:100%;height:400px;object-fit:cover;transition:transform 1s ease}
+  .gallery-grid figure:hover img{transform:scale(1.06)}
+  .gallery-grid figcaption{position:absolute;left:0;right:0;bottom:0;padding:20px;color:#fff;font-family:var(--display);font-size:.72rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;background:linear-gradient(transparent,rgba(23,21,31,0.72))}
+
+  details{background:var(--off);border-radius:16px;padding:22px 28px;margin-bottom:12px;border:1px solid #e6eef0}
+  summary{font-family:var(--display);font-weight:600;font-size:1.05rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:-.01em;gap:20px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:'+';font-size:1.4rem;color:var(--aqua-deep);transition:transform .3s}
+  details[open] summary::after{transform:rotate(45deg)}
+  details p{margin-top:12px;color:var(--muted-dark)}
+
+  /* Mid-page CTA. The form lives at the very bottom; on a long page that is a
+     lot of scroll between "I'm interested" and anywhere to say so. */
+  .midcta{background:var(--off);border-top:1px solid #e6eef0;border-bottom:1px solid #e6eef0;padding:38px 0}
+  .midcta .wrap{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
+  .midcta p{font-family:var(--display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;margin:0;max-width:62ch}
+  .midcta .btn{flex:none}
+
+
+  .cta-band{position:relative;color:#fff;padding:120px 0;
+    background:linear-gradient(160deg,rgba(23,21,31,0.94),rgba(184,104,42,0.84)),
+    url('img/cta.jpg') center/cover}
+  .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:76px;align-items:start}
+  .cta-band h2{color:#fff}
+  .cta-band .prose{color:rgba(255,255,255,.8)}
+  form{background:rgba(255,255,255,.99);border-radius:24px;padding:44px;color:var(--ink);position:relative;box-shadow:0 30px 80px rgba(0,0,0,.3)}
+  label{display:block;font-family:var(--display);font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--aqua-deep);margin:20px 0 8px}
+  form label:first-of-type{margin-top:0}
+  input,select{width:100%;background:var(--off);border:1px solid #e0e9eb;border-radius:12px;color:var(--ink);font-family:var(--body);font-size:1rem;padding:14px 16px;outline:none;transition:border-color .3s}
+  input:focus,select:focus{border-color:var(--aqua)}
+  select{appearance:none;cursor:pointer}
+  form .btn{width:100%;margin-top:28px}
+  .fineprint{margin-top:16px;font-size:.83rem;color:var(--muted)}
+  .fineprint a{color:var(--aqua-deep)}
+
+  footer{background:var(--ink);color:var(--muted);padding:54px 0;font-size:.82rem}
+  footer .wordmark{font-size:1rem;display:inline-block;margin-bottom:18px;overflow-wrap:anywhere}
+  footer a{color:var(--aqua)}
+  footer p{max-width:90ch}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:900px){
+    .split,.cta-grid{grid-template-columns:1fr;gap:42px}
+    .split img{height:360px}
+    .gallery-grid{grid-template-columns:1fr}
+    .gallery-grid img{height:280px}
+    section{padding:72px 0}
+    .btn-ghost{margin-left:0;margin-top:12px}
+    form{padding:32px}
+    .midcta .wrap{flex-direction:column;align-items:flex-start}
+  }
+  /* Phones. The fixed header ran 106–133px, its button wrapped onto two or three
+     lines and ran into the wordmark, and an iPhone SE could not see the hero
+     button. One compact row (68px, 60px scrolled), a hero whose button clears the
+     fold at 375x553, a 12px floor on labels and 44px tap targets. */
+  @media(max-width:600px){
+    .wrap{padding:0 20px}
+    header{padding:12px 0}
+    header.scrolled{padding:8px 0}
+    header .wrap{gap:12px}
+    header .wordmark{font-size:min(18px,5.05vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
+    .nav-cta{flex:none;display:inline-block;line-height:44px;padding:0 16px;font-size:.75rem;letter-spacing:.05em;white-space:nowrap}
+    .nav-cta .cta-x{display:none}
+    .hero-inner{padding:88px 0 76px}
+    .chip{font-size:.75rem;letter-spacing:.08em;padding:7px 14px;margin-bottom:16px}
+    .hero h1{font-size:clamp(2rem,9.2vw,2.5rem);line-height:1.06}
+    .hero p.sub{margin:16px 0 24px;font-size:1rem;line-height:1.55}
+    .btn{padding:16px 28px}
+    .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
+    summary{min-height:44px}
+  }
+  @media(max-width:359px){
+    .wrap{padding:0 16px}
+    header .wrap{gap:10px}
+    .nav-cta{padding:0 12px}
+  }
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <div class="wrap">
+    <a class="wordmark" href="#top">CENTRAL<span>TOWER</span></a>
+    <a class="nav-cta" href="#signup">Get Pricing<span class="cta-x"> First</span></a>
+  </div>
+</header>
+
+<div class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-inner">
+      <span class="chip">Floor Plans Out · Delivering Feb 2027</span>
+      <h1>Life at the<br>center of<br>Miami<br><span class="aqua">Worldcenter.</span></h1>
+      <p class="sub">Central Tower is Melo Group's 824-residence rental tower at 46 NE 6th Street, the building first announced as Downtown 6. The floor plans are out: one- to three-bedroom homes from 732 to 1,171 sq ft, every one with a balcony and a full-size washer and dryer.</p>
+      <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
+      <a class="btn btn-ghost" href="#building">See the Building</a>
+    </div>
+  </div>
+  <div class="hero-ticker"><div>824 residences &nbsp;·&nbsp; 58 floors &nbsp;·&nbsp; A balcony on every home &nbsp;·&nbsp; Full-size washer & dryer &nbsp;·&nbsp; 2,100+ sq ft fitness center &nbsp;·&nbsp; Delivering Feb 2027 &nbsp;·&nbsp; 824 residences &nbsp;·&nbsp; 58 floors &nbsp;·&nbsp; A balcony on every home &nbsp;·&nbsp; Full-size washer & dryer &nbsp;·&nbsp; 2,100+ sq ft fitness center &nbsp;·&nbsp; Delivering Feb 2027 &nbsp;·&nbsp; </div></div>
+</div>
+
+<div class="stats">
+  <div class="wrap">
+    <div class="stat reveal"><b>732+</b><small>Sq Ft</small></div>
+    <div class="stat reveal"><b>824</b><small>Residences</small></div>
+    <div class="stat reveal"><b>58</b><small>Floors</small></div>
+    <div class="stat reveal"><b>Feb '27</b><small>Completion</small></div>
+  </div>
+</div>
+
+<section id="building">
+  <div class="wrap">
+    <div class="split">
+      <div class="reveal">
+        <p class="kicker">46 NE 6th Street</p>
+        <h2>The floor plans are out</h2>
+        <p class="prose">Melo Group has published the layouts: one-bedrooms at 732 sq ft, one-bedroom-plus-dens at 792, two-bedroom, two-bath homes from 878 to 951, and three-bedrooms at 1,171. Every residence gets a balcony, granite counters, Samsung stainless appliances, a double-door refrigerator, wood-look laminate floors, porcelain-tiled baths and a full-size washer and dryer.</p>
+        <p class="prose">The tower stands on NE 6th Street across from 600 Miami Worldcenter, with the Metromover at the door, Bayside and Miami Dade College a block away, and I-95 and I-395 within reach. Brickell is a few blocks south; South Beach and Miami International Airport are each about ten minutes out.</p>
+      </div>
+      <img class="reveal" src="img/split.jpg" alt="Central Tower at dusk, 46 NE 6th Street, Miami Worldcenter" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section class="alt" style="padding-top:90px">
+  <div class="wrap">
+    <p class="kicker reveal">Why this building</p>
+    <h2 class="reveal">What makes Central Tower worth tracking</h2>
+    <div class="cards">
+      <div class="card reveal"><span class="num">01</span><b>Pool and jacuzzi</b><p>A large resort-style pool and a jacuzzi on site, so a Saturday in the sun doesn't start with a drive.</p></div>
+      <div class="card reveal"><span class="num">02</span><b>A real gym, downstairs</b><p>More than 2,100 sq ft of fitness space, plus a social room, kids' room, business center and a café-market in the building.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>Parking, or the Mover</b><p>Private parking on site for the car, and the Metromover at the door for the days you'd rather leave it.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="midcta reveal">
+  <div class="wrap">
+    <p>Central Tower pricing goes to this list before it reaches the listing sites.</p>
+    <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <p class="kicker reveal">The Neighborhood</p>
+    <h2 class="reveal" style="margin-bottom:44px">Miami Worldcenter, on foot</h2>
+    <div class="gallery-grid">
+      <figure class="reveal"><img src="img/g1.jpg" alt="Central Tower — Pool Deck" loading="lazy"><figcaption>Pool Deck</figcaption></figure>
+      <figure class="reveal"><img src="img/g2.jpg" alt="Central Tower — Fitness Center" loading="lazy"><figcaption>Fitness Center</figcaption></figure>
+      <figure class="reveal"><img src="img/g3.jpg" alt="Central Tower — From the Balconies" loading="lazy"><figcaption>From the Balconies</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <p class="kicker reveal">FAQ</p>
+    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
+    <details class="reveal"><summary>Is Central Tower the same building as Downtown 6?</summary><p>Yes. Downtown 6 was the project's announced name; Melo Group now markets the tower as Central Tower. Same building, same address: 46 NE 6th Street.</p></details>
+    <details class="reveal"><summary>When does Central Tower open?</summary><p>Melo Group lists completion for February 2027. Applications at Melo towers typically open around completion, and this list hears first.</p></details>
+    <details class="reveal"><summary>What floor plans are there?</summary><p>One-bedrooms (732 sq ft), one-bedroom-plus-den (792 sq ft), two-bedroom, two-bath homes (878 to 951 sq ft) and three-bedroom, two-bath homes (1,171 sq ft). Melo's published plans don't include studios.</p></details>
+    <details class="reveal"><summary>How much will rent be?</summary><p>Melo hasn't published rents yet. When it does, the numbers and any opening specials go to this list before the listing sites.</p></details>
+    <details class="reveal"><summary>What amenities does it have?</summary><p>A large swimming pool and jacuzzi, a fitness center of more than 2,100 sq ft, a café-market, social room, kids' room, business center and private parking on site.</p></details>
+  </div>
+</section>
+
+<div class="cta-band" id="signup">
+  <div class="wrap">
+    <div class="cta-grid">
+      <div class="reveal">
+        <p class="kicker" style="color:#fdf0e3">First Access</p>
+        <h2>Central Tower pricing is weeks away.</h2>
+        <p class="prose">Melo lists completion for February 2027, and applications usually open around then. Get the rents, opening specials and first pick of floor plans the day they're released.</p>
+
+      </div>
+      <form data-lead class="reveal">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" required placeholder="Your name" autocomplete="name">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required placeholder="you@email.com" autocomplete="email">
+        <label for="phone">Phone / WhatsApp</label>
+        <input id="phone" name="phone" type="tel" required placeholder="+1 305 555 0123" autocomplete="tel" inputmode="tel">
+        <label for="unit">Interested in</label>
+        <select id="unit" name="unit_type"><option>1 Bedroom</option><option>1 Bedroom + Den</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
+        <label for="movein">Target move-in</label>
+        <select id="movein" name="move_in"><option>Early 2027</option><option>Mid 2027</option><option>Flexible</option></select>
+        <button class="btn btn-aqua" type="submit">Get Pricing First</button>
+        <p class="fineprint">Looking more broadly? <a href="https://staycio.com?utm_source=centraltowermiami&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span class="wordmark">CENTRALTOWERMIAMI.COM</span>
+    <p>© 2026 centraltowermiami.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Melo Group or the owners or leasing agents of Central Tower. Building names are used for identification only. Renderings and photography courtesy of Melo Group / Central Tower Rentals. Details compiled from public reporting and believed accurate as of 2026-10-10 — always verify with the official leasing office.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var hdr=document.getElementById("hdr");
+  addEventListener("scroll",function(){hdr.classList.toggle("scrolled",scrollY>40)},{passive:true});
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(function(el){io.observe(el)});
+  var form=document.querySelector("form[data-lead]");if(!form)return;
+  form.addEventListener("submit",function(e){
+    e.preventDefault();
+    var btn=form.querySelector("button[type=submit]");var old=btn.textContent;
+    btn.disabled=true;btn.textContent="Sending…";
+    var data={};new FormData(form).forEach(function(v,k){data[k]=v;});
+    data.domain="centraltowermiami.com";data.building="Central Tower";
+    fetch("https://staycio.com/api/microsite-leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
+      .then(function(r){if(!r.ok)return r.json().catch(function(){return{};}).then(function(j){throw new Error(j.error||"Something went wrong");});return r.json();})
+      .then(function(){if(window.__scTrack)window.__scTrack("form_submit");form.innerHTML='<p style="font-family:var(--display);font-weight:700;font-size:1.5rem">You\'re on the list! 🎉</p><p style="color:var(--muted-dark);margin-top:10px">We\'ll email you the moment pricing and availability drop.</p>';})
+      .catch(function(err){
+        btn.disabled=false;btn.textContent=old;
+        var m=form.querySelector(".form-error");
+        if(!m){m=document.createElement("p");m.className="form-error";m.style.cssText="color:#c0392b;font-size:.9rem;margin-top:12px";form.appendChild(m);}
+        m.textContent=(err&&err.message?err.message:"Something went wrong")+" — please try again.";
+      });
+  });
+})();
+</script>
+
+<script>
+/* Staycio microsite analytics — anonymous, first-party, no cookies. */
+(function(){
+  var D="centraltowermiami.com", EP="https://staycio.com/api/microsite-analytics";
+  var sid;
+  try{
+    sid=localStorage.getItem("_sc_sid");
+    if(!sid){sid=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem("_sc_sid",sid);}
+  }catch(e){sid=Math.random().toString(36).slice(2)+Date.now().toString(36);}
+  function send(p,beacon){
+    p.domain=D;p.session_id=sid;p.path=location.pathname;
+    var b=JSON.stringify(p);
+    try{
+      if(beacon&&navigator.sendBeacon){navigator.sendBeacon(EP,new Blob([b],{type:"application/json"}));return;}
+      fetch(EP,{method:"POST",headers:{"Content-Type":"application/json"},body:b,keepalive:true}).catch(function(){});
+    }catch(e){}
+  }
+  window.__scTrack=function(name,props){send({type:"event",event_name:name,properties:props||{}});};
+  send({type:"pageview",referrer:document.referrer||null});
+  var hit={};
+  addEventListener("scroll",function(){
+    var h=document.documentElement.scrollHeight-innerHeight;
+    if(h<=0)return;
+    var p=Math.round(scrollY/h*100);
+    [25,50,75,100].forEach(function(m){
+      if(!hit[m]&&p>=m){hit[m]=1;send({type:"event",event_name:"scroll_depth",properties:{depth:m}});}
+    });
+  },{passive:true});
+  document.addEventListener("click",function(e){
+    var a=e.target.closest&&e.target.closest("a,button");if(!a)return;
+    var label=(a.textContent||"").trim().slice(0,60);
+    var href=a.getAttribute("href")||null;
+    if(href&&href.indexOf("staycio.com")>-1){send({type:"event",event_name:"staycio_click",properties:{label:label}});return;}
+    if(a.className&&/btn|nav-cta/.test(a.className)){send({type:"event",event_name:"cta_click",properties:{label:label,href:href}});}
+  });
+  var started=false;
+  document.addEventListener("focusin",function(e){
+    if(started||!e.target.closest)return;
+    if(!e.target.closest("form[data-lead]"))return;
+    started=true;send({type:"event",event_name:"form_start"});
+  });
+  var t0=Date.now(),sent=false;
+  addEventListener("visibilitychange",function(){
+    if(document.visibilityState==="hidden"&&!sent){
+      sent=true;send({type:"event",event_name:"time_on_page",properties:{ms:Date.now()-t0}},true);
+    }
+  });
+})();
+</script>
+<!-- stacy:start (generated from microsites/_shared/stacy-widget.html; edit the template, not this block) -->
+<style>
+.stc,.stc-panel{--stc-a:#f2a65a;--stc-ink:#17151f;letter-spacing:normal;text-transform:none;text-align:left}
+.stc{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;display:flex;gap:10px;align-items:center;transition:opacity .2s ease,transform .2s ease}
+/* Out of the way (script below): while a hero/mid-page button, the lead form or the footer passes
+   under the launchers, while a form field has focus (the iOS keyboard is up), and while the chat is open. */
+.stc.stc-away{opacity:0;transform:translateY(14px);visibility:hidden;pointer-events:none;transition:opacity .15s ease,transform .15s ease,visibility 0s linear .15s}
+@media (prefers-reduced-motion:reduce){.stc,.stc.stc-away{transition:none}}
+.stc-fab{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:0;border-radius:999px;padding:13px 18px;font-family:inherit;font-weight:600;font-size:15px;line-height:1;cursor:pointer;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.stc-chat{background:var(--stc-a);color:var(--stc-ink)}
+.stc-call{background:var(--stc-ink);color:#fff}
+.stc-fab svg{width:18px;height:18px;flex:none}
+.stc-panel{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 32px));height:min(560px,calc(100dvh - 32px));background:#fff;color:#111;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.3);display:none;flex-direction:column;overflow:hidden;z-index:61;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+.stc-panel.open{display:flex}
+.stc-head{background:var(--stc-ink);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.stc-head b{display:block;font-size:15px}
+.stc-head small{display:block;opacity:.75;font-size:12px;margin-top:2px}
+.stc-x{flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:-12px -12px -12px 0;background:none;border:0;border-radius:10px;color:#fff;font-size:26px;line-height:1;cursor:pointer;padding:0}
+.stc-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:#f6f7f8}
+.stc-m{max-width:85%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+.stc-m.a{background:#fff;border:1px solid #e3e5e8;align-self:flex-start}
+.stc-m.u{background:var(--stc-ink);color:#fff;align-self:flex-end}
+.stc-m.t{color:#6b7280;font-style:italic;background:none;border:0;padding:2px 4px}
+.stc-form{display:flex;gap:8px;padding:10px;border-top:1px solid #e3e5e8;background:#fff}
+.stc-form input{flex:1;min-width:0;width:auto;height:auto;min-height:44px;margin:0;border:1px solid #d5d8dc;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;line-height:1.3;color:#111;background:#fff;box-shadow:none;-webkit-appearance:none;appearance:none;opacity:1}
+.stc-form input::placeholder{color:#8a9097;opacity:1}
+.stc-form input:focus{outline:2px solid var(--stc-a);outline-offset:1px;border-color:transparent}
+.stc-form button{width:auto;min-height:44px;margin:0;border:0;border-radius:10px;padding:0 14px;letter-spacing:normal;text-transform:none;background:var(--stc-a);color:var(--stc-ink);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.stc-form button:disabled{opacity:.5;cursor:default}
+.stc-foot{font-size:12px;color:#6b7280;padding:0 12px 10px;background:#fff}
+.stc-foot a{color:inherit}
+@media (max-width:520px){.stc{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}.stc-fab{padding:12px 15px}.stc-call span{display:none}
+/* Full-height sheet. dvh tracks Safari's toolbar (vh alone put the header under it); the script
+   below also fits it to the visual viewport while the iOS keyboard is up. */
+.stc-panel{right:8px;left:8px;width:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px));height:calc(100vh - 16px - env(safe-area-inset-bottom,0px));height:calc(100dvh - 16px - env(safe-area-inset-bottom,0px))}}
+</style>
+<div class="stc" id="stc">
+  <a class="stc-fab stc-call" href="tel:+13059521558" aria-label="Call Stacy, Staycio's AI assistant, at (305) 952-1558"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg><span>Call</span></a>
+  <button class="stc-fab stc-chat" type="button" aria-expanded="false" aria-controls="stc-panel"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2z"/></svg>Ask Stacy</button>
+</div>
+<div class="stc-panel" id="stc-panel" role="dialog" aria-label="Chat with Stacy">
+  <div class="stc-head"><div><b>Stacy · AI apartment assistant</b><small>Staycio, independent of the building and its leasing office</small></div><button class="stc-x" type="button" aria-label="Close chat">×</button></div>
+  <div class="stc-log" aria-live="polite"></div>
+  <div class="stc-form"><input type="text" autocomplete="off" enterkeyhint="send" maxlength="1000" placeholder="Ask about rents, timing, pets…" aria-label="Message Stacy"><button type="button">Send</button></div>
+  <div class="stc-foot">AI answers can be wrong; confirm with the leasing office. Rather talk? <a href="tel:+13059521558">Call (305) 952-1558</a>, any time.</div>
+</div>
+<script>
+(function(){
+  var D="centraltowermiami.com",EP="https://staycio.com/api/microsite-chat",GREET="Hi, I'm Stacy. I can help you explore Central Tower or find apartments in Miami Worldcenter that are available now.";
+  var root=document.getElementById("stc"),panel=document.getElementById("stc-panel");
+  // Deliberately not a form element: each page has exactly one form, and its lead handler binds
+  // to the first one it finds.
+  var log=panel.querySelector(".stc-log"),input=panel.querySelector(".stc-form input"),sendBtn=panel.querySelector(".stc-form button");
+  var openBtn=root.querySelector(".stc-chat"),msgs=[],busy=false,started=false;
+  function track(n,p){try{window.__scTrack&&window.__scTrack(n,p||{});}catch(e){}}
+  function sid(){var k="stc_sid",v=null;try{v=sessionStorage.getItem(k);}catch(e){}
+    if(!v){v=(Date.now().toString(36)+Math.random().toString(36).slice(2,10)).replace(/[^a-z0-9]/g,"");try{sessionStorage.setItem(k,v);}catch(e){}}return v;}
+  function add(cls,text){var d=document.createElement("div");d.className="stc-m "+cls;d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
+  // The launchers step aside (.stc-away) for as long as any reason holds.
+  var away={};
+  function setAway(k,v){if(!!away[k]===!!v)return;away[k]=!!v;var on=false;for(var r in away)if(away[r])on=true;root.classList.toggle("stc-away",on);}
+  // They must never cover a primary button or the lead form (on phones they sat on the hero CTA and
+  // the phone field), nor sit over the footer at the very bottom. The observer's root is shrunk to
+  // the launchers' own box, so they only hide while one of these actually passes underneath.
+  var guards=[].slice.call(document.querySelectorAll(".hero .btn,.midcta .btn,form[data-lead],footer")),under=[],io=null,rq=0;
+  function watch(){
+    if(!window.IntersectionObserver||!guards.length)return;
+    if(io)io.disconnect();under=[];
+    var cs=getComputedStyle(root),pad=10,rt=parseFloat(cs.right)||0,bt=parseFloat(cs.bottom)||0;
+    var m=[innerHeight-bt-root.offsetHeight-pad,rt-pad,bt-pad,innerWidth-rt-root.offsetWidth-pad].map(function(n){return -Math.max(0,Math.round(n))+"px";});
+    io=new IntersectionObserver(function(es){es.forEach(function(e){var i=under.indexOf(e.target);
+      if(e.isIntersecting){if(i<0)under.push(e.target);}else if(i>-1)under.splice(i,1);});setAway("cover",under.length>0);},{rootMargin:m.join(" ")});
+    guards.forEach(function(g){io.observe(g);});
+  }
+  watch();
+  // Safari's toolbar changes innerHeight as it collapses and expands, which moves the launchers.
+  addEventListener("resize",function(){cancelAnimationFrame(rq);rq=requestAnimationFrame(watch);});
+  // A focused field means the iOS keyboard is up and the launchers would ride on top of it.
+  function field(t){return !!t&&/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)&&!panel.contains(t);}
+  document.addEventListener("focusin",function(e){if(field(e.target))setAway("focus",true);});
+  document.addEventListener("focusout",function(){setTimeout(function(){setAway("focus",field(document.activeElement));},0);});
+  // On phones the panel is a full-height sheet. While the keyboard is up iOS shrinks only the visual
+  // viewport, so size the sheet to that, or its header and close button scroll off the top.
+  var vv=window.visualViewport;
+  function fit(){var s=panel.style;
+    if(!vv||!panel.classList.contains("open")||innerWidth>520||vv.scale>1.01){s.top=s.height="";return;}
+    s.top=Math.round(vv.offsetTop+8)+"px";s.height=Math.max(240,Math.round(vv.height-16))+"px";}
+  if(vv){vv.addEventListener("resize",fit);vv.addEventListener("scroll",fit);}
+  function toggle(open){panel.classList.toggle("open",open);openBtn.setAttribute("aria-expanded",open?"true":"false");setAway("panel",open);fit();
+    if(open){if(!started){started=true;add("a",GREET);}track("chat_open");setTimeout(function(){input.focus();},50);}}
+  openBtn.addEventListener("click",function(){toggle(!panel.classList.contains("open"));});
+  panel.querySelector(".stc-x").addEventListener("click",function(){toggle(false);});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&panel.classList.contains("open"))toggle(false);});
+  root.querySelector(".stc-call").addEventListener("click",function(){track("call_click",{where:"floating"});});
+  panel.querySelector(".stc-foot a").addEventListener("click",function(){track("call_click",{where:"chat"});});
+  input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();send();}});
+  sendBtn.addEventListener("click",send);
+  function send(){
+    var q=input.value.trim();if(!q||busy)return;
+    input.value="";add("u",q);msgs.push({role:"user",content:q});busy=true;sendBtn.disabled=true;
+    var typing=add("t","Stacy is typing…");track("chat_message",{n:msgs.length});
+    fetch(EP,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({domain:D,session_id:sid(),messages:msgs.slice(-16)})})
+      .then(function(r){return r.json();})
+      .then(function(d){var t=(d&&(d.reply||d.error))||"Sorry, something went wrong.";typing.remove();add("a",t);if(d&&d.reply)msgs.push({role:"assistant",content:d.reply});})
+      .catch(function(){typing.remove();add("a","I can't connect right now. Call (305) 952-1558 or use the form on this page.");})
+      .then(function(){busy=false;sendBtn.disabled=false;input.focus();});
+  }
+})();
+</script>
+<!-- stacy:end -->
+</body>
+</html>

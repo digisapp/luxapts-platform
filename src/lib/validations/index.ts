@@ -106,6 +106,8 @@ export const MICROSITE_DOMAINS = [
   "neoedgewatermiami.com",
   // Added 2026-10-10: Aimco's 114-unit bayfront rental tower, no official site.
   "hamiltonhousemiami.com",
+  // Same building as downtown6miami.com: Melo now leases it as Central Tower.
+  "centraltowermiami.com",
 ] as const;
 
 export type MicrositeDomain = (typeof MICROSITE_DOMAINS)[number];
