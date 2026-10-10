@@ -14,7 +14,7 @@ const { monogram, writeFavicons, faviconTags } = require("./favicon.js");
 
 const ROOT = path.join(__dirname, "..");
 const TODAY = new Date().toISOString().slice(0, 10);
-// The footer claims facts were "believed accurate as of" this date. It tracks
+// Stacy's brief says page facts were last checked on this date. It tracks
 // when the DATA was verified, not when the file was built — wiring it to TODAY
 // meant every regeneration silently re-asserted diligence nobody had done.
 const VERIFIED = BUILDINGS.FACTS_VERIFIED || TODAY;
@@ -32,9 +32,8 @@ const VERIFY = "b3cf5795b633271ae0b26ee982d06033";
 // tower "Miami skyline", and 2600 Biscayne, Art Plaza and Panorama showed
 // Jade as their own building. A renter who knows the skyline notices.
 //
-// The interior pool is Midtown 5's own photography ("courtesy of Greystar /
-// Midtown 5" in that page's footer) and is still reused on six other
-// operating-building pages. That is a rights and honesty question to settle
+// The interior pool is Midtown 5's own photography (Greystar / Midtown 5) and
+// is still reused on six other operating-building pages. That is a rights and honesty question to settle
 // with real photos, not a generator fix — see the README.
 const POOL = {
   construction: ["downtown6miami.com/img/construction.jpg", "downtown6miami.com/img/const-01.jpg",
@@ -502,7 +501,7 @@ ${hasInventory ? `        <div class="inv" data-inv hidden>
 <footer>
   <div class="wrap">
     <span class="wordmark">${esc(b.domain.toUpperCase())}</span>
-    <p>© ${new Date().getFullYear()} ${esc(b.domain)} — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by${b.developer ? ", " + esc(b.developer) + " or" : ""} the owners or leasing agents of ${esc(b.name)}. Building names are used for identification only.${b.credit ? " " + esc(b.credit) + "." : ""} Details compiled from public reporting and believed accurate as of ${b.verified || VERIFIED} — always verify with the official leasing office.</p>
+    <p>© ${new Date().getFullYear()} ${esc(b.domain)}</p>
   </div>
 </footer>
 

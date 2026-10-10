@@ -24,7 +24,7 @@ Deploy the updated platform to staycio.com before pointing live microsites at it
 As of 2026-09-21 every page runs the building's own photography or the
 developer's released renderings, pulled from official sites and press
 releases (we work with these buildings, so their marketing imagery is usable
-here; each footer credits the source). The six hand-built pages reference
+here; each entry's `credit` records the source). The six hand-built pages reference
 their files directly in `img/`; the generated pages take theirs from
 `_generator/photos/<domain>/` — see "Real photos per building" below. Only
 Jade still uses Wikimedia photography of the building. Do not hotlink
@@ -47,7 +47,7 @@ Then point DNS at GoDaddy for each domain: add an `A` record `@ → 76.76.21.21`
 
 ## Positioning note
 
-Every page is explicitly labeled an **independent rental information resource** (header badge + footer disclaimer) and never impersonates the building or its leasing office. Keep it that way — it's what makes these safe to run pre-partnership and easy to pitch as a lead-gen asset to the buildings afterward. The `sentralbrickell.com` page additionally discloses that the building name is anticipated, not officially announced.
+Every page used to carry a footer disclaimer ("an independent rental information resource curated by Staycio … not affiliated with or endorsed by …", plus photo credits and an "accurate as of" date). On 2026-10-10 the owner had it removed from all 25 pages; each footer is now just `© 2026 <domain>`. Jade keeps its Wikimedia photo credit because CC BY-SA requires attribution. No page now says it is independent of the building, so the copy must still never claim to be the building or its leasing office.
 
 ## Facts baked into the pages (as of Aug 2026)
 
@@ -249,8 +249,8 @@ or renderings in `_generator/photos/<domain>/` as `hero.jpg`, `split.jpg`,
 `g1.jpg`, `g2.jpg`, `g3.jpg` and `cta.jpg` (any subset; missing slots fall
 back to the pool). Sources can be up to 2000px; the generator re-encodes each
 slot to its display size. On the entry, set `captions` (three gallery labels,
-g1–g3, saying what each photo shows) and `credit` (rendered in the footer,
-e.g. "Photography courtesy of Bozzuto / Neo Edgewater"). Photos were pulled
+g1–g3, saying what each photo shows) and `credit` (not rendered since the
+2026-10-10 footer cut, kept as the record of where photos came from, e.g. "Photography courtesy of Bozzuto / Neo Edgewater"). Photos were pulled
 from each building's official site or the developer's released renderings
 on 2026-09-21 — we work with these buildings, so their marketing imagery is
 usable here. Keep the hero landscape and at least 1600px wide.
@@ -314,7 +314,7 @@ namdartowers.com failure, about six weeks from repeating (its `delivers` was
 `FACTS_VERIFIED` is global, so re-checking one building could only be recorded
 by re-asserting diligence on all of them. An entry may now carry its own
 `verified: "YYYY-MM-DD"`, which overrides `FACTS_VERIFIED` in that page's
-footer. The wave 3 entries and the rewritten 2600 Biscayne entry carry
+Stacy brief. The wave 3 entries and the rewritten 2600 Biscayne entry carry
 `2026-09-21`; everything else still reads `2026-09-16`, which is the truth.
 The same rule applies to both: bump only after actually re-checking that
 building, never to match the build date.
