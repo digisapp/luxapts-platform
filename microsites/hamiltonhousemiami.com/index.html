@@ -7,16 +7,17 @@
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#041f22">
-<title>Downtown 6 Miami — Luxury Rental Apartments</title>
-<meta name="description" content="Downtown 6, now marketed as Central Tower: Melo Group's 824 rentals at 46 NE 6th St, two blocks from Brightline. Get rents, floor plans and specials first.">
-<link rel="preload" as="image" href="img/d6-hero.jpg" fetchpriority="high">
-<link rel="canonical" href="https://downtown6miami.com/">
-<meta property="og:title" content="Downtown 6 (Central Tower) — 824 New Rental Apartments by Melo Group">
-<meta property="og:description" content="Melo Group's newest downtown tower, steps from MiamiCentral. Get pricing and floor plans first.">
-<meta property="og:image" content="https://downtown6miami.com/img/d6-hero.jpg">
-<meta property="og:url" content="https://downtown6miami.com/">
+<meta name="theme-color" content="#0e1a24">
+<title>Hamilton House Edgewater — Miami Rental Apartments</title>
+<meta name="description" content="Hamilton House: 114 new rental apartments at 640 NE 34th St, Edgewater, Miami, by Aimco. Get pricing and floor plans first.">
+<link rel="canonical" href="https://hamiltonhousemiami.com/">
+<link rel="preload" as="image" href="img/hero.jpg" fetchpriority="high">
+<meta property="og:title" content="Hamilton House — Edgewater, Miami">
+<meta property="og:description" content="Hamilton House: 114 new rental apartments at 640 NE 34th St, Edgewater, Miami, by Aimco. Get pricing and floor plans first.">
+<meta property="og:image" content="https://hamiltonhousemiami.com/img/hero.jpg">
+<meta property="og:url" content="https://hamiltonhousemiami.com/">
 <meta property="og:type" content="website">
+<meta name="robots" content="index,follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -24,18 +25,25 @@
 {
   "@context": "https://schema.org",
   "@type": "ApartmentComplex",
-  "name": "Downtown 6",
-  "alternateName": ["Central Tower", "Downtown 6th"],
-  "description": "824-unit rental tower by Melo Group at 46 NE 6th Street, Downtown Miami, marketed as Central Tower.",
-  "address": {"@type": "PostalAddress", "streetAddress": "46 NE 6th Street", "addressLocality": "Miami", "addressRegion": "FL", "postalCode": "33132", "addressCountry": "US"},
-  "url": "https://downtown6miami.com/",
-  "numberOfAccommodationUnits": 824
+  "name": "Hamilton House",
+  "description": "Hamilton House: 114 new rental apartments at 640 NE 34th St, Edgewater, Miami, by Aimco. Get pricing and floor plans first.",
+  "image": "https://hamiltonhousemiami.com/img/hero.jpg",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "640 NE 34th St",
+    "addressLocality": "Miami",
+    "addressRegion": "FL",
+    "postalCode": "33137",
+    "addressCountry": "US"
+  },
+  "url": "https://hamiltonhousemiami.com/",
+  "numberOfAccommodationUnits": 114
 }
 </script>
 <style>
   :root{
-    --ink:#041f22; --aqua:#00c2cb; --aqua-deep:#00858c; --aqua-pale:#d7f6f7;
-    --white:#ffffff; --off:#f4fbfb; --muted:#7d9296; --muted-dark:#43585c;
+    --ink:#0e1a24; --aqua:#c8a978; --aqua-deep:#8a6d3f; --aqua-pale:#f6efe3;
+    --white:#ffffff; --off:#f6f9fa; --muted:#8a9aa0; --muted-dark:#46585d;
     --display:'Sora',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box}
@@ -45,7 +53,7 @@
   img{max-width:100%;display:block}
 
   header{position:fixed;top:0;left:0;right:0;z-index:50;transition:all .35s;padding:20px 0}
-  header.scrolled{background:rgba(4,31,34,.96);backdrop-filter:blur(12px);padding:12px 0}
+  header.scrolled{background:rgba(14,26,36,0.96);backdrop-filter:blur(12px);padding:12px 0}
   header .wrap{display:flex;align-items:center;justify-content:space-between}
   .wordmark{font-family:var(--display);font-weight:800;font-size:1.25rem;color:#fff;text-decoration:none;letter-spacing:-.01em}
   .wordmark span{color:var(--aqua)}
@@ -53,26 +61,26 @@
   .nav-cta:hover{background:#fff}
 
   .hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;color:#fff;
-    background:linear-gradient(165deg,rgba(4,31,34,.82) 0%,rgba(0,133,140,.45) 60%,rgba(4,31,34,.72) 100%),
-    url('img/d6-hero.jpg') center/cover}
+    background:linear-gradient(165deg,rgba(14,26,36,0.84) 0%,rgba(138,109,63,0.5) 60%,rgba(14,26,36,0.76) 100%),
+    url('img/hero.jpg') center/cover}
   .hero-inner{max-width:840px;padding:150px 0 110px}
-  .chip{display:inline-block;font-family:var(--display);font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;background:rgba(0,194,203,.18);border:1px solid rgba(0,194,203,.5);color:#9ff0f4;padding:8px 18px;border-radius:999px;margin-bottom:28px}
-  .hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,6.4vw,4.8rem);line-height:1.04;letter-spacing:-.03em}
+  .chip{display:inline-block;font-family:var(--display);font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;background:rgba(200,169,120,0.18);border:1px solid rgba(200,169,120,0.5);color:#f6efe3;padding:8px 18px;border-radius:999px;margin-bottom:28px}
+  .hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,6.2vw,4.6rem);line-height:1.05;letter-spacing:-.03em}
   .hero h1 .aqua{color:var(--aqua)}
-  .hero p.sub{margin:26px 0 38px;font-size:1.15rem;color:rgba(255,255,255,.85);max-width:560px}
+  .hero p.sub{margin:26px 0 38px;font-size:1.15rem;color:rgba(255,255,255,.85);max-width:580px}
   .btn{display:inline-block;font-family:var(--display);font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;padding:17px 36px;border-radius:999px;transition:all .3s;cursor:pointer;border:none}
   .btn-aqua{background:var(--aqua);color:var(--ink)}
   .btn-aqua:hover{background:#fff}
   .btn-ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.4);margin-left:14px}
   .btn-ghost:hover{border-color:var(--aqua);color:var(--aqua)}
   .hero-ticker{position:absolute;bottom:0;left:0;right:0;background:var(--aqua);color:var(--ink);font-family:var(--display);font-weight:600;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;padding:13px 0;white-space:nowrap;overflow:hidden}
-  .hero-ticker div{display:inline-block;animation:tick 28s linear infinite}
+  .hero-ticker div{display:inline-block;animation:tick 30s linear infinite}
   @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
   .stats{background:var(--ink);color:#fff;padding:70px 0}
   .stats .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:36px}
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
-  .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.6rem;letter-spacing:-.02em;line-height:1.15}
+  .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 
   section{padding:104px 0}
@@ -83,10 +91,10 @@
   .split{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
   .split img{width:100%;height:540px;object-fit:cover;border-radius:24px}
 
-  .melo{background:var(--off)}
+  .alt{background:var(--off)}
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;margin-top:46px}
-  .card{background:#fff;border-radius:20px;padding:36px 32px;border:1px solid #e3f0f1;transition:transform .3s,box-shadow .3s}
-  .card:hover{transform:translateY(-4px);box-shadow:0 18px 42px rgba(4,31,34,.09)}
+  .card{background:#fff;border-radius:20px;padding:36px 32px;border:1px solid #e6eef0;transition:transform .3s,box-shadow .3s}
+  .card:hover{transform:translateY(-4px);box-shadow:0 18px 42px rgba(14,26,36,0.09)}
   .card .num{font-family:var(--display);font-weight:800;font-size:.85rem;color:var(--aqua-deep);letter-spacing:.14em}
   .card b{display:block;font-family:var(--display);font-weight:700;font-size:1.15rem;margin:12px 0 8px;letter-spacing:-.01em}
   .card p{color:var(--muted-dark);font-size:.95rem}
@@ -95,32 +103,33 @@
   .gallery-grid figure{overflow:hidden;border-radius:22px;position:relative}
   .gallery-grid img{width:100%;height:400px;object-fit:cover;transition:transform 1s ease}
   .gallery-grid figure:hover img{transform:scale(1.06)}
-  .gallery-grid figcaption{position:absolute;left:0;right:0;bottom:0;padding:20px;color:#fff;font-family:var(--display);font-size:.72rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;background:linear-gradient(transparent,rgba(4,31,34,.72))}
+  .gallery-grid figcaption{position:absolute;left:0;right:0;bottom:0;padding:20px;color:#fff;font-family:var(--display);font-size:.72rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;background:linear-gradient(transparent,rgba(14,26,36,0.72))}
 
-  details{background:var(--off);border-radius:16px;padding:22px 28px;margin-bottom:12px;border:1px solid #e3f0f1}
-  summary{font-family:var(--display);font-weight:600;font-size:1.05rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:-.01em}
+  details{background:var(--off);border-radius:16px;padding:22px 28px;margin-bottom:12px;border:1px solid #e6eef0}
+  summary{font-family:var(--display);font-weight:600;font-size:1.05rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:-.01em;gap:20px}
   summary::-webkit-details-marker{display:none}
   summary::after{content:'+';font-size:1.4rem;color:var(--aqua-deep);transition:transform .3s}
   details[open] summary::after{transform:rotate(45deg)}
   details p{margin-top:12px;color:var(--muted-dark)}
 
-  /* Mid-page CTA. The waitlist form is at the very bottom; this is a second
-     place to act without scrolling the whole page. Anchor only — one form. */
-  .midcta{background:var(--off);border-top:1px solid #dceceb;border-bottom:1px solid #dceceb;padding:38px 0}
+  /* Mid-page CTA. The form lives at the very bottom; on a long page that is a
+     lot of scroll between "I'm interested" and anywhere to say so. */
+  .midcta{background:var(--off);border-top:1px solid #e6eef0;border-bottom:1px solid #e6eef0;padding:38px 0}
   .midcta .wrap{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
   .midcta p{font-family:var(--display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;margin:0;max-width:62ch}
   .midcta .btn{flex:none}
 
+
   .cta-band{position:relative;color:#fff;padding:120px 0;
-    background:linear-gradient(160deg,rgba(4,31,34,.93),rgba(0,133,140,.82)),
-    url('img/d6-cta.jpg') center/cover}
+    background:linear-gradient(160deg,rgba(14,26,36,0.94),rgba(138,109,63,0.84)),
+    url('img/cta.jpg') center/cover}
   .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:76px;align-items:start}
   .cta-band h2{color:#fff}
   .cta-band .prose{color:rgba(255,255,255,.8)}
   form{background:rgba(255,255,255,.99);border-radius:24px;padding:44px;color:var(--ink);position:relative;box-shadow:0 30px 80px rgba(0,0,0,.3)}
   label{display:block;font-family:var(--display);font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--aqua-deep);margin:20px 0 8px}
   form label:first-of-type{margin-top:0}
-  input,select{width:100%;background:var(--off);border:1px solid #dcecee;border-radius:12px;color:var(--ink);font-family:var(--body);font-size:1rem;padding:14px 16px;outline:none;transition:border-color .3s}
+  input,select{width:100%;background:var(--off);border:1px solid #e0e9eb;border-radius:12px;color:var(--ink);font-family:var(--body);font-size:1rem;padding:14px 16px;outline:none;transition:border-color .3s}
   input:focus,select:focus{border-color:var(--aqua)}
   select{appearance:none;cursor:pointer}
   form .btn{width:100%;margin-top:28px}
@@ -128,7 +137,7 @@
   .fineprint a{color:var(--aqua-deep)}
 
   footer{background:var(--ink);color:var(--muted);padding:54px 0;font-size:.82rem}
-  footer .wordmark{font-size:1rem;display:inline-block;margin-bottom:18px}
+  footer .wordmark{font-size:1rem;display:inline-block;margin-bottom:18px;overflow-wrap:anywhere}
   footer a{color:var(--aqua)}
   footer p{max-width:90ch}
 
@@ -138,64 +147,68 @@
   @media(max-width:900px){
     .split,.cta-grid{grid-template-columns:1fr;gap:42px}
     .split img{height:360px}
-    .midcta .wrap{flex-direction:column;align-items:flex-start}
     .gallery-grid{grid-template-columns:1fr}
     .gallery-grid img{height:280px}
     section{padding:72px 0}
     .btn-ghost{margin-left:0;margin-top:12px}
+    form{padding:32px}
+    .midcta .wrap{flex-direction:column;align-items:flex-start}
   }
-  /* Phones. The fixed header ran 106px, its button wrapped onto two lines and
-     covered the "6" of the wordmark, and an iPhone SE could not see the hero
+  /* Phones. The fixed header ran 106–133px, its button wrapped onto two or three
+     lines and ran into the wordmark, and an iPhone SE could not see the hero
      button. One compact row (68px, 60px scrolled), a hero whose button clears the
-     fold at 375x553, a 12px floor on labels and 44px tap targets. The header keeps
-     the full "Get Pricing First" label down to 360px; below that it drops "First"
-     (the word stays in the DOM, so cta_click still logs the full label). */
+     fold at 375x553, a 12px floor on labels and 44px tap targets. */
   @media(max-width:600px){
     .wrap{padding:0 20px}
     header{padding:12px 0}
     header.scrolled{padding:8px 0}
     header .wrap{gap:12px}
-    header .wordmark{font-size:18px;white-space:nowrap;padding:10px 0;margin:-10px 0}
+    header .wordmark{font-size:min(18px,4.66vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
     .nav-cta{flex:none;display:inline-block;line-height:44px;padding:0 16px;font-size:.75rem;letter-spacing:.05em;white-space:nowrap}
+    .nav-cta .cta-x{display:none}
     .hero-inner{padding:88px 0 76px}
-    .chip{font-size:.75rem;letter-spacing:.08em;padding:7px 14px;margin-bottom:18px}
+    .chip{font-size:.75rem;letter-spacing:.08em;padding:7px 14px;margin-bottom:16px}
     .hero h1{font-size:clamp(2rem,9.2vw,2.5rem);line-height:1.06}
-    .hero p.sub{margin:16px 0 24px;font-size:1rem;line-height:1.6}
+    .hero p.sub{margin:16px 0 24px;font-size:1rem;line-height:1.55}
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
   }
-  @media(max-width:359px){.nav-cta .cta-x{display:none}}
+  @media(max-width:359px){
+    .wrap{padding:0 16px}
+    header .wrap{gap:10px}
+    .nav-cta{padding:0 12px}
+  }
 </style>
 </head>
 <body>
 
 <header id="hdr">
   <div class="wrap">
-    <a class="wordmark" href="#top">DOWNTOWN<span>6</span></a>
-    <a class="nav-cta" href="#waitlist">Get Pricing<span class="cta-x"> First</span></a>
+    <a class="wordmark" href="#top">HAMILTON<span>HOUSE</span></a>
+    <a class="nav-cta" href="#signup">Get Pricing<span class="cta-x"> First</span></a>
   </div>
 </header>
 
 <div class="hero" id="top">
   <div class="wrap">
     <div class="hero-inner">
-      <span class="chip">Topped Off · Delivering Feb 2027</span>
-      <h1>824 new apartments<br>in <span class="aqua">Downtown Miami.</span></h1>
-      <p class="sub">Melo Group's new tower at 46 NE 6th Street, now marketed as Central Tower — two blocks from Brightline, in the middle of everything. Join the list and get rents and floor plans before the leasing office even opens.</p>
-      <a class="btn btn-aqua" href="#waitlist">Get Pricing First</a>
+      <span class="chip">Topped Out · Delivering Q3 2027</span>
+      <h1>114 bayfront<br>rentals averaging<br>2,500 square<br><span class="aqua">feet each.</span></h1>
+      <p class="sub">Aimco has topped out a 38-story tower at 640 NE 34th Street, directly on Biscayne Bay. Just 114 residences, averaging more than 2,500 sq ft with 9- to 10-foot ceilings and oversized terraces: condo-sized homes, for lease.</p>
+      <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
   </div>
-  <div class="hero-ticker"><div>Topped off March 2026 &nbsp;·&nbsp; 824 residences &nbsp;·&nbsp; 2 blocks to MiamiCentral &nbsp;·&nbsp; Completion Feb 2027 &nbsp;·&nbsp; Topped off March 2026 &nbsp;·&nbsp; 824 residences &nbsp;·&nbsp; 2 blocks to MiamiCentral &nbsp;·&nbsp; Completion Feb 2027 &nbsp;·&nbsp;</div></div>
+  <div class="hero-ticker"><div>114 residences &nbsp;·&nbsp; 38 stories &nbsp;·&nbsp; Directly on Biscayne Bay &nbsp;·&nbsp; 2,500+ sq ft average &nbsp;·&nbsp; 9–10 ft ceilings &nbsp;·&nbsp; Delivering Q3 2027 &nbsp;·&nbsp; 114 residences &nbsp;·&nbsp; 38 stories &nbsp;·&nbsp; Directly on Biscayne Bay &nbsp;·&nbsp; 2,500+ sq ft average &nbsp;·&nbsp; 9–10 ft ceilings &nbsp;·&nbsp; Delivering Q3 2027 &nbsp;·&nbsp; </div></div>
 </div>
 
 <div class="stats">
   <div class="wrap">
-    <div class="stat reveal"><b>824</b><small>Residences</small></div>
-    <div class="stat reveal"><b>Feb '27</b><small>Completion</small></div>
-    <div class="stat reveal"><b>2 min</b><small>Walk to Brightline</small></div>
-    <div class="stat reveal"><b>6th</b><small>Melo Downtown Tower</small></div>
+    <div class="stat reveal"><b>114</b><small>Residences</small></div>
+    <div class="stat reveal"><b>38</b><small>Stories</small></div>
+    <div class="stat reveal"><b>2,500+</b><small>Avg Sq Ft</small></div>
+    <div class="stat reveal"><b>Q3 '27</b><small>Completion</small></div>
   </div>
 </div>
 
@@ -203,43 +216,43 @@
   <div class="wrap">
     <div class="split">
       <div class="reveal">
-        <p class="kicker">46 NE 6th Street</p>
-        <h2>The A&E District just got its anchor</h2>
-        <p class="prose">Downtown 6 rises in Miami's Arts & Entertainment District — two blocks from MiamiCentral, where Brightline runs to Fort Lauderdale, Boca, West Palm and Orlando. Metromover at the corner. Wynwood and Brickell, ten minutes either way. Melo now markets the tower as Central Tower, so you'll see both names.</p>
-        <p class="prose">This is Melo Group's sixth downtown tower, following the same playbook that filled Downtown 1st, Downtown 5th, Art Plaza and Miami Plaza: new construction, real pricing, fast approvals — buildings that lease up while competitors are still printing brochures.</p>
+        <p class="kicker">640 NE 34th Street</p>
+        <h2>Condo-sized homes, on a lease</h2>
+        <p class="prose">Hamilton House rises on the Biscayne Bay waterfront at the north end of Edgewater, across NE 34th Street from The Hamilton. Midtown and the Design District are a few minutes west; on the other side, the view is open water.</p>
+        <p class="prose">Aimco cut an earlier 60-story plan down to 38 stories and made the homes larger instead: 114 residences averaging more than 2,500 square feet, with 9- to 10-foot ceilings, oversized private terraces and unobstructed bay views. Stantec designed the tower and Americaribe-Grycon topped it out in March 2026, ahead of first move-ins in the third quarter of 2027.</p>
       </div>
-      <img class="reveal" src="img/d6-aerial.jpg" alt="Downtown city towers" loading="lazy">
+      <img class="reveal" src="img/split.jpg" alt="Hamilton House — Edgewater, Miami" loading="lazy">
     </div>
   </div>
 </section>
 
-<section class="melo" style="padding-top:90px">
+<section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why renters track Melo buildings</p>
-    <h2 class="reveal">Priced like they actually want you to move in</h2>
+    <p class="kicker reveal">Why this building</p>
+    <h2 class="reveal">What makes Hamilton House worth tracking</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>Below-market instinct</b><p>Melo has delivered thousands of downtown units priced consistently under flashier competition — their lease-ups routinely outpace the market.</p></div>
-      <div class="card reveal"><span class="num">02</span><b>No-drama leasing</b><p>Sister towers are known for straightforward pricing and quick, simple approvals. No broker games.</p></div>
-      <div class="card reveal"><span class="num">03</span><b>Location without markup</b><p>Steps from transit, arenas, Bayside and the bay — the same blocks luxury towers charge a premium for.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>2,500 square feet, average</b><p>The kind of space Miami renters usually have to buy a condo to get. Most new rental towers build far smaller homes; this one went the other way.</p></div>
+      <div class="card reveal"><span class="num">02</span><b>Directly on the bay</b><p>A waterfront site on Biscayne Bay, with oversized private terraces so the view comes with outdoor space to use it.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>A waterfront restaurant downstairs</b><p>The family behind Daniel's, A Florida Steakhouse, has leased about 11,500 sq ft on the ground floor for a Rockwell Group-designed steak and seafood restaurant with an outdoor bar on the water.</p></div>
     </div>
   </div>
 </section>
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Downtown 6 pricing goes to this list before it reaches the listing sites.</p>
-    <a class="btn btn-aqua" href="#waitlist">Get Pricing First</a>
+    <p>Hamilton House pricing goes to this list before it reaches the listing sites.</p>
+    <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
     <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Your ten-minute radius</h2>
+    <h2 class="reveal" style="margin-bottom:44px">Edgewater, on foot</h2>
     <div class="gallery-grid">
-      <figure class="reveal"><img src="img/d6-tower.jpg" alt="Palm-lined Miami street" loading="lazy"><figcaption>The Finished Tower</figcaption></figure>
-      <figure class="reveal"><img src="img/d6-lobby.jpg" alt="Bright apartment interior" loading="lazy"><figcaption>Lobby Entrance</figcaption></figure>
-      <figure class="reveal"><img src="img/d6-plaza.jpg" alt="Palms and skyline" loading="lazy"><figcaption>Street Level</figcaption></figure>
+      <figure class="reveal"><img src="img/g1.jpg" alt="Hamilton House — Topped Out Over the Bay" loading="lazy"><figcaption>Topped Out Over the Bay</figcaption></figure>
+      <figure class="reveal"><img src="img/g2.jpg" alt="Hamilton House — On Biscayne Bay" loading="lazy"><figcaption>On Biscayne Bay</figcaption></figure>
+      <figure class="reveal"><img src="img/g3.jpg" alt="Hamilton House — The Podium" loading="lazy"><figcaption>The Podium</figcaption></figure>
     </div>
   </div>
 </section>
@@ -248,22 +261,22 @@
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
     <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>When does Downtown 6 start leasing?</summary><p>Melo Group lists completion for February 2027. Based on Melo's past lease-ups, applications typically open around building completion — waitlist members are notified the day it happens.</p></details>
-    <details class="reveal"><summary>How much will rent be?</summary><p>Not yet published. Melo's downtown sister towers have historically leased below comparable new construction — exact pricing goes out to the waitlist the moment the leasing office releases it.</p></details>
-    <details class="reveal"><summary>Is Downtown 6 the same building as Central Tower?</summary><p>Yes. Downtown 6 was the project name; Melo Group now markets the tower as Central Tower. Same building, same address: 46 NE 6th Street.</p></details>
-    <details class="reveal"><summary>What layouts are there?</summary><p>One-, two- and three-bedroom apartments, including one-bedroom-plus-den layouts, all with balconies and full-size washers and dryers. Melo's published floor plans don't include studios.</p></details>
-    <details class="reveal"><summary>Where exactly is it?</summary><p>46 NE 6th Street — Downtown Miami's Arts & Entertainment District, two blocks from MiamiCentral station.</p></details>
-    <details class="reveal"><summary>Who is Melo Group?</summary><p>The family developer behind Downtown 1st, Downtown 5th, Art Plaza, Miami Plaza, Square Station and Melody Tower — over a dozen towers of downtown rental housing.</p></details>
+    <details class="reveal"><summary>When does Hamilton House start leasing?</summary><p>Aimco schedules first move-ins for the third quarter of 2027. Lease-up pricing is normally released a few months ahead of that, and this list is emailed first.</p></details>
+    <details class="reveal"><summary>How much will rent be?</summary><p>Nothing has been published. With residences averaging more than 2,500 square feet on the bay, expect pricing well above Edgewater's typical new rentals. The actual numbers go to this list first.</p></details>
+    <details class="reveal"><summary>Is it a rental or a condo?</summary><p>A rental. Aimco is building Hamilton House as a multifamily rental tower: the homes are leased, not sold. In its filings Aimco refers to the project as 34th Street.</p></details>
+    <details class="reveal"><summary>Is this The Hamilton?</summary><p>No. The Hamilton is the existing 276-unit rental building at 555 NE 34th Street, across the street. Hamilton House is the new 38-story tower at 640 NE 34th Street.</p></details>
+    <details class="reveal"><summary>Who is the developer?</summary><p>Aimco, with architecture by Stantec and construction by Americaribe-Grycon.</p></details>
   </div>
 </section>
 
-<div class="cta-band" id="waitlist">
+<div class="cta-band" id="signup">
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#9ff0f4">The Waitlist</p>
-        <h2>Get pricing before the crowd.</h2>
-        <p class="prose">824 apartments will not stay quiet for long. Floor plans, rents and opening specials — emailed the moment they drop.</p>
+        <p class="kicker" style="color:#f6efe3">The Waitlist</p>
+        <h2>Get Hamilton House pricing first.</h2>
+        <p class="prose">114 bayfront residences averaging over 2,500 sq ft, with no published rent and no leasing office yet. Floor plans and pricing, emailed the moment they're released.</p>
+
       </div>
       <form data-lead class="reveal">
         <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
@@ -274,11 +287,11 @@
         <label for="phone">Phone / WhatsApp</label>
         <input id="phone" name="phone" type="tel" required placeholder="+1 305 555 0123" autocomplete="tel" inputmode="tel">
         <label for="unit">Interested in</label>
-        <select id="unit" name="unit_type"><option>1 Bedroom</option><option>1 Bedroom + Den</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
+        <select id="unit" name="unit_type"><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
         <label for="movein">Target move-in</label>
-        <select id="movein" name="move_in"><option>Early 2027</option><option>Mid 2027</option><option>Flexible</option></select>
+        <select id="movein" name="move_in"><option>Q3 2027</option><option>Late 2027</option><option>Flexible</option></select>
         <button class="btn btn-aqua" type="submit">Get Pricing First</button>
-        <p class="fineprint">Need a place sooner? <a href="https://staycio.com?utm_source=downtown6miami&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
+        <p class="fineprint">Looking more broadly? <a href="https://staycio.com?utm_source=hamiltonhousemiami&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
       </form>
     </div>
   </div>
@@ -286,8 +299,8 @@
 
 <footer>
   <div class="wrap">
-    <span class="wordmark">DOWNTOWN<span>6</span>MIAMI.COM</span>
-    <p>© 2026 downtown6miami.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Melo Group. Building names are used for identification only. Renderings courtesy of Melo Group; construction photography via Florida YIMBY. Details compiled from public reporting, believed accurate as of October 2026 — always verify with the official leasing office.</p>
+    <span class="wordmark">HAMILTONHOUSEMIAMI.COM</span>
+    <p>© 2026 hamiltonhousemiami.com — an independent rental information resource curated by <a href="https://staycio.com">Staycio</a>. This is not the official website of, and is not affiliated with or endorsed by, Aimco or the owners or leasing agents of Hamilton House. Building names are used for identification only. Renderings courtesy of Aimco; construction photography by Oscar Nunez via Florida YIMBY. Details compiled from public reporting and believed accurate as of 2026-10-10 — always verify with the official leasing office.</p>
   </div>
 </footer>
 
@@ -303,7 +316,7 @@
     var btn=form.querySelector("button[type=submit]");var old=btn.textContent;
     btn.disabled=true;btn.textContent="Sending…";
     var data={};new FormData(form).forEach(function(v,k){data[k]=v;});
-    data.domain="downtown6miami.com";data.building="Downtown 6";
+    data.domain="hamiltonhousemiami.com";data.building="Hamilton House";
     fetch("https://staycio.com/api/microsite-leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
       .then(function(r){if(!r.ok)return r.json().catch(function(){return{};}).then(function(j){throw new Error(j.error||"Something went wrong");});return r.json();})
       .then(function(){if(window.__scTrack)window.__scTrack("form_submit");form.innerHTML='<p style="font-family:var(--display);font-weight:700;font-size:1.5rem">You\'re on the list! 🎉</p><p style="color:var(--muted-dark);margin-top:10px">We\'ll email you the moment pricing and availability drop.</p>';})
@@ -316,10 +329,11 @@
   });
 })();
 </script>
+
 <script>
 /* Staycio microsite analytics — anonymous, first-party, no cookies. */
 (function(){
-  var D="downtown6miami.com", EP="https://staycio.com/api/microsite-analytics";
+  var D="hamiltonhousemiami.com", EP="https://staycio.com/api/microsite-analytics";
   var sid;
   try{
     sid=localStorage.getItem("_sc_sid");
@@ -367,7 +381,7 @@
 </script>
 <!-- stacy:start (generated from microsites/_shared/stacy-widget.html; edit the template, not this block) -->
 <style>
-.stc,.stc-panel{--stc-a:#00c2cb;--stc-ink:#041f22;letter-spacing:normal;text-transform:none;text-align:left}
+.stc,.stc-panel{--stc-a:#c8a978;--stc-ink:#0e1a24;letter-spacing:normal;text-transform:none;text-align:left}
 .stc{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;display:flex;gap:10px;align-items:center;transition:opacity .2s ease,transform .2s ease}
 /* Out of the way (script below): while a hero/mid-page button, the lead form or the footer passes
    under the launchers, while a form field has focus (the iOS keyboard is up), and while the chat is open. */
@@ -413,7 +427,7 @@
 </div>
 <script>
 (function(){
-  var D="downtown6miami.com",EP="https://staycio.com/api/microsite-chat",GREET="Hi, I'm Stacy. I can help you explore Downtown 6 availability or find apartments in Downtown Miami that are available.";
+  var D="hamiltonhousemiami.com",EP="https://staycio.com/api/microsite-chat",GREET="Hi, I'm Stacy. I can help you explore Hamilton House or find apartments in Edgewater that are available now.";
   var root=document.getElementById("stc"),panel=document.getElementById("stc-panel");
   // Deliberately not a form element: each page has exactly one form, and its lead handler binds
   // to the first one it finds.
