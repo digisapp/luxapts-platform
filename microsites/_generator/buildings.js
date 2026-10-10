@@ -669,6 +669,59 @@ const BUILDINGS = [
     moveIn: ["Q3 2027","Late 2027","Flexible"],
     ctaH2: "Get Hamilton House pricing first.",
     ctaP: "114 bayfront residences averaging over 2,500 sq ft, with no published rent and no leasing office yet. Floor plans and pricing, emailed the moment they're released."
+  },
+  {
+    domain: "centraltowermiami.com", name: "Central Tower", short: "CENTRAL", accent: "TOWER",
+    captions: ["Pool Deck","Fitness Center","From the Balconies"], credit: "Renderings and photography courtesy of Melo Group / Central Tower Rentals",
+    splitAlt: "Central Tower at dusk, 46 NE 6th Street, Miami Worldcenter",
+    // Added 2026-10-10. SAME BUILDING as downtown6miami.com (hand-built, and
+    // hands-off while it produces leads — never edit it from here). Melo now
+    // leases the tower as Central Tower (centraltowerrentals.com; Melo's
+    // portfolio page lists it "Coming Feb 2027"), so searchers arrive under
+    // either name. Two domains on one building is the duplicate-content trap:
+    // this entry sets its own title/desc/ogTitle, leads with the published
+    // floor plans and amenities rather than D6's construction/Brightline angle,
+    // and uses only Melo's newer leasing imagery — not one image is shared with
+    // downtown6miami.com. Note D6's page still says Q4 2026; this one follows
+    // Melo's current date.
+    mode: "waitlist", palette: { ink:"#17151f", a:"#f2a65a", deep:"#b8682a", pale:"#fdf0e3" },
+    hood: "Miami Worldcenter", address: "46 NE 6th St", zip: "33132", units: 824, stories: 58,
+    developer: "Melo Group", eta: "Feb 2027", etaShort: "Feb '27", delivers: "2027-02-01",
+    verified: "2026-10-10",
+    title: "Central Tower Miami — Worldcenter Rental Apartments",
+    desc: "Central Tower, 46 NE 6th St: Melo Group's 824 rentals in Miami Worldcenter. 1–3 bedrooms from 732 sq ft, with balconies. Get pricing and floor plans first.",
+    ogTitle: "Central Tower — Melo Group Rentals at Miami Worldcenter",
+    chip: "Floor Plans Out · Delivering Feb 2027",
+    h1: ["Life at the", "center of", "Miami", "Worldcenter."],
+    sub: "Central Tower is Melo Group's 824-residence rental tower at 46 NE 6th Street, the building first announced as Downtown 6. The floor plans are out: one- to three-bedroom homes from 732 to 1,171 sq ft, every one with a balcony and a full-size washer and dryer.",
+    ticker: ["824 residences","58 floors","A balcony on every home","Full-size washer & dryer","2,100+ sq ft fitness center","Delivering Feb 2027"],
+    stats: [["732+","Sq Ft"],["824","Residences"],["58","Floors"],["Feb '27","Completion"]],
+    kicker: "46 NE 6th Street",
+    h2: "The floor plans are out",
+    body: [
+      "Melo Group has published the layouts: one-bedrooms at 732 sq ft, one-bedroom-plus-dens at 792, two-bedroom, two-bath homes from 878 to 951, and three-bedrooms at 1,171. Every residence gets a balcony, granite counters, Samsung stainless appliances, a double-door refrigerator, wood-look laminate floors, porcelain-tiled baths and a full-size washer and dryer.",
+      "The tower stands on NE 6th Street across from 600 Miami Worldcenter, with the Metromover at the door, Bayside and Miami Dade College a block away, and I-95 and I-395 within reach. Brickell is a few blocks south; South Beach and Miami International Airport are each about ten minutes out."
+    ],
+    cards: [
+      ["Pool and jacuzzi","A large resort-style pool and a jacuzzi on site, so a Saturday in the sun doesn't start with a drive."],
+      ["A real gym, downstairs","More than 2,100 sq ft of fitness space, plus a social room, kids' room, business center and a café-market in the building."],
+      ["Parking, or the Mover","Private parking on site for the car, and the Metromover at the door for the days you'd rather leave it."]
+    ],
+    faq: [
+      ["Is Central Tower the same building as Downtown 6?","Yes. Downtown 6 was the project's announced name; Melo Group now markets the tower as Central Tower. Same building, same address: 46 NE 6th Street."],
+      ["When does Central Tower open?","Melo Group lists completion for February 2027. Applications at Melo towers typically open around completion, and this list hears first."],
+      ["What floor plans are there?","One-bedrooms (732 sq ft), one-bedroom-plus-den (792 sq ft), two-bedroom, two-bath homes (878 to 951 sq ft) and three-bedroom, two-bath homes (1,171 sq ft). Melo's published plans don't include studios."],
+      ["How much will rent be?","Melo hasn't published rents yet. When it does, the numbers and any opening specials go to this list before the listing sites."],
+      ["What amenities does it have?","A large swimming pool and jacuzzi, a fitness center of more than 2,100 sq ft, a café-market, social room, kids' room, business center and private parking on site."]
+    ],
+    unitTypes: ["1 Bedroom","1 Bedroom + Den","2 Bedroom","3 Bedroom","Not sure yet"],
+    moveIn: ["Early 2027","Mid 2027","Flexible"],
+    soon: {
+      h2: "Central Tower pricing is weeks away.",
+      p: "Melo lists completion for February 2027, and applications usually open around then. Get the rents, opening specials and first pick of floor plans the day they're released."
+    },
+    ctaH2: "Get Central Tower pricing first.",
+    ctaP: "824 homes with the floor plans published and the rents not yet. Leave your details and the numbers come to you the moment Melo releases them."
   }
 ];
 

@@ -69,6 +69,9 @@ const THEME = {
   "2900terrace.com": "construction", "neoedgewatermiami.com": "interior",
   // Every slot is overridden by its own photos; the theme only matters if one goes missing.
   "hamiltonhousemiami.com": "bay",
+  // Same building as downtown6miami.com, whose own images ARE the construction
+  // pool, so this site must never fall back to it.
+  "centraltowermiami.com": "skyline",
 };
 const SLOTS = ["hero.jpg", "split.jpg", "g1.jpg", "g2.jpg", "g3.jpg", "cta.jpg"];
 // Real photography and renderings of the building itself live in
