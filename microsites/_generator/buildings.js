@@ -624,6 +624,51 @@ const BUILDINGS = [
     moveIn: ["As soon as possible","October 2026","Next 60 days","Flexible"],
     ctaH2: "See what's open, and what it actually costs.",
     ctaP: "399 apartments releasing in waves, with concessions that change as floors fill. Tell us the bedroom count, budget and timing and we'll come back with what's available now."
+  },
+  {
+    domain: "hamiltonhousemiami.com", name: "Hamilton House", short: "HAMILTON", accent: "HOUSE",
+    captions: ["Topped Out Over the Bay","On Biscayne Bay","The Podium"], credit: "Renderings courtesy of Aimco; construction photography by Oscar Nunez via Florida YIMBY",
+    // Added 2026-10-10. No building website exists anywhere (the only
+    // "official" link in trackers is aimco.com), so this page is the vacuum
+    // downtown6miami.com was. Aimco's SEC filings call the project "34th
+    // Street"; Hamilton House is the name every press source uses. Aimco is in
+    // liquidation (stockholders approved Feb 2026), so the tower may change
+    // hands and be renamed before lease-up — re-check the name before Q2 2027.
+    // TRD's July 2026 restaurant story calls it a condo; Aimco's Q2 2026 10-Q
+    // calls it a multifamily development with "stabilized occupancy" in 4Q
+    // 2028, i.e. a rental. Trust the filing.
+    mode: "waitlist", palette: { ink:"#0e1a24", a:"#c8a978", deep:"#8a6d3f", pale:"#f6efe3" },
+    hood: "Edgewater", address: "640 NE 34th St", zip: "33137", units: 114, stories: 38,
+    developer: "Aimco", eta: "Q3 2027", etaShort: "Q3 '27", delivers: "2027-07-01",
+    verified: "2026-10-10",
+    chip: "Topped Out · Delivering Q3 2027",
+    h1: ["114 bayfront", "rentals averaging", "2,500 square", "feet each."],
+    sub: "Aimco has topped out a 38-story tower at 640 NE 34th Street, directly on Biscayne Bay. Just 114 residences, averaging more than 2,500 sq ft with 9- to 10-foot ceilings and oversized terraces: condo-sized homes, for lease.",
+    ticker: ["114 residences","38 stories","Directly on Biscayne Bay","2,500+ sq ft average","9–10 ft ceilings","Delivering Q3 2027"],
+    stats: [["114","Residences"],["38","Stories"],["2,500+","Avg Sq Ft"],["Q3 '27","Completion"]],
+    kicker: "640 NE 34th Street",
+    h2: "Condo-sized homes, on a lease",
+    body: [
+      "Hamilton House rises on the Biscayne Bay waterfront at the north end of Edgewater, across NE 34th Street from The Hamilton. Midtown and the Design District are a few minutes west; on the other side, the view is open water.",
+      "Aimco cut an earlier 60-story plan down to 38 stories and made the homes larger instead: 114 residences averaging more than 2,500 square feet, with 9- to 10-foot ceilings, oversized private terraces and unobstructed bay views. Stantec designed the tower and Americaribe-Grycon topped it out in March 2026, ahead of first move-ins in the third quarter of 2027."
+    ],
+    cards: [
+      ["2,500 square feet, average","The kind of space Miami renters usually have to buy a condo to get. Most new rental towers build far smaller homes; this one went the other way."],
+      ["Directly on the bay","A waterfront site on Biscayne Bay, with oversized private terraces so the view comes with outdoor space to use it."],
+      ["A waterfront restaurant downstairs","The family behind Daniel's, A Florida Steakhouse, has leased about 11,500 sq ft on the ground floor for a Rockwell Group-designed steak and seafood restaurant with an outdoor bar on the water."]
+    ],
+    faq: [
+      ["When does Hamilton House start leasing?","Aimco schedules first move-ins for the third quarter of 2027. Lease-up pricing is normally released a few months ahead of that, and this list is emailed first."],
+      ["How much will rent be?","Nothing has been published. With residences averaging more than 2,500 square feet on the bay, expect pricing well above Edgewater's typical new rentals. The actual numbers go to this list first."],
+      ["Is it a rental or a condo?","A rental. Aimco is building Hamilton House as a multifamily rental tower: the homes are leased, not sold. In its filings Aimco refers to the project as 34th Street."],
+      ["Is this The Hamilton?","No. The Hamilton is the existing 276-unit rental building at 555 NE 34th Street, across the street. Hamilton House is the new 38-story tower at 640 NE 34th Street."],
+      ["Who is the developer?","Aimco, with architecture by Stantec and construction by Americaribe-Grycon."]
+    ],
+    // Aimco has published no bedroom mix; at 2,500+ sq ft average a studio is not plausible.
+    unitTypes: ["1 Bedroom","2 Bedroom","3 Bedroom","Not sure yet"],
+    moveIn: ["Q3 2027","Late 2027","Flexible"],
+    ctaH2: "Get Hamilton House pricing first.",
+    ctaP: "114 bayfront residences averaging over 2,500 sq ft, with no published rent and no leasing office yet. Floor plans and pricing, emailed the moment they're released."
   }
 ];
 

@@ -104,6 +104,8 @@ export const MICROSITE_DOMAINS = [
   "mohawkmiami.com",
   "2900terrace.com",
   "neoedgewatermiami.com",
+  // Added 2026-10-10: Aimco's 114-unit bayfront rental tower, no official site.
+  "hamiltonhousemiami.com",
 ] as const;
 
 export type MicrositeDomain = (typeof MICROSITE_DOMAINS)[number];

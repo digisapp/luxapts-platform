@@ -30,6 +30,7 @@ export const MICROSITE_BUILDINGS: Record<string, string> = {
   "mohawkmiami.com": "Mohawk at Wynwood",
   "2900terrace.com": "2900 Terrace",
   "neoedgewatermiami.com": "Neo Edgewater",
+  "hamiltonhousemiami.com": "Hamilton House",
 };
 
 /**
@@ -100,6 +101,7 @@ export const MICROSITE_GUIDES: MicrositeGuide[] = [
   { domain: "2900terrace.com", name: "2900 Terrace", neighborhood: "edgewater", blurb: "Pre-leasing waitlist" },
   { domain: "3333biscaynemiami.com", name: "3333 Biscayne", neighborhood: "edgewater", blurb: "Pre-leasing waitlist" },
   { domain: "biscayne18.com", name: "Biscayne 18", neighborhood: "edgewater", blurb: "Pre-leasing waitlist" },
+  { domain: "hamiltonhousemiami.com", name: "Hamilton House", neighborhood: "edgewater", blurb: "Pre-leasing waitlist" },
   // Wynwood, Midtown, A&E, River
   { domain: "mohawkwynwood.com", name: "Mohawk at Wynwood", neighborhood: "wynwood", blurb: "Pre-leasing waitlist" },
   { domain: "midtown5apartments.com", name: "Midtown 5", neighborhood: "midtown-miami", blurb: "Availability & rents" },

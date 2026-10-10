@@ -67,6 +67,8 @@ const THEME = {
   // because the building is finished and leasing.
   "mohawkwynwood.com": "construction", "mohawkmiami.com": "interior",
   "2900terrace.com": "construction", "neoedgewatermiami.com": "interior",
+  // Every slot is overridden by its own photos; the theme only matters if one goes missing.
+  "hamiltonhousemiami.com": "bay",
 };
 const SLOTS = ["hero.jpg", "split.jpg", "g1.jpg", "g2.jpg", "g3.jpg", "cta.jpg"];
 // Real photography and renderings of the building itself live in
@@ -484,7 +486,7 @@ ${hasInventory ? `        <div class="inv" data-inv hidden>
         <label for="phone">Phone / WhatsApp</label>
         <input id="phone" name="phone" type="tel" required placeholder="+1 305 555 0123" autocomplete="tel" inputmode="tel">
         <label for="unit">Interested in</label>
-        <select id="unit" name="unit_type"><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
+        <select id="unit" name="unit_type">${(b.unitTypes || ["Studio", "1 Bedroom", "2 Bedroom", "3 Bedroom", "Not sure yet"]).map((u) => `<option>${esc(u)}</option>`).join("")}</select>
         <label for="movein">Target move-in</label>
         <select id="movein" name="move_in">${b.moveIn.map((m) => `<option>${esc(m)}</option>`).join("")}</select>
         <button class="btn btn-aqua" type="submit">${ctaLabel}</button>

@@ -22,8 +22,8 @@ export const BUILDING_BRIEFS: BuildingBrief[] = [
   {
     domain: "downtown6miami.com",
     name: "Downtown 6",
-    aliases: ["Downtown Six", "Melo Downtown 6"],
-    brief: `46 NE 6th Street, Arts & Entertainment District, Downtown Miami. 824 rental apartments by Melo Group (its sixth downtown tower, after Downtown 1st, Downtown 5th, Art Plaza and Miami Plaza). Topped off March 2026; completion on track for Q4 2026. NOT leasing yet: applications typically open around completion. Rent has not been published; Melo's sister towers have historically leased below comparable new construction. Two blocks from MiamiCentral (Brightline to Fort Lauderdale, Boca, West Palm, Orlando); Metromover at the corner; Wynwood and Brickell about ten minutes away. Goal: add them to the Downtown 6 pricing list (create_lead). If they need a place sooner, search verified Downtown Miami listings.`,
+    aliases: ["Central Tower", "Central Tower Miami", "Downtown Six", "Downtown 6th", "Melo Downtown 6"],
+    brief: `46 NE 6th Street, Arts & Entertainment District, Downtown Miami. 824 rental apartments by Melo Group (its sixth downtown tower, after Downtown 1st, Downtown 5th, Art Plaza and Miami Plaza). Melo now markets the tower as Central Tower: same building, same address. Topped off March 2026; Melo lists completion for February 2027. NOT leasing yet: applications typically open around completion. Layouts are one, two and three bedrooms, including one-bedroom-plus-den; Melo's published floor plans have no studios. Rent has not been published; Melo's sister towers have historically leased below comparable new construction. Two blocks from MiamiCentral (Brightline to Fort Lauderdale, Boca, West Palm, Orlando); Metromover at the corner; Wynwood and Brickell about ten minutes away. Goal: add them to the Downtown 6 pricing list (create_lead). If they need a place sooner, search verified Downtown Miami listings.`,
   },
   {
     domain: "namdartowers.com",
