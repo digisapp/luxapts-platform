@@ -8,12 +8,10 @@ import { withTimeout } from "@/lib/with-timeout";
 import { scrapeUnitsOnly } from "./fetcher";
 import {
   getBuildingsToScrape,
-  scrapeStatusOf,
+  resolveScrapeUrl,
   updateScrapeStatus,
   saveScrapedUnits,
-  markUnitsUnavailable,
-  shouldRetireUnseenUnits,
-  normalizeUnitNumber,
+  retireUnseenUnits,
   createScrapeJob,
   updateScrapeJob,
 } from "./db";
@@ -91,9 +89,9 @@ export async function runUnitScrapeBatch(
       break;
     }
 
-    // Scraper-internal override first: building_scrape_status.website_url points at the
-    // best scrape target (portal/API/manager page) without changing the user-facing link
-    const websiteUrl = scrapeStatusOf(building)?.website_url || building.website_url;
+    // Scraper-internal override first (when it is really this building's
+    // page), else the user-facing link — see resolveScrapeUrl
+    const websiteUrl = resolveScrapeUrl(building);
     if (!websiteUrl) {
       results.failed++;
       results.errors.push({ building_id: building.id, building_name: building.name, error: "No website URL" });
@@ -115,35 +113,25 @@ export async function runUnitScrapeBatch(
 
           // Anything still listed that this scrape didn't see is no longer
           // available — but only when the scrape is evidence of that. A
-          // bot-walled availability page or a marketing page's floorplan
-          // "from" prices used to retire every real numbered unit purely
-          // because units.length > 0.
-          const scrapedNumbered = scrapeResult.data.units.filter(
-            (u) => normalizeUnitNumber(u.unit_number) !== null
-          ).length;
-
-          if (
-            shouldRetireUnseenUnits({
+          // bot-walled availability page, a marketing page's floorplan
+          // "from" prices, or a lazy list rendered half-loaded used to
+          // retire real units purely because units.length > 0.
+          await retireUnseenUnits(
+            supabase,
+            building,
+            {
+              units: scrapeResult.data.units,
               unitsPageFetchFailed: scrapeResult.units_page_fetch_failed,
-              scrapedNumbered,
-              existingNumberedAvailable: saved.existingNumberedAvailable,
-            })
-          ) {
-            await markUnitsUnavailable(supabase, building.id, saved.seenUnitIds);
-          } else {
-            console.warn(
-              `Skipping retirement for ${building.name}: source=${scrapeResult.source}, ` +
-                `units_page_fetch_failed=${scrapeResult.units_page_fetch_failed}, ` +
-                `scraped_numbered=${scrapedNumbered}, existing_numbered=${saved.existingNumberedAvailable}`
-            );
-          }
+              source: scrapeResult.source,
+            },
+            saved,
+          );
         }
 
         await updateScrapeStatus(supabase, building.id, {
           type: "units",
           success: true,
           unitsFound: scrapeResult.data.units.length,
-          websiteUrl,
         });
 
         results.success++;
@@ -154,7 +142,6 @@ export async function runUnitScrapeBatch(
           type: "units",
           success: false,
           error: scrapeResult.error,
-          websiteUrl,
         });
         results.failed++;
         results.errors.push({
@@ -170,7 +157,6 @@ export async function runUnitScrapeBatch(
         type: "units",
         success: false,
         error: errorMessage,
-        websiteUrl,
       });
       results.failed++;
       results.errors.push({ building_id: building.id, building_name: building.name, error: errorMessage });

@@ -7,7 +7,7 @@ import { MICROSITE_DOMAINS, type MicrositeDomain } from "@/lib/validations";
 import { MICROSITE_BUILDINGS } from "@/lib/microsites";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { isValidSessionKey, logChatTurn, type LoggedToolCall } from "@/lib/chat/session-log";
-import { executeVoiceTool, isVoiceToolName, type LeadChannel } from "@/lib/voice/tools";
+import { executeVoiceTool, isVoiceToolName, toolOutcome, type LeadChannel } from "@/lib/voice/tools";
 import { micrositeFacts } from "@/lib/voice/microsite-facts";
 import {
   micrositeChatInstructions,
@@ -27,6 +27,16 @@ const MAX_TOOL_ROUNDS = 4;
 
 // Up to five model calls plus tool fetches per message.
 export const maxDuration = 60;
+
+// Wall-clock budget inside maxDuration. Past FINAL_ANSWER_AFTER_MS the next
+// call runs without tools so it has to answer; nothing starts after
+// HARD_DEADLINE_MS, which leaves after() time to store the transcript. The SDK
+// default (10-minute timeout, two retries) let one slow call 504 the request
+// and lose the turn.
+const FINAL_ANSWER_AFTER_MS = 40_000;
+const HARD_DEADLINE_MS = 50_000;
+const MAX_CALL_MS = 20_000;
+const MIN_CALL_MS = 3_000;
 
 const TOOLS: OpenAI.ChatCompletionTool[] = VOICE_TOOL_SCHEMAS.map((t) => ({
   type: "function",
@@ -88,6 +98,8 @@ export async function POST(req: Request) {
     finalSource: "microsite",
     sourceDetail: domain,
     note: `Stacy chat on ${domain}.`,
+    // Every microsite building is in Miami; a model-picked city only lost leads.
+    citySlug: "miami",
   };
 
   const supabase = createAdminClient();
@@ -128,16 +140,23 @@ export async function POST(req: Request) {
   const toolLog: LoggedToolCall[] = [];
   let reply = "";
 
+  const started = Date.now();
   try {
     const client = createXAIClient();
     for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-      const allowTools = round < MAX_TOOL_ROUNDS;
-      const completion = await client.chat.completions.create({
-        model: "grok-4.3",
-        messages,
-        ...(allowTools ? { tools: TOOLS, tool_choice: "auto" as const } : {}),
-        max_tokens: 600,
-      });
+      const elapsed = Date.now() - started;
+      const timeout = Math.min(MAX_CALL_MS, HARD_DEADLINE_MS - elapsed);
+      if (timeout < MIN_CALL_MS) break;
+      const allowTools = round < MAX_TOOL_ROUNDS && elapsed < FINAL_ANSWER_AFTER_MS;
+      const completion = await client.chat.completions.create(
+        {
+          model: "grok-4.3",
+          messages,
+          ...(allowTools ? { tools: TOOLS, tool_choice: "auto" as const } : {}),
+          max_tokens: 600,
+        },
+        { timeout, maxRetries: 0 }
+      );
       const message = completion.choices[0]?.message;
       const calls = (message?.tool_calls ?? []).filter((c) => c.type === "function");
       if (!calls.length) {
@@ -156,14 +175,7 @@ export async function POST(req: Request) {
         const result = isVoiceToolName(call.function.name)
           ? await executeVoiceTool(call.function.name, args, channel, baseUrl)
           : { error: "Unknown tool" };
-        const error = (result as { error?: string } | null)?.error ?? null;
-        const count = (result as { result_count?: number } | null)?.result_count;
-        toolLog.push({
-          name: call.function.name,
-          args,
-          error,
-          resultCount: typeof count === "number" ? count : null,
-        });
+        toolLog.push({ name: call.function.name, args, ...toolOutcome(call.function.name, result) });
         messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(result) });
       }
     }

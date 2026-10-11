@@ -10,8 +10,16 @@ export interface ScrapeStatusRelation {
   website_url: string | null;
   scrape_enabled: boolean | null;
   amenities_scraped_at: string | null;
+  amenities_scrape_success?: boolean | null;
   units_scraped_at: string | null;
 }
+
+/**
+ * A failed amenity scrape (AI outage, bot wall) is retried after this many
+ * days instead of the ~180 a successful one earns — the failure still stamps
+ * amenities_scraped_at, which is the staleness key.
+ */
+const AMENITIES_RETRY_AFTER_FAILURE_DAYS = 7;
 
 export interface ScrapeCandidate {
   id: string;
@@ -34,6 +42,30 @@ export function scrapeStatusOf<T>(
   return getFirstRelation(building?.building_scrape_status);
 }
 
+/**
+ * The URL a scrape should fetch for a building.
+ *
+ * building_scrape_status.website_url is a scraper-only override (a leasing
+ * portal or manager page) that wins over the user-facing link. Until
+ * 2026-10 every scrape wrote back whatever URL it used, so that column also
+ * holds frozen copies of old links — portfolio homepages (glenwoodnyc.com,
+ * tfc.com) that scraped 0 units or another building's, and that silently
+ * outranked every later admin edit of buildings.website_url. An override
+ * that doesn't even name the building is one of those, not a deliberate pick.
+ */
+export function resolveScrapeUrl(building: {
+  name: string;
+  website_url: string | null;
+  building_scrape_status?:
+    | { website_url: string | null }
+    | { website_url: string | null }[]
+    | null;
+}): string | null {
+  const override = scrapeStatusOf(building)?.website_url?.trim();
+  if (override && isPropertySpecificUrl(override, building.name)) return override;
+  return building.website_url || null;
+}
+
 /** Which timestamp decides staleness. "full" needs both to have run. */
 export type ScrapeMode = "units" | "amenities" | "full";
 
@@ -54,6 +86,10 @@ export async function getBuildingsToScrape(
   // Calculate the cutoff date
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysStale);
+  const failedAmenitiesCutoff = new Date();
+  failedAmenitiesCutoff.setDate(
+    failedAmenitiesCutoff.getDate() - Math.min(daysStale, AMENITIES_RETRY_AFTER_FAILURE_DAYS)
+  );
 
   // Fetch the ENTIRE eligible fleet (paged past the 1000-row cap), not a
   // window of it: the previous `limit * 2` fetch had no ORDER BY, so the
@@ -71,6 +107,7 @@ export async function getBuildingsToScrape(
           website_url,
           scrape_enabled,
           amenities_scraped_at,
+          amenities_scrape_success,
           units_scraped_at
         )
       `)
@@ -101,7 +138,9 @@ export async function getBuildingsToScrape(
       const status = scrapeStatusOf(b);
       if (status?.scrape_enabled === false) return false;
       const key = scrapeKey(b);
-      return key === null || key < cutoffDate.getTime();
+      if (key === null) return true;
+      const failedAmenities = mode === "amenities" && status?.amenities_scrape_success === false;
+      return key < (failedAmenities ? failedAmenitiesCutoff : cutoffDate).getTime();
     })
     // Stalest first, never-scraped at the very front — a fair round-robin
     // instead of the same buildings monopolizing every run
@@ -118,18 +157,17 @@ export async function updateScrapeStatus(
     error?: string;
     unitsFound?: number;
     imagesFound?: number;
-    websiteUrl?: string;
   }
 ) {
   const now = new Date().toISOString();
 
+  // Never writes website_url: that column is a deliberate scrape-target
+  // override (see resolveScrapeUrl). Persisting the URL each run used froze
+  // whatever link was current at the first scrape and outranked every later
+  // fix to buildings.website_url.
   const updateData: Record<string, unknown> = {
     building_id: buildingId,
   };
-
-  if (update.websiteUrl) {
-    updateData.website_url = update.websiteUrl;
-  }
 
   if (update.type === "amenities" || update.type === "full") {
     updateData.amenities_scraped_at = now;
@@ -164,15 +202,43 @@ export async function updateScrapeStatus(
   }
 }
 
-// Sanity bounds on AI-extracted data — the model output is untrusted and
-// hallucinated values would otherwise flow straight into search results.
-function isSaneUnit(unit: ScrapedUnit): boolean {
-  if (unit.rent != null && (!Number.isFinite(unit.rent) || unit.rent < 100 || unit.rent > 100000)) return false;
-  if (unit.beds != null && (!Number.isFinite(unit.beds) || unit.beds < 0 || unit.beds > 10)) return false;
-  if (unit.baths != null && (!Number.isFinite(unit.baths) || unit.baths < 0 || unit.baths > 10)) return false;
-  if (unit.sqft != null && (!Number.isFinite(unit.sqft) || unit.sqft < 50 || unit.sqft > 50000)) return false;
-  if (unit.unit_number != null && String(unit.unit_number).length > 20) return false;
-  return true;
+/**
+ * A finite number inside [min, max], else null. Absent stays absent: units.baths
+ * is written as-is, and turning a missing value into null would blank a
+ * stored one on every scrape that omits it.
+ */
+function inBounds(value: unknown, min: number, max: number): number | null | undefined {
+  if (value === undefined) return undefined;
+  return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max ? value : null;
+}
+
+/**
+ * Sanity bounds on AI-extracted data — the model output is untrusted and
+ * hallucinated values would otherwise flow straight into search results.
+ *
+ * Bad FIELDS are nulled, not the whole unit: dropping unit 101 for sqft:0 (or
+ * seven Dey Street units for rent:-1) left them unseen, so retirement marked
+ * listings that were still on the site as gone. A null rent just writes no
+ * snapshot. Only a unit with no usable identity is dropped — an absurd unit
+ * number, or no number AND no bedroom count to key a floorplan on.
+ * Exported for tests.
+ */
+export function sanitizeScrapedUnit(unit: ScrapedUnit): ScrapedUnit | null {
+  const unitNumber = normalizeUnitNumber(unit.unit_number);
+  if (unitNumber !== null && unitNumber.length > 20) return null;
+
+  const beds = inBounds(unit.beds, 0, 10);
+  if (unitNumber === null && beds == null) return null;
+
+  // ScrapedUnit types these as numbers, but model output already carries
+  // nulls through them and every writer below treats null as "unknown".
+  return {
+    ...unit,
+    beds: beds as number,
+    baths: inBounds(unit.baths, 0, 10) as number,
+    sqft: inBounds(unit.sqft, 50, 50000) as number,
+    rent: inBounds(unit.rent, 100, 100000) as number,
+  };
 }
 
 // Out-of-bounds terms are dropped (not the whole unit) — a hallucinated term
@@ -193,11 +259,38 @@ export interface SaveScrapedUnitsResult {
    * A floorplan-level scrape must never retire a numbered inventory.
    */
   existingNumberedAvailable: number;
+  /**
+   * How many of the building's rows (numbered and floorplan-level) were
+   * available before this scrape — the inventory a retirement would act on.
+   */
+  existingAvailable: number;
 }
 
 interface ExistingUnit {
   id: string;
   latest_rent: number | null;
+  price_captured_at: string | null;
+}
+
+/**
+ * An unchanged rent is re-snapshotted once it is this old. Verified pricing
+ * (45 days) and best-match ordering read the LATEST capture's date, so a
+ * unit re-seen every two days at the same price aged out and became "Contact
+ * for pricing". Weekly keeps growth bounded: one row per unit per week.
+ */
+const SNAPSHOT_REFRESH_DAYS = 7;
+
+/** Whether a unit seen at `rent` now needs a new price snapshot. Exported for tests. */
+export function needsPriceSnapshot(
+  rent: number | null,
+  existing: { latest_rent: number | null; price_captured_at: string | null },
+  now: Date = new Date(),
+): boolean {
+  if (!rent) return false;
+  if (rent !== existing.latest_rent) return true;
+  const captured = existing.price_captured_at ? new Date(existing.price_captured_at).getTime() : NaN;
+  if (Number.isNaN(captured)) return true;
+  return captured < now.getTime() - SNAPSHOT_REFRESH_DAYS * 86_400_000;
 }
 
 /**
@@ -344,23 +437,100 @@ async function resolveFloorplanIds(
 }
 
 /**
- * Whether a scrape is trustworthy enough to retire the units it did not see.
- * Pure, and exported so both the cron and the admin route share one rule.
+ * Below this many available rows, a scrape that sees few units is believable
+ * (a small building really can lease most of its handful in a few days).
  */
-export function shouldRetireUnseenUnits(opts: {
+const PARTIAL_SCRAPE_MIN_EXISTING = 6;
+/** A scrape that saw less than this share of a real inventory is partial. */
+const PARTIAL_SCRAPE_MIN_SHARE = 0.5;
+/**
+ * After a partial scrape, units unseen this long are still retired. Partial
+ * renders are intermittent, so a live unit is re-seen by the next full one;
+ * without this a genuine drop (or another building's floorplans picked up
+ * from a sibling page) would stay "available" forever.
+ */
+export const UNSEEN_RETIRE_AFTER_DAYS = 14;
+
+export interface RetirementInput {
   /** The availability page was found but every fetch of it failed. */
   unitsPageFetchFailed?: boolean;
   /** How many scraped listings carry a unit number. */
   scrapedNumbered: number;
   /** How many currently-available existing rows carry a unit number. */
   existingNumberedAvailable: number;
-}): boolean {
+  /** How many distinct units this scrape matched or created (seenUnitIds). */
+  seenCount: number;
+  /** How many rows of any kind were available before this scrape. */
+  existingAvailable: number;
+}
+
+/**
+ * How far a scrape is evidence that the units it did not see are gone:
+ * "all" retires every unseen unit, "stale" only those no scrape has seen for
+ * UNSEEN_RETIRE_AFTER_DAYS, "none" nothing. Pure, and exported so both the
+ * cron and the admin route share one rule.
+ */
+export function unseenRetirementScope(opts: RetirementInput): "all" | "stale" | "none" {
   // Bot wall / timeout on the units page: whatever we extracted came off the
   // marketing page and says nothing about the real inventory.
-  if (opts.unitsPageFetchFailed) return false;
-  // Floorplan-level "from" prices must never retire a numbered inventory.
-  if (opts.scrapedNumbered === 0 && opts.existingNumberedAvailable > 0) return false;
-  return true;
+  if (opts.unitsPageFetchFailed) return "none";
+  // Floorplan-level "from" prices must never retire a numbered unit a recent
+  // scrape saw. Numbered units no scrape has seen for UNSEEN_RETIRE_AFTER_DAYS
+  // are gone, though: a site that switched to floorplan-only listings
+  // otherwise kept its last numbered inventory "available" forever.
+  if (opts.scrapedNumbered === 0 && opts.existingNumberedAvailable > 0) return "stale";
+  // A lazy-loaded list cut short: Loria Ansley went from 59 units to 5 off the
+  // same URL three days later and 54 live listings were retired.
+  if (
+    opts.existingAvailable >= PARTIAL_SCRAPE_MIN_EXISTING &&
+    opts.seenCount < opts.existingAvailable * PARTIAL_SCRAPE_MIN_SHARE
+  ) {
+    return "stale";
+  }
+  return "all";
+}
+
+/** Boolean form of unseenRetirementScope: may every unseen unit be retired? */
+export function shouldRetireUnseenUnits(opts: RetirementInput): boolean {
+  return unseenRetirementScope(opts) === "all";
+}
+
+/**
+ * Retire what a scrape did not see, as far as the scrape is evidence of it,
+ * and log when it is not. Shared by the batch job and the admin route.
+ */
+export async function retireUnseenUnits(
+  supabase: SupabaseClient,
+  building: { id: string; name: string },
+  scrape: { units: ScrapedUnit[]; unitsPageFetchFailed?: boolean; source?: string },
+  saved: SaveScrapedUnitsResult,
+): Promise<"all" | "stale" | "none"> {
+  const opts: RetirementInput = {
+    unitsPageFetchFailed: scrape.unitsPageFetchFailed,
+    scrapedNumbered: scrape.units.filter((u) => normalizeUnitNumber(u.unit_number) !== null).length,
+    existingNumberedAvailable: saved.existingNumberedAvailable,
+    seenCount: saved.seenUnitIds.length,
+    existingAvailable: saved.existingAvailable,
+  };
+  const scope = unseenRetirementScope(opts);
+
+  if (scope !== "all") {
+    console.warn(
+      `${scope === "stale" ? `Retiring only units unseen for ${UNSEEN_RETIRE_AFTER_DAYS}+ days` : "Skipping retirement"} ` +
+        `for ${building.name}: source=${scrape.source}, ` +
+        `units_page_fetch_failed=${opts.unitsPageFetchFailed}, ` +
+        `scraped_numbered=${opts.scrapedNumbered}, existing_numbered=${opts.existingNumberedAvailable}, ` +
+        `seen=${opts.seenCount}, existing_available=${opts.existingAvailable}`
+    );
+  }
+  if (scope === "all") {
+    await markUnitsUnavailable(supabase, building.id, saved.seenUnitIds);
+  } else if (scope === "stale") {
+    await markUnitsUnavailable(supabase, building.id, saved.seenUnitIds, {
+      unseenSince: new Date(Date.now() - UNSEEN_RETIRE_AFTER_DAYS * 86_400_000),
+    });
+  }
+  return scope;
 }
 
 export async function saveScrapedUnits(
@@ -374,11 +544,19 @@ export async function saveScrapedUnits(
   const seenUnitIds = new Set<string>();
   const seenIdentities = new Set<string>();
 
-  const saneUnits = units.filter((u) => {
-    const ok = isSaneUnit(u);
-    if (!ok) console.warn(`Skipping out-of-bounds scraped unit for building ${buildingId}:`, u);
-    return ok;
-  });
+  const saneUnits: ScrapedUnit[] = [];
+  for (const u of units) {
+    const sane = sanitizeScrapedUnit(u);
+    if (!sane) {
+      console.warn(`Skipping scraped unit with no usable identity for building ${buildingId}:`, u);
+    } else {
+      const nulled = (["rent", "beds", "baths", "sqft"] as const).filter((k) => u[k] != null && sane[k] == null);
+      if (nulled.length > 0) {
+        console.warn(`Dropping out-of-bounds ${nulled.join(", ")} from scraped unit for building ${buildingId}:`, u);
+      }
+      saneUnits.push(sane);
+    }
+  }
 
   // Existing units with their latest snapshot rent, so unchanged prices don't
   // get a new snapshot. Paged: a building past 1000 rows (every building that
@@ -395,15 +573,49 @@ export async function saveScrapedUnits(
     sqft: number | null;
     is_available: boolean | null;
     latest_rent: number | null;
+    price_captured_at: string | null;
   }>((from, to) =>
     supabase
       .from("units_with_latest_price")
-      .select("id, unit_number, floorplan_id, beds, baths, sqft, is_available, latest_rent, created_at")
+      .select("id, unit_number, floorplan_id, beds, baths, sqft, is_available, latest_rent, price_captured_at, created_at")
       .eq("building_id", buildingId)
       .order("created_at", { ascending: false })
       .order("id")
       .range(from, to)
   );
+
+  // A floorplan-level page ("1BR from $2,151") while the building's numbered
+  // units were seen recently is a coarser view of the same apartments, not
+  // more inventory. Saving it stacked a floorplan row on top of the numbered
+  // ones and availability counted twice (Manchester State Thomas 15 + 16)
+  // until the next unit-level scrape retired them. Recency comes from the
+  // price capture, which saveScrapedUnits refreshes at least weekly.
+  const recentSince = Date.now() - UNSEEN_RETIRE_AFTER_DAYS * 86_400_000;
+  const recentNumbered = existingUnits.filter(
+    (u) =>
+      unitNumberKey(u.unit_number) !== null &&
+      u.is_available !== false &&
+      u.price_captured_at != null &&
+      new Date(u.price_captured_at).getTime() >= recentSince
+  ).length;
+  if (
+    saneUnits.length > 0 &&
+    recentNumbered > 0 &&
+    !saneUnits.some((u) => unitNumberKey(u.unit_number) !== null)
+  ) {
+    console.warn(
+      `Not saving ${saneUnits.length} floorplan-level listings for building ${buildingId}: ` +
+        `${recentNumbered} numbered units were seen in the last ${UNSEEN_RETIRE_AFTER_DAYS} days`
+    );
+    const available = existingUnits.filter((u) => u.is_available !== false);
+    return {
+      unitsCreated: 0,
+      unitsUpdated: 0,
+      seenUnitIds: [],
+      existingNumberedAvailable: available.filter((u) => unitNumberKey(u.unit_number) !== null).length,
+      existingAvailable: available.length,
+    };
+  }
 
   const floorplanIds = await resolveFloorplanIds(supabase, buildingId, saneUnits);
 
@@ -412,8 +624,10 @@ export async function saveScrapedUnits(
   const existingByNumber = new Map<string, ExistingUnit>();
   const existingByFloorplan = new Map<string, ExistingUnit>();
   let existingNumberedAvailable = 0;
+  let existingAvailable = 0;
   for (const u of existingUnits) {
-    const rec: ExistingUnit = { id: u.id, latest_rent: u.latest_rent };
+    const rec: ExistingUnit = { id: u.id, latest_rent: u.latest_rent, price_captured_at: u.price_captured_at };
+    if (u.is_available !== false) existingAvailable++;
     const numberKey = unitNumberKey(u.unit_number);
     if (numberKey) {
       if (u.is_available !== false) existingNumberedAvailable++;
@@ -496,11 +710,11 @@ export async function saveScrapedUnits(
         console.error(`Unit update failed for ${existing.id} (building ${buildingId}):`, updateError.message);
       }
 
-      // Snapshot only when rent actually changed — blind daily inserts grew
-      // unit_price_snapshots unboundedly and pushed units past PostgREST's
-      // 1000-row cap in downstream latest-price reads.
+      // Snapshot when rent changed or the last capture is a week old — blind
+      // daily inserts grew unit_price_snapshots unboundedly and pushed units
+      // past PostgREST's 1000-row cap in downstream latest-price reads.
       const rent = toInt(unit.rent);
-      if (rent && rent !== existing.latest_rent) {
+      if (rent && needsPriceSnapshot(rent, existing)) {
         snapshots.push({
           unit_id: existing.id,
           rent,
@@ -562,7 +776,13 @@ export async function saveScrapedUnits(
 
   await insertSnapshots(supabase, buildingId, snapshots);
 
-  return { unitsCreated, unitsUpdated, seenUnitIds: [...seenUnitIds], existingNumberedAvailable };
+  return {
+    unitsCreated,
+    unitsUpdated,
+    seenUnitIds: [...seenUnitIds],
+    existingNumberedAvailable,
+    existingAvailable,
+  };
 }
 
 /**
@@ -667,7 +887,14 @@ export async function saveScrapedAmenities(
 export async function markUnitsUnavailable(
   supabase: SupabaseClient,
   buildingId: string,
-  seenUnitIds: string[]
+  seenUnitIds: string[],
+  options: {
+    /**
+     * Only retire units no scrape has touched since this time. saveScrapedUnits
+     * updates every unit it sees, so units.updated_at is when one last was.
+     */
+    unseenSince?: Date;
+  } = {}
 ) {
   // A scrape that saw nothing is not evidence the building is empty (it is
   // far more often a bot wall or a layout change) — never retire on it.
@@ -675,15 +902,15 @@ export async function markUnitsUnavailable(
 
   // Paged: buildings that accumulated floorplan phantoms hold well over 1000
   // "available" rows, and the tail past the cap was never reachable.
-  const availableUnits = await fetchAllRows<{ id: string }>((from, to) =>
-    supabase
+  const availableUnits = await fetchAllRows<{ id: string }>((from, to) => {
+    let query = supabase
       .from("units")
       .select("id")
       .eq("building_id", buildingId)
-      .eq("is_available", true)
-      .order("id")
-      .range(from, to)
-  );
+      .eq("is_available", true);
+    if (options.unseenSince) query = query.lt("updated_at", options.unseenSince.toISOString());
+    return query.order("id").range(from, to);
+  });
 
   if (availableUnits.length === 0) return;
 

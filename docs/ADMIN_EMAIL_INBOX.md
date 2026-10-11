@@ -141,7 +141,10 @@ they are influenced by attacker-controlled inbound content.
 - Renter-facing mail (tour confirmations, alerts) sets Reply-To to the inbox
   address via `getReplyToAddress()`, so "just reply to this email" lands here.
 - Bulk lead campaigns (`/api/admin/email/send`, `/api/admin/leads/bulk-email`)
-  are a separate feature and do not write to this inbox.
+  are a separate feature and do not write to this inbox, but bulk lead email
+  does cancel each recipient's queued note and skips unsubscribed leads. A
+  single email from a lead's CRM page goes through `sendNewEmail`, so it is
+  stored here like an inbox reply.
 
 ## Microsite signups
 
@@ -157,9 +160,35 @@ morning (Miami time) for a signup outside 8 AM–9 PM, and `sendNewEmail`
 hands that time to Resend as `scheduledAt`. Until then the row shows in
 Sent with an amber **Scheduled** badge and the time it will leave; the
 webhook's `email.delivered` flips it to Delivered as usual. Writing to the
-same person by hand before it leaves (any immediate `sendNewEmail` to that
-address) cancels the queued note on Resend and marks the row **Cancelled**,
-so a real reply is never followed by the canned one.
+same person by hand before it leaves cancels the queued note on Resend and
+marks the row **Cancelled**, so a real reply is never followed by the canned
+one. The cancel runs only after Resend has accepted the hand-written email
+(a failed send leaves the note in place), it is limited to notes for the same
+lead (someone who signed up at two buildings still gets the other note), and
+a cancel that fails comes back to the composer as a warning.
+
+The automatic note never counts as contact. The lead stays **new** and its
+"New lead" alert stays unread until a person writes to them (a send with
+`sentBy`) or moves the status; if the note bounces or fails, the alert is
+marked unread again so the lead goes back on the to-do list. When a person
+does contact a lead, that person's other **new** signups for the same
+building move with it (repeat form submissions are separate rows).
+
+## Leads and replies
+
+- Phone numbers in a lead's reply are saved to the lead only when the sender
+  passes the authentication check (SPF/DKIM/DMARC via `senderAuthenticated`);
+  a forged From cannot plant a number on a real lead.
+- Lead emails are stored lowercased and matched case-insensitively.
+- Reply prefers the sender's Reply-To over From, and the To field can be
+  edited. Reply on a "New lead" alert continues the lead's latest real
+  conversation; with none, it uses the same subject as the automatic note.
+- A fresh compose always sends as Staycio; only a reply in a known lead's
+  conversation sends as the building. Our own addresses are refused as
+  recipients.
+- The unsubscribe link's GET only shows a confirmation page; the unsubscribe
+  happens on POST (the button, or an RFC 8058 one-click POST), so link
+  scanners can't unsubscribe anyone.
 
 
 ## Phone alerts

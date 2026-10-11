@@ -46,17 +46,30 @@ export async function POST(
       return apiError("Cannot approve showing fee for a no-show", 400);
     }
 
-    // Approve the debrief
-    await adminClient
+    // Approve the debrief — conditional on it still being unapproved, so a
+    // double click (or two admins) can't both pass the check above and each
+    // pay the showing fee. Only the request that flips the row continues.
+    const { data: approvedRows, error: approveError } = await adminClient
       .from("showing_debriefs")
       .update({
         admin_approved_at: new Date().toISOString(),
         admin_approved_by: auth.userId,
         admin_notes: adminNotes || null,
       })
-      .eq("id", debrief.id);
+      .eq("id", debrief.id)
+      .is("admin_approved_at", null)
+      .select("id");
 
-    // Create approved showing fee earnings record
+    if (approveError) {
+      console.error("Approve debrief error:", approveError);
+      return apiError("Failed to approve debrief", 500);
+    }
+    if (!approvedRows || approvedRows.length !== 1) {
+      return apiError("Debrief already approved", 409);
+    }
+
+    // Create approved showing fee earnings record. Migration 033 also allows
+    // only one live showing_fee row per showing (23505 otherwise).
     const { data: earning, error: earningError } = await adminClient
       .from("shower_earnings")
       .insert({
@@ -72,8 +85,17 @@ export async function POST(
       .single();
 
     if (earningError || !earning) {
+      if (earningError?.code === "23505") {
+        return apiError("Showing fee already recorded for this showing", 409);
+      }
       console.error("Create earning error:", earningError);
-      return apiError("Debrief approved but failed to create earnings record", 500);
+      // Undo the approval so the admin can retry — otherwise the conditional
+      // update above would refuse every retry and the fee would never exist.
+      await adminClient
+        .from("showing_debriefs")
+        .update({ admin_approved_at: null, admin_approved_by: null })
+        .eq("id", debrief.id);
+      return apiError("Failed to create earnings record — approval was not saved, please retry", 500);
     }
 
     await logAuditEvent(auth.userId, AuditAction.DEBRIEF_APPROVE, "showing_lead", leadId, {

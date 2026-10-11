@@ -83,7 +83,11 @@ export interface SearchResult {
 
 export interface SearchResponse {
   city: string;
+  /** The city's state code ("FL"), so clients can date availability in its zone */
+  state?: string | null;
   captured_at_max: string | null;
+  /** The result page came back full (set by cachedSearch) */
+  limit_reached?: boolean;
   results: SearchResult[];
 }
 
@@ -182,20 +186,30 @@ function orderSpec(sort: string): OrderSpec[] {
   }
 }
 
+// Database failures throw instead of returning an empty result: whatever
+// executeSearch returns is cached for CACHE_TTL_SECONDS, so a transient error
+// turned into five minutes of "No apartments found" for that search, while a
+// rejection is never stored. Empty results are only for real no-matches.
 async function executeSearch(params: SearchParams): Promise<SearchResponse> {
   const limit = params.limit ?? 50;
   const sort = params.sort || "best_match";
   const supabase = createAdminClient();
-  const empty: SearchResponse = { city: params.city_slug, captured_at_max: null, results: [] };
 
-  // 1. Resolve city
+  // 1. Resolve city (an unknown slug is a no-match, not an error)
   const cityRes = await supabase
     .from("cities")
-    .select("id, slug, name")
+    .select("id, slug, name, state")
     .eq("slug", params.city_slug)
-    .single();
+    .maybeSingle();
 
-  if (cityRes.error || !cityRes.data) return empty;
+  if (cityRes.error) throw new Error(`city lookup failed: ${cityRes.error.message}`);
+  const empty: SearchResponse = {
+    city: params.city_slug,
+    state: (cityRes.data?.state as string | null | undefined) ?? null,
+    captured_at_max: null,
+    results: [],
+  };
+  if (!cityRes.data) return empty;
   const cityId = cityRes.data.id as string;
 
   // 2. Candidate buildings (paged — never silently capped at 1000)
@@ -209,15 +223,19 @@ async function executeSearch(params: SearchParams): Promise<SearchResponse> {
     // Requested neighborhoods that don't exist in this city mean "no match",
     // not "search the whole city" — silently dropping the filter returned
     // every Miami unit for a Brooklyn neighborhood.
-    if (neighborhoodRes.error || !neighborhoodRes.data?.length) return empty;
+    if (neighborhoodRes.error) throw new Error(`neighborhood lookup failed: ${neighborhoodRes.error.message}`);
+    if (!neighborhoodRes.data?.length) return empty;
     neighborhoodIds = neighborhoodRes.data.map((n) => n.id as string);
   }
 
+  // fetchAllRows stops quietly at a failed page (and hands back what it has),
+  // so the page callback throws instead — a failed read must not be cached
+  // as "no buildings".
   const buildings = await fetchAllRows<{
     id: string;
     pet_policy: string | null;
     parking_policy: string | null;
-  }>((from, to) => {
+  }>(async (from, to) => {
     let q = supabase
       .from("buildings")
       .select("id, pet_policy, parking_policy")
@@ -226,7 +244,9 @@ async function executeSearch(params: SearchParams): Promise<SearchResponse> {
     if (neighborhoodIds) q = q.in("neighborhood_id", neighborhoodIds);
     if (params.pet_friendly) q = q.not("pet_policy", "is", null);
     if (params.parking_required) q = q.not("parking_policy", "is", null);
-    return q.order("id").range(from, to);
+    const res = await q.order("id").range(from, to);
+    if (res.error) throw new Error(`building lookup failed: ${res.error.message}`);
+    return res;
   });
 
   // Judged in code with the same helpers as the "Pets OK" / "Parking" chips:
@@ -349,7 +369,7 @@ async function executeSearch(params: SearchParams): Promise<SearchResponse> {
   ]);
 
   return {
-    city: params.city_slug,
+    ...empty,
     captured_at_max: capturedAtMax ?? page[0]?.price_captured_at ?? null,
     results: page.map((u) => {
       const unitImages = imagesByUnit.get(u.id) || [];
@@ -405,6 +425,9 @@ export async function cachedSearch(params: SearchParams): Promise<SearchResponse
   const verified = withVerifiedPricing(res, params);
   return {
     ...verified,
+    // Judged before the verified-price filter, which can drop rows from a
+    // full page — a full page means more units may match than were returned
+    limit_reached: res.results.length >= (params.limit ?? 50),
     results: verified.results.map((r) => ({ ...r, building: withPolicyText(r.building) })),
   };
 }

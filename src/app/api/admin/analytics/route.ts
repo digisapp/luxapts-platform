@@ -81,12 +81,17 @@ export async function GET(req: Request) {
         )
       ),
 
-      // Top pages
+      // Top pages. Rows with duration_ms are the time-on-page pings sent
+      // when a view ends, a second row for a view already counted.
       fetchAllRows<{ path: string }>((from, to) =>
         supabase
           .from("page_views")
           .select("id, path")
           .gte("created_at", since)
+          .is("duration_ms", null)
+          // staycio.com only: microsite views share the table, tagged with
+          // source_domain (022), and were most of the "/" count.
+          .is("source_domain", null)
           .order("id")
           .range(from, to)
       ),

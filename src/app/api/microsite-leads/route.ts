@@ -52,10 +52,15 @@ export async function POST(req: Request) {
     // text to any address. Every domain maps to one building: use that.
     const buildingName = MICROSITE_BUILDINGS[body.domain] ?? body.building;
 
-    // Honeypot tripped — pretend success, store nothing.
+    // Honeypot tripped — pretend success, store nothing. Logged (domain
+    // only, no PII) so a false positive from a real visitor shows up.
     if (body.website) {
+      console.warn(`[Microsite lead] Honeypot tripped on ${body.domain}; nothing stored`);
       return NextResponse.json({ ok: true }, { status: 201, headers: cors });
     }
+
+    // Stored lowercased: the inbox links mail to a lead by address.
+    const email = body.email.trim().toLowerCase();
 
     const supabase = createAdminClient();
 
@@ -89,7 +94,7 @@ export async function POST(req: Request) {
         source_detail: body.domain,
         city_id: cityRes.data.id,
         name: body.name,
-        user_email: body.email,
+        user_email: email,
         user_phone: body.phone || null,
         notes,
         status: "new",
@@ -104,7 +109,7 @@ export async function POST(req: Request) {
           source: "web_form",
           city_id: cityRes.data.id,
           name: body.name,
-          user_email: body.email,
+          user_email: email,
         user_phone: body.phone || null,
           notes,
           status: "new",
@@ -173,7 +178,7 @@ export async function POST(req: Request) {
     await recordInternalLeadAlert(supabase, {
       leadId,
       name: body.name,
-      email: body.email,
+      email,
       subject: `New Microsite Lead: ${body.name} · ${buildingName}`,
       html: alertHtml,
       sourceLabel: `microsite (${body.domain})`,
@@ -208,36 +213,43 @@ export async function POST(req: Request) {
         // It leaves 10–20 minutes from now, or the next morning for a
         // night-time signup (send-window.ts), so it reads as a person
         // answering rather than an autoresponder. Resend holds it until then.
-        const unsubscribe = unsubscribeUrl(leadId);
-        const scheduledAt = scheduleReplyAt();
-        const reply = micrositeInquiryEmail({
-          name: body.name,
-          buildingName: buildingName,
-          city: cityRes.data.name,
-          moveIn: body.move_in ?? null,
-          unitType: body.unit_type ?? null,
-        });
-        const sent = await getAdminInboxService().sendNewEmail({
-          to: body.email,
-          subject: micrositeInquirySubject(buildingName, cityRes.data.name, body.unit_type ?? null),
-          bodyHtml: reply.bodyHtml,
-          bodyText: reply.text,
-          leadId,
-          scheduledAt,
-          // One-click unsubscribe (RFC 8058): Gmail and Yahoo require it for
-          // bulk senders, and it is what the Unsubscribe button next to the
-          // sender name is wired to.
-          ...(unsubscribe
-            ? {
-                extraHeaders: {
-                  "List-Unsubscribe": `<${unsubscribe}>`,
-                  "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-                },
-              }
-            : {}),
-        });
-        if (!sent.success) {
-          console.error("Microsite inquiry confirmation failed:", leadId, sent.error);
+        // The lead is stored either way; past the per-address cap only the
+        // note is skipped.
+        const recipientLimit = await rateLimit(`recipient:${email}`, RATE_LIMITS.recipient);
+        if (!recipientLimit.success) {
+          console.warn(`[Microsite lead] Note skipped for lead ${leadId}: per-address cap reached`);
+        } else {
+          const unsubscribe = unsubscribeUrl(leadId);
+          const scheduledAt = scheduleReplyAt();
+          const reply = micrositeInquiryEmail({
+            name: body.name,
+            buildingName: buildingName,
+            city: cityRes.data.name,
+            moveIn: body.move_in ?? null,
+            unitType: body.unit_type ?? null,
+          });
+          const sent = await getAdminInboxService().sendNewEmail({
+            to: body.email,
+            subject: micrositeInquirySubject(buildingName, cityRes.data.name, body.unit_type ?? null),
+            bodyHtml: reply.bodyHtml,
+            bodyText: reply.text,
+            leadId,
+            scheduledAt,
+            // One-click unsubscribe (RFC 8058): Gmail and Yahoo require it for
+            // bulk senders, and it is what the Unsubscribe button next to the
+            // sender name is wired to.
+            ...(unsubscribe
+              ? {
+                  extraHeaders: {
+                    "List-Unsubscribe": `<${unsubscribe}>`,
+                    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                  },
+                }
+              : {}),
+          });
+          if (!sent.success) {
+            console.error("Microsite inquiry confirmation failed:", leadId, sent.error);
+          }
         }
       } catch (emailError) {
         console.error("Microsite lead email failed:", emailError);

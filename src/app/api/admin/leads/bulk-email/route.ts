@@ -7,6 +7,7 @@ import { getReplyToAddress } from "@/lib/email/recipients";
 import { senderIdentityFor } from "@/lib/microsites";
 import { apiError } from "@/lib/api-helpers";
 import { unsubscribeFooterHtml, unsubscribeToken } from "@/lib/email/unsubscribe";
+import { getAdminInboxService } from "@/lib/email/admin-inbox";
 
 // Up to 200 sends; Resend batches of 100 keep this well inside the limit.
 export const maxDuration = 60;
@@ -46,6 +47,12 @@ function textToHtml(text: string): string {
   return escapeHtml(text).replace(/\r?\n/g, "<br>");
 }
 
+/** "Hi Jordan," above every message; the preview shows it too. */
+function greetingHtml(lead: Lead): string {
+  const first = (lead.name ?? "").trim().split(/\s+/)[0];
+  return first ? `<p>Hi ${escapeHtml(first)},</p>` : "";
+}
+
 export async function POST(req: Request) {
   try {
     const auth = await checkAdminAuth();
@@ -74,10 +81,8 @@ export async function POST(req: Request) {
     const supabase = createAdminClient();
     const { data: leads, error } = await supabase
       .from("leads")
-      .select("id, name, user_email, source_detail")
-      .in("id", lead_ids)
-      // CAN-SPAM: never mail someone who used the unsubscribe link.
-      .is("unsubscribed_at", null);
+      .select("id, name, user_email, source_detail, unsubscribed_at")
+      .in("id", lead_ids);
 
     if (error) {
       console.error("Bulk email lead fetch failed:", error);
@@ -85,11 +90,20 @@ export async function POST(req: Request) {
     }
 
     const fallbackFrom = getFromEmail();
+    // CAN-SPAM: never mail someone who used the unsubscribe link, on any of
+    // their lead rows.
+    const optedOut = new Set(
+      (leads ?? []).filter((l) => l.unsubscribed_at).map((l) => l.user_email?.trim().toLowerCase())
+    );
     // One send per address: the same person often has several lead rows.
+    // Every selected row of theirs is kept for pulling back queued notes.
     const byEmail = new Map<string, Lead>();
+    const idsByEmail = new Map<string, string[]>();
     for (const lead of leads ?? []) {
       const email = lead.user_email?.trim().toLowerCase();
-      if (email && !byEmail.has(email)) byEmail.set(email, { ...lead, user_email: email });
+      if (!email || optedOut.has(email)) continue;
+      if (!byEmail.has(email)) byEmail.set(email, { id: lead.id, name: lead.name, user_email: email, source_detail: lead.source_detail });
+      idsByEmail.set(email, [...(idsByEmail.get(email) ?? []), lead.id]);
     }
     const withEmail = [...byEmail.values()];
     // Unsubscribed, duplicate or address-less rows
@@ -119,20 +133,23 @@ export async function POST(req: Request) {
               to: sample.user_email,
               from: senderIdentityFor(sample.source_detail, fallbackFrom).from,
               subject: fill(subject, sample, senderIdentityFor(sample.source_detail, fallbackFrom).label),
-              body: textToHtml(fill(emailBody, sample, senderIdentityFor(sample.source_detail, fallbackFrom).label)),
+              body:
+                greetingHtml(sample) +
+                `<div>${textToHtml(fill(emailBody, sample, senderIdentityFor(sample.source_detail, fallbackFrom).label))}</div>`,
             }
           : null,
       });
     }
 
     const resend = getResendClient();
+    const inbox = getAdminInboxService();
     const replyTo = getReplyToAddress();
     const sent: string[] = [];
     const failed: { id: string; error: string }[] = [];
+    let notesNotCancelled = 0;
 
     const render = (lead: Lead) => {
       const sender = senderIdentityFor(lead.source_detail, fallbackFrom);
-      const first = (lead.name ?? "").trim().split(/\s+/)[0];
       return {
         from: sender.from,
         to: [lead.user_email!],
@@ -140,7 +157,7 @@ export async function POST(req: Request) {
         subject: fill(subject, lead, sender.label),
         html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          ${first ? `<p>Hi ${escapeHtml(first)},</p>` : ""}
+          ${greetingHtml(lead)}
           <div>${textToHtml(fill(emailBody, lead, sender.label))}</div>
           <p style="margin-top: 24px; color: #666; font-size: 12px;">
             — ${escapeHtml(sender.label)}${sender.label === "Staycio" ? "" : " · via Staycio"}
@@ -168,11 +185,26 @@ export async function POST(req: Request) {
       }
       const ids = chunk.map((l) => l.id);
       sent.push(...ids);
+      // The automatic note still queued for someone who just got this one
+      // would arrive after it and read as a bot: pull back any queued for
+      // the selected leads of everyone in this batch.
+      try {
+        notesNotCancelled += (await inbox.cancelScheduledForLeads(chunk.flatMap((l) => idsByEmail.get(l.user_email!) ?? [l.id]))).failed;
+      } catch (err) {
+        console.error("Bulk email: could not cancel queued notes:", err);
+        notesNotCancelled += chunk.length;
+      }
       await supabase.from("lead_events").insert(
         ids.map((lead_id) => ({ lead_id, type: "email_sent", payload: { subject, bulk: true } }))
       );
       if (mark_contacted) {
         await supabase.from("leads").update({ status: "contacted" }).in("id", ids).eq("status", "new");
+        // Worked leads leave the inbox's Unread, and so do the same people's
+        // duplicate signups for the same building.
+        await inbox.markLeadAlertsRead(ids).catch((err) => console.error("Bulk email: could not clear lead alerts:", err));
+        await inbox
+          .advanceDuplicateSignups(ids, "contacted")
+          .catch((err) => console.error("Bulk email: could not update duplicate signups:", err));
       }
     }
 
@@ -180,6 +212,7 @@ export async function POST(req: Request) {
       sent: sent.length,
       failed: failed.length,
       skipped_no_email: skipped,
+      notes_not_cancelled: notesNotCancelled,
       errors: failed.slice(0, 5),
     });
   } catch (err) {

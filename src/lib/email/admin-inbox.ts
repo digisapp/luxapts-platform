@@ -4,11 +4,15 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { getResendClient } from "@/lib/resend/client";
 import { sanitizeInboundEmailHtml } from "@/lib/html-sanitize";
 import { isValidUUID } from "@/lib/utils";
+import { fetchAllRows } from "@/lib/db-helpers";
+import type { LeadStatus } from "@/types/database";
 import { buildEmailShell, htmlToText } from "./branded";
-import { senderIdentityFor } from "@/lib/microsites";
+import { micrositeInquirySubject } from "./templates";
+import { MICROSITE_BUILDINGS, senderIdentityFor } from "@/lib/microsites";
 import { toLeadContext, type LeadContext, type LeadRowForContext } from "@/lib/leads/lead-context";
 import {
   getAdminFrom,
+  isOurInboundAddress,
   isValidEmail,
   threadReplyAddress,
 } from "./inbound-address";
@@ -172,6 +176,8 @@ export interface EmailListItem {
 export interface EmailDetail extends Omit<EmailListItem, "preview"> {
   resendEmailId: string | null;
   messageId: string | null;
+  /** The sender's Reply-To (inbound), or the lead's address on a lead alert. Replies go here when set. */
+  replyTo: string | null;
   bodyText: string | null;
   bodyHtml: string | null;
   cc: string[];
@@ -304,6 +310,7 @@ export function toDetail(row: EmailRow): EmailDetail {
     ...item,
     resendEmailId: row.resend_message_id,
     messageId: row.headers?.["message-id"] ?? null,
+    replyTo: row.reply_to?.trim() || null,
     bodyText: row.body_text,
     bodyHtml: row.body_html,
     cc: ccFromMeta.length ? ccFromMeta : ccFromColumn,
@@ -313,6 +320,53 @@ export function toDetail(row: EmailRow): EmailDetail {
     aiDraftText: row.ai_draft_text,
     aiDraftHtml: row.ai_draft_html,
     aiProcessedAt: row.ai_processed_at,
+  };
+}
+
+// ── Reply on a "New lead" alert ──
+
+/** The subject the first note to a lead goes out under (the automatic microsite note's). */
+export function firstNoteSubject(lead: Pick<LeadContext, "building" | "city" | "unitType"> | null): string {
+  if (lead?.building) return micrositeInquirySubject(lead.building, lead.city, lead.unitType);
+  return lead?.city ? `Your ${lead.city} apartment search` : "Your apartment search";
+}
+
+export interface LeadAlertReply {
+  /** What the reply answers: the lead's latest real message, else the alert itself. */
+  replyToEmailId: string;
+  /** Null when the lead left no address we can write to (a phone-only lead). */
+  to: string | null;
+  subject: string;
+  /** The message quoted under the reply; never the alert. */
+  quoted: EmailDetail | null;
+}
+
+/**
+ * Where Reply on a "New lead" alert goes. The alert's subject ("New
+ * Microsite Lead: <name> · <building>") is our internal wording and must
+ * never reach the renter: the reply continues the lead's latest real
+ * conversation (the note we sent, or their answer) when there is one, and
+ * otherwise starts one under the subject the automatic note uses. Our own
+ * addresses (a phone-only lead's alert is "from" leads@staycio.com) are
+ * never a recipient.
+ */
+export function leadAlertReply(alert: EmailDetail, latest: EmailDetail | null, lead: LeadContext | null): LeadAlertReply {
+  const usable = (address: string | null | undefined) => {
+    const v = (address ?? "").trim().toLowerCase();
+    return isValidEmail(v) && !isOurInboundAddress(v) ? v : null;
+  };
+  if (latest) {
+    const to = latest.direction === "inbound" ? usable(latest.replyTo) ?? usable(latest.fromAddress) : usable(latest.toAddress);
+    if (to) {
+      const subject = /^re:/i.test(latest.subject) ? latest.subject : `Re: ${latest.subject}`;
+      return { replyToEmailId: latest.id, to, subject, quoted: latest };
+    }
+  }
+  return {
+    replyToEmailId: alert.id,
+    to: usable(alert.replyTo) ?? usable(lead?.email) ?? usable(alert.fromAddress),
+    subject: firstNoteSubject(lead),
+    quoted: null,
   };
 }
 
@@ -353,6 +407,17 @@ function escapeLike(q: string): string {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyQuery = any;
+
+/**
+ * `column` equals `email`, ignoring case: lead rows keep the address as it
+ * was typed ("Jane@Example.com"). The LIKE wildcards are escaped so the
+ * pattern is exact; PostgREST reads `*` as `%` and it cannot be escaped, so
+ * an address containing one falls back to an exact match.
+ */
+function whereEmail(q: AnyQuery, column: string, email: string): AnyQuery {
+  const value = email.trim().toLowerCase();
+  return value.includes("*") ? q.eq(column, value) : q.ilike(column, value.replace(/[\\%_]/g, "\\$&"));
+}
 
 function applyFolder(q: AnyQuery, folder: InboxFolder, spamColumn: boolean): AnyQuery | null {
   switch (folder) {
@@ -504,6 +569,69 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       if (error) throw new Error(error.message);
     },
 
+    /**
+     * Mail to these leads bounced or failed: nothing reached them, so their
+     * "New lead" alerts go back to Unread (call or text them instead).
+     */
+    async reopenLeadAlerts(leadIds: string[]) {
+      const ids = leadIds.filter((id) => isValidUUID(id));
+      if (ids.length === 0) return;
+      const { error } = await supabase
+        .from("emails")
+        .update({ status: "received", read_at: null })
+        .in("lead_id", ids)
+        .eq("direction", "inbound")
+        .in("status", ["read", "replied"])
+        .eq("metadata->>kind", "lead_alert");
+      if (error) throw new Error(error.message);
+    },
+
+    /**
+     * People often sign up twice for the same building. Once one of those
+     * leads is worked, the others are the same to-do: the same person's
+     * other "new" leads for the same building (same address, same
+     * source_detail) move to `status` and their alerts are cleared. Rows are
+     * never merged or deleted. Returns the ids that moved.
+     */
+    async advanceDuplicateSignups(leadIds: string[], status: LeadStatus): Promise<string[]> {
+      const ids = leadIds.filter((id) => isValidUUID(id));
+      if (ids.length === 0 || status === "new") return [];
+      const { data: worked, error } = await supabase.from("leads").select("id, user_email, source_detail").in("id", ids);
+      if (error) throw new Error(error.message);
+      type Row = { id: string; user_email: string | null; source_detail: string | null };
+      // Building signups only: a phone-line lead's source_detail is the
+      // number dialed ("phone:+1…"), shared by every call.
+      const keyOf = (l: Row) =>
+        l.user_email?.trim() && l.source_detail && MICROSITE_BUILDINGS[l.source_detail]
+          ? `${l.user_email.trim().toLowerCase()}|${l.source_detail}`
+          : null;
+      const keys = new Set(((worked ?? []) as Row[]).map(keyOf).filter((k): k is string => !!k));
+      if (keys.size === 0) return [];
+      const domains = [...new Set(((worked ?? []) as Row[]).filter((l) => keyOf(l)).map((l) => l.source_detail as string))];
+      // Matched here rather than in SQL: addresses are stored as typed, so
+      // the comparison has to ignore case and stray spaces.
+      const waiting = await fetchAllRows<Row>((from, to) =>
+        supabase.from("leads").select("id, user_email, source_detail").in("source_detail", domains).eq("status", "new").order("id").range(from, to)
+      );
+      const dupes = waiting.filter((l) => !ids.includes(l.id) && keys.has(keyOf(l) ?? "")).map((l) => l.id);
+      if (dupes.length === 0) return [];
+      const { data: moved, error: moveError } = await supabase
+        .from("leads")
+        .update({ status })
+        .in("id", dupes)
+        .eq("status", "new")
+        .select("id");
+      if (moveError) throw new Error(moveError.message);
+      const movedIds = ((moved ?? []) as Array<{ id: string }>).map((r) => r.id);
+      if (movedIds.length > 0) {
+        await service.markLeadAlertsRead(movedIds);
+        await supabase
+          .from("lead_events")
+          .insert(movedIds.map((lead_id) => ({ lead_id, type: "status_changed", payload: { new_status: status, duplicate_signup: true } })));
+      }
+      return movedIds;
+    },
+
     async markRead(id: string, isRead: boolean) {
       if (isRead) {
         // 'read' only replaces the initial 'received'; never clobber 'replied'.
@@ -598,6 +726,11 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
     /**
      * Compose or reply. Sends through Resend from the verified apex with a
      * per-thread Reply-To, then stores the outbound row.
+     *
+     * Only a person's send (`sentBy`) counts as working the lead: it moves a
+     * "new" lead to "contacted" and clears its "New lead" alert. The
+     * automatic note to a microsite signup leaves both alone, so the lead
+     * stays on the owner's to-do list until someone actually answers.
      */
     async sendNewEmail({
       to,
@@ -618,6 +751,7 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       bodyHtml: string;
       bodyText: string;
       replyToEmailId?: string | null;
+      /** The admin who wrote it. Absent on automatic mail. */
       sentBy?: string | null;
       /** The lead this mail belongs to, when the caller already knows it. */
       leadId?: string | null;
@@ -634,12 +768,17 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
        */
       scheduledAt?: Date | null;
     }): Promise<
-      | { success: true; id: string; threadId: string; resendId: string | null }
+      | { success: true; id: string; threadId: string; resendId: string | null; warning?: string }
       | { success: false; error: string; status?: number }
     > {
       const recipient = to.trim().toLowerCase();
       if (!isValidEmail(recipient)) {
         return { success: false, error: "Enter a valid email address", status: 400 };
+      }
+      // A phone-only lead's alert is "from" leads@staycio.com. Mail to our own
+      // domains reaches no one (or loops back into this inbox).
+      if (isOurInboundAddress(recipient)) {
+        return { success: false, error: "That is one of Staycio's own addresses, not the lead's. This lead has no email address to write to.", status: 400 };
       }
       const cleanSubject = subject.trim();
       if (!cleanSubject) return { success: false, error: "Subject is required", status: 400 };
@@ -650,15 +789,17 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
 
       let threadId: string | null = null;
       let toName: string | null = null;
-      let leadId: string | null = knownLeadId ?? null;
+      // The lead this mail is about, as the caller or the conversation knows
+      // it. Only this one decides who it goes out as.
+      let contextLeadId: string | null = test ? null : (knownLeadId ?? null);
       let headers: Record<string, string> = { ...(extraHeaders ?? {}) };
 
       if (replyToEmailId) {
         const original = await service.getEmailRow(replyToEmailId);
         if (original) {
           threadId = threadKeyOf(original);
-          leadId = original.lead_id;
-          if (original.direction === "inbound" && original.from_email.toLowerCase() === recipient) {
+          if (!test) contextLeadId = original.lead_id ?? contextLeadId;
+          if (original.direction === "inbound" && [original.from_email, original.reply_to].some((a) => a?.toLowerCase() === recipient)) {
             toName = original.from_name;
           } else if (original.direction === "outbound" && original.to_email.toLowerCase() === recipient) {
             toName = original.to_name;
@@ -675,13 +816,27 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
             };
           }
         }
+        // Any message in the thread may carry the lead (the first note
+        // does); the inbox's lead card reads it the same way, so the From
+        // the admin was shown is the From that goes out.
+        if (!contextLeadId && !test && threadId && isValidUUID(threadId)) {
+          const { data: carrier } = await supabase
+            .from("emails")
+            .select("lead_id")
+            .or(`thread_id.eq.${threadId},id.eq.${threadId}`)
+            .not("lead_id", "is", null)
+            .limit(1)
+            .maybeSingle();
+          contextLeadId = (carrier as { lead_id?: string | null } | null)?.lead_id ?? null;
+        }
       }
 
-      if (!leadId) {
-        const { data: lead } = await supabase
-          .from("leads")
-          .select("id")
-          .eq("user_email", recipient)
+      // A fresh compose names no lead: link the newest lead with that
+      // address so the conversation shows its lead card, but it still goes
+      // out as Staycio, which is what the compose window shows.
+      let leadId = contextLeadId;
+      if (!leadId && !test) {
+        const { data: lead } = await whereEmail(supabase.from("leads").select("id"), "user_email", recipient)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -692,17 +847,10 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       const id = randomUUID();
       if (!threadId) threadId = id;
 
-      // A person being written to right now must not also get a canned note
-      // that is still waiting in Resend's queue; it would arrive after the
-      // real one and read as a bot.
-      if (!scheduledIso && !test) {
-        await service.cancelScheduledTo(recipient).catch((err) => console.error("[Inbox] Could not cancel scheduled note:", err));
-      }
-
       // Sent as the building when the lead came from a microsite ("Downtown 6"
       // <downtown6miami@staycio.com>), as Staycio otherwise: the person wrote
       // to the name they know, and the answer must come from the same name.
-      const sender = await service.senderForLead(leadId);
+      const sender = await service.senderForLead(contextLeadId);
       const resend = getResendClient();
       const { data: sent, error: sendError } = await resend.emails.send(
         {
@@ -728,6 +876,24 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       if (sendError) {
         console.error("[Inbox] Resend send failed:", sendError);
         return { success: false, error: sendError.message || "Failed to send email", status: 502 };
+      }
+
+      // A person written to right now must not also get a canned note that
+      // is still waiting in Resend's queue; it would arrive after the real
+      // one and read as a bot. Pulled back only once the real one has gone
+      // (a failed send must not leave them with neither), and only notes
+      // about this lead when the conversation names one. If one can't be
+      // pulled back, the admin is told.
+      let warning: string | undefined;
+      if (!scheduledIso && !test) {
+        const stuck = "Sent. The automatic note queued for this person could not be cancelled and may still go out.";
+        try {
+          const { failed } = await service.cancelScheduledTo(recipient, contextLeadId);
+          if (failed > 0) warning = stuck;
+        } catch (err) {
+          console.error("[Inbox] Could not cancel scheduled note:", err);
+          warning = stuck;
+        }
       }
 
       const meta: EmailMetadata = {};
@@ -769,35 +935,65 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       }
 
       if (replyToEmailId) await service.markReplied(replyToEmailId);
-      // Writing to a lead is contacting them: move "new" to "contacted" so
-      // the leads list shows who has been worked. Later stages are kept.
-      if (leadId && !test) {
+      // Someone writing to a lead is contacting them: move "new" to
+      // "contacted" so the leads list shows who has been worked (later
+      // stages are kept), clear the alert, and do the same for the same
+      // person's duplicate signups. Automatic mail never does this.
+      if (leadId && !test && sentBy) {
         await supabase.from("leads").update({ status: "contacted" }).eq("id", leadId).eq("status", "new");
         await service.markLeadAlertsRead([leadId]).catch((err) => console.error("[Inbox] Could not clear lead alert:", err));
+        await service
+          .advanceDuplicateSignups([leadId], "contacted")
+          .catch((err) => console.error("[Inbox] Could not update duplicate signups:", err));
       }
 
-      return { success: true, id, threadId, resendId: sent?.id ?? null };
+      return { success: true, id, threadId, resendId: sent?.id ?? null, ...(warning && { warning }) };
     },
 
     /**
      * Pull back every note to `recipient` that Resend is still holding for a
-     * later send. Called before any immediate send to the same person, so a
-     * hand-written reply is never followed by the canned one. Returns how
-     * many were cancelled.
+     * later send. Called after an immediate send to the same person, so a
+     * hand-written reply is never followed by the canned one. With lead ids,
+     * only notes about those leads: someone who signed up for two buildings
+     * still gets the other building's note.
      */
-    async cancelScheduledTo(recipient: string): Promise<number> {
-      const nowIso = new Date().toISOString();
+    async cancelScheduledTo(recipient: string, leadIds?: string | string[] | null): Promise<{ cancelled: number; failed: number }> {
+      const scope = (Array.isArray(leadIds) ? leadIds : leadIds ? [leadIds] : []).filter(Boolean);
+      let q = supabase
+        .from("emails")
+        .select("id, resend_message_id, metadata")
+        .eq("direction", "outbound")
+        .eq("to_email", recipient.trim().toLowerCase());
+      if (scope.length > 0) q = q.in("lead_id", scope);
+      const { data: pending, error } = await q
+        .gt("metadata->>scheduled_at", nowIso())
+        .is("metadata->>cancelled_at", null)
+        .limit(20);
+      if (error) throw new Error(error.message);
+      return service.pullBackScheduled((pending ?? []) as Array<Pick<EmailRow, "id" | "resend_message_id" | "metadata">>);
+    },
+
+    /** Pull back every queued note to these leads (they are being deleted). */
+    async cancelScheduledForLeads(leadIds: string[]): Promise<{ cancelled: number; failed: number }> {
+      const ids = leadIds.filter((id) => isValidUUID(id));
+      if (ids.length === 0) return { cancelled: 0, failed: 0 };
       const { data: pending, error } = await supabase
         .from("emails")
         .select("id, resend_message_id, metadata")
         .eq("direction", "outbound")
-        .eq("to_email", recipient.trim().toLowerCase())
-        .gt("metadata->>scheduled_at", nowIso)
+        .in("lead_id", ids)
+        .gt("metadata->>scheduled_at", nowIso())
         .is("metadata->>cancelled_at", null)
-        .limit(20);
+        .limit(500);
       if (error) throw new Error(error.message);
-      const rows = (pending ?? []) as Array<Pick<EmailRow, "id" | "resend_message_id" | "metadata">>;
+      return service.pullBackScheduled((pending ?? []) as Array<Pick<EmailRow, "id" | "resend_message_id" | "metadata">>);
+    },
+
+    /** Cancel these scheduled rows on Resend and mark them Cancelled. */
+    async pullBackScheduled(rows: Array<Pick<EmailRow, "id" | "resend_message_id" | "metadata">>): Promise<{ cancelled: number; failed: number }> {
+      const cancelledAt = nowIso();
       let cancelled = 0;
+      let failed = 0;
       for (const row of rows) {
         if (row.resend_message_id) {
           // Resend answers 422 "Email is not scheduled" for a fraction of a
@@ -811,14 +1007,15 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
           }
           if (cancelError) {
             console.error(`[Inbox] Could not cancel scheduled email ${row.id}:`, cancelError);
+            failed++;
             continue;
           }
         }
-        const meta: EmailMetadata = { ...readMetadata(row.metadata), cancelled_at: nowIso };
+        const meta: EmailMetadata = { ...readMetadata(row.metadata), cancelled_at: cancelledAt };
         await supabase.from("emails").update({ metadata: meta }).eq("id", row.id);
         cancelled++;
       }
-      return cancelled;
+      return { cancelled, failed };
     },
 
     /**
@@ -965,10 +1162,7 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
 
       // Link the sender to a lead by email.
       if (!leadId) {
-        const { data: lead } = await supabase
-          .from("leads")
-          .select("id")
-          .eq("user_email", from.toLowerCase())
+        const { data: lead } = await whereEmail(supabase.from("leads").select("id"), "user_email", from)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -1027,15 +1221,50 @@ export function createAdminInboxService(supabase: SupabaseClient = createAdminCl
       if (error) throw new Error(error.message);
     },
 
-    async updateDeliveryStatus(resendEmailId: string, status: "delivered" | "bounced" | "failed") {
+    async updateDeliveryStatus(
+      resendEmailId: string,
+      status: "delivered" | "bounced" | "failed",
+      { reopenLeadAlert = true }: { reopenLeadAlert?: boolean } = {}
+    ) {
       // Only outbound rows carry a delivery status; inbound rows also store a
       // Resend id (the received-email id) and must not be touched.
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("emails")
         .update({ status })
         .eq("resend_message_id", resendEmailId)
-        .eq("direction", "outbound");
+        .eq("direction", "outbound")
+        .select("lead_id");
       if (error) throw new Error(error.message);
+      // A note that bounced or failed never reached the lead: their "New
+      // lead" alert goes back to Unread so someone calls or texts them.
+      if (status !== "delivered" && reopenLeadAlert) {
+        const leadIds = [...new Set(((data ?? []) as Array<{ lead_id: string | null }>).map((r) => r.lead_id).filter((l): l is string => !!l))];
+        if (leadIds.length > 0) await service.reopenLeadAlerts(leadIds);
+      }
+    },
+
+    /**
+     * The lead's latest real message, the note we sent or their answer, for
+     * Reply on their "New lead" alert (see leadAlertReply). Skips the alert
+     * itself, tests, spam, and notes that were cancelled or have not left yet.
+     */
+    async latestLeadMessage(leadId: string | null | undefined): Promise<EmailDetail | null> {
+      if (!leadId || !isValidUUID(leadId)) return null;
+      const { data, error } = await supabase
+        .from("emails")
+        .select("*")
+        .eq("lead_id", leadId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw new Error(error.message);
+      const now = Date.now();
+      const row = ((data ?? []) as EmailRow[]).find((r) => {
+        const meta = readMetadata(r.metadata);
+        if (meta.kind === "lead_alert" || meta.test || meta.cancelled_at || r.is_spam === true) return false;
+        const pending = r.direction === "outbound" && r.status === "sent" && !!meta.scheduled_at && Date.parse(meta.scheduled_at) > now;
+        return !pending;
+      });
+      return row ? toDetail(row) : null;
     },
 
     async updateAiFields(

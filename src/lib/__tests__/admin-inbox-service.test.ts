@@ -15,7 +15,7 @@ vi.mock("@/lib/resend/client", () => ({
 }));
 vi.mock("@/lib/supabase/server", () => ({ createAdminClient: () => { throw new Error("not used"); } }));
 
-const { createAdminInboxService, _resetInboxSchemaCache, isLikelySpam, toListItem, checkOutgoingAttachments } = await import("@/lib/email/admin-inbox");
+const { createAdminInboxService, _resetInboxSchemaCache, isLikelySpam, toListItem, toDetail, checkOutgoingAttachments, leadAlertReply } = await import("@/lib/email/admin-inbox");
 
 const T = "3f2504e0-4f89-11d3-9a0c-0305e82c3301";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -37,7 +37,7 @@ function fakeSupabase(script: Array<{ table?: string; op?: string; result: unkno
   };
   const builder = (call: Call) => {
     const chain: Record<string, unknown> = {};
-    const filterNames = ["eq", "neq", "in", "or", "is", "gt", "ilike", "order", "range", "limit"];
+    const filterNames = ["eq", "neq", "in", "or", "is", "not", "gt", "ilike", "order", "range", "limit"];
     for (const f of filterNames) {
       chain[f] = (...args: unknown[]) => {
         call.filters.push([f, ...args]);
@@ -297,7 +297,7 @@ describe("sendNewEmail", () => {
     expect(row).toMatchObject({ from_email: "downtown6miami@staycio.com", from_name: "Downtown 6", lead_id: "lead-1" });
   });
 
-  it("sends attachments to Resend, records them as sent, and moves a new lead to contacted", async () => {
+  it("sends attachments to Resend, records them as sent, and (sent by an admin) moves a new lead to contacted", async () => {
     const { client, calls } = fakeSupabase([
       { table: "leads", op: "select", result: { data: { source_detail: "perrinbrickell.com" } } },
       insertOk,
@@ -310,6 +310,7 @@ describe("sendNewEmail", () => {
       bodyText: "Floor plans attached.",
       leadId: "77777777-7777-4777-8777-777777777777",
       attachments: [{ filename: "Plan B.pdf", contentType: "application/pdf", content }],
+      sentBy: "admin-1",
     });
     expect(r.success).toBe(true);
     const [payload] = send.mock.calls.at(-1)!;
@@ -400,7 +401,7 @@ describe("sendNewEmail", () => {
     expect(row.metadata).not.toHaveProperty("scheduled_at");
   });
 
-  it("pulls back a queued note to the same person before an immediate send", async () => {
+  it("pulls back a queued note to the same person once an immediate send has gone", async () => {
     cancel.mockReset();
     cancel.mockResolvedValue({ data: { object: "email", id: "em_sched" }, error: null });
     const future = new Date(Date.now() + 10 * 60_000).toISOString();
@@ -447,6 +448,264 @@ describe("sendNewEmail", () => {
     const r = await createAdminInboxService(client).sendNewEmail({ to: "a@b.co", subject: "s", bodyHtml: "<p>x</p>", bodyText: "x" });
     expect(r.success).toBe(true);
     expect(calls.filter((c) => c.table === "emails" && c.op === "update")).toHaveLength(0);
+    // The admin is told the canned note may still go out.
+    expect(r.success && r.warning).toMatch(/could not be cancelled/);
+  });
+});
+
+describe("sendNewEmail: who works the lead, and who it goes out as", () => {
+  const LEAD = "55555555-5555-4555-8555-555555555555";
+
+  beforeEach(() => {
+    _resetInboxSchemaCache();
+    send.mockReset();
+    send.mockResolvedValue({ data: { id: "em_1" }, error: null });
+    cancel.mockReset();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("the automatic microsite note never marks the lead contacted or clears its alert", async () => {
+    const { client, calls } = fakeSupabase([{ table: "leads", op: "select", result: { data: { source_detail: "downtown6miami.com" } } }, insertOk]);
+    const r = await createAdminInboxService(client).sendNewEmail({
+      to: "renter@example.com",
+      subject: "Downtown 6 Miami — Availability",
+      bodyHtml: "<p>Hi,</p>",
+      bodyText: "Hi,",
+      leadId: LEAD,
+      scheduledAt: new Date(Date.now() + 15 * 60_000),
+    });
+    expect(r.success).toBe(true);
+    expect(calls.some((c) => c.table === "leads" && c.op === "update")).toBe(false);
+    expect(calls.some((c) => c.table === "emails" && c.op === "update")).toBe(false);
+  });
+
+  it("an immediate send with no admin behind it leaves the lead alone too", async () => {
+    const { client, calls } = fakeSupabase([{ table: "leads", op: "select", result: { data: null } }, insertOk]);
+    await createAdminInboxService(client).sendNewEmail({ to: "renter@example.com", subject: "s", bodyHtml: "<p>x</p>", bodyText: "x", leadId: LEAD });
+    expect(calls.some((c) => c.table === "leads" && c.op === "update")).toBe(false);
+    expect(calls.some((c) => c.table === "emails" && c.op === "update" && (c.args[0] as { status?: string }).status === "read")).toBe(false);
+  });
+
+  it("does not pull anything back when the send itself fails", async () => {
+    send.mockResolvedValue({ data: null, error: { message: "Rate limited" } });
+    const { client, calls } = fakeSupabase([{ table: "leads", op: "select", result: { data: null } }]);
+    const r = await createAdminInboxService(client).sendNewEmail({ to: "a@b.co", subject: "s", bodyHtml: "<p>x</p>", bodyText: "x", sentBy: "admin-1" });
+    expect(r.success).toBe(false);
+    expect(calls.some((c) => c.table === "emails" && c.op === "select")).toBe(false);
+    expect(cancel).not.toHaveBeenCalled();
+  });
+
+  it("only pulls back notes about the conversation's lead", async () => {
+    const { client, calls } = fakeSupabase([{ table: "leads", op: "select", result: { data: { source_detail: "perrinbrickell.com" } } }, insertOk]);
+    await createAdminInboxService(client).sendNewEmail({ to: "renter@example.com", subject: "s", bodyHtml: "<p>x</p>", bodyText: "x", leadId: LEAD, sentBy: "admin-1" });
+    const lookup = calls.find((c) => c.table === "emails" && c.op === "select")!;
+    expect(lookup.filters).toEqual(expect.arrayContaining([["eq", "to_email", "renter@example.com"], ["in", "lead_id", [LEAD]]]));
+  });
+
+  it("a fresh compose goes out as Staycio even when the address belongs to a microsite lead, and still links the lead", async () => {
+    const { client, calls } = fakeSupabase([{ table: "leads", op: "select", result: { data: { id: LEAD } } }, insertOk]);
+    await createAdminInboxService(client).sendNewEmail({ to: "Renter@Example.com", subject: "Hello", bodyHtml: "<p>x</p>", bodyText: "x", sentBy: "admin-1" });
+    expect(send.mock.calls[0][0].from).toBe("Staycio <hello@staycio.com>");
+    // The building is never looked up for a fresh compose.
+    expect(calls.some((c) => c.table === "leads" && c.op === "select" && c.args[0] === "source_detail")).toBe(false);
+    const row = calls.find((c) => c.op === "insert")!.args[0] as Record<string, unknown>;
+    expect(row).toMatchObject({ lead_id: LEAD, from_email: "hello@staycio.com" });
+    // A guessed lead is linked, but the pull-back stays recipient-wide.
+    const lookup = calls.find((c) => c.table === "emails" && c.op === "select")!;
+    expect(lookup.filters.some(([f, col]) => f === "in" && col === "lead_id")).toBe(false);
+  });
+
+  it("matches the lead by address ignoring case, with LIKE wildcards escaped", async () => {
+    const { client, calls } = fakeSupabase([{ table: "leads", op: "select", result: { data: null } }, insertOk]);
+    await createAdminInboxService(client).sendNewEmail({ to: "Jo_hn%Doe@Example.com", subject: "s", bodyHtml: "<p>x</p>", bodyText: "x" });
+    const lookup = calls.find((c) => c.table === "leads" && c.op === "select")!;
+    expect(lookup.filters).toContainEqual(["ilike", "user_email", "jo\\_hn\\%doe@example.com"]);
+  });
+
+  it("a test send never resolves a lead or a building", async () => {
+    const { client, calls } = fakeSupabase([insertOk]);
+    const r = await createAdminInboxService(client).sendNewEmail({ to: "owner@example.com", subject: "Inbox test", bodyHtml: "<p>x</p>", bodyText: "x", sentBy: "admin-1", test: true });
+    expect(r.success).toBe(true);
+    expect(calls.some((c) => c.table === "leads")).toBe(false);
+    expect(send.mock.calls[0][0].from).toBe("Staycio <hello@staycio.com>");
+    expect((calls.find((c) => c.op === "insert")!.args[0] as Record<string, unknown>).lead_id).toBeNull();
+  });
+
+  it("a reply goes out as the lead carried elsewhere in the thread, as the lead card shows", async () => {
+    const original = { id: "orig-2", thread_id: T, direction: "inbound", from_email: "jane@example.com", from_name: "Jane", to_email: "replies@inbound.staycio.com", reply_to: null, lead_id: null, headers: {}, metadata: {} };
+    const { client, calls } = fakeSupabase([
+      { table: "emails", op: "select", result: { data: original } },
+      { table: "emails", op: "select", result: { data: { lead_id: LEAD } } }, // the thread's lead
+      { table: "leads", op: "select", result: { data: { source_detail: "downtown6miami.com" } } },
+      insertOk,
+    ]);
+    await createAdminInboxService(client).sendNewEmail({ to: "jane@example.com", subject: "Re: Tour", bodyHtml: "<p>x</p>", bodyText: "x", replyToEmailId: "11111111-1111-4111-8111-111111111111", sentBy: "admin-1" });
+    expect(send.mock.calls[0][0].from).toBe('"Downtown 6" <downtown6miami@staycio.com>');
+    const carrier = calls.filter((c) => c.table === "emails" && c.op === "select")[1];
+    expect(carrier.filters).toContainEqual(["not", "lead_id", "is", null]);
+  });
+
+  it("refuses to write to our own addresses (a phone-only lead's alert is from leads@staycio.com)", async () => {
+    const svc = createAdminInboxService(fakeSupabase([]).client);
+    for (const to of ["leads@staycio.com", "replies@inbound.staycio.com", "Hello@Staycio.com"]) {
+      expect(await svc.sendNewEmail({ to, subject: "s", bodyHtml: "<p>x</p>", bodyText: "x", sentBy: "admin-1" })).toMatchObject({ success: false, status: 400 });
+    }
+    expect(send).not.toHaveBeenCalled();
+  });
+});
+
+describe("delivery status", () => {
+  const LEAD = "66666666-6666-4666-8666-666666666666";
+
+  it("puts the lead's alert back in Unread when a note bounces", async () => {
+    const { client, calls } = fakeSupabase([{ table: "emails", op: "update", result: { data: [{ lead_id: LEAD }], error: null } }]);
+    await createAdminInboxService(client).updateDeliveryStatus("em_9", "bounced");
+    const [status, reopen] = calls.filter((c) => c.op === "update");
+    expect(status.args[0]).toEqual({ status: "bounced" });
+    expect(status.filters).toEqual(expect.arrayContaining([["eq", "resend_message_id", "em_9"], ["eq", "direction", "outbound"]]));
+    expect(reopen.args[0]).toEqual({ status: "received", read_at: null });
+    expect(reopen.filters).toEqual(
+      expect.arrayContaining([["in", "lead_id", [LEAD]], ["eq", "direction", "inbound"], ["in", "status", ["read", "replied"]], ["eq", "metadata->>kind", "lead_alert"]])
+    );
+  });
+
+  it("leaves alerts alone on delivery, and on a spam complaint", async () => {
+    for (const [status, opts] of [["delivered", {}], ["failed", { reopenLeadAlert: false }]] as const) {
+      const { client, calls } = fakeSupabase([{ table: "emails", op: "update", result: { data: [{ lead_id: LEAD }], error: null } }]);
+      await createAdminInboxService(client).updateDeliveryStatus("em_9", status, opts);
+      expect(calls.filter((c) => c.op === "update")).toHaveLength(1);
+    }
+  });
+});
+
+describe("advanceDuplicateSignups", () => {
+  const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+  const D = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+
+  it("moves the same person's other new leads for the same building, and clears their alerts", async () => {
+    const { client, calls } = fakeSupabase([
+      { table: "leads", op: "select", result: { data: [{ id: A, user_email: "Jane@Example.com ", source_detail: "downtown6miami.com" }], error: null } },
+      {
+        table: "leads",
+        op: "select",
+        result: {
+          data: [
+            { id: B, user_email: "jane@example.com", source_detail: "downtown6miami.com" }, // duplicate
+            { id: C, user_email: "jane@example.com", source_detail: "perrinbrickell.com" }, // another building
+            { id: D, user_email: "someone@example.com", source_detail: "downtown6miami.com" }, // another person
+          ],
+          error: null,
+        },
+      },
+      { table: "leads", op: "update", result: { data: [{ id: B }], error: null } },
+    ]);
+    const moved = await createAdminInboxService(client).advanceDuplicateSignups([A], "contacted");
+    expect(moved).toEqual([B]);
+    const waiting = calls.filter((c) => c.table === "leads" && c.op === "select")[1];
+    expect(waiting.filters).toEqual(expect.arrayContaining([["in", "source_detail", ["downtown6miami.com"]], ["eq", "status", "new"]]));
+    const update = calls.find((c) => c.table === "leads" && c.op === "update")!;
+    expect(update.args[0]).toEqual({ status: "contacted" });
+    // Only rows still "new" move; nothing is merged or deleted.
+    expect(update.filters).toEqual(expect.arrayContaining([["in", "id", [B]], ["eq", "status", "new"]]));
+    expect(calls.some((c) => c.op === "delete")).toBe(false);
+    const alerts = calls.find((c) => c.table === "emails" && c.op === "update")!;
+    expect(alerts.filters).toEqual(expect.arrayContaining([["in", "lead_id", [B]], ["eq", "metadata->>kind", "lead_alert"]]));
+    expect(calls.find((c) => c.table === "lead_events")!.args[0]).toEqual([
+      { lead_id: B, type: "status_changed", payload: { new_status: "contacted", duplicate_signup: true } },
+    ]);
+  });
+
+  it("does nothing for main-site or phone-line leads (no building), or a move back to new", async () => {
+    const worked = [
+      { id: A, user_email: "jane@example.com", source_detail: null },
+      { id: C, user_email: "jane@example.com", source_detail: "phone:+13055550100" }, // every call shares the dialed number
+    ];
+    const { client, calls } = fakeSupabase([{ table: "leads", op: "select", result: { data: worked, error: null } }]);
+    expect(await createAdminInboxService(client).advanceDuplicateSignups([A, C], "touring")).toEqual([]);
+    expect(await createAdminInboxService(client).advanceDuplicateSignups([A], "new")).toEqual([]);
+    expect(calls.filter((c) => c.table === "leads")).toHaveLength(1);
+  });
+});
+
+describe("cancelScheduledForLeads", () => {
+  it("pulls back every queued note to the leads being deleted", async () => {
+    cancel.mockReset();
+    cancel.mockResolvedValue({ data: { object: "email", id: "em_q" }, error: null });
+    const L = "77777777-7777-4777-8777-777777777777";
+    const { client, calls } = fakeSupabase([
+      { table: "emails", op: "select", result: { data: [{ id: "q-1", resend_message_id: "em_q", metadata: { scheduled_at: new Date(Date.now() + 60_000).toISOString() } }], error: null } },
+      { table: "emails", op: "update", result: { error: null } },
+    ]);
+    expect(await createAdminInboxService(client).cancelScheduledForLeads([L, "not-a-uuid"])).toEqual({ cancelled: 1, failed: 0 });
+    expect(cancel).toHaveBeenCalledWith("em_q");
+    expect(calls[0].filters).toEqual(expect.arrayContaining([["eq", "direction", "outbound"], ["in", "lead_id", [L]], ["is", "metadata->>cancelled_at", null]]));
+  });
+});
+
+describe("Reply on a New lead alert", () => {
+  const LEAD = "88888888-8888-4888-8888-888888888888";
+  const base = {
+    thread_id: null, resend_message_id: null, to_name: null, reply_to: null, cc: null, body_html: null, body_text: null,
+    sent_by: null, lead_id: LEAD, is_starred: false, headers: {}, read_at: null, replied_at: null, ai_draft_html: null,
+    ai_draft_text: null, ai_category: null, ai_confidence: null, ai_processed_at: null, ai_summary: null,
+  } as const;
+  const row = (r: Record<string, unknown>) => ({ ...base, ...r }) as unknown as Parameters<typeof toDetail>[0];
+  const alert = toDetail(row({
+    id: "alert-1", direction: "inbound", status: "received", from_email: "jane@example.com", from_name: "Jane Doe",
+    to_email: "leads@staycio.com", reply_to: "jane@example.com", subject: "New Microsite Lead: Jane Doe · Downtown 6",
+    metadata: { kind: "lead_alert" }, created_at: "2026-10-10T10:00:00Z",
+  }));
+  const lead = {
+    id: LEAD, name: "Jane Doe", email: "jane@example.com", phone: null, status: "new" as const, domain: "downtown6miami.com",
+    building: "Downtown 6", city: "Miami", unitType: "2 Bedroom", moveIn: null, sender: '"Downtown 6" <downtown6miami@staycio.com>', createdAt: "2026-10-10T10:00:00Z",
+  };
+
+  it("continues the lead's latest real conversation", () => {
+    const answer = toDetail(row({
+      id: "in-1", direction: "inbound", status: "read", from_email: "jane@example.com", from_name: "Jane", to_email: "replies+x@inbound.staycio.com",
+      reply_to: "jane.work@example.com", subject: "Re: Downtown 6 Miami — 2 Bedroom Availability", metadata: {}, created_at: "2026-10-10T11:00:00Z",
+    }));
+    expect(leadAlertReply(alert, answer, lead)).toEqual({
+      replyToEmailId: "in-1",
+      to: "jane.work@example.com", // their Reply-To wins over From
+      subject: "Re: Downtown 6 Miami — 2 Bedroom Availability",
+      quoted: answer,
+    });
+    const note = toDetail(row({
+      id: "out-1", direction: "outbound", status: "delivered", from_email: "downtown6miami@staycio.com", from_name: "Downtown 6",
+      to_email: "jane@example.com", subject: "Downtown 6 Miami — 2 Bedroom Availability", metadata: {}, created_at: "2026-10-10T10:15:00Z",
+    }));
+    expect(leadAlertReply(alert, note, lead)).toMatchObject({ replyToEmailId: "out-1", to: "jane@example.com", subject: "Re: Downtown 6 Miami — 2 Bedroom Availability" });
+  });
+
+  it("with nothing sent yet, starts one under the automatic note's subject, never the alert's", () => {
+    const r = leadAlertReply(alert, null, lead);
+    expect(r).toEqual({ replyToEmailId: "alert-1", to: "jane@example.com", subject: "Downtown 6 Miami — 2 Bedroom Availability", quoted: null });
+    expect(r.subject).not.toMatch(/New Microsite Lead/);
+    expect(leadAlertReply(alert, null, null).subject).toBe("Your apartment search");
+  });
+
+  it("has no one to write to for a phone-only lead", () => {
+    const phoneOnly = toDetail(row({
+      id: "alert-2", direction: "inbound", status: "received", from_email: "leads@staycio.com", from_name: "Sam",
+      to_email: "leads@staycio.com", reply_to: null, subject: "New Lead: Sam · Miami", metadata: { kind: "lead_alert" }, created_at: "2026-10-10T10:00:00Z",
+    }));
+    expect(leadAlertReply(phoneOnly, null, { ...lead, email: null }).to).toBeNull();
+  });
+
+  it("latestLeadMessage skips the alert, tests, cancelled and still-queued notes", async () => {
+    const later = new Date(Date.now() + 10 * 60_000).toISOString();
+    const rows = [
+      row({ id: "queued", direction: "outbound", status: "sent", from_email: "a@staycio.com", from_name: null, to_email: "jane@example.com", subject: "q", metadata: { scheduled_at: later }, created_at: "2026-10-10T12:00:00Z" }),
+      row({ id: "alert", direction: "inbound", status: "received", from_email: "jane@example.com", from_name: null, to_email: "leads@staycio.com", subject: "New", metadata: { kind: "lead_alert" }, created_at: "2026-10-10T11:30:00Z" }),
+      row({ id: "pulled", direction: "outbound", status: "sent", from_email: "a@staycio.com", from_name: null, to_email: "jane@example.com", subject: "p", metadata: { cancelled_at: "2026-10-10T11:20:00Z" }, created_at: "2026-10-10T11:10:00Z" }),
+      row({ id: "real", direction: "outbound", status: "delivered", from_email: "a@staycio.com", from_name: null, to_email: "jane@example.com", subject: "Downtown 6", metadata: {}, created_at: "2026-10-10T11:00:00Z" }),
+    ];
+    const { client, calls } = fakeSupabase([{ table: "emails", op: "select", result: { data: rows, error: null } }]);
+    expect((await createAdminInboxService(client).latestLeadMessage(LEAD))?.id).toBe("real");
+    expect(calls[0].filters).toEqual(expect.arrayContaining([["eq", "lead_id", LEAD], ["order", "created_at", { ascending: false }]]));
   });
 });
 

@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { senderIdentityFor } from "@/lib/microsites";
+import { firstNameOf } from "@/lib/email/names";
+import { sourceLabel } from "./lead-format";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +41,9 @@ export function SendEmailDialog({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  // Sent, but the automatic note queued for them could not be pulled back.
+  const [warning, setWarning] = useState<string | null>(null);
+  const first = firstNameOf(leadName);
 
   async function handleSend() {
     if (!subject.trim() || !body.trim()) return;
@@ -52,16 +57,21 @@ export function SendEmailDialog({
         body: JSON.stringify({ subject, body }),
       });
 
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Failed to send");
       }
 
       setSuccess(true);
+      setSubject("");
+      setBody("");
+      if (typeof data.warning === "string" && data.warning) {
+        // Left open so the warning is read; closing resets it.
+        setWarning(data.warning);
+        return;
+      }
       setTimeout(() => {
         onOpenChange(false);
-        setSubject("");
-        setBody("");
         setSuccess(false);
       }, 1500);
     } catch (err) {
@@ -72,7 +82,16 @@ export function SendEmailDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) {
+          setSuccess(false);
+          setWarning(null);
+        }
+        onOpenChange(o);
+      }}
+    >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Send Email</DialogTitle>
@@ -81,7 +100,12 @@ export function SendEmailDialog({
             <span className="mt-1 block text-xs">
               From: <span className="font-medium text-foreground">{sender.from}</span>
               {sourceDetail && (
-                <span className="text-muted-foreground"> — they signed up on {sourceDetail}</span>
+                // "phone:<number>" is Stacy's phone line, not a website.
+                <span className="text-muted-foreground">
+                  {sourceDetail.startsWith("phone:")
+                    ? ` — lead from a ${sourceLabel("voice", sourceDetail).toLowerCase()}`
+                    : ` — they signed up on ${sourceDetail}`}
+                </span>
               )}
             </span>
           </DialogDescription>
@@ -107,10 +131,15 @@ export function SendEmailDialog({
               placeholder="Write your message..."
               rows={6}
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {first ? `Starts with “Hi ${first},” automatically. ` : ""}Plain text, line breaks kept. It shows in
+              the inbox&apos;s Sent folder and their reply lands in the same conversation.
+            </p>
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
           {success && <p className="text-sm text-green-400">Email sent successfully!</p>}
+          {warning && <p className="text-sm text-amber-300">{warning}</p>}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>

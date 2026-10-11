@@ -6,6 +6,7 @@ import { classifyAndDraftReply, sendAutoReply } from "@/lib/ai-email";
 import { draftContextFor } from "@/lib/leads/draft-context";
 import { sendInboxAlert } from "@/lib/email/inbox-notify";
 import { extractPhone, stripQuotedHistory } from "@/lib/email/phone-capture";
+import { parseAuthResults, senderAuthenticated } from "@/lib/email/sender-auth";
 import {
   findOurRecipient,
   parseEmailAddress,
@@ -182,9 +183,10 @@ export async function POST(request: Request) {
           // A lead who answers the "what's your phone number?" follow-up gets
           // that number on their lead, so the team can text or call. Never
           // overwrites a number from the form. Runs first so the draft knows
-          // the number is on file.
+          // the number is on file. From is trivially forged, so only a sender
+          // that passed DMARC (sender-auth.ts) can put a number on a lead.
           let phoneSaved: string | null = null;
-          if (stored.lead_id) {
+          if (stored.lead_id && senderAuthenticated(parseAuthResults(headers["authentication-results"]))) {
             try {
               phoneSaved = await inbox.captureLeadPhone(stored.lead_id, extractPhone(stripQuotedHistory(text, html)));
               if (phoneSaved) console.log(`[Inbox] Saved phone from email reply to lead ${stored.lead_id}`);
@@ -265,7 +267,9 @@ export async function POST(request: Request) {
       const id: string | undefined = body.data?.email_id;
       if (id) {
         const status = eventType === "email.delivered" ? "delivered" : eventType === "email.bounced" ? "bounced" : "failed";
-        await inbox.updateDeliveryStatus(id, status);
+        // A bounce or a failed send puts the lead's alert back in Unread; a
+        // spam complaint is not a reason to chase them.
+        await inbox.updateDeliveryStatus(id, status, { reopenLeadAlert: eventType !== "email.complained" });
       }
       return NextResponse.json({ received: true });
     }

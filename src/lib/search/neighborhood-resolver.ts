@@ -9,13 +9,16 @@ export interface NeighborhoodRow {
 }
 
 // The catalog is ~100 rows and changes rarely; one query per hour is plenty.
-export const getNeighborhoodCatalog = unstable_cache(
+// A failed read throws so it isn't cached — an empty catalog stored for the
+// hour silently dropped every neighborhood from AI search.
+const loadNeighborhoodCatalog = unstable_cache(
   async (): Promise<NeighborhoodRow[]> => {
     const supabase = createAdminClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("neighborhoods")
       .select("slug, name, cities:city_id ( slug )")
       .limit(1000);
+    if (error) throw new Error(`neighborhood catalog read failed: ${error.message}`);
     return (data || []).map((n) => {
       const city = Array.isArray(n.cities) ? n.cities[0] : n.cities;
       return { slug: n.slug as string, name: n.name as string, city_slug: (city as { slug?: string } | null)?.slug ?? "" };
@@ -24,6 +27,17 @@ export const getNeighborhoodCatalog = unstable_cache(
   ["parse-query-neighborhoods"],
   { revalidate: 3600 },
 );
+
+/** The cached catalog; an empty (uncached) one when the read fails, so the
+ *  query parser keeps its other filters and only skips neighborhoods. */
+export async function getNeighborhoodCatalog(): Promise<NeighborhoodRow[]> {
+  try {
+    return await loadNeighborhoodCatalog();
+  } catch (error) {
+    console.error("getNeighborhoodCatalog:", error);
+    return [];
+  }
+}
 
 /**
  * Resolve neighborhood names the model extracted against the real catalog.

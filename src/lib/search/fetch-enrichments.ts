@@ -85,7 +85,10 @@ export async function fetchUnitImages(
           .order("is_primary", { ascending: false })
           .order("sort_order", { ascending: true })
           .order("id")
-          .range(from, to)
+          .range(from, to),
+        // Search results are cached for minutes: a failed read must not be
+        // stored as "this unit has no photos".
+        { throwOnError: true }
       )
     )
   );
@@ -114,7 +117,8 @@ export async function fetchBuildingImages(
           .order("is_primary", { ascending: false })
           .order("sort_order", { ascending: true })
           .order("id")
-          .range(from, to)
+          .range(from, to),
+        { throwOnError: true }
       )
     )
   );

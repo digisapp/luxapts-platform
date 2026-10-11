@@ -17,10 +17,9 @@ async function main() {
   const {
     scrapeUnitsOnly,
     saveScrapedUnits,
-    markUnitsUnavailable,
     updateScrapeStatus,
-    shouldRetireUnseenUnits,
-    normalizeUnitNumber,
+    retireUnseenUnits,
+    resolveScrapeUrl,
   } = await import("../src/lib/scraper");
 
   const namesIdx = process.argv.indexOf("--names");
@@ -44,7 +43,7 @@ async function main() {
   // Buildings whose unit scrapes never succeeded or found nothing
   const { data: rows, error } = await supabase
     .from("building_scrape_status")
-    .select("building_id, website_url, units_found, units_scrape_success, buildings:building_id (id, name, status)")
+    .select("building_id, website_url, units_found, units_scrape_success, buildings:building_id (id, name, status, website_url)")
     .not("website_url", "is", null)
     .or("units_found.eq.0,units_found.is.null")
     .limit(limit);
@@ -69,36 +68,37 @@ async function main() {
     const b = Array.isArray(row.buildings) ? row.buildings[0] : row.buildings;
     if (!b) continue;
     const label = `${b.name}`.padEnd(36);
+    // Same URL choice as the cron: a stale portfolio-homepage override loses
+    // to the building's own page.
+    const url = resolveScrapeUrl({
+      name: b.name,
+      website_url: b.website_url,
+      building_scrape_status: { website_url: row.website_url },
+    });
+    if (!url) continue;
 
     try {
-      const result = await scrapeUnitsOnly(row.website_url!);
+      const result = await scrapeUnitsOnly(url);
 
       if (result.success && result.data && result.data.units.length > 0) {
         const saved = await saveScrapedUnits(supabase, b.id, result.data.units);
 
-        // markUnitsUnavailable takes unit UUIDs. Passing the scraped unit
-        // NUMBERS meant nothing matched, so every unit this script had just
-        // saved was immediately retired. Same guard as the cron: a
-        // floorplan-level or bot-walled result is not evidence of an empty
-        // building.
-        const scrapedNumbered = result.data.units.filter(
-          (u) => normalizeUnitNumber(u.unit_number) !== null
-        ).length;
-
-        if (
-          shouldRetireUnseenUnits({
+        // Same retirement rule as the cron: a floorplan-level, bot-walled or
+        // partial (lazy-loaded) result is not evidence the rest is gone.
+        await retireUnseenUnits(
+          supabase,
+          { id: b.id, name: b.name },
+          {
+            units: result.data.units,
             unitsPageFetchFailed: result.units_page_fetch_failed,
-            scrapedNumbered,
-            existingNumberedAvailable: saved.existingNumberedAvailable,
-          })
-        ) {
-          await markUnitsUnavailable(supabase, b.id, saved.seenUnitIds);
-        }
+            source: result.source,
+          },
+          saved,
+        );
         await updateScrapeStatus(supabase, b.id, {
           type: "units",
           success: true,
           unitsFound: result.data.units.length,
-          websiteUrl: row.website_url!,
         });
         success++;
         totalUnits += result.data.units.length;
@@ -108,7 +108,6 @@ async function main() {
           type: "units",
           success: false,
           error: result.error || "No units extracted",
-          websiteUrl: row.website_url!,
         });
         failed++;
         console.log(`  MISS  ${label} ${result.error || "no units extracted"}`);

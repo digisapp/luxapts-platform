@@ -1,12 +1,20 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
-import { getResendClient, getFromEmail } from "@/lib/resend/client";
-import { isValidUUID, escapeHtml } from "@/lib/utils";
-import { getReplyToAddress } from "@/lib/email/recipients";
-import { senderIdentityFor } from "@/lib/microsites";
+import { isValidUUID } from "@/lib/utils";
+import { getAdminInboxService } from "@/lib/email/admin-inbox";
+import { textToHtml } from "@/lib/email/branded";
+import { firstNameOf } from "@/lib/email/names";
 import { apiError } from "@/lib/api-helpers";
 
+/**
+ * POST /api/admin/leads/[id]/email — one email to one lead from the leads
+ * list. It goes through the admin inbox exactly like a message written in
+ * /admin/email: sent as the building the lead signed up on, stored in Sent
+ * with a per-thread Reply-To (their answer threads under it), any automatic
+ * note still queued for them pulled back, and a "new" lead moved to
+ * "contacted" with its alert cleared.
+ */
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -22,8 +30,9 @@ export async function POST(
       return apiError("Invalid lead ID");
     }
 
-    const body = await req.json();
-    const { subject, body: emailBody } = body as { subject: string; body: string };
+    const body = await req.json().catch(() => ({}));
+    const subject = typeof body.subject === "string" ? body.subject.trim() : "";
+    const emailBody = typeof body.body === "string" ? body.body.trim() : "";
 
     if (!subject || !emailBody) {
       return apiError("subject and body required");
@@ -31,10 +40,9 @@ export async function POST(
 
     const supabase = createAdminClient();
 
-    // Fetch lead email
     const { data: lead, error: leadError } = await supabase
       .from("leads")
-      .select("user_email, name, source_detail")
+      .select("user_email, name, unsubscribed_at")
       .eq("id", id)
       .single();
 
@@ -46,41 +54,36 @@ export async function POST(
       return apiError("Lead has no email address");
     }
 
-    // A lead who signed up on downtown6miami.com sees "Downtown 6" in their
-    // inbox rather than a brand they may not recognise.
-    const sender = senderIdentityFor(lead.source_detail, getFromEmail());
-
-    const resend = getResendClient();
-    const { error: sendError } = await resend.emails.send({
-      from: sender.from,
-      to: [lead.user_email],
-      // Replies to FROM_EMAIL bounce (staycio.com has no MX record).
-      replyTo: getReplyToAddress(),
-      subject,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          ${lead.name ? `<p>Hi ${escapeHtml(lead.name)},</p>` : ""}
-          <div>${escapeHtml(emailBody).replace(/\r?\n/g, "<br>")}</div>
-          <p style="margin-top: 24px; color: #666; font-size: 12px;">
-            — ${escapeHtml(sender.label)}${sender.label === "Staycio" ? "" : " · via Staycio"}
-          </p>
-        </div>
-      `,
-    });
-
-    if (sendError) {
-      console.error("Send email error:", sendError);
-      return apiError("Failed to send email", 500);
+    // CAN-SPAM: never mail someone who used the unsubscribe link.
+    if (lead.unsubscribed_at) {
+      return apiError("This lead unsubscribed from email", 409);
     }
 
-    // Log lead event
+    // Greeted by first name, then the message as typed, in the inbox's
+    // plain paragraphs.
+    const first = firstNameOf(lead.name);
+    const bodyText = first ? `Hi ${first},\n\n${emailBody}` : emailBody;
+
+    const result = await getAdminInboxService().sendNewEmail({
+      to: lead.user_email,
+      subject,
+      bodyHtml: textToHtml(bodyText),
+      bodyText,
+      leadId: id,
+      sentBy: auth.userId,
+    });
+    if (!result.success) {
+      return apiError(result.error, result.status ?? 502);
+    }
+
     await supabase.from("lead_events").insert({
       lead_id: id,
       type: "email_sent",
-      payload: { subject, to: lead.user_email, from: sender.from },
+      payload: { subject, to: lead.user_email, email_id: result.id },
     });
 
-    return NextResponse.json({ success: true });
+    // `warning`: sent, but a queued automatic note could not be pulled back.
+    return NextResponse.json({ success: true, id: result.id, warning: result.warning ?? null });
   } catch (error) {
     console.error("Lead email error:", error);
     return apiError("Internal server error", 500);

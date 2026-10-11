@@ -8,6 +8,7 @@ import {
   durationLabel,
   initials,
   moveInLabel,
+  offsetAfterRemoval,
   sourceLabel,
   statusMeta,
 } from "./lead-format";
@@ -71,8 +72,29 @@ describe("labels", () => {
     expect(sourceLabel("web_form", null)).toBe("Web form");
     expect(sourceLabel("voice")).toBe("Phone call");
   });
+  it("labels a phone-line lead as a call, not as its dialed number", () => {
+    expect(sourceLabel("voice", "phone:+13059521558")).toBe("Phone call");
+    expect(sourceLabel("voice", "phone:unknown")).toBe("Phone call");
+  });
   it("falls back to New styling for an unknown status", () => {
     expect(statusMeta("bogus").label).toBe("New");
+  });
+});
+
+describe("offsetAfterRemoval", () => {
+  it("stays put while the page still has rows", () => {
+    expect(offsetAfterRemoval(0, 10, 1, 25)).toBe(0);
+    expect(offsetAfterRemoval(25, 30, 1, 25)).toBe(25);
+    expect(offsetAfterRemoval(25, 30, 0, 25)).toBe(25);
+  });
+  it("steps back when the last page empties", () => {
+    // Filtered to New, 26 leads, page 2 holds one; it moves to Contacted.
+    expect(offsetAfterRemoval(25, 26, 1, 25)).toBe(0);
+    expect(offsetAfterRemoval(50, 53, 3, 25)).toBe(25);
+  });
+  it("never goes below zero", () => {
+    expect(offsetAfterRemoval(25, 25, 25, 25)).toBe(0);
+    expect(offsetAfterRemoval(25, 3, 10, 25)).toBe(0);
   });
 });
 

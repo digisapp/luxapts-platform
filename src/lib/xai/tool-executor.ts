@@ -7,6 +7,8 @@ import { normalizeCitySlug } from "@/lib/constants/cities";
 import { getFirstRelation } from "@/lib/db-helpers";
 import { isVerifiedPrice } from "@/lib/verified-pricing";
 import { policyText, withPolicyText } from "@/lib/policy-text";
+import { prepareLeadInput, sessionLeadId, updateSessionLead } from "@/lib/xai/session-lead";
+import { withSessionLock } from "@/lib/session-lock";
 
 // Per-request state passed through a single chat turn so tool usage can be
 // bounded (e.g. at most one lead created per conversation turn).
@@ -16,6 +18,14 @@ export interface ToolContext {
   sessionKey?: string | null;
   /** Surface the lead came from. Phone calls pass "voice"; everything else is chat. */
   leadSource?: "chat" | "voice";
+  /** Contact number for a new lead when the person gives none (caller ID). */
+  defaultPhone?: string | null;
+  /** Forces the lead's city whatever the model says (microsite chat is Miami-only). */
+  citySlug?: string | null;
+  /** The conversation's lead, once this request has created or found it. */
+  leadId?: string | null;
+  /** Tail of this request's lead writes; see serializeLeadWrites. */
+  leadQueue?: Promise<unknown>;
 }
 
 const MAX_LEADS_PER_REQUEST = 1;
@@ -119,6 +129,173 @@ function truncate(value: unknown, max: number): string | null {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value;
 }
 
+// Facts about rent, availability and promotions go stale with the market, and
+// every such building_facts row dates from the January scrape ("3 months
+// free..."). They reach the model only while the row's own updated_at is
+// inside the verified-pricing window.
+const PERISHABLE_FACT_KEY = /rent|price|special|concession|promo|availab/i;
+
+export function currentFacts(facts: unknown, now: Date = new Date()): Row[] {
+  if (!Array.isArray(facts)) return [];
+  return facts
+    .filter((f) => {
+      const row = (f && typeof f === "object" ? f : {}) as Row;
+      // isVerifiedPrice with a stand-in rent is the freshness check alone.
+      return !PERISHABLE_FACT_KEY.test(String(row.key ?? "")) || isVerifiedPrice(1, row.updated_at, now);
+    })
+    .map((f) => pick(f, ["key", "value"]));
+}
+
+// The knowledge documents (scripts/upload-to-collection.ts) were written with
+// the rent range and move-in specials of the day they were ingested. Labelled
+// lines go whole; elsewhere only the sentence quoting a price or promotion.
+const PRICE_LINE =
+  /^\s*(?:#+\s*pricing\b|(?:rent(?:s|al)?\s*range|price\s*range|pricing|rents?|prices?|move-in\s*specials?|specials?|concessions?|available\s*units)\s*:)/i;
+const PRICE_SENTENCE =
+  /\$\s?\d|\b\d+\s*(?:months?|weeks?)\s+free\b|\bmove-in\s+specials?\b|\bconcessions?\b|\bfree\s+rent\b/i;
+const PRICE_METADATA = new Set(["min_rent", "max_rent"]);
+
+export function stripUnverifiedPricing(text: string): string {
+  return text
+    .split("\n")
+    .filter((line) => !PRICE_LINE.test(line))
+    .map((line) => {
+      if (!PRICE_SENTENCE.test(line)) return line;
+      const kept = line.split(/(?<=[.!?])\s+/).filter((s) => !PRICE_SENTENCE.test(s));
+      return kept.length ? kept.join(" ") : null;
+    })
+    .filter((line): line is string => line !== null)
+    .join("\n");
+}
+
+/** Every string in a knowledge search result, stripped; ingest-time rent metadata dropped. */
+export function withoutUnverifiedPricing(value: unknown): unknown {
+  if (typeof value === "string") return stripUnverifiedPricing(value);
+  if (Array.isArray(value)) return value.map(withoutUnverifiedPricing);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => !PRICE_METADATA.has(key))
+        .map(([key, v]) => [key, withoutUnverifiedPricing(v)])
+    );
+  }
+  return value;
+}
+
+/**
+ * What a failed internal call tells the model. Our routes' 4xx messages are
+ * validation feedback it can act on ("Date must be YYYY-MM-DD format"); a 5xx
+ * body stays in the logs.
+ */
+async function upstreamError(name: string, response: Response): Promise<string> {
+  const errorText = await response.text().catch(() => "");
+  console.error(`Tool ${name} upstream error ${response.status}:`, errorText);
+  if (response.status >= 400 && response.status < 500) {
+    try {
+      const message = (JSON.parse(errorText) as { error?: unknown }).error;
+      if (typeof message === "string" && message.trim()) {
+        return `The ${name} request was rejected: ${message.trim().slice(0, 200)}`;
+      }
+    } catch {
+      // Not our JSON error shape
+    }
+  }
+  return `The ${name} request could not be completed.`;
+}
+
+/**
+ * Tool calls in one round run in parallel, so two create_lead calls both saw
+ * "no lead yet" and created two. Lead writes in one request run one at a time
+ * instead, and the second updates the lead the first created. Across requests
+ * (a phone call's tools arrive as separate HTTP calls) the conversation's
+ * session lock does the same.
+ */
+function serializeLeadWrites<T>(ctx: ToolContext | undefined, write: () => Promise<T>): Promise<T> {
+  if (!ctx) return write();
+  const sessionKey = ctx.sessionKey;
+  const locked = sessionKey ? () => withSessionLock(`lead:${sessionKey}`, write) : write;
+  const run = (ctx.leadQueue ?? Promise.resolve()).then(locked);
+  ctx.leadQueue = run.catch(() => undefined);
+  return run;
+}
+
+function droppedNote(dropped: string[]) {
+  return dropped.length
+    ? {
+        dropped_fields: dropped,
+        note: `Saved without ${dropped.join(", ")}: not in a valid format. Don't tell them those were saved; ask again if they matter.`,
+      }
+    : {};
+}
+
+/**
+ * create_lead for every channel: the conversation's first call creates the
+ * lead through /api/leads; any later one (more details, a tour) is added to
+ * that same lead instead of being refused or creating a duplicate.
+ */
+async function createOrUpdateLead(args: Row, baseUrl: string, ctx?: ToolContext): Promise<unknown> {
+  const source = ctx?.leadSource ?? "chat";
+
+  const existingId = ctx?.leadId ?? (await sessionLeadId(ctx?.sessionKey));
+  if (existingId) {
+    const prepared = prepareLeadInput(args, { source, citySlug: ctx?.citySlug, isNew: false });
+    if ("error" in prepared) return { error: prepared.error };
+    const updated = await updateSessionLead(existingId, prepared.data);
+    if (updated && "error" in updated) return updated;
+    if (updated) {
+      if (ctx) ctx.leadId = updated.lead_id;
+      return {
+        ...updated,
+        message: "Added to the request already saved for this conversation; it's one lead, so don't save it again.",
+        ...droppedNote(prepared.dropped),
+      };
+    }
+    // The lead was deleted since; start a new one.
+  }
+
+  // Prevent a prompt-injected turn from mass-creating leads/emails.
+  if (ctx && ctx.leadsCreated >= MAX_LEADS_PER_REQUEST) {
+    return { error: "A lead has already been created for this conversation." };
+  }
+  const prepared = prepareLeadInput(args, {
+    source,
+    citySlug: ctx?.citySlug,
+    defaultPhone: ctx?.defaultPhone,
+    isNew: true,
+  });
+  if ("error" in prepared) return { error: prepared.error };
+
+  if (ctx) ctx.leadsCreated++;
+  const response = await fetch(`${baseUrl}/api/leads`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...internalHeaders() },
+    // source is set by the caller, never the model: letting the model pick
+    // "web_form" mis-attributed leads and triggered the renter
+    // tour-confirmation email path.
+    body: JSON.stringify(prepared.data),
+  });
+  if (!response.ok) {
+    if (ctx) ctx.leadsCreated--;
+    return { error: await upstreamError("create_lead", response) };
+  }
+
+  const created = (await response.json()) as { lead_id?: string };
+  if (created?.lead_id) {
+    if (ctx) ctx.leadId = created.lead_id;
+    // Tie the conversation to the lead it produced so the Chat Log can show
+    // which sessions actually converted (and later calls update this lead).
+    if (ctx?.sessionKey) {
+      try {
+        const { linkSessionToLead } = await import("@/lib/chat/session-log");
+        await linkSessionToLead(ctx.sessionKey, created.lead_id);
+      } catch (err) {
+        console.error("Linking chat session to lead failed:", err);
+      }
+    }
+  }
+  return { ...created, ...droppedNote(prepared.dropped) };
+}
+
 /**
  * Trim the /api/buildings/[id] payload (every column, every unit with every
  * column, image-heavy relations) down to what the assistant needs.
@@ -134,7 +311,7 @@ function compactBuildingDetails(payload: unknown): unknown {
         .map((a) => (a && typeof a === "object" ? (a as Row).name : null))
         .filter((n): n is string => typeof n === "string")
     : [];
-  const facts = Array.isArray(b.facts) ? b.facts.map((f) => pick(f, ["key", "value"])) : [];
+  const facts = currentFacts(b.facts);
   const floorplans = Array.isArray(b.floorplans)
     ? b.floorplans.map((f) => pick(f, ["id", "name", "beds", "baths", "sqft", "sqft_min", "sqft_max"]))
     : [];
@@ -224,8 +401,8 @@ export async function executeTool(
           body: JSON.stringify(args),
         });
         if (!response.ok) break;
-        // Price stats aggregate every available unit. A side whose newest
-        // capture is stale has nothing verified to compare on.
+        // Price stats come from verified units only (/api/compare); a side
+        // with none has nothing to quote.
         const compared = (await response.json()) as Row;
         for (const side of ["building_a", "building_b"]) {
           const b = compared[side] as Row | undefined;
@@ -263,77 +440,26 @@ export async function executeTool(
         // field (scripts/upload-to-collection.ts), so filter on it here.
         const citySlug = normalizeCitySlug(args.city_slug);
         if (citySlug) {
-          return {
+          return withoutUnverifiedPricing({
             ...results,
             results: (results.results ?? []).filter(
               (r) => normalizeCitySlug(r.metadata?.city) === citySlug
             ),
-          };
+          });
         }
-        return results;
+        return withoutUnverifiedPricing(results);
       }
 
-      case "create_lead": {
-        // Prevent a prompt-injected turn from mass-creating leads/emails.
-        if (ctx && ctx.leadsCreated >= MAX_LEADS_PER_REQUEST) {
-          return { error: "A lead has already been created for this conversation." };
-        }
-        // leads.contactable CHECK requires an email or a phone — tell the
-        // model to ask rather than letting the insert fail opaquely.
-        const email = typeof args.email === "string" ? args.email.trim() : "";
-        const phone = typeof args.phone === "string" ? args.phone.trim() : "";
-        if (!email && !phone) {
-          return {
-            error:
-              "A lead needs an email address or a phone number. Ask the user for one, then call create_lead again.",
-          };
-        }
-        // Reserve the slot before awaiting: tool calls in one round run in
-        // parallel, and two create_lead calls both passed the check above
-        // when the counter only moved after the fetch (two leads, two alerts).
-        if (ctx) ctx.leadsCreated++;
-        response = await fetch(`${baseUrl}/api/leads`, {
-          method: "POST",
-          headers: jsonHeaders,
-          body: JSON.stringify({
-            ...args,
-            email: email || undefined,
-            phone: phone || undefined,
-            // Set by the caller, never the model: letting the model pick
-            // "web_form" mis-attributed leads and triggered the renter
-            // tour-confirmation email path.
-            source: ctx?.leadSource ?? "chat",
-            city_slug: normalizeCitySlug(args.city_slug),
-          }),
-        });
-        if (ctx && !response.ok) ctx.leadsCreated--;
-        if (ctx && response.ok) {
-          // Tie the conversation to the lead it produced so the Chat Log can
-          // show which sessions actually converted.
-          if (ctx.sessionKey) {
-            try {
-              const created = (await response.clone().json()) as { lead_id?: string };
-              if (created?.lead_id) {
-                const { linkSessionToLead } = await import("@/lib/chat/session-log");
-                await linkSessionToLead(ctx.sessionKey, created.lead_id);
-              }
-            } catch (err) {
-              console.error("Linking chat session to lead failed:", err);
-            }
-          }
-        }
-        break;
-      }
+      case "create_lead":
+        return await serializeLeadWrites(ctx, () => createOrUpdateLead(args, baseUrl, ctx));
 
       default:
         return { error: `Unknown tool: ${name}` };
     }
 
     if (!response.ok) {
-      // Don't echo raw upstream error bodies back to the model/user.
-      const errorText = await response.text();
-      console.error(`Tool ${name} upstream error ${response.status}:`, errorText);
-      return { error: `The ${name} request could not be completed.` };
+      // Raw upstream bodies stay in the logs; only our 4xx messages go back.
+      return { error: await upstreamError(name, response) };
     }
 
     return await response.json();

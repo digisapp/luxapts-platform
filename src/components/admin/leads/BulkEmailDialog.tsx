@@ -33,7 +33,7 @@ export function BulkEmailDialog({ open, onOpenChange, leadIds, onSent }: BulkEma
   const [preview, setPreview] = useState<Preview | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ sent: number; failed: number } | null>(null);
+  const [result, setResult] = useState<{ sent: number; failed: number; notesNotCancelled: number } | null>(null);
 
   function reset() {
     setSubject("");
@@ -56,7 +56,7 @@ export function BulkEmailDialog({ open, onOpenChange, leadIds, onSent }: BulkEma
       if (!res.ok) throw new Error(data.error || "Request failed");
       if (dryRun) setPreview(data as Preview);
       else {
-        setResult({ sent: data.sent, failed: data.failed });
+        setResult({ sent: data.sent, failed: data.failed, notesNotCancelled: data.notes_not_cancelled ?? 0 });
         onSent?.();
       }
     } catch (err) {
@@ -90,6 +90,12 @@ export function BulkEmailDialog({ open, onOpenChange, leadIds, onSent }: BulkEma
             {result.failed > 0 && (
               <p className="text-sm text-amber-300">{result.failed} failed to send.</p>
             )}
+            {result.notesNotCancelled > 0 && (
+              <p className="text-sm text-amber-300">
+                {result.notesNotCancelled} automatic {result.notesNotCancelled === 1 ? "note" : "notes"} queued for
+                these people could not be cancelled and may still go out.
+              </p>
+            )}
             <p className="text-sm text-muted-foreground">
               Those leads moved from New to Contacted.
             </p>
@@ -122,7 +128,8 @@ export function BulkEmailDialog({ open, onOpenChange, leadIds, onSent }: BulkEma
                 placeholder={"You joined the {{building}} list a few weeks ago…"}
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Basic HTML is allowed. Line breaks need &lt;br&gt; or &lt;p&gt; tags.
+                Plain text: line breaks are kept and HTML tags are sent as typed. Each email starts
+                with &ldquo;Hi {"{{name}}"},&rdquo; automatically.
               </p>
             </div>
 
@@ -131,7 +138,7 @@ export function BulkEmailDialog({ open, onOpenChange, leadIds, onSent }: BulkEma
                 <p className="font-medium">
                   {preview.recipients} will receive this
                   {preview.skipped_no_email > 0 &&
-                    ` · ${preview.skipped_no_email} skipped with no email address`}
+                    ` · ${preview.skipped_no_email} skipped (no email address, unsubscribed, or the same person twice)`}
                 </p>
                 <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
                   {preview.senders.map((s) => (

@@ -134,18 +134,19 @@ export function unitSignalCount(html: string): number {
  * Atlas New York was the case that exposed this: identical renders returned 23
  * prices one run and 9 the next, so the same building extracted seven units or
  * zero depending on timing. Scroll the page and keep sampling until the markup
- * actually contains units, then hand back the richest snapshot seen.
+ * contains units AND has stopped growing, then hand back the richest snapshot.
+ * Exported for tests.
  */
-async function settleForUnitContent(
-  page: import("playwright").Page,
+export async function settleForUnitContent(
+  page: Pick<import("playwright").Page, "content" | "evaluate" | "waitForTimeout">,
   budgetMs: number,
 ): Promise<string> {
   let best = await page.content();
   let bestScore = unitSignalCount(best);
-  if (looksLikeUnitContent(best) && bestScore >= 3) return best;
 
   const deadline = Date.now() + budgetMs;
   let rounds = 0;
+  let stableRounds = 0;
   while (Date.now() < deadline) {
     await page
       .evaluate(() => window.scrollBy(0, Math.round(window.innerHeight * 0.9)))
@@ -159,9 +160,14 @@ async function settleForUnitContent(
     if (score > bestScore) {
       best = html;
       bestScore = score;
+      stableRounds = 0;
+    } else {
+      stableRounds++;
     }
-    // Enough inventory on the page to be worth extracting — stop paying for time.
-    if (looksLikeUnitContent(html) && score >= 3) return html;
+    // Inventory on the page and no new prices for two polls — the list has
+    // finished loading. Stopping at the first 3 prices handed back lazy lists
+    // cut short (the likely way Loria Ansley went from 59 units to 5).
+    if (looksLikeUnitContent(best) && bestScore >= 3 && stableRounds >= 2) return best;
 
     // Most of the fleet's stubborn sites (Greystar's property pages, marketing
     // one-pagers) publish no pricing at all. Once a few scrolls have produced

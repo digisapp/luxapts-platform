@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
+import { devRoutesEnabled, notFound } from "@/lib/api-helpers";
 import { upsertImportedUnitWithPrice } from "@/lib/import/units";
 import miamiListings from "../../../../../data/miami_listings.json";
 
@@ -45,6 +46,12 @@ interface MiamiBuilding {
 }
 
 export async function POST() {
+  // Seeds from the bundled January JSON: writes units whose rents are stamped
+  // as captured now (some importers invent them outright) and overwrites live
+  // buildings' website_url and status. Disabled in production unless
+  // explicitly enabled with ENABLE_DEV_ROUTES=1.
+  if (!devRoutesEnabled()) return notFound();
+
   try {
     const auth = await checkAdminAuth();
     if (!auth.isAdmin) {
@@ -334,6 +341,8 @@ export async function POST() {
 }
 
 export async function GET() {
+  if (!devRoutesEnabled()) return notFound();
+
   return NextResponse.json({
     message: "POST to this endpoint to import Miami buildings",
     buildings_count: (miamiListings as { buildings: unknown[] }).buildings.length,

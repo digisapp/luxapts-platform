@@ -1,5 +1,6 @@
 import { isVerifiedPrice } from "@/lib/verified-pricing";
 import { policyText } from "@/lib/policy-text";
+import { miamiToday } from "@/lib/chat/miami-time";
 
 export { isVerifiedPrice };
 
@@ -10,10 +11,14 @@ export { isVerifiedPrice };
 
 type Row = Record<string, unknown>;
 
-/** A past move-in date means "now"; saying "available May 11th" in September is wrong. */
+/**
+ * A past move-in date means "now"; saying "available May 11th" in September is
+ * wrong. "Today" is Miami's: in UTC, after 8 PM a unit available tomorrow was
+ * already "now".
+ */
 export function spokenAvailability(availableOn: unknown, now: Date = new Date()): string | null {
   if (typeof availableOn !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(availableOn)) return null;
-  return availableOn.slice(0, 10) <= now.toISOString().slice(0, 10) ? "now" : availableOn.slice(0, 10);
+  return availableOn.slice(0, 10) <= miamiToday(now) ? "now" : availableOn.slice(0, 10);
 }
 
 /** Scraper filler ("Not specified in provided HTML") is worse than silence. */

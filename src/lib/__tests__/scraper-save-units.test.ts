@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { saveScrapedUnits, markUnitsUnavailable } from "../scraper/db";
+import { saveScrapedUnits, markUnitsUnavailable, retireUnseenUnits } from "../scraper/db";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ScrapedUnit } from "../scraper/types";
 
@@ -27,6 +27,8 @@ function mockDb(existing: Array<Record<string, unknown>>, options: MockOptions =
     snapshotBatches: 0,
     retired: [] as string[],
     floorplanInserts: [] as Record<string, unknown>[],
+    /** The updated_at cutoff markUnitsUnavailable filtered on, if any. */
+    unseenBefore: null as string | null,
   };
 
   let nextId = 100;
@@ -111,14 +113,17 @@ function mockDb(existing: Array<Record<string, unknown>>, options: MockOptions =
             return Promise.resolve({ error: null });
           },
         }),
-        // markUnitsUnavailable pages with .range(); the 23505 recovery path
-        // reads a single row with .maybeSingle().
-        select: () =>
-          chain({
+        // markUnitsUnavailable pages with .range() (optionally behind an
+        // updated_at cutoff); the 23505 recovery path reads a single row with
+        // .maybeSingle().
+        select: () => {
+          let before: string | null = null;
+          const b = chain({
             range: (fromRow: number, toRow: number) =>
               Promise.resolve({
                 data: existing
                   .filter((u) => u.is_available !== false)
+                  .filter((u) => before === null || String(u.updated_at) < before)
                   .map((u) => ({ id: u.id }))
                   .slice(fromRow, toRow + 1),
                 error: null,
@@ -128,7 +133,13 @@ function mockDb(existing: Array<Record<string, unknown>>, options: MockOptions =
               const id = Object.values(rows)[0];
               return Promise.resolve({ data: id ? { id } : null, error: null });
             },
-          }),
+          });
+          b.lt = (column: string, value: string) => {
+            if (column === "updated_at") before = log.unseenBefore = value;
+            return b;
+          };
+          return b;
+        },
       };
     }
     throw new Error(`unexpected table ${table}`);
@@ -138,11 +149,13 @@ function mockDb(existing: Array<Record<string, unknown>>, options: MockOptions =
 }
 
 const fp = (beds: number, baths: number, sqft: number, rent: number): ScrapedUnit => ({ beds, baths, sqft, rent });
+const daysAgo = (d: number) => new Date(Date.now() - d * 86_400_000).toISOString();
+const recent = daysAgo(1);
 
 describe("saveScrapedUnits — floorplan-level listings (no unit number)", () => {
   it("matches an existing floorplan row instead of inserting a duplicate every night", async () => {
     const { client, log } = mockDb([
-      { id: "u1", unit_number: null, beds: 1, baths: 1, sqft: 823, latest_rent: 2151, created_at: "2026-09-04" },
+      { id: "u1", unit_number: null, beds: 1, baths: 1, sqft: 823, latest_rent: 2151, price_captured_at: recent, created_at: "2026-09-04" },
     ]);
     const res = await saveScrapedUnits(client, "b1", [fp(1, 1, 823, 2151)]);
     expect(res).toEqual({
@@ -150,6 +163,7 @@ describe("saveScrapedUnits — floorplan-level listings (no unit number)", () =>
       unitsUpdated: 1,
       seenUnitIds: ["u1"],
       existingNumberedAvailable: 0,
+      existingAvailable: 1,
     });
     expect(log.inserts).toHaveLength(0);
     expect(log.snapshots).toHaveLength(0); // unchanged rent → no snapshot
@@ -312,5 +326,190 @@ describe("markUnitsUnavailable", () => {
     const { client, log } = mockDb([{ id: "u0", is_available: true }]);
     await markUnitsUnavailable(client, "b1", []);
     expect(log.retired).toHaveLength(0);
+  });
+});
+
+describe("saveScrapedUnits — verified-price freshness", () => {
+  it("re-snapshots an unchanged rent once the latest capture is a week old", async () => {
+    const { client, log } = mockDb([
+      { id: "n1", unit_number: "1", beds: 1, baths: 1, sqft: 700, latest_rent: 2400, price_captured_at: daysAgo(10), created_at: "2026-08-01" },
+      { id: "n2", unit_number: "2", beds: 1, baths: 1, sqft: 700, latest_rent: 2500, price_captured_at: daysAgo(2), created_at: "2026-08-01" },
+    ]);
+    await saveScrapedUnits(client, "b1", [
+      { unit_number: "1", beds: 1, baths: 1, sqft: 700, rent: 2400 },
+      { unit_number: "2", beds: 1, baths: 1, sqft: 700, rent: 2500 },
+    ]);
+    // Unit 1 would otherwise age out of the 45-day verified window while
+    // being re-seen every two days; unit 2's capture is still fresh.
+    expect(log.snapshots).toEqual([{ unit_id: "n1", rent: 2400, lease_term_months: null, source_id: undefined }]);
+  });
+});
+
+describe("saveScrapedUnits — per-field sanitizing", () => {
+  it("keeps a listed unit whose sqft is nonsense, so it is not retired as unseen", async () => {
+    const { client, log } = mockDb([
+      { id: "n101", unit_number: "101", beds: 1, baths: 1, sqft: 650, latest_rent: 2400, price_captured_at: recent, is_available: true, created_at: "2026-09-01" },
+    ]);
+    const res = await saveScrapedUnits(client, "b1", [{ unit_number: "101", beds: 1, baths: 1, sqft: 0, rent: 2450 }]);
+    expect(res.seenUnitIds).toEqual(["n101"]);
+    expect(log.updates[0].patch).toMatchObject({ sqft: null, is_available: true });
+    expect(log.snapshots).toEqual([{ unit_id: "n101", rent: 2450, lease_term_months: null, source_id: undefined }]);
+  });
+
+  it("keeps a unit with an impossible rent but writes no snapshot for it", async () => {
+    const { client, log } = mockDb([]);
+    const res = await saveScrapedUnits(client, "b1", [{ unit_number: "7C", beds: 2, baths: 2, sqft: 900, rent: -1 }]);
+    expect(res.unitsCreated).toBe(1);
+    expect(res.seenUnitIds).toHaveLength(1);
+    expect(log.snapshots).toHaveLength(0);
+  });
+
+  it("drops only units with no usable identity", async () => {
+    const { client, log } = mockDb([]);
+    const res = await saveScrapedUnits(client, "b1", [
+      { unit_number: "PH-A-WITH-A-VERY-LONG-NAME", beds: 3, baths: 3, sqft: 2000, rent: 9000 },
+      { beds: 42, baths: 1, sqft: 600, rent: 2000 },
+      { unit_number: "3B", beds: 1, baths: 1, sqft: 600, rent: 2100 },
+    ]);
+    expect(res.unitsCreated).toBe(1);
+    expect(log.inserts.map((i) => i.unit_number)).toEqual(["3B"]);
+  });
+});
+
+describe("retireUnseenUnits", () => {
+  const building = { id: "b1", name: "Loria Ansley" };
+  const live = (n: number, updatedDaysAgo: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `u${i}`,
+      unit_number: String(100 + i),
+      is_available: true,
+      updated_at: daysAgo(updatedDaysAgo),
+    }));
+
+  it("keeps a recently-seen inventory when a partial render saw a fraction of it", async () => {
+    const existing = live(59, 3);
+    const { client, log } = mockDb(existing);
+    const scope = await retireUnseenUnits(
+      client,
+      building,
+      { units: Array.from({ length: 5 }, (_, i) => ({ unit_number: String(100 + i), beds: 1, baths: 1, rent: 3000 })) },
+      { unitsCreated: 0, unitsUpdated: 5, seenUnitIds: ["u0", "u1", "u2", "u3", "u4"], existingNumberedAvailable: 59, existingAvailable: 59 },
+    );
+    expect(scope).toBe("stale");
+    expect(log.unseenBefore).not.toBeNull();
+    expect(log.retired).toHaveLength(0);
+  });
+
+  it("still retires what no scrape has seen for weeks, so a real drop cannot stick forever", async () => {
+    const existing = [...live(5, 1), ...live(20, 30).map((u, i) => ({ ...u, id: `old${i}`, unit_number: `9${i}` }))];
+    const { client, log } = mockDb(existing);
+    const scope = await retireUnseenUnits(
+      client,
+      building,
+      { units: Array.from({ length: 5 }, (_, i) => ({ unit_number: String(100 + i), beds: 1, baths: 1, rent: 3000 })) },
+      { unitsCreated: 0, unitsUpdated: 5, seenUnitIds: ["u0", "u1", "u2", "u3", "u4"], existingNumberedAvailable: 25, existingAvailable: 25 },
+    );
+    expect(scope).toBe("stale");
+    expect(log.retired).toHaveLength(20);
+    expect(log.retired.every((id) => id.startsWith("old"))).toBe(true);
+  });
+
+  it("retires every unseen unit after a full scrape", async () => {
+    const { client, log } = mockDb(live(10, 1));
+    const seen = Array.from({ length: 8 }, (_, i) => `u${i}`);
+    const scope = await retireUnseenUnits(
+      client,
+      building,
+      { units: seen.map((_, i) => ({ unit_number: String(100 + i), beds: 1, baths: 1, rent: 3000 })) },
+      { unitsCreated: 0, unitsUpdated: 8, seenUnitIds: seen, existingNumberedAvailable: 10, existingAvailable: 10 },
+    );
+    expect(scope).toBe("all");
+    expect(log.unseenBefore).toBeNull();
+    expect(log.retired).toEqual(["u8", "u9"]);
+  });
+
+  it("retires nothing when the units page could not be fetched", async () => {
+    const { client, log } = mockDb(live(10, 30));
+    const scope = await retireUnseenUnits(
+      client,
+      building,
+      { units: [{ beds: 1, baths: 1, rent: 3000 }], unitsPageFetchFailed: true },
+      { unitsCreated: 1, unitsUpdated: 0, seenUnitIds: ["new-1"], existingNumberedAvailable: 10, existingAvailable: 10 },
+    );
+    expect(scope).toBe("none");
+    expect(log.retired).toHaveLength(0);
+  });
+});
+
+describe("saveScrapedUnits — floorplan-level page over a numbered inventory", () => {
+  const numbered = (capturedDaysAgo: number) =>
+    Array.from({ length: 3 }, (_, i) => ({
+      id: `n${i}`,
+      unit_number: String(100 + i),
+      beds: 1,
+      baths: 1,
+      sqft: 700,
+      is_available: true,
+      latest_rent: 2400,
+      price_captured_at: daysAgo(capturedDaysAgo),
+      created_at: "2026-09-01",
+    }));
+
+  it("writes nothing while the numbered units were seen recently, so nothing is counted twice", async () => {
+    const { client, log } = mockDb(numbered(3));
+    const res = await saveScrapedUnits(client, "b1", [fp(1, 1, 700, 2400), fp(2, 2, 1100, 3400)]);
+    expect(res).toEqual({
+      unitsCreated: 0,
+      unitsUpdated: 0,
+      seenUnitIds: [],
+      existingNumberedAvailable: 3,
+      existingAvailable: 3,
+    });
+    expect(log.inserts).toHaveLength(0);
+    expect(log.updates).toHaveLength(0);
+    expect(log.floorplanInserts).toHaveLength(0);
+    expect(log.snapshots).toHaveLength(0);
+  });
+
+  it("saves the floorplans once no scrape has seen a numbered unit for two weeks", async () => {
+    const { client, log } = mockDb(numbered(20));
+    const res = await saveScrapedUnits(client, "b1", [fp(1, 1, 700, 2400), fp(2, 2, 1100, 3400)]);
+    expect(res.unitsCreated).toBe(2);
+    expect(log.inserts).toHaveLength(2);
+  });
+
+  it("retires only the numbered units nobody has seen for two weeks", async () => {
+    const existing = [
+      { id: "fresh", unit_number: "101", is_available: true, updated_at: daysAgo(2) },
+      { id: "gone", unit_number: "102", is_available: true, updated_at: daysAgo(30) },
+      { id: "plan", unit_number: null, is_available: true, updated_at: daysAgo(0) },
+    ];
+    const { client, log } = mockDb(existing);
+    const scope = await retireUnseenUnits(
+      client,
+      { id: "b1", name: "Switched to floorplans" },
+      { units: [fp(1, 1, 700, 2400)] },
+      { unitsCreated: 0, unitsUpdated: 1, seenUnitIds: ["plan"], existingNumberedAvailable: 2, existingAvailable: 3 },
+    );
+    expect(scope).toBe("stale");
+    expect(log.retired).toEqual(["gone"]);
+  });
+});
+
+describe("saveScrapedUnits — units retired by a bad scrape", () => {
+  it("re-match by unit number on the next good scrape instead of re-inserting", async () => {
+    const { client, log } = mockDb([
+      { id: "r201", unit_number: "201", beds: 2, baths: 2, sqft: 1000, latest_rent: 4200, price_captured_at: daysAgo(4), is_available: false, created_at: "2026-10-06" },
+      { id: "a202", unit_number: "202", beds: 2, baths: 2, sqft: 1000, latest_rent: 4300, price_captured_at: daysAgo(4), is_available: true, created_at: "2026-10-06" },
+    ]);
+    const res = await saveScrapedUnits(client, "b1", [
+      { unit_number: "201", beds: 2, baths: 2, sqft: 1000, rent: 4200 },
+      { unit_number: "202", beds: 2, baths: 2, sqft: 1000, rent: 4300 },
+    ]);
+    expect(log.inserts).toHaveLength(0);
+    expect(res.seenUnitIds).toEqual(["r201", "a202"]);
+    expect(log.updates.find((u) => u.id === "r201")?.patch).toMatchObject({ is_available: true });
+    // Only rows live before this scrape count toward the partial-scrape check
+    expect(res.existingAvailable).toBe(1);
   });
 });

@@ -5,6 +5,7 @@ import { getFirstRelation } from "@/lib/db-helpers";
 import { isValidUUID } from "@/lib/utils";
 import { fetchAvailableUnitPrices } from "@/lib/search/fetch-enrichments";
 import { policyText, withPolicyText } from "@/lib/policy-text";
+import { isVerifiedPrice } from "@/lib/verified-pricing";
 
 interface CompareBody {
   building_a_id: string;
@@ -106,11 +107,14 @@ export async function POST(req: Request) {
         return { by_beds: {}, captured_at_max: null as string | null };
       }
 
-      // Group by beds, tracking the newest capture with a real comparison
+      // Group by beds, tracking the newest capture with a real comparison.
+      // Only verified prices count: one fresh unit used to carry every stale
+      // January rent beside it into min/median/max.
       const rentsByBeds: Record<string, number[]> = {};
       let captured_at_max: string | null = null;
       for (const u of units) {
         if (u.latest_rent == null || u.beds == null) continue;
+        if (!isVerifiedPrice(u.latest_rent, u.price_captured_at)) continue;
         if (bedsFilter !== null && u.beds !== bedsFilter) continue;
         const key = String(u.beds);
         if (!rentsByBeds[key]) rentsByBeds[key] = [];

@@ -66,6 +66,23 @@ describe("getBuildingsToScrape", () => {
     expect(picked.map((b) => b.id)).toEqual(["a", "b"]);
   });
 
+  it("retries a failed amenity scrape within the week instead of after 180 days", async () => {
+    const supabase = mockSupabase([
+      building("ok-10d", { scrape_enabled: true, amenities_scraped_at: ago(10), amenities_scrape_success: true, units_scraped_at: null, website_url: null }),
+      building("failed-10d", { scrape_enabled: true, amenities_scraped_at: ago(10), amenities_scrape_success: false, units_scraped_at: null, website_url: null }),
+      building("failed-2d", { scrape_enabled: true, amenities_scraped_at: ago(2), amenities_scrape_success: false, units_scraped_at: null, website_url: null }),
+    ]);
+    const picked = await getBuildingsToScrape(supabase, { mode: "amenities", limit: 10, daysStale: 180 });
+    expect(picked.map((b) => b.id)).toEqual(["failed-10d"]);
+  });
+
+  it("keeps the units staleness rule unchanged by an amenity failure", async () => {
+    const supabase = mockSupabase([
+      building("u", { scrape_enabled: true, amenities_scraped_at: ago(10), amenities_scrape_success: false, units_scraped_at: ago(1), website_url: null }),
+    ]);
+    expect(await getBuildingsToScrape(supabase, { mode: "units", limit: 10, daysStale: 3 })).toEqual([]);
+  });
+
   it("exposes the scrape-target URL override through scrapeStatusOf", async () => {
     const supabase = mockSupabase([
       building("x", { scrape_enabled: true, units_scraped_at: null, amenities_scraped_at: null, website_url: "https://portal.example.com/availability" }),

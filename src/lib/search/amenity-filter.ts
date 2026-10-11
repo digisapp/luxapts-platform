@@ -21,8 +21,11 @@ export async function filterBuildingsByAmenities(
     return buildingIds;
   }
 
-  const amenities = await fetchAllRows<{ id: string; name: string }>((from, to) =>
-    supabase.from("amenities").select("id, name").order("id").range(from, to)
+  // Failed reads throw: an empty catalog used to skip the filter and return
+  // every building, and the search cache stored that for minutes.
+  const amenities = await fetchAllRows<{ id: string; name: string }>(
+    (from, to) => supabase.from("amenities").select("id, name").order("id").range(from, to),
+    { throwOnError: true }
   );
 
   if (!amenities.length) return buildingIds;
@@ -47,7 +50,8 @@ export async function filterBuildingsByAmenities(
             .in("building_id", ids)
             .order("building_id")
             .order("amenity_id")
-            .range(from, to)
+            .range(from, to),
+          { throwOnError: true }
         )
       )
     )

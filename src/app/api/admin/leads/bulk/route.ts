@@ -4,6 +4,7 @@ import { getAdminInboxService } from "@/lib/email/admin-inbox";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { isValidUUID } from "@/lib/utils";
 import { apiError } from "@/lib/api-helpers";
+import type { LeadStatus } from "@/types/database";
 
 export async function POST(req: Request) {
   try {
@@ -41,6 +42,11 @@ export async function POST(req: Request) {
       await getAdminInboxService()
         .markLeadAlertsRead(lead_ids)
         .catch((err) => console.error("Could not clear lead alerts:", err));
+      // An automatic note still queued for a deleted lead must not go out.
+      // Found by lead_id, which the delete nulls, so this runs first.
+      await getAdminInboxService()
+        .cancelScheduledForLeads(lead_ids)
+        .catch((err) => console.error("Could not cancel queued notes:", err));
 
       // A tour request was bridged to an open showing lead (019). Deleting
       // only nulls its source_lead_id, leaving showers able to claim a tour
@@ -107,11 +113,15 @@ export async function POST(req: Request) {
       }
 
       // A lead past "new" has been worked: its "New lead" alert in the
-      // inbox no longer belongs in Unread.
+      // inbox no longer belongs in Unread. The same person's other "new"
+      // signups for the same building are the same to-do and move with it.
       if (value !== "new") {
         await getAdminInboxService()
           .markLeadAlertsRead(lead_ids)
           .catch((err) => console.error("Could not clear lead alerts:", err));
+        await getAdminInboxService()
+          .advanceDuplicateSignups(lead_ids, value as LeadStatus)
+          .catch((err) => console.error("Could not update duplicate signups:", err));
       }
 
       // Insert lead events for each

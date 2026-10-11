@@ -16,6 +16,7 @@ import { getFirstRelation } from "@/lib/db-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, safeParseInt } from "@/lib/utils";
+import { startOfMiamiDay } from "@/lib/chat/miami-time";
 import { ConversationFilters } from "@/components/admin/conversations/ConversationFilters";
 import { MigrationNotice } from "@/components/admin/conversations/MigrationNotice";
 import {
@@ -82,8 +83,8 @@ interface ConversationsData {
 async function loadConversations(params: ListQuery): Promise<ConversationsData> {
   const supabase = createAdminClient();
   const nowMs = Date.now();
-  const todayStart = new Date(nowMs);
-  todayStart.setHours(0, 0, 0, 0);
+  // Miami's day: setHours() on the UTC server reset "Today" at 8 PM Eastern.
+  const todayStart = startOfMiamiDay(new Date(nowMs));
   const offset = (params.page - 1) * PAGE_SIZE;
 
   let listQuery = supabase

@@ -210,6 +210,79 @@ export async function logChatTurn(turn: ChatTurn): Promise<void> {
 }
 
 /**
+ * Create the session row up front, before any tool runs: a lead created
+ * mid-turn links to it, and the one-lead-per-conversation rule reads it. Left
+ * to logChatTurn (after the response), a first-turn lead had no row to link
+ * to. An existing row (23505) is the normal case after the first message.
+ * Never throws.
+ */
+export async function ensureChatSession(session: {
+  sessionKey: string;
+  surface?: ChatSurface;
+  citySlug?: string | null;
+  buildingId?: string | null;
+  firstQuestion?: string | null;
+}): Promise<void> {
+  try {
+    if (!isValidSessionKey(session.sessionKey)) return;
+    const { error } = await createAdminClient()
+      .from("chat_sessions")
+      .insert({
+        session_key: session.sessionKey,
+        surface: session.surface ?? "chat",
+        city_slug: session.citySlug ?? null,
+        building_id: session.buildingId ?? null,
+        first_question: clip(session.firstQuestion)?.slice(0, 500) ?? null,
+        last_message_at: new Date().toISOString(),
+        messages_count: 0,
+        tool_calls_count: 0,
+        error_count: 0,
+        empty_results_count: 0,
+      });
+    if (error && error.code !== "23505") {
+      reportWriteFailure(`Chat session create failed (${session.sessionKey}):`, error);
+    }
+  } catch (err) {
+    reportWriteFailure("ensureChatSession threw:", err);
+  }
+}
+
+/**
+ * Count one tool call's failure or empty result against its session as it
+ * happens. Phone transcripts arrive at hang-up without tool outcomes (the
+ * agent only relays results), so this is what puts a call in Needs review.
+ * Never throws.
+ */
+export async function recordToolHealth(
+  sessionKey: string,
+  outcome: { resultCount?: number | null; error?: string | null }
+): Promise<void> {
+  const errors = outcome.error ? 1 : 0;
+  const empties = outcome.resultCount === 0 ? 1 : 0;
+  if (!errors && !empties) return;
+  try {
+    if (!isValidSessionKey(sessionKey)) return;
+    const supabase = createAdminClient();
+    const { data: session } = await supabase
+      .from("chat_sessions")
+      .select("id, error_count, empty_results_count")
+      .eq("session_key", sessionKey)
+      .maybeSingle();
+    if (!session) return;
+    const { error } = await supabase
+      .from("chat_sessions")
+      .update({
+        error_count: (session.error_count ?? 0) + errors,
+        empty_results_count: (session.empty_results_count ?? 0) + empties,
+      })
+      .eq("id", session.id);
+    if (error) reportWriteFailure(`Tool health update failed (${sessionKey}):`, error);
+  } catch (err) {
+    reportWriteFailure("recordToolHealth threw:", err);
+  }
+}
+
+/**
  * Attach a session to the lead it produced, so the Chat Log can show which
  * conversations converted. Never throws.
  */

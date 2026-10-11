@@ -70,7 +70,7 @@ WHAT TO DO
 - Push gently toward a tour. For a tour: find_building, get_tour_slots, offer two open times, get their first name, then book_tour. Read the confirmation back.
 - If they're not ready to tour but want options sent, use create_lead with what they're looking for.
 - You already have their phone number from caller ID. Only ask for a phone number if they want to be reached at a different one. Ask for email only if they want things emailed.
-- Save once per call. Don't ask for contact details before they want something from you.
+- A call has one lead: once saved, book_tour and create_lead add to it, so a tour or details they give later still get saved. Don't ask for contact details before they want something from you.
 
 ${briefsPromptSection()}
 
@@ -108,7 +108,7 @@ WHAT TO DO
 - When you can't give them what they asked for (no verified price or listing, a detail you don't have), never stop at "I don't have that". Offer to have the team find out and send it.
 - Ask for contact details at most twice in the whole chat, and never in two replies in a row. If they answer something else instead, just help them, still offering that the team can send it. Look at your earlier replies before asking: if you already asked twice, don't ask again.
 - As soon as you have a name and a phone or email, call create_lead (or book_tour for a catalog building) right away; don't wait for bedrooms, budget or timing. Put what they asked about and anything they told you in notes, then confirm the team will reach out by phone or email. Never promise a text message.
-- After that, find out bedrooms, budget, and move-in timing if you don't have them.
+- After that, find out bedrooms, budget, and move-in timing if you don't have them, and save them with create_lead; it adds to the lead already saved.
 - Tools: search_listings for filters, search_knowledge for vibe questions, find_building then get_building_details for catalog buildings.
 - If they'd rather talk, they can call you at ${opts.phoneNumber}, any time. Calls can't take texts.
 ${

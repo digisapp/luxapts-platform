@@ -65,10 +65,32 @@ const SOURCE_LABELS: Record<string, string> = {
   microsite: "Microsite",
 };
 
-/** Microsite leads name the building they asked about, not just "Microsite". */
+/**
+ * Microsite leads name the building they asked about, not just "Microsite".
+ * Stacy's phone line also sets source_detail, to "phone:<dialed number>",
+ * which read as a site name; a call is labelled as a call.
+ */
 export function sourceLabel(source: string, sourceDetail?: string | null): string {
+  if (sourceDetail?.startsWith("phone:")) return SOURCE_LABELS.voice;
   if (sourceDetail) return MICROSITE_BUILDINGS[sourceDetail] ?? sourceDetail;
   return SOURCE_LABELS[source] ?? source;
+}
+
+/**
+ * The page to refetch after `removed` leads leave the current view (deleted,
+ * or moved out of the status filter). Refetching the same offset after the
+ * last page emptied showed "No leads match", with no Previous button once the
+ * total fit on one page; this steps back to the last page that still has rows.
+ */
+export function offsetAfterRemoval(
+  offset: number,
+  total: number,
+  removed: number,
+  limit: number
+): number {
+  const remaining = total - removed;
+  if (offset === 0 || offset < remaining) return offset;
+  return Math.max(0, Math.floor((remaining - 1) / limit) * limit);
 }
 
 export function budgetLabel(min: number | null, max: number | null): string | null {

@@ -105,6 +105,11 @@ export async function fetchBuildingHTML(websiteUrl: string): Promise<{ html: str
       } else {
         console.error(`Response too large for ${websiteUrl}: ${contentLength} bytes`);
       }
+    } else if (response.status === 404 || response.status === 410) {
+      // The page is gone, not bot-walled. Rendering it just produced the
+      // site's 404 template, which "succeeded" with 0 units every night.
+      console.error(`Page gone for ${websiteUrl}: ${response.status}`);
+      return null;
     } else {
       console.error(`Failed to fetch ${websiteUrl}: ${response.status} ${response.statusText}`);
     }
@@ -160,6 +165,42 @@ const GALLERY_LINK_PATTERNS = [
 ];
 const GALLERY_KEYWORDS = /gallery|photos|photo-gallery|images|media|virtual/i;
 
+// A WHOLE path segment naming a section of the same property (optionally with
+// a file extension). Whole, not substring: a sibling property's slug can
+// contain "gallery" (Gallery at Turtle Creek) but is never exactly "gallery".
+const UNITS_SECTION_SEGMENT = /^(?:floor[-_]?plans?|availability|pricing)(?:\.[a-z]+)?$/i;
+const AMENITIES_SECTION_SEGMENT = /^(?:amenities|features|lifestyle)(?:\.[a-z]+)?$/i;
+const GALLERY_SECTION_SEGMENT = /^(?:gallery|photos|photo-gallery|images|media|virtual-tour)(?:\.[a-z]+)?$/i;
+
+function pathSegments(pathname: string): string[] {
+  return pathname.split("/").filter(Boolean).map((s) => s.toLowerCase());
+}
+
+/**
+ * On a portfolio host the property lives in a sub-path
+ * (greystar.com/novel-turtle-creek-dallas-tx/p_18979) and the nav links to
+ * sibling properties on the same host. "apartments" in a sibling's slug sent
+ * Novel Turtle Creek to Gallery at Turtle Creek's page, and Novel carried
+ * Gallery's floorplans. So for a base path of 2+ segments, accept only links
+ * under the base path, or next to it whose differing segment is itself the
+ * section (/en/home → /en/floorplans). Root and one-segment bases are
+ * single-property sites and keep the old behaviour.
+ */
+function staysOnProperty(base: URL, candidate: URL, sectionSegment: RegExp): boolean {
+  const baseParts = pathSegments(base.pathname);
+  if (baseParts.length < 2) return true;
+
+  const parts = pathSegments(candidate.pathname);
+  if (baseParts.every((p, i) => parts[i] === p)) return true;
+
+  const parent = baseParts.slice(0, -1);
+  return (
+    parts.length > parent.length &&
+    parent.every((p, i) => parts[i] === p) &&
+    sectionSegment.test(parts[parent.length])
+  );
+}
+
 /**
  * Find the first same-site link whose PATH (never the hostname) matches a
  * section keyword. Pure and exported for tests.
@@ -172,6 +213,7 @@ export function findLinkedPage(
   baseUrl: string,
   patterns: RegExp[],
   keywords: RegExp,
+  sectionSegment: RegExp,
 ): string | null {
   let base: URL;
   try {
@@ -210,6 +252,8 @@ export function findLinkedPage(
       // the scraper read a 2KB JSON stub instead of the floor plans page.
       if (NON_PAGE_PATH.test(candidate.pathname) || PORTAL_PATH.test(candidate.pathname)) continue;
 
+      if (!staysOnProperty(base, candidate, sectionSegment)) continue;
+
       if (keywords.test(candidate.pathname + candidate.search)) {
         return candidate.href;
       }
@@ -221,7 +265,7 @@ export function findLinkedPage(
 
 /** Amenities page finder (pure). */
 export function findAmenitiesPageIn(mainHtml: string, baseUrl: string): string | null {
-  return findLinkedPage(mainHtml, baseUrl, AMENITIES_LINK_PATTERNS, AMENITIES_KEYWORDS);
+  return findLinkedPage(mainHtml, baseUrl, AMENITIES_LINK_PATTERNS, AMENITIES_KEYWORDS, AMENITIES_SECTION_SEGMENT);
 }
 
 /**
@@ -237,12 +281,12 @@ export function findUnitsPageIn(mainHtml: string, baseUrl: string): string | nul
   } catch {
     return null;
   }
-  return findLinkedPage(mainHtml, baseUrl, UNITS_LINK_PATTERNS, UNITS_KEYWORDS);
+  return findLinkedPage(mainHtml, baseUrl, UNITS_LINK_PATTERNS, UNITS_KEYWORDS, UNITS_SECTION_SEGMENT);
 }
 
 /** Photo gallery page finder (pure). */
 export function findGalleryPageIn(mainHtml: string, baseUrl: string): string | null {
-  return findLinkedPage(mainHtml, baseUrl, GALLERY_LINK_PATTERNS, GALLERY_KEYWORDS);
+  return findLinkedPage(mainHtml, baseUrl, GALLERY_LINK_PATTERNS, GALLERY_KEYWORDS, GALLERY_SECTION_SEGMENT);
 }
 
 // Try to find the amenities page from the main website
@@ -403,6 +447,17 @@ export async function scrapeAmenitiesOnly(websiteUrl: string): Promise<ScrapeRes
 
     // Extract amenities with AI
     const amenitiesData = await extractAmenitiesWithAI(htmlToProcess, sourceUrl);
+
+    // Same rule as units: an AI outage is not "this building has no
+    // amenities". Reporting it as success stamped amenities_scraped_at and
+    // deferred the building for 180 days.
+    if (amenitiesData.error) {
+      return {
+        success: false,
+        error: `Amenity extraction failed: ${amenitiesData.error}`,
+        raw_html_length: htmlToProcess.length,
+      };
+    }
 
     return {
       success: true,

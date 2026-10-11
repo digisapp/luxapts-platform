@@ -14,9 +14,8 @@ import {
   saveScrapedAmenities,
   saveScrapedBuildingImages,
   saveScrapedUnitImages,
-  markUnitsUnavailable,
-  shouldRetireUnseenUnits,
-  normalizeUnitNumber,
+  retireUnseenUnits,
+  resolveScrapeUrl,
 } from "@/lib/scraper";
 
 interface RouteContext {
@@ -56,11 +55,8 @@ export async function POST(req: Request, context: RouteContext) {
       return NextResponse.json({ error: "Building not found" }, { status: 404 });
     }
 
-    // Scraper-internal override first — see cron/scrape-units
-    const statusRel = building.building_scrape_status as { website_url: string | null }[] | { website_url: string | null } | null;
-    const scrapeUrl =
-      (Array.isArray(statusRel) ? statusRel[0]?.website_url : statusRel?.website_url) ||
-      building.website_url;
+    // Scraper-internal override first — same selection as the batch job
+    const scrapeUrl = resolveScrapeUrl(building);
 
     if (!scrapeUrl) {
       return NextResponse.json({ error: "Building has no website URL" }, { status: 400 });
@@ -75,7 +71,6 @@ export async function POST(req: Request, context: RouteContext) {
           type: "images",
           success: false,
           error: imageResult.error,
-          websiteUrl: scrapeUrl,
         });
 
         return NextResponse.json({
@@ -104,7 +99,6 @@ export async function POST(req: Request, context: RouteContext) {
         type: "images",
         success: true,
         imagesFound: totalImages,
-        websiteUrl: scrapeUrl,
       });
 
       return NextResponse.json({
@@ -143,7 +137,6 @@ export async function POST(req: Request, context: RouteContext) {
         type: scrapeType,
         success: false,
         error: result.error,
-        websiteUrl: scrapeUrl,
       });
 
       return NextResponse.json({
@@ -162,21 +155,18 @@ export async function POST(req: Request, context: RouteContext) {
         const saved = await saveScrapedUnits(supabase, buildingId, result.data.units);
         unitsResult = { unitsCreated: saved.unitsCreated, unitsUpdated: saved.unitsUpdated };
 
-        // Same retirement guard as the cron: floorplan-level or bot-walled
-        // results are not evidence that numbered units are gone.
-        const scrapedNumbered = result.data.units.filter(
-          (u) => normalizeUnitNumber(u.unit_number) !== null
-        ).length;
-
-        if (
-          shouldRetireUnseenUnits({
+        // Same retirement guard as the cron: floorplan-level, bot-walled or
+        // half-rendered results are not evidence that units are gone.
+        await retireUnseenUnits(
+          supabase,
+          { id: buildingId, name: building.name },
+          {
+            units: result.data.units,
             unitsPageFetchFailed: result.units_page_fetch_failed,
-            scrapedNumbered,
-            existingNumberedAvailable: saved.existingNumberedAvailable,
-          })
-        ) {
-          await markUnitsUnavailable(supabase, buildingId, saved.seenUnitIds);
-        }
+            source: result.source,
+          },
+          saved,
+        );
       }
     }
 
@@ -197,13 +187,28 @@ export async function POST(req: Request, context: RouteContext) {
       }
     }
 
-    // Update scrape status
-    await updateScrapeStatus(supabase, buildingId, {
-      type: scrapeType,
-      success: true,
-      unitsFound: result.data.units.length,
-      websiteUrl: scrapeUrl,
-    });
+    // Update scrape status. A full scrape whose amenity extraction failed
+    // records amenities as failed — stamping success deferred the building
+    // out of the amenities cron for 180 days.
+    const amenitiesError = scrapeType === "full" ? result.data.amenities_error : undefined;
+    if (amenitiesError) {
+      await updateScrapeStatus(supabase, buildingId, {
+        type: "units",
+        success: true,
+        unitsFound: result.data.units.length,
+      });
+      await updateScrapeStatus(supabase, buildingId, {
+        type: "amenities",
+        success: false,
+        error: `Amenity extraction failed: ${amenitiesError}`,
+      });
+    } else {
+      await updateScrapeStatus(supabase, buildingId, {
+        type: scrapeType,
+        success: true,
+        unitsFound: result.data.units.length,
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -214,6 +219,7 @@ export async function POST(req: Request, context: RouteContext) {
         units_updated: unitsResult.unitsUpdated,
         amenities_found: result.data.amenities.length,
         amenities_linked: amenitiesLinked,
+        ...(amenitiesError ? { amenities_error: amenitiesError } : {}),
         pet_policy: result.data.pet_policy,
         parking_policy: result.data.parking_policy,
         move_in_specials: result.data.move_in_specials,

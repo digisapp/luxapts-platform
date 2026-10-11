@@ -27,7 +27,13 @@ import { SendEmailDialog } from "./SendEmailDialog";
 import { DeleteLeadsDialog } from "./DeleteLeadsDialog";
 import { PipelineStrip } from "./PipelineStrip";
 import { PopoverMenu } from "./PopoverMenu";
-import { dayGroup, durationLabel, statusMeta, type DayGroup } from "./lead-format";
+import {
+  dayGroup,
+  durationLabel,
+  offsetAfterRemoval,
+  statusMeta,
+  type DayGroup,
+} from "./lead-format";
 
 interface Agent {
   user_id: string;
@@ -219,8 +225,9 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStats, agents }: L
       setLeads((prev) =>
         prev.map((l) => (l.id === leadId ? { ...l, status: newStatus } : l))
       );
-      // Refresh counts
-      fetchLeads(offset);
+      // Refresh counts. Under a status filter the lead leaves this view.
+      const removed = statusFilter && newStatus !== statusFilter ? 1 : 0;
+      fetchLeads(offsetAfterRemoval(offset, total, removed, LIMIT));
     } catch (err) {
       console.error("Status change error:", err);
       setActionError("Could not update status. Check your connection and retry.");
@@ -247,7 +254,9 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStats, agents }: L
           ? `Moved ${n} ${n === 1 ? "lead" : "leads"} to ${statusMeta(value).label}.`
           : `Assigned ${n} ${n === 1 ? "lead" : "leads"}.`
       );
-      fetchLeads(offset);
+      // Selection is cleared on every fetch, so all `n` are on this page.
+      const removed = action === "status" && statusFilter && value !== statusFilter ? n : 0;
+      fetchLeads(offsetAfterRemoval(offset, total, removed, LIMIT));
     } catch (err) {
       console.error("Bulk action error:", err);
       setActionError("Bulk update failed. Check your connection and retry.");
@@ -262,8 +271,7 @@ export function LeadsCRM({ initialLeads, initialTotal, initialStats, agents }: L
     setActionNotice(`Deleted ${deletedCount} ${deletedCount === 1 ? "lead" : "leads"}.`);
     // Emptying the last page would otherwise leave "No leads" on screen with
     // earlier pages still full.
-    const remaining = total - deletedCount;
-    fetchLeads(offset > 0 && offset >= remaining ? Math.max(0, offset - LIMIT) : offset);
+    fetchLeads(offsetAfterRemoval(offset, total, deletedCount, LIMIT));
   }
 
   function handleOpenEmail(lead: LeadRowData) {

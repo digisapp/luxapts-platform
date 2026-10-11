@@ -68,23 +68,30 @@ export async function GET() {
       console.error("Get claimed leads error:", claimedError);
     }
 
-    // Fetch past showings (last 10)
-    const { data: pastLeads } = await adminClient
+    // Fetch past showings (last 10). The debrief hangs off the showing lead:
+    // embedding it as `showing_debriefs:showing_lead_id` followed the claim's
+    // FK to showing_leads, which has no submitted_at, so the query failed
+    // (42703) and past showings were always empty.
+    const { data: pastLeads, error: pastError } = await adminClient
       .from("showing_claims")
       .select(`
         id, claimed_at, status,
         showing_leads:showing_lead_id (
           id, preferred_date, preferred_time, status,
-          buildings:building_id (id, name)
-        ),
-        showing_debriefs:showing_lead_id (
-          id, submitted_at, admin_approved_at, client_rating
+          buildings:building_id (id, name),
+          showing_debriefs (
+            id, submitted_at, admin_approved_at, client_rating
+          )
         )
       `)
       .eq("shower_id", auth.showerId)
       .neq("status", "active")
       .order("claimed_at", { ascending: false })
       .limit(10);
+
+    if (pastError) {
+      console.error("Get past leads error:", pastError);
+    }
 
     return apiSuccess({
       open_leads: openLeads || [],

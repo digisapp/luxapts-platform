@@ -40,6 +40,8 @@ export interface ScrapedBuildingData {
 
   // Amenities
   amenities: ScrapedAmenity[];
+  /** Set when the amenity extraction itself failed, as units_error is for units. */
+  amenities_error?: string;
 
   // Policies
   pet_policy?: string;

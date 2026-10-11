@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getAgentUserId } from "@/lib/agent/auth";
+import { getActiveAssignment, isLeadStatus } from "@/lib/agent/access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FormSubmitButton } from "@/components/admin/layout/FormSubmitButton";
@@ -26,15 +27,9 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
 
   const supabase = createAdminClient();
 
-  // Verify this lead is assigned to the current agent
-  const { data: assignment } = await supabase
-    .from("agent_assignments")
-    .select("id, status")
-    .eq("lead_id", id)
-    .eq("agent_user_id", agentId)
-    .order("assigned_at", { ascending: false })
-    .limit(1)
-    .single();
+  // Verify this lead is assigned to the current agent — in an active state;
+  // a declined or reassigned row is not access.
+  const assignment = await getActiveAssignment(supabase, id, agentId);
 
   if (!assignment) {
     notFound();
@@ -64,11 +59,17 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
   const events = eventsRes.data || [];
   const targets = targetsRes.data || [];
 
-  // Server actions
+  // Server actions. Each re-checks the caller and their assignment: an action
+  // is a public POST endpoint, and the assignment may have changed since the
+  // page rendered.
   async function updateStatus(formData: FormData) {
     "use server";
-    const newStatus = formData.get("status") as string;
+    const newStatus = formData.get("status");
+    if (!isLeadStatus(newStatus)) return;
+    const actorId = await getAgentUserId();
+    if (!actorId) redirect("/");
     const supabase = createAdminClient();
+    if (!(await getActiveAssignment(supabase, id, actorId))) notFound();
 
     await supabase
       .from("leads")
@@ -86,9 +87,12 @@ export default async function AgentLeadDetailPage({ params }: LeadDetailPageProp
 
   async function addNote(formData: FormData) {
     "use server";
-    const note = formData.get("note") as string;
-    if (!note?.trim()) return;
+    const note = formData.get("note");
+    if (typeof note !== "string" || !note.trim()) return;
+    const actorId = await getAgentUserId();
+    if (!actorId) redirect("/");
     const supabase = createAdminClient();
+    if (!(await getActiveAssignment(supabase, id, actorId))) notFound();
 
     await supabase.from("lead_events").insert({
       lead_id: id,

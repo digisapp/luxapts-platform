@@ -192,6 +192,8 @@ export function AdminInbox() {
                 onBack={d.closeDetail}
                 onRetry={() => d.selectedId && d.selectEmail(d.selectedId)}
                 onReply={() => d.openCompose(d.selectedEmail)}
+                // A phone-only lead's alert has no one to write to.
+                canReply={!(d.selectedEmail?.isLeadAlert && !d.leadReply?.to)}
                 onToggleStar={d.toggleStar}
                 onMarkUnread={d.markUnread}
                 onSetSpam={d.setSpam}

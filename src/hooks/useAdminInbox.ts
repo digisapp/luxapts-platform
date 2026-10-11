@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "@/contexts/ToastContext";
-import type { BulkAction, EmailDetail, EmailListItem, FolderCounts, InboxFolder, InboxStatus, LeadContext } from "@/components/admin/inbox/types";
+import type { BulkAction, EmailDetail, EmailListItem, FolderCounts, InboxFolder, InboxStatus, LeadAlertReply, LeadContext } from "@/components/admin/inbox/types";
 import { quoteText, replySubject } from "@/components/admin/inbox/types";
 import { firstNameOf } from "@/lib/email/names";
 import type { LeadStatus } from "@/types/database";
@@ -59,7 +59,7 @@ async function readError(res: Response, fallback: string) {
 }
 
 export function useAdminInbox() {
-  const { success: showSuccess, error: showError } = useToast();
+  const { success: showSuccess, error: showError, warning: showWarning } = useToast();
 
   // ── List ──
   const [folder, setFolderState] = useState<InboxFolder>("inbox");
@@ -80,6 +80,8 @@ export function useAdminInbox() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [lead, setLead] = useState<LeadContext | null>(null);
+  /** Where Reply goes when the open email is a "New lead" alert. */
+  const [leadReply, setLeadReply] = useState<LeadAlertReply | null>(null);
   const [regenerating, setRegenerating] = useState(false);
 
   // ── Compose ──
@@ -113,6 +115,11 @@ export function useAdminInbox() {
   // while a previous fetch is still in flight.
   const fetchSeq = useRef(0);
 
+  // The open conversation, so a poll that brings new mail in it can reload
+  // it (selectEmail is defined further down).
+  const openThreadRef = useRef<{ id: string; threadId: string; ids: string[] } | null>(null);
+  const selectEmailRef = useRef<((_id: string, _opts?: { silent?: boolean }) => Promise<void>) | null>(null);
+
   const fetchEmails = useCallback(
     async (opts: { silent?: boolean } = {}) => {
       const seq = ++fetchSeq.current;
@@ -131,6 +138,11 @@ export function useAdminInbox() {
         setTotalPages(data.totalPages ?? 1);
         setTotal(data.total ?? 0);
         if (data.counts) setCounts(data.counts);
+        // New mail in the conversation that is open: show it there too.
+        const open = openThreadRef.current;
+        if (opts.silent && open && ((data.emails ?? []) as EmailListItem[]).some((e) => e.threadId === open.threadId && !open.ids.includes(e.id))) {
+          void selectEmailRef.current?.(open.id, { silent: true });
+        }
       } catch (err) {
         if (seq === fetchSeq.current && !opts.silent) setError(err instanceof Error ? err.message : "Failed to load emails");
       } finally {
@@ -221,19 +233,31 @@ export function useAdminInbox() {
     if (!res.ok) throw new Error(await readError(res, "Update failed"));
   }, []);
 
+  // Tap A then B: A's slower response must not fill the pane (and aim
+  // Reply at A). Only the latest open may land, and a silent reload (new
+  // mail in the open thread) never overtakes an open the admin started.
+  const detailSeq = useRef(0);
+  const openIdRef = useRef<string | null>(null);
+
   const selectEmail = useCallback(
-    async (id: string) => {
-      setSelectedId(id);
-      setDetailLoading(true);
-      setDetailError(null);
+    async (id: string, opts: { silent?: boolean } = {}) => {
+      const seq = opts.silent ? detailSeq.current : ++detailSeq.current;
+      if (!opts.silent) {
+        openIdRef.current = id;
+        setSelectedId(id);
+        setDetailLoading(true);
+        setDetailError(null);
+      }
       try {
         const res = await fetch(`/api/admin/inbox/${id}`);
         if (!res.ok) throw new Error(await readError(res, "Failed to open email"));
         const data = await res.json();
+        if (seq !== detailSeq.current || openIdRef.current !== id) return;
         const email: EmailDetail = data.email;
         setSelectedEmail(email);
         setThread(data.thread ?? [email]);
         setLead(data.lead ?? null);
+        setLeadReply(data.leadReply ?? null);
 
         if (email.direction === "inbound" && !email.isRead) {
           await patchFlags(id, { isRead: true }).catch(() => {});
@@ -244,13 +268,23 @@ export function useAdminInbox() {
           setCounts((prev) => ({ ...prev, unread: Math.max(0, prev.unread - 1) }));
         }
       } catch (err) {
-        setDetailError(err instanceof Error ? err.message : "Failed to open email");
+        if (seq === detailSeq.current && !opts.silent) setDetailError(err instanceof Error ? err.message : "Failed to open email");
       } finally {
-        setDetailLoading(false);
+        if (seq === detailSeq.current && !opts.silent) setDetailLoading(false);
       }
     },
     [patchFlags]
   );
+
+  useEffect(() => {
+    selectEmailRef.current = selectEmail;
+  }, [selectEmail]);
+
+  useEffect(() => {
+    openThreadRef.current = selectedEmail
+      ? { id: selectedEmail.id, threadId: selectedEmail.threadId, ids: (thread.length ? thread : [selectedEmail]).map((m) => m.id) }
+      : null;
+  }, [selectedEmail, thread]);
 
   // An alert email links to /admin/email?email=<id>: open that conversation
   // once on arrival, then drop the parameter so a refresh or a back/forward
@@ -270,7 +304,10 @@ export function useAdminInbox() {
   }, [selectEmail]);
 
   const closeDetail = useCallback(() => {
+    detailSeq.current++; // an open still in flight must not reopen the pane
+    openIdRef.current = null;
     setLead(null);
+    setLeadReply(null);
     setSelectedId(null);
     setSelectedEmail(null);
     setThread([]);
@@ -410,11 +447,29 @@ export function useAdminInbox() {
 
   // ── Compose ──
   const openCompose = useCallback((replyTo?: EmailDetail | null) => {
-    if (replyTo) {
+    if (replyTo?.isLeadAlert) {
+      // Never "Re: New Microsite Lead: …" to the renter: the server worked
+      // out the lead's latest real conversation, or a fresh one under the
+      // automatic note's subject (leadAlertReply).
+      if (!leadReply?.to) {
+        showError("This lead left no email address", "Call or text them instead.");
+        return;
+      }
+      setCompose({
+        open: true,
+        to: leadReply.to,
+        subject: leadReply.subject,
+        bodyText: replyStarter(lead?.name ?? replyTo.fromName),
+        replyToEmailId: leadReply.replyToEmailId,
+        quotedText: leadReply.quoted ? quoteText(leadReply.quoted) : undefined,
+        from: lead?.sender,
+      });
+    } else if (replyTo) {
       const inbound = replyTo.direction === "inbound";
       setCompose({
         open: true,
-        to: inbound ? replyTo.fromAddress : replyTo.toAddress,
+        // The sender's Reply-To wins over their From, as in any mail client.
+        to: inbound ? replyTo.replyTo || replyTo.fromAddress : replyTo.toAddress,
         subject: replySubject(replyTo.subject),
         bodyText: replyStarter(lead?.name ?? (inbound ? replyTo.fromName : replyTo.toName)),
         replyToEmailId: replyTo.id,
@@ -427,7 +482,7 @@ export function useAdminInbox() {
         !prev.replyToEmailId && (prev.to || prev.subject || prev.bodyText) ? { ...prev, open: true } : { ...EMPTY_COMPOSE, open: true }
       );
     }
-  }, [lead]);
+  }, [lead, leadReply, showError]);
 
   const setComposeField = useCallback((field: "to" | "subject" | "bodyText", value: string) => {
     setCompose((prev) => ({ ...prev, [field]: value }));
@@ -487,9 +542,11 @@ export function useAdminInbox() {
         }),
       });
       if (!res.ok) throw new Error(await readError(res, "Failed to send"));
+      const data = await res.json().catch(() => ({}));
       const wasReply = compose.replyToEmailId;
       setCompose(EMPTY_COMPOSE);
-      showSuccess(wasReply ? "Reply sent" : "Email sent");
+      if (typeof data.warning === "string" && data.warning) showWarning(wasReply ? "Reply sent" : "Email sent", data.warning);
+      else showSuccess(wasReply ? "Reply sent" : "Email sent");
       if (wasReply) {
         applyLocal([wasReply], { status: "replied", isRead: true });
         if (selectedId) selectEmail(selectedId);
@@ -500,7 +557,7 @@ export function useAdminInbox() {
     } finally {
       setSending(false);
     }
-  }, [compose, selectedId, applyLocal, selectEmail, fetchEmails, showSuccess, showError]);
+  }, [compose, selectedId, applyLocal, selectEmail, fetchEmails, showSuccess, showWarning, showError]);
 
   // ── AI draft ──
   const useAiDraft = useCallback(
@@ -509,7 +566,9 @@ export function useAdminInbox() {
       try {
         const res = await fetch(`/api/admin/inbox/${id}`, { method: "PATCH", headers: JSON_HEADERS, body: JSON.stringify({ useAiDraft: true }) });
         if (!res.ok) throw new Error(await readError(res, "Failed to send draft"));
-        showSuccess("AI draft sent");
+        const data = await res.json().catch(() => ({}));
+        if (typeof data.warning === "string" && data.warning) showWarning("AI draft sent", data.warning);
+        else showSuccess("AI draft sent");
         applyLocal([id], { status: "replied", isRead: true });
         await selectEmail(id);
         fetchEmails({ silent: true });
@@ -519,14 +578,14 @@ export function useAdminInbox() {
         setSending(false);
       }
     },
-    [selectEmail, fetchEmails, applyLocal, showSuccess, showError]
+    [selectEmail, fetchEmails, applyLocal, showSuccess, showWarning, showError]
   );
 
   const editAiDraft = useCallback((email: EmailDetail) => {
     if (!email.aiDraftText) return;
     setCompose({
       open: true,
-      to: email.fromAddress,
+      to: email.replyTo || email.fromAddress,
       subject: replySubject(email.subject),
       bodyText: email.aiDraftText,
       replyToEmailId: email.id,
@@ -612,7 +671,7 @@ export function useAdminInbox() {
     toggleStar, markUnread, setSpam, requestDelete, cancelDelete, confirmDelete, pendingDelete,
     selectedIds, toggleSelect, selectAllOnPage, clearSelection, bulk, bulkActing,
     useAiDraft, editAiDraft, regenerateDraft, regenerating,
-    lead, setLeadStatus, addAttachments, removeAttachment,
+    lead, leadReply, setLeadStatus, addAttachments, removeAttachment,
     autoReplyEnabled, autoReplyLoading, setAutoReply,
     compose, setComposeField, openCompose, closeCompose, discardCompose, sending, handleSend,
     status, statusLoading, refreshStatus: () => fetchStatus(true), sendTest, sendingTest,

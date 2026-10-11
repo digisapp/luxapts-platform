@@ -570,7 +570,8 @@ export default async function UnitPage({
           buildingId={parent.id}
           buildingName={building.name}
           citySlug={city?.slug || ""}
-          price={latestPrice}
+          // A leased unit quotes no rent anywhere else on the page either
+          price={unit.is_available ? latestPrice : undefined}
         />
       )}
 

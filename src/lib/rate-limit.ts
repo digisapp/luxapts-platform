@@ -91,6 +91,11 @@ const redis =
       })
     : null;
 
+/** The shared Upstash client, or null when it isn't configured (local dev, tests). */
+export function getRedis(): Redis | null {
+  return redis;
+}
+
 // One Ratelimit instance per distinct config
 const limiters = new Map<string, Ratelimit>();
 
@@ -193,4 +198,10 @@ export const RATE_LIMITS = {
 
   // Welcome email - strict, one real signup shouldn't need more
   welcome: { limit: 5, windowMs: 60 * 1000 }, // 5 req/min
+
+  // Automatic mail to one address from the public lead forms. Origin checks
+  // stop other web pages, not scripts, so without a per-address cap a form
+  // could be used to mail one inbox without limit (and burn our sending
+  // reputation). Roomy enough for a renter filling in several buildings.
+  recipient: { limit: 6, windowMs: 24 * 60 * 60 * 1000 }, // 6 emails/day per address
 };

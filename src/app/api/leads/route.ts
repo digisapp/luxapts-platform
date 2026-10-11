@@ -206,7 +206,15 @@ export async function POST(req: Request) {
           .eq("id", body.targets[0].building_id)
           .single();
 
-        if (bld && body.name) {
+        // The lead is stored either way; past the per-address cap only the
+        // confirmation is skipped.
+        const recipientLimit = await rateLimit(
+          `recipient:${body.email.trim().toLowerCase()}`,
+          RATE_LIMITS.recipient
+        );
+        if (!recipientLimit.success) {
+          console.warn(`[Leads] Tour confirmation skipped for lead ${leadId}: per-address cap reached`);
+        } else if (bld && body.name) {
           // Resend v6 surfaces API failures on `error` and never throws, so a
           // rejected confirmation used to disappear silently.
           const { error: confirmError } = await resend.emails.send({

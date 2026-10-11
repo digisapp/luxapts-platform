@@ -10,18 +10,18 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { LeadTimeSeriesPoint } from "@/types/analytics";
+import { formatDayKey } from "@/lib/admin/time";
 
 interface LeadsOverTimeChartProps {
   data: LeadTimeSeriesPoint[];
 }
 
 export function LeadsOverTimeChart({ data }: LeadsOverTimeChartProps) {
+  // `date` is a Miami calendar day ("2026-10-10"). new Date() on it is UTC
+  // midnight, which labelled each point a day early west of Greenwich.
   const chartData = data.map((d) => ({
     ...d,
-    dateLabel: new Date(d.date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
+    dateLabel: formatDayKey(d.date),
   }));
 
   const total = data.reduce((sum, d) => sum + d.count, 0);
@@ -84,7 +84,7 @@ export function LeadsOverTimeChart({ data }: LeadsOverTimeChartProps) {
                   return (
                     <div className="rounded-lg border bg-background p-2 shadow-md">
                       <p className="text-xs text-muted-foreground">
-                        {new Date(item.date).toLocaleDateString("en-US", {
+                        {formatDayKey(item.date, {
                           weekday: "short",
                           month: "short",
                           day: "numeric",

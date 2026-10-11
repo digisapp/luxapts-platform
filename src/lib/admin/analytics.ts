@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { fetchAllRows, getFirstRelation, aggregateByProperty } from "@/lib/db-helpers";
+import { countByMiamiDay } from "@/lib/admin/time";
 import type {
   AnalyticsDashboardData,
   LeadFunnelMetrics,
@@ -76,13 +77,16 @@ export async function getLeadSourceMetrics(): Promise<LeadSourceMetrics[]> {
   }));
 }
 
-// Get leads created in the last N days
+// Get leads created in the last N days, one point per Miami calendar day.
+// Bucketing by the UTC date put every lead after 8 PM Miami time (7 PM in
+// winter) on the next day.
 export async function getLeadsOverTime(
   days: number = 30
 ): Promise<LeadTimeSeriesPoint[]> {
   const supabase = createAdminClient();
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
+  const now = new Date();
+  // A day extra so the oldest Miami day is whole; countByMiamiDay drops the rest.
+  const startDate = new Date(now.getTime() - (days + 1) * 86_400_000);
 
   const data = await fetchAllRows<{ created_at: string }>((from, to) =>
     supabase
@@ -94,29 +98,11 @@ export async function getLeadsOverTime(
       .range(from, to)
   );
 
-  // Group by date
-  const countsByDate: Record<string, number> = {};
-
-  // Initialize all dates in range
-  for (let i = 0; i < days; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - (days - 1 - i));
-    const dateStr = date.toISOString().split("T")[0];
-    countsByDate[dateStr] = 0;
-  }
-
-  // Count leads per date
-  data.forEach((lead) => {
-    const dateStr = lead.created_at.split("T")[0];
-    if (dateStr in countsByDate) {
-      countsByDate[dateStr]++;
-    }
-  });
-
-  return Object.entries(countsByDate).map(([date, count]) => ({
-    date,
-    count,
-  }));
+  return countByMiamiDay(
+    data.map((lead) => lead.created_at),
+    days,
+    now
+  );
 }
 
 // Shared helper: fetch items from a table, aggregate by building_id, enrich with building details
@@ -313,11 +299,11 @@ export async function fetchDashboardAnalytics(): Promise<AnalyticsDashboardData>
   const conversionRate =
     totalLeads > 0 ? Math.round((leasedCount / totalLeads) * 100) : 0;
 
-  // Count new leads this week
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
+  // New leads in the last 7 Miami calendar days, today included: the sum of
+  // the chart's last 7 points. It compared UTC-midnight keys with now - 7
+  // days, so the window was UTC days and turned over in the Miami evening.
   const newLeadsThisWeek = leadsOverTime
-    .filter((p) => new Date(p.date) >= weekAgo)
+    .slice(-7)
     .reduce((sum, p) => sum + p.count, 0);
 
   return {

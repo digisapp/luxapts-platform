@@ -26,6 +26,8 @@ import { buildingPath } from "@/lib/seo/urls";
 import { AMENITY_OPTIONS } from "@/lib/constants/amenities";
 import { storageSet } from "@/lib/safe-storage";
 import { parkingAvailable, petsAllowed } from "@/lib/policy-text";
+import { timeZoneForState, todayKey } from "@/app/buildings/availability";
+import { moveInLabel, neighborhoodsForCityChange, resultCountLabel } from "./search-helpers";
 
 // mapbox-gl is huge — load the map chunk only when the map view mounts,
 // never during SSR or in the initial bundle
@@ -90,9 +92,32 @@ interface SearchResult {
 
 interface SearchResponse {
   city: string;
+  /** The city's state code — move-in dates are judged in its time zone */
+  state?: string | null;
   captured_at_max: string | null;
+  /** The page came back full: there may be more than were returned */
+  limit_reached?: boolean;
   results: SearchResult[];
 }
+
+// Units requested per search. There is no paging, so a full page is shown
+// as "200+" rather than an exact count.
+const SEARCH_LIMIT = 200;
+const DEFAULT_SORT = "price_low";
+
+// Markets with active buildings. Chicago and San Francisco are in the cities
+// table with none, so picking them could only ever say "No apartments found"
+// (the homepage's browse list leaves them out for the same reason).
+const SEARCH_CITIES = [
+  { slug: "miami", name: "Miami" },
+  { slug: "new-york", name: "New York City" },
+  { slug: "los-angeles", name: "Los Angeles" },
+  { slug: "austin", name: "Austin" },
+  { slug: "dallas", name: "Dallas" },
+  { slug: "nashville", name: "Nashville" },
+  { slug: "atlanta", name: "Atlanta" },
+  { slug: "brooklyn", name: "Brooklyn" },
+];
 
 interface ParsedFilters {
   city_slug?: string;
@@ -231,7 +256,7 @@ function SearchContent() {
   const [bedsMax, setBedsMax] = useState(bedsMaxParam || "");
   const [budgetMin, setBudgetMin] = useState(budgetMinParam || "");
   const [budgetMax, setBudgetMax] = useState(budgetMaxParam || "");
-  const [sort, setSort] = useState("price_low");
+  const [sort, setSort] = useState(DEFAULT_SORT);
   const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState(queryParam || "");
 
@@ -253,8 +278,12 @@ function SearchContent() {
   const [showAmenityDropdown, setShowAmenityDropdown] = useState(false);
 
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
+  // True from the start: the first search runs right after hydration, and
+  // starting false flashed "No apartments found" until it did
+  const [loading, setLoading] = useState(true);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
+  const [resultsState, setResultsState] = useState<string | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
   // Race protection: only the most recent request may apply its results
@@ -526,6 +555,8 @@ function SearchContent() {
     visibleResults,
     (capturedAt) => priceAgeLabel(capturedAt)?.stale === false
   );
+  // Today in the results' city, the day the building pages date move-ins by
+  const resultsToday = todayKey(timeZoneForState(resultsState));
 
   // Count active filters
   const activeFilterCount = [
@@ -541,6 +572,20 @@ function SearchContent() {
     selectedAmenities.length > 0,
   ].filter(Boolean).length;
 
+  // Mirror a complete filter set into the controls; anything absent is cleared
+  const applyFilterState = (f: SearchFilterOverrides) => {
+    setSelectedNeighborhoods(f.neighborhood_slugs ?? []);
+    setBedsMin(f.beds_min != null ? String(f.beds_min) : "");
+    setBedsMax(f.beds_max != null ? String(f.beds_max) : "");
+    setBudgetMin(f.budget_min != null ? String(f.budget_min) : "");
+    setBudgetMax(f.budget_max != null ? String(f.budget_max) : "");
+    setBathsMin(f.baths_min != null ? String(f.baths_min) : "");
+    setPetFriendly(Boolean(f.pet_friendly));
+    setParkingRequired(Boolean(f.parking_required));
+    setMoveInDate(f.move_in_date ?? "");
+    setSelectedAmenities(f.amenities ?? []);
+  };
+
   const handleSearch = useCallback(async (filters?: SearchFilterOverrides) => {
     const requestId = ++requestIdRef.current;
     hasSearchedRef.current = true;
@@ -550,7 +595,7 @@ function SearchContent() {
       const body: Record<string, unknown> = {
         city_slug: filters?.city_slug || city,
         sort: filters?.sort || sort,
-        limit: 200,
+        limit: SEARCH_LIMIT,
       };
 
       // Basic filters — `null` explicitly clears, `undefined` falls back to state
@@ -594,6 +639,8 @@ function SearchContent() {
         if (requestId !== requestIdRef.current) return;
         setResults(data.results);
         setCapturedAt(data.captured_at_max);
+        setResultsState(data.state ?? null);
+        setLimitReached(data.limit_reached ?? data.results.length >= SEARCH_LIMIT);
         setBrokenImageIds(new Set());
       } else {
         setSearchError("Search failed. Please try again.");
@@ -653,10 +700,12 @@ function SearchContent() {
     handleSearch(CLEARED_FILTERS);
 
     try {
+      // The current city lets the parser place names several cities share
+      // ("downtown", "midtown"), which it otherwise drops as ambiguous
       const res = await fetch("/api/parse-query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, city_slug: city }),
       });
 
       if (res.ok) {
@@ -664,10 +713,12 @@ function SearchContent() {
         const filters: ParsedFilters = data.filters;
 
         const fresh: SearchFilterOverrides = { ...CLEARED_FILTERS, ...filters };
+        pendingNeighborhoodsRef.current = neighborhoodsForCityChange(
+          filters.city_slug,
+          filters.neighborhood_slugs,
+          city
+        );
         if (filters.city_slug) setCity(filters.city_slug);
-        if (filters.neighborhood_slugs?.length) {
-          pendingNeighborhoodsRef.current = filters.neighborhood_slugs;
-        }
         setSelectedNeighborhoods(filters.neighborhood_slugs ?? []);
         setBedsMin(filters.beds_min !== undefined ? filters.beds_min.toString() : "");
         setBedsMax(filters.beds_max !== undefined ? filters.beds_max.toString() : "");
@@ -692,7 +743,7 @@ function SearchContent() {
     } finally {
       setAiParsing(false);
     }
-  }, [handleSearch]);
+  }, [city, handleSearch]);
 
   // Handle search from input — routes to semantic or parse-and-search depending on mode
   const handleAiSearch = () => {
@@ -717,6 +768,15 @@ function SearchContent() {
     }
   };
 
+  // City picker: a new city starts with no neighborhoods, including any an
+  // earlier AI parse left pending for the city effect
+  const handleCityChange = (val: string) => {
+    pendingNeighborhoodsRef.current = null;
+    setCity(val);
+    setAiSummary(null);
+    handleSearch({ city_slug: val, neighborhood_slugs: [] });
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !aiParsing && !loading) {
       handleAiSearch();
@@ -737,10 +797,31 @@ function SearchContent() {
     lastUrlQueryRef.current = q;
     setSearchInput(q);
     if (!q) {
+      // Back past an AI search: its parsed filters belong to the entry we
+      // left, and rerunning them under an empty query box looked like an
+      // unfiltered search that wasn't. Search what this URL itself carries
+      // instead — usually nothing, i.e. the cleared set.
+      const urlFilters: SearchFilterOverrides = {
+        ...CLEARED_FILTERS,
+        beds_min: bedsMinParam ? parseInt(bedsMinParam) : null,
+        beds_max: bedsMaxParam ? parseInt(bedsMaxParam) : null,
+        budget_min: budgetMinParam ? parseInt(budgetMinParam) : null,
+        budget_max: budgetMaxParam ? parseInt(budgetMaxParam) : null,
+        neighborhood_slugs: initialNeighborhoods,
+        pet_friendly: initialPetFriendly,
+      };
+      pendingNeighborhoodsRef.current = null;
+      if (cityParam && cityParam !== city) {
+        urlFilters.city_slug = cityParam;
+        // The city effect would reset the URL's neighborhoods otherwise
+        pendingNeighborhoodsRef.current = initialNeighborhoods.length ? initialNeighborhoods : null;
+        setCity(cityParam);
+      }
+      applyFilterState(urlFilters);
       setAiSummary(null);
       setSemanticResults([]);
       setSemanticQuery(null);
-      handleSearch();
+      handleSearch(urlFilters);
     } else if (smartSearch) {
       handleSemanticSearch(q);
     } else {
@@ -887,21 +968,14 @@ function SearchContent() {
             {/* Mobile: compact control row — city, filters, commute, map */}
             <div className="flex gap-2 md:hidden">
               <div className="min-w-0 flex-1">
-              <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); handleSearch({ city_slug: val, neighborhood_slugs: [] }); }}>
+              <Select value={city} onValueChange={handleCityChange}>
                 <SelectTrigger aria-label="City" className="h-11 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="City" />
                 </SelectTrigger>
                 <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
-                  <SelectItem value="miami">Miami</SelectItem>
-                  <SelectItem value="new-york">New York City</SelectItem>
-                  <SelectItem value="los-angeles">Los Angeles</SelectItem>
-                  <SelectItem value="austin">Austin</SelectItem>
-                  <SelectItem value="dallas">Dallas</SelectItem>
-                  <SelectItem value="nashville">Nashville</SelectItem>
-                  <SelectItem value="atlanta">Atlanta</SelectItem>
-                  <SelectItem value="brooklyn">Brooklyn</SelectItem>
-                  <SelectItem value="chicago">Chicago</SelectItem>
-                  <SelectItem value="san-francisco">San Francisco</SelectItem>
+                  {SEARCH_CITIES.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               </div>
@@ -1015,21 +1089,14 @@ function SearchContent() {
               </div>
 
               <div className="flex items-center gap-3 md:col-span-3 md:row-start-2 lg:contents">
-              <Select value={city} onValueChange={(val) => { setCity(val); setAiSummary(null); handleSearch({ city_slug: val, neighborhood_slugs: [] }); }}>
+              <Select value={city} onValueChange={handleCityChange}>
                 <SelectTrigger aria-label="City" className="h-12 w-[180px] shrink-0 lg:w-[160px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
                   <SelectValue placeholder="Select city" />
                 </SelectTrigger>
                 <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
-                  <SelectItem value="miami">Miami</SelectItem>
-                  <SelectItem value="new-york">New York City</SelectItem>
-                  <SelectItem value="los-angeles">Los Angeles</SelectItem>
-                  <SelectItem value="austin">Austin</SelectItem>
-                  <SelectItem value="dallas">Dallas</SelectItem>
-                  <SelectItem value="nashville">Nashville</SelectItem>
-                  <SelectItem value="atlanta">Atlanta</SelectItem>
-                  <SelectItem value="brooklyn">Brooklyn</SelectItem>
-                  <SelectItem value="chicago">Chicago</SelectItem>
-                  <SelectItem value="san-francisco">San Francisco</SelectItem>
+                  {SEARCH_CITIES.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -1102,15 +1169,15 @@ function SearchContent() {
                   onClick={() => {
                     setAiSummary(null);
                     setSearchInput("");
-                    setBedsMin("");
-                    setBedsMax("");
-                    setBudgetMin("");
-                    setBudgetMax("");
+                    // Everything the parse set, not just beds and budget
+                    pendingNeighborhoodsRef.current = null;
+                    applyFilterState(CLEARED_FILTERS);
+                    setSort(DEFAULT_SORT);
                     lastUrlQueryRef.current = "";
                     router.push("/search");
                     // State updates above haven't committed yet, so pass
-                    // explicit clear sentinels instead of relying on state
-                    handleSearch({ beds_min: null, beds_max: null, budget_min: null, budget_max: null });
+                    // the cleared set explicitly instead of relying on state
+                    handleSearch({ ...CLEARED_FILTERS, sort: DEFAULT_SORT });
                   }}
                 >
                   <X className="h-4 w-4" />
@@ -1412,6 +1479,7 @@ function SearchContent() {
                       setMoveInDate("");
                       setSelectedAmenities([]);
                       setAiSummary(null);
+                      pendingNeighborhoodsRef.current = null;
                     }}
                   >
                     Clear All
@@ -1448,7 +1516,8 @@ function SearchContent() {
                       "Searching..."
                     ) : (
                       <>
-                        {visibleResults.length} {visibleResults.length === 1 ? "Apartment" : "Apartments"}
+                        {resultCountLabel(visibleResults.length, limitReached)}{" "}
+                        {visibleResults.length === 1 ? "Apartment" : "Apartments"}
                         <span className="hidden md:inline"> Available</span>
                       </>
                     )}
@@ -1730,11 +1799,7 @@ function SearchContent() {
                         : group.sqftMin === group.sqftMax
                           ? `${group.sqftMin.toLocaleString()} sqft`
                           : `${group.sqftMin.toLocaleString()}–${group.sqftMax!.toLocaleString()} sqft`;
-                    const moveIn = group.earliestAvailable
-                      ? Date.parse(group.earliestAvailable) <= Date.now()
-                        ? "Available now"
-                        : `Available ${new Date(group.earliestAvailable).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
-                      : null;
+                    const moveIn = moveInLabel(group.earliestAvailable, resultsToday);
 
                     return (
                       <Link

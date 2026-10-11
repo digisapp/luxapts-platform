@@ -81,6 +81,53 @@ describe("findUnitsPageIn", () => {
   });
 });
 
+describe("finders on a portfolio host (property in a sub-path)", () => {
+  const novel = "https://www.greystar.com/novel-turtle-creek-dallas-tx/p_18979";
+  const gallerySibling = "/gallery-at-turtle-creek-apartments-dallas-tx/p_14950";
+
+  it("never hops to a sibling property whose slug contains a keyword", () => {
+    // Novel Turtle Creek followed this link because "apartments" matched, and
+    // ended up carrying Gallery at Turtle Creek's floorplans.
+    expect(findUnitsPageIn(html(gallerySibling), novel)).toBeNull();
+    expect(findGalleryPageIn(html(gallerySibling), novel)).toBeNull();
+  });
+
+  it("still finds the property's own section under its base path", () => {
+    expect(findUnitsPageIn(html(gallerySibling, "/novel-turtle-creek-dallas-tx/p_18979/floorplans"), novel)).toBe(
+      "https://www.greystar.com/novel-turtle-creek-dallas-tx/p_18979/floorplans"
+    );
+    expect(findAmenitiesPageIn(html("/novel-turtle-creek-dallas-tx/p_18979/amenities"), novel)).toBe(
+      "https://www.greystar.com/novel-turtle-creek-dallas-tx/p_18979/amenities"
+    );
+  });
+
+  it("keeps a single-property site's sibling section page (/en/home → /en/floorplans)", () => {
+    expect(findUnitsPageIn(html("/en/floorplans"), "https://www.tower.com/en/home")).toBe(
+      "https://www.tower.com/en/floorplans"
+    );
+    expect(findGalleryPageIn(html("/en/gallery"), "https://www.tower.com/en/home/")).toBe(
+      "https://www.tower.com/en/gallery"
+    );
+  });
+
+  it("rejects a sibling under the same parent unless the segment is the section itself", () => {
+    const amli = "https://www.amli.com/apartments/austin/amli-at-mueller";
+    expect(findUnitsPageIn(html("/apartments/austin/amli-downtown"), amli)).toBeNull();
+    expect(findGalleryPageIn(html("/apartments/dallas/gallery-at-turtle-creek"), "https://x.com/apartments/dallas/novel")).toBeNull();
+    // ...and skips past it to the property's own page
+    expect(findUnitsPageIn(html("/apartments/austin/amli-downtown", "/apartments/austin/amli-at-mueller/floorplans"), amli)).toBe(
+      "https://www.amli.com/apartments/austin/amli-at-mueller/floorplans"
+    );
+  });
+
+  it("leaves root and one-segment bases as before", () => {
+    expect(findUnitsPageIn(html("/floorplans"), "https://tower.com/home")).toBe("https://tower.com/floorplans");
+    expect(findUnitsPageIn(html("/other-tower-apartments"), "https://tower.com/")).toBe(
+      "https://tower.com/other-tower-apartments"
+    );
+  });
+});
+
 describe("findAmenitiesPageIn", () => {
   it("finds the amenities page and ignores the hostname", () => {
     const page = html("https://amenities-living.com/", "/community/amenities");

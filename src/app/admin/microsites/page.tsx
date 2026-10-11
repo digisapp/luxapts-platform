@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 import { MICROSITE_DOMAINS } from "@/lib/validations";
 import { MICROSITE_BUILDINGS } from "@/lib/microsites";
+import { formatMiamiDate } from "@/lib/admin/time";
 import { ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -27,20 +28,32 @@ function pct(n: number, d: number): string {
 // don't count as impure render work (react-hooks/purity).
 async function loadMicrositeData(days: number) {
   const supabase = createAdminClient();
+  const since = new Date(Date.now() - days * 86400000).toISOString();
+  // Counted in Postgres. Tallying a row select stopped at PostgREST's 1000
+  // rows, an arbitrary slice of the window (140 CTA clicks shown of 270).
+  const countEvents = (eventName: string) =>
+    supabase
+      .from("analytics_events")
+      .select("id", { count: "exact", head: true })
+      .not("source_domain", "is", null)
+      .eq("event_name", eventName)
+      .gte("created_at", since);
   return Promise.all([
     supabase.rpc("get_microsite_stats", { days_back: days }),
+    // Phone-call leads also set source_detail ("phone:+1…"), so filter on source.
     supabase
       .from("leads")
       .select("id, created_at, name, user_email, notes, status, source_detail")
+      .eq("source", "microsite")
       .not("source_detail", "is", null)
       .order("created_at", { ascending: false })
       .limit(15),
-    supabase
-      .from("analytics_events")
-      .select("event_name, source_domain, properties")
-      .not("source_domain", "is", null)
-      .gte("created_at", new Date(Date.now() - days * 86400000).toISOString())
-      .limit(1000),
+    // The page script logs every .btn click as cta_click, including the form's
+    // submit button, so the raw count overstated calls to action by one per
+    // submission attempt. Only clicks on a link with an anchor target are a
+    // visitor choosing to go to the form.
+    countEvents("cta_click").like("properties->>href", "#%"),
+    countEvents("staycio_click"),
   ]);
 }
 
@@ -52,7 +65,7 @@ export default async function AdminMicrositesPage({
   const params = await searchParams;
   const days = Math.min(Math.max(parseInt(params.days || "30", 10) || 30, 1), 365);
 
-  const [statsRes, recentLeadsRes, eventsRes] = await loadMicrositeData(days);
+  const [statsRes, recentLeadsRes, ctaRes, staycioRes] = await loadMicrositeData(days);
 
   const statsByDomain = new Map<string, Stat>();
   ((statsRes.data as Stat[] | null) || []).forEach((s) => statsByDomain.set(s.domain, s));
@@ -85,18 +98,8 @@ export default async function AdminMicrositesPage({
   );
   const hasEngaged = rows.some((r) => r.engaged !== undefined);
 
-  // The page script logs every .btn click as cta_click, including the form's
-  // submit button, so the raw count overstated calls to action by one per
-  // submission attempt. Only clicks on a link with an anchor target are a
-  // visitor choosing to go to the form.
-  const ctaClicks = (eventsRes.data || []).filter((e) => {
-    if (e.event_name !== "cta_click") return false;
-    const href = (e.properties as { href?: string | null } | null)?.href;
-    return typeof href === "string" && href.startsWith("#");
-  }).length;
-  const staycioClicks = (eventsRes.data || []).filter(
-    (e) => e.event_name === "staycio_click"
-  ).length;
+  const ctaClicks = ctaRes.count ?? 0;
+  const staycioClicks = staycioRes.count ?? 0;
 
   const rpcMissing = Boolean(statsRes.error);
 
@@ -215,7 +218,7 @@ export default async function AdminMicrositesPage({
                 {recentLeadsRes.data.map((l) => (
                   <tr key={l.id} className="border-t">
                     <td className="whitespace-nowrap p-3 text-muted-foreground">
-                      {new Date(l.created_at).toLocaleDateString()}
+                      {formatMiamiDate(l.created_at)}
                     </td>
                     <td className="p-3">
                       {MICROSITE_BUILDINGS[l.source_detail as string] ?? l.source_detail}

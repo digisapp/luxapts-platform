@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { fetchDashboardAnalytics } from "@/lib/admin/analytics";
 import { fetchQuickActionCounts, fetchActivityFeed } from "@/lib/admin/dashboard";
 import { getFirstRelation } from "@/lib/db-helpers";
+import { formatMiamiDate, startOfMiamiDay } from "@/lib/admin/time";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, TrendingUp, Calendar, Mail, MessageCircle, Target } from "lucide-react";
 import { LeadFunnelChart } from "@/components/admin/analytics/LeadFunnelChart";
@@ -18,8 +19,9 @@ export const dynamic = "force-dynamic";
 export default async function AdminDashboardPage() {
   const supabase = createAdminClient();
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  // Miami midnight: setHours(0) on the UTC server started "today" at 8 PM
+  // (7 PM in winter) the evening before.
+  const todayStart = startOfMiamiDay();
 
   const [analytics, buildingsRes, citiesRes, recentLeads, quickActions, activityFeed, campaignsRes, chatSessionsRes, chatTodayRes, pipelineRes] =
     await Promise.all([
@@ -148,7 +150,7 @@ export default async function AdminDashboardPage() {
             <div className="text-2xl font-bold">{campaignsCount}</div>
             <p className="text-xs text-muted-foreground">
               {lastCampaignDate
-                ? `Last campaign: ${new Date(lastCampaignDate).toLocaleDateString()}`
+                ? `Last campaign: ${formatMiamiDate(lastCampaignDate)}`
                 : "No campaigns yet"}
             </p>
           </CardContent>
@@ -275,7 +277,7 @@ export default async function AdminDashboardPage() {
                       {lead.status}
                     </span>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {new Date(lead.created_at).toLocaleDateString()}
+                      {formatMiamiDate(lead.created_at)}
                     </p>
                   </div>
                 </div>

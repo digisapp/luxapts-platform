@@ -107,7 +107,7 @@ async function main() {
     if (good.length === 0) {
       console.log(`  MISS  ${label} ${probed.length} candidates, none usable`);
       if (!dryRun) {
-        await updateScrapeStatus(supabase, b.id, { type: "images", success: true, imagesFound: 0, websiteUrl: b.url! });
+        await updateScrapeStatus(supabase, b.id, { type: "images", success: true, imagesFound: 0 });
       }
       continue;
     }
@@ -128,7 +128,6 @@ async function main() {
       type: "images",
       success: true,
       imagesFound: buildingSaved + unitSaved,
-      websiteUrl: b.url!,
     });
     if (buildingSaved > 0) withPhotos++;
     saved += buildingSaved;

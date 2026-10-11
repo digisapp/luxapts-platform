@@ -190,7 +190,16 @@ export async function extractUnitsWithAI(
 export async function extractAmenitiesWithAI(
   html: string,
   sourceUrl: string
-): Promise<{ amenities: ScrapedAmenity[]; pet_policy?: string; parking_policy?: string }> {
+): Promise<{
+  amenities: ScrapedAmenity[];
+  pet_policy?: string;
+  parking_policy?: string;
+  /**
+   * Set when the extraction itself failed (no key, model error, no JSON).
+   * Recording that as a successful scrape deferred the building 180 days.
+   */
+  error?: string;
+}> {
   // Condense first, then truncate
   const condensed = condenseHtml(html);
   const truncatedHtml = condensed.length > 100000 ? condensed.slice(0, 100000) + "\n... [truncated]" : condensed;
@@ -213,22 +222,22 @@ export async function extractAmenitiesWithAI(
 
       const content = response.choices[0].message.content || "{}";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          amenities: parsed.amenities || [],
-          pet_policy: parsed.pet_policy,
-          parking_policy: parsed.parking_policy,
-        };
+      if (!jsonMatch) {
+        return { amenities: [], error: "Model response contained no JSON object" };
       }
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        amenities: parsed.amenities || [],
+        pet_policy: parsed.pet_policy,
+        parking_policy: parsed.parking_policy,
+      };
     }
 
-    // Fallback: return empty if no AI available
     console.warn("No AI service configured for amenity extraction");
-    return { amenities: [] };
+    return { amenities: [], error: "No AI service configured (XAI_API_KEY missing)" };
   } catch (error) {
     console.error("AI amenity extraction error:", error);
-    return { amenities: [] };
+    return { amenities: [], error: error instanceof Error ? error.message : "Unknown AI error" };
   }
 }
 
@@ -439,6 +448,7 @@ export async function extractFullBuildingData(
     units_error: unitsResult.error,
     move_in_specials: unitsResult.move_in_specials,
     amenities: amenitiesResult.amenities,
+    amenities_error: amenitiesResult.error,
     pet_policy: amenitiesResult.pet_policy,
     parking_policy: amenitiesResult.parking_policy,
     scraped_at: new Date().toISOString(),

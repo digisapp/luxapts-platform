@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { apiError } from "@/lib/api-helpers";
 import { isValidUUID } from "@/lib/utils";
-import { getAdminInboxService } from "@/lib/email/admin-inbox";
+import { getAdminInboxService, leadAlertReply } from "@/lib/email/admin-inbox";
 import { logAuditEvent, AuditAction } from "@/lib/admin/audit";
 import { classifyAndDraftReply } from "@/lib/ai-email";
 import { draftContextFor } from "@/lib/leads/draft-context";
@@ -14,7 +14,8 @@ type Params = { params: Promise<{ id: string }> };
 
 /**
  * GET /api/admin/inbox/[id] — one email, its thread, and the lead behind the
- * conversation (for the lead card). Does not mark read; the UI does that.
+ * conversation (for the lead card). On a "New lead" alert, also where Reply
+ * goes (`leadReply`, see leadAlertReply). Does not mark read; the UI does that.
  */
 export async function GET(_req: NextRequest, { params }: Params) {
   try {
@@ -33,7 +34,10 @@ export async function GET(_req: NextRequest, { params }: Params) {
     // Any message in the thread may carry the lead (the first note does).
     const leadId = email.leadId ?? messages.find((m) => m.leadId)?.leadId ?? null;
     const lead = await inbox.getLeadContext(leadId).catch(() => null);
-    return NextResponse.json({ email, thread: messages, lead });
+    const leadReply = email.isLeadAlert
+      ? leadAlertReply(email, await inbox.latestLeadMessage(leadId).catch(() => null), lead)
+      : null;
+    return NextResponse.json({ email, thread: messages, lead, leadReply });
   } catch (error) {
     console.error("Get inbox email error:", error);
     return apiError("Failed to open email", 500);
@@ -63,7 +67,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       if (email.status === "replied") return apiError("This email was already answered", 409);
 
       const result = await inbox.sendNewEmail({
-        to: email.fromAddress,
+        to: email.replyTo || email.fromAddress,
         subject: /^re:/i.test(email.subject) ? email.subject : `Re: ${email.subject}`,
         bodyHtml: email.aiDraftHtml,
         bodyText: email.aiDraftText,
@@ -73,10 +77,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       if (!result.success) return apiError(result.error, result.status ?? 502);
 
       void logAuditEvent(auth.userId, AuditAction.INBOX_SEND_AI_DRAFT, "email", result.id, {
-        to: email.fromAddress,
+        to: email.replyTo || email.fromAddress,
         inReplyTo: id,
       });
-      return NextResponse.json({ success: true, sent: true, id: result.id });
+      return NextResponse.json({ success: true, sent: true, id: result.id, warning: result.warning ?? null });
     }
 
     if (body.regenerateDraft === true) {

@@ -27,6 +27,7 @@
  * and every lead that gets the note is moved from "new" to "contacted".
  */
 import { createAdminClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/db-helpers";
 import { getAdminInboxService } from "@/lib/email/admin-inbox";
 import { micrositeFollowUpEmail, micrositeInquirySubject } from "@/lib/email/templates";
 import { unsubscribeUrl } from "@/lib/email/unsubscribe";
@@ -83,22 +84,30 @@ function unitTypeFromNotes(notes: string | null): string | null {
 
 async function buildRecipients(): Promise<{ recipients: Recipient[]; skipped: Record<string, number> }> {
   const supabase = createAdminClient();
-  const { data: leads, error } = await supabase
-    .from("leads")
-    .select("id, created_at, status, source_detail, name, user_email, user_phone, unsubscribed_at, notes, city:city_id(name)")
-    .not("source_detail", "is", null)
-    .order("created_at", { ascending: true })
-    .limit(5000);
-  if (error) throw new Error(`leads query failed: ${error.message}`);
-  const all = (leads ?? []) as unknown as Lead[];
+  // PostgREST caps every response at 1000 rows whatever .limit() asks for,
+  // so both lists are read a page at a time. A query error must stop the
+  // run (fetchAllRows would just stop paging): a short "already emailed"
+  // list would mail people twice.
+  const page = <T,>(label: string, query: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) =>
+    fetchAllRows<T>(async (from, to) => {
+      const res = await query(from, to);
+      if (res.error) throw new Error(`${label} query failed: ${res.error.message}`);
+      return res;
+    });
+  const all = (await page("leads", (from, to) =>
+    supabase
+      .from("leads")
+      .select("id, created_at, status, source_detail, name, user_email, user_phone, unsubscribed_at, notes, city:city_id(name)")
+      .not("source_detail", "is", null)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )) as unknown as Lead[];
 
-  const { data: sent, error: sentError } = await supabase
-    .from("emails")
-    .select("to_email, status")
-    .eq("direction", "outbound")
-    .limit(10000);
-  if (sentError) throw new Error(`emails query failed: ${sentError.message}`);
-  const everEmailed = new Set((sent ?? []).map((r) => String(r.to_email).toLowerCase()));
+  const sent = await page("emails", (from, to) =>
+    supabase.from("emails").select("to_email").eq("direction", "outbound").order("id", { ascending: true }).range(from, to)
+  );
+  const everEmailed = new Set(sent.map((r) => String(r.to_email).toLowerCase()));
 
   const hasPhone = new Set(
     all.filter((l) => (l.user_phone ?? "").trim()).map((l) => (l.user_email ?? "").trim().toLowerCase())
@@ -226,7 +235,11 @@ async function main() {
     });
     if (result.success) {
       ok++;
+      // Running this is the owner writing to them, but the send carries no
+      // admin (sentBy), so the inbox leaves the lead alone: move it here and
+      // clear its "New lead" alert, as a send from /admin/email would.
       await supabase.from("leads").update({ status: "contacted" }).eq("id", r.lead.id).eq("status", "new");
+      await inbox.markLeadAlertsRead([r.lead.id]).catch((err) => console.log(`  could not clear the alert: ${err}`));
       console.log(`[${i + 1}/${batch.length}] sent  ${r.email}  (${r.building})`);
     } else {
       failed++;

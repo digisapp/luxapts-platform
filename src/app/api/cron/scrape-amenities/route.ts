@@ -18,7 +18,7 @@ import {
   createScrapeJob,
   updateScrapeJob,
   getBuildingsToScrape,
-  scrapeStatusOf,
+  resolveScrapeUrl,
 } from "@/lib/scraper";
 
 // Amenities change rarely, so a scraped building waits ~6 months before it is
@@ -106,9 +106,9 @@ export async function GET(req: Request) {
     for (const building of buildings) {
       const remainingMs = TIME_BUDGET_MS - (Date.now() - loopStartedAt);
       if (remainingMs < MIN_USEFUL_REMAINING_MS) break;
-      // Scraper-internal override first: building_scrape_status.website_url points at the
-      // best scrape target (portal/API/manager page) without changing the user-facing link
-      const websiteUrl = scrapeStatusOf(building)?.website_url || building.website_url;
+      // Scraper-internal override first (when it is really this building's
+      // page), else the user-facing link — see resolveScrapeUrl
+      const websiteUrl = resolveScrapeUrl(building);
 
       if (!websiteUrl) {
         results.failed++;
@@ -152,7 +152,6 @@ export async function GET(req: Request) {
           await updateScrapeStatus(supabase, building.id, {
             type: "amenities",
             success: true,
-            websiteUrl,
           });
 
           results.success++;
@@ -162,7 +161,6 @@ export async function GET(req: Request) {
             type: "amenities",
             success: false,
             error: scrapeResult.error,
-            websiteUrl,
           });
 
           results.failed++;
@@ -179,7 +177,6 @@ export async function GET(req: Request) {
           type: "amenities",
           success: false,
           error: errorMessage,
-          websiteUrl,
         });
 
         results.failed++;

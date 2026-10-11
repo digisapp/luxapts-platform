@@ -2,6 +2,20 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
+/**
+ * The path the gates below test. nextUrl.pathname keeps percent-escapes, so a
+ * raw startsWith("/admin") let "/%61dmin" skip the login redirect. Decoded,
+ * with repeated slashes collapsed and lowercased; null when it can't be
+ * decoded, which the caller treats as a protected path.
+ */
+export function gatePathname(pathname: string): string | null {
+  try {
+    return decodeURIComponent(pathname).replace(/\/{2,}/g, "/").toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -38,17 +52,20 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes - check authentication
-  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
-  const isAgentRoute = request.nextUrl.pathname.startsWith("/agent");
-  const isPartnerRoute = request.nextUrl.pathname.startsWith("/partner");
+  // Protected routes - check authentication. An undecodable path counts as
+  // every protected prefix, so it is denied rather than waved through.
+  const path = gatePathname(request.nextUrl.pathname);
+  const under = (prefix: string) => path === null || path.startsWith(prefix);
+  const isAdminRoute = under("/admin");
+  const isAgentRoute = under("/agent");
+  const isPartnerRoute = under("/partner");
   // /shower/* needs a session: every page under it calls an API that returns
   // 401 without one, so anonymous visitors used to reach the shower
   // registration form and only find out after submitting. It is deliberately
   // NOT role-gated below — a logged-in renter must still be able to open
   // /shower/profile to apply.
-  const isShowerRoute = request.nextUrl.pathname.startsWith("/shower");
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
+  const isShowerRoute = under("/shower");
+  const isAuthRoute = path !== null && path.startsWith("/auth");
 
   // If trying to access protected routes without being logged in
   if (!user && (isAdminRoute || isAgentRoute || isPartnerRoute || isShowerRoute)) {
@@ -101,7 +118,7 @@ export async function updateSession(request: NextRequest) {
   // Exception: /auth/reset-password — Supabase recovery links sign the user
   // in BEFORE they land on the reset page, so redirecting would make it
   // impossible to ever set a new password.
-  const isResetPasswordRoute = request.nextUrl.pathname.startsWith("/auth/reset-password");
+  const isResetPasswordRoute = path !== null && path.startsWith("/auth/reset-password");
   if (user && isAuthRoute && !isResetPasswordRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/";

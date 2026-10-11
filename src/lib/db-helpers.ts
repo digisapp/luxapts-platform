@@ -35,12 +35,29 @@ export function getFirstRelation<T>(relation: T | T[] | null | undefined): T | n
  */
 export async function fetchAllRows<T>(
   queryPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>,
-  { pageSize = 1000, maxPages = 30 }: { pageSize?: number; maxPages?: number } = {},
+  {
+    pageSize = 1000,
+    maxPages = 30,
+    throwOnError = false,
+  }: {
+    pageSize?: number;
+    maxPages?: number;
+    /**
+     * Reject on a failed page instead of returning what was read so far.
+     * Use it inside cached reads (unstable_cache), where a short result is
+     * stored as if it were the truth while a rejection is not stored at all.
+     */
+    throwOnError?: boolean;
+  } = {},
 ): Promise<T[]> {
   const all: T[] = [];
   for (let page = 0; page < maxPages; page++) {
     const from = page * pageSize;
     const { data, error } = await queryPage(from, from + pageSize - 1);
+    if (error && throwOnError) {
+      const message = (error as { message?: string }).message ?? String(error);
+      throw new Error(`fetchAllRows page ${page} failed: ${message}`);
+    }
     if (error || !data || data.length === 0) break;
     all.push(...data);
     if (data.length < pageSize) break;

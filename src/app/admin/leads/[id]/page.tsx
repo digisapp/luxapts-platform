@@ -1,6 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
+import { checkAdminAuth } from "@/lib/admin/auth";
+import { formatMiamiDate, formatMiamiDateTime } from "@/lib/admin/time";
+import { getAdminInboxService } from "@/lib/email/admin-inbox";
+import { LEAD_STATUSES } from "@/lib/leads/stats";
 
 export const dynamic = "force-dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +21,14 @@ import { LeadDeleteButton } from "./LeadDeleteButton";
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>;
+}
+
+// Each server action below is its own POST endpoint. The proxy and the admin
+// layout gate rendering this page, not calls to its actions, and the actions
+// write with the service role, so each one checks the caller itself.
+async function requireAdmin() {
+  const auth = await checkAdminAuth();
+  if (!auth.isAdmin) throw new Error(auth.error);
 }
 
 export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
@@ -76,13 +88,31 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
   // Handle status update
   async function updateStatus(formData: FormData) {
     "use server";
-    const newStatus = formData.get("status") as string;
+    await requireAdmin();
+    const newStatus = String(formData.get("status") ?? "");
+    if (!(LEAD_STATUSES as readonly string[]).includes(newStatus)) {
+      throw new Error("Invalid status");
+    }
     const supabase = createAdminClient();
 
-    await supabase
+    // The update's error was ignored, so a failed write still logged
+    // "Status changed" and reloaded the page as if it had worked.
+    const { error: updateError } = await supabase
       .from("leads")
       .update({ status: newStatus })
       .eq("id", id);
+    if (updateError) {
+      console.error("Lead status update error:", updateError);
+      throw new Error("Could not update the lead's status.");
+    }
+
+    // A lead past "new" has been worked: its "New lead" alert in the inbox
+    // no longer belongs in Unread (as in the bulk status route).
+    if (newStatus !== "new") {
+      await getAdminInboxService()
+        .markLeadAlertsRead([id])
+        .catch((err) => console.error("Could not clear lead alerts:", err));
+    }
 
     await supabase.from("lead_events").insert({
       lead_id: id,
@@ -96,6 +126,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
   // Handle agent assignment
   async function assignAgent(formData: FormData) {
     "use server";
+    await requireAdmin();
     const agentUserId = formData.get("agent_user_id") as string;
     const supabase = createAdminClient();
 
@@ -117,6 +148,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
   // Handle add note
   async function addNote(formData: FormData) {
     "use server";
+    await requireAdmin();
     const note = formData.get("note") as string;
     if (!note?.trim()) return;
     const supabase = createAdminClient();
@@ -209,7 +241,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
         <div className="flex-1 min-w-0">
           <p className="text-sm break-words">{config.label}</p>
           <p className="text-xs text-muted-foreground">
-            {new Date(event.created_at).toLocaleString()}
+            {formatMiamiDateTime(event.created_at)}
           </p>
         </div>
       </div>
@@ -236,7 +268,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
               {lead.status}
             </span>
             {lead.user_email && (
-              <LeadEmailButton leadId={lead.id} leadName={lead.name} leadEmail={lead.user_email} />
+              <LeadEmailButton leadId={lead.id} leadName={lead.name} leadEmail={lead.user_email} sourceDetail={lead.source_detail} />
             )}
             <LeadDeleteButton leadId={lead.id} leadName={lead.name} />
           </div>
@@ -483,7 +515,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Created</span>
-                <span>{formatDate(lead.created_at)}</span>
+                <span>{formatMiamiDate(lead.created_at)}</span>
               </div>
             </CardContent>
           </Card>

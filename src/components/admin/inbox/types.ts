@@ -7,6 +7,7 @@ import type {
   EmailStatus,
   FolderCounts,
   InboxFolder,
+  LeadAlertReply,
 } from "@/lib/email/admin-inbox";
 import type { InboxStatus } from "@/lib/email/inbox-status";
 import type { LeadContext } from "@/lib/leads/lead-context";
@@ -21,6 +22,7 @@ export type {
   FolderCounts,
   InboxFolder,
   InboxStatus,
+  LeadAlertReply,
   LeadContext,
 };
 

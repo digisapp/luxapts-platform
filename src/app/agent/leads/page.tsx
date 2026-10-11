@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { getAgentUserId } from "@/lib/agent/auth";
+import { ACTIVE_ASSIGNMENT_STATUSES } from "@/lib/agent/access";
 import { redirect } from "next/navigation";
 import { AgentLeadsList } from "@/components/agent/leads/AgentLeadsList";
 
@@ -22,6 +23,8 @@ export default async function AgentLeadsPage() {
       )
     `)
     .eq("agent_user_id", agentId)
+    // Declined/reassigned rows are history, not access (matches RLS).
+    .in("status", [...ACTIVE_ASSIGNMENT_STATUSES])
     .order("assigned_at", { ascending: false });
 
   if (error) {

@@ -39,13 +39,15 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
+      # tsx is a pinned devDependency installed by `npm ci` above: `npx --yes`
+      # fetched whatever version npm served into a job holding these secrets.
+      # Inputs go through env and are quoted, never pasted into the script.
       - name: Scrape
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           XAI_BASE_URL: ${{ secrets.XAI_BASE_URL }}
-        run: >
-          npx --yes tsx scripts/scrape-units-batch.ts
-          --limit ${{ inputs.limit || '60' }}
-          --minutes ${{ inputs.minutes || '50' }}
+          SCRAPE_LIMIT: ${{ inputs.limit || '60' }}
+          SCRAPE_MINUTES: ${{ inputs.minutes || '50' }}
+        run: npx tsx scripts/scrape-units-batch.ts --limit "$SCRAPE_LIMIT" --minutes "$SCRAPE_MINUTES"

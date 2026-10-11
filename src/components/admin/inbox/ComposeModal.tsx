@@ -76,8 +76,6 @@ export function ComposeModal({ compose, from, sending, onField, onSend, onClose,
               value={compose.to}
               onChange={(e) => onField("to", e.target.value)}
               placeholder="name@example.com"
-              readOnly={isReply}
-              className={isReply ? "opacity-70" : ""}
             />
           </div>
 

@@ -7,6 +7,7 @@ import { getBuildingTourSlots } from "@/lib/tours/slots";
 import { callSessionKey, type CallInfo } from "@/lib/voice/auth";
 import { verifiedBuildingDetails, verifiedSearchResults } from "@/lib/voice/verified";
 import { findMicrositeBuildings } from "@/lib/voice/microsite-facts";
+import { normalizeTourTime } from "@/lib/xai/session-lead";
 
 /**
  * Tools for Stacy on the phone. Same data and lead pipeline as web chat
@@ -52,6 +53,10 @@ export interface LeadChannel {
   sourceDetail: string;
   /** Appended to the lead's notes. */
   note: string;
+  /** Forces the lead's city (microsite chat: every building is in Miami). */
+  citySlug?: string;
+  /** Set once this request saved or found the conversation's lead. */
+  leadId?: string | null;
 }
 
 export function phoneChannel(call: CallInfo): LeadChannel {
@@ -66,14 +71,18 @@ export function phoneChannel(call: CallInfo): LeadChannel {
 
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
-/** A call produces at most one lead, however many times the model asks. */
-async function callAlreadyHasLead(sessionKey: string): Promise<boolean> {
-  const { data } = await createAdminClient()
-    .from("chat_sessions")
-    .select("lead_id")
-    .eq("session_key", sessionKey)
-    .maybeSingle();
-  return Boolean(data?.lead_id);
+/**
+ * What the Chat Log records for one tool call: rows found (0 flags the
+ * session for review) and any error. find_building reports matches, not a
+ * result_count.
+ */
+export function toolOutcome(name: string, result: unknown): { resultCount: number | null; error: string | null } {
+  const r = (result && typeof result === "object" ? result : {}) as Args;
+  let resultCount = typeof r.result_count === "number" ? r.result_count : null;
+  if (resultCount === null && name === "find_building" && Array.isArray(r.matches)) {
+    resultCount = r.matches.length + (Array.isArray(r.staycio_sites) ? r.staycio_sites.length : 0);
+  }
+  return { resultCount, error: typeof r.error === "string" ? r.error : null };
 }
 
 async function findBuilding(args: Args) {
@@ -193,28 +202,37 @@ async function tagLeadSource(leadId: string, channel: LeadChannel) {
   }
 }
 
+/**
+ * Save the conversation's lead. One per conversation: the first call creates
+ * it, and later ones (a tour, a budget heard after the name and number) add to
+ * it. Refusing those used to drop tours silently.
+ */
 async function createLead(args: Args, channel: LeadChannel, baseUrl: string) {
-  const { sessionKey } = channel;
-  if (await callAlreadyHasLead(sessionKey)) {
-    return { error: "Their details are already saved. Don't save again; just confirm what was saved." };
-  }
-
-  const result = await executeTool(
+  const result = (await executeTool(
     "create_lead",
-    {
-      ...args,
-      // The caller's own number is the contact unless they gave another.
-      phone: str(args.phone) || channel.defaultPhone || undefined,
-      notes: [str(args.notes), channel.note].filter(Boolean).join("\n"),
-    },
+    { ...args, notes: [str(args.notes), channel.note].filter(Boolean).join("\n") },
     baseUrl,
-    { leadsCreated: 0, sessionKey, leadSource: channel.source }
-  );
+    {
+      leadsCreated: 0,
+      sessionKey: channel.sessionKey,
+      leadSource: channel.source,
+      // The caller's own number is the contact unless they gave another.
+      defaultPhone: channel.defaultPhone,
+      citySlug: channel.citySlug,
+      leadId: channel.leadId,
+    }
+  )) as { lead_id?: string; updated?: boolean; bridged?: boolean; note?: string } | null;
 
-  const leadId = (result as { lead_id?: string } | null)?.lead_id;
-  if (leadId) {
-    await tagLeadSource(leadId, channel);
-    return { saved: true };
+  if (result?.lead_id) {
+    channel.leadId = result.lead_id;
+    if (!result.updated) await tagLeadSource(result.lead_id, channel);
+    return {
+      saved: true,
+      ...(result.updated
+        ? { updated: true, bridged: Boolean(result.bridged), say: "Added to what's already saved for them." }
+        : {}),
+      ...(result.note ? { note: result.note } : {}),
+    };
   }
   return result;
 }
@@ -223,7 +241,8 @@ async function bookTour(args: Args, channel: LeadChannel, baseUrl: string) {
   const buildingId = await resolveBuildingId(args);
   if (!buildingId) return UNKNOWN_BUILDING;
   const date = str(args.tour_date);
-  const time = str(args.tour_time).slice(0, 5);
+  // "2:00 PM" and "14:00:00" are the same slot as "14:00".
+  const time = normalizeTourTime(args.tour_time) ?? "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) {
     return { error: "tour_date must be YYYY-MM-DD and tour_time HH:MM (24h)." };
   }
@@ -257,16 +276,24 @@ async function bookTour(args: Args, channel: LeadChannel, baseUrl: string) {
     channel,
     baseUrl
   );
-  if ((result as { saved?: boolean }).saved) {
+  const saved = result as { saved?: boolean; updated?: boolean; bridged?: boolean; error?: string } | null;
+  if (saved?.saved) {
+    // Added to an earlier lead, the tour is only booked for certain if it
+    // reached the showing network (a lead's first tour; a change of time is
+    // confirmed by the team).
+    const confirmed = slots.instant && (!saved.updated || saved.bridged === true);
     return {
       booked: true,
-      confirmed: slots.instant,
-      say: slots.instant
+      confirmed,
+      say: confirmed
         ? "Tour is booked; a Staycio showing agent will meet them there."
         : "Tour request is in; the team will confirm the exact time by text or call.",
     };
   }
-  return result;
+  return {
+    booked: false,
+    error: `The tour was NOT booked. ${saved?.error ?? "Saving it failed."} Don't tell them it's booked.`,
+  };
 }
 
 export async function executeVoiceTool(

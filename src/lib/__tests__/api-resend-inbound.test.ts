@@ -152,6 +152,42 @@ describe("POST /api/webhooks/resend", () => {
     expect(classify).not.toHaveBeenCalled();
   });
 
+  const phoneReply = (headers: Record<string, string>) => ({
+    data: {
+      id: "r10",
+      from: "jillian@example.com",
+      to: [`replies+${T}@inbound.staycio.com`],
+      cc: [],
+      received_for: [`replies+${T}@inbound.staycio.com`],
+      reply_to: null,
+      subject: "Re: Downtown 6 Miami — 2 Bedroom Availability",
+      text: "My cell is (786) 555-0142.",
+      html: "",
+      message_id: "<m10@example.com>",
+      headers: { From: "Jillian <jillian@example.com>", "Message-ID": "<m10@example.com>", ...headers },
+      attachments: [],
+    },
+    error: null,
+  });
+
+  it("never saves a phone number from a sender that did not pass DMARC (From is forgeable)", async () => {
+    for (const auth of [
+      {} as Record<string, string>,
+      { "Authentication-Results": "amazonses.com; spf=pass; dkim=fail; dmarc=fail header.from=example.com" },
+      // A header the sender wrote themselves, not the receiving server's.
+      { "Authentication-Results": "evil.test; dmarc=pass header.from=example.com" },
+    ]) {
+      captureLeadPhone.mockClear();
+      sendInboxAlert.mockClear();
+      receivingGet.mockResolvedValue(phoneReply(auth));
+      storeInboundEmail.mockResolvedValue({ id: "e10", is_spam: false, thread_id: T, headers: {}, lead_id: "lead-9" });
+      const res = await post({ type: "email.received", data: { email_id: "r10", from: "jillian@example.com", to: [`replies+${T}@inbound.staycio.com`] } });
+      expect(res.status).toBe(200);
+      await vi.waitFor(() => expect(sendInboxAlert).toHaveBeenCalledWith(expect.objectContaining({ id: "e10", phoneSaved: null })));
+      expect(captureLeadPhone).not.toHaveBeenCalled();
+    }
+  });
+
   it("saves a phone number a lead sends in reply, and tells the owner", async () => {
     receivingGet.mockResolvedValue({
       data: {
@@ -165,7 +201,11 @@ describe("POST /api/webhooks/resend", () => {
         text: "Hi Stacy, move-in around January. My cell is (786) 555-0142.\n\nOn Mon, Oct 5, 2026 at 9:00 AM Downtown 6 <downtown6miami@staycio.com> wrote:\n> What's your phone number? I can text you.",
         html: "",
         message_id: "<m9@example.com>",
-        headers: { From: "Jillian <jillian@example.com>", "Message-ID": "<m9@example.com>" },
+        headers: {
+          From: "Jillian <jillian@example.com>",
+          "Message-ID": "<m9@example.com>",
+          "Authentication-Results": "amazonses.com; spf=pass smtp.mailfrom=example.com; dkim=pass header.i=@example.com; dmarc=pass header.from=example.com",
+        },
         attachments: [],
       },
       error: null,
@@ -193,11 +233,12 @@ describe("POST /api/webhooks/resend", () => {
     await post({ type: "email.bounced", data: { email_id: "out2" } });
     await post({ type: "email.failed", data: { email_id: "out3" } });
     await post({ type: "email.complained", data: { email_id: "out4" } });
+    // A bounce or failure reopens the lead's alert; a spam complaint does not.
     expect(updateDeliveryStatus.mock.calls).toEqual([
-      ["out1", "delivered"],
-      ["out2", "bounced"],
-      ["out3", "failed"],
-      ["out4", "failed"],
+      ["out1", "delivered", { reopenLeadAlert: true }],
+      ["out2", "bounced", { reopenLeadAlert: true }],
+      ["out3", "failed", { reopenLeadAlert: true }],
+      ["out4", "failed", { reopenLeadAlert: false }],
     ]);
   });
 

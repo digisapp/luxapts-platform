@@ -42,12 +42,13 @@ export async function POST(
     const PLACEMENT_BONUS_PCT = settings.placement_bonus_pct / 100;
     const DISPUTE_WINDOW_DAYS = settings.payout_timelines.commission_dispute_days;
 
-    // Check for duplicate commission record
+    // Check for duplicate commission record (the unique index from migration
+    // 033 is the backstop for two requests passing this check at once)
     const { data: existing } = await adminClient
       .from("commission_records")
       .select("id")
       .eq("showing_lead_id", leadId)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       return apiError("Commission already recorded for this lead", 409);
@@ -67,6 +68,9 @@ export async function POST(
       .select("id")
       .single();
 
+    if (commError?.code === "23505") {
+      return apiError("Commission already recorded for this lead", 409);
+    }
     if (commError || !commission) {
       console.error("Commission record error:", commError);
       return apiError("Failed to record commission", 500);

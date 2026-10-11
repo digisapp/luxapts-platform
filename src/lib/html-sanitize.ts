@@ -39,6 +39,26 @@ function dropUnsafeStyle(tagName: string, attribs: sanitizeHtml.Attributes) {
 const MAIL_SCHEMES = ["http", "https", "mailto", "tel", "cid"];
 
 /**
+ * Inline images in received mail come back from Resend as data: URIs. Only
+ * raster images are let through, and only as an <img> src: never SVG (it
+ * can carry script), never on a link or any other tag.
+ */
+const SAFE_DATA_IMAGE = /^data:image\/(png|jpe?g|gif|webp);base64,[a-z0-9+/]+=*$/i;
+const IMG_SCHEMES = { img: [...MAIL_SCHEMES, "data"] };
+
+function keepSafeDataImage(tagName: string, attribs: sanitizeHtml.Attributes) {
+  if (typeof attribs.src !== "string") return { tagName, attribs };
+  // The same clean-up the URL check does (browsers ignore control
+  // characters and spaces inside a URL), so what is checked is what loads.
+  const src = attribs.src.replace(/[\x00-\x20]+/g, "");
+  if (!/^data:/i.test(src)) return { tagName, attribs };
+  const rest = { ...attribs };
+  if (SAFE_DATA_IMAGE.test(src)) rest.src = src;
+  else delete rest.src;
+  return { tagName, attribs: rest };
+}
+
+/**
  * Inbound email stored for the admin inbox. Strips scripts, event handlers and
  * dangerous tags while preserving layout and formatting, so a hostile sender
  * cannot plant stored XSS in a page an admin opens.
@@ -62,7 +82,8 @@ export function sanitizeInboundEmailHtml(html: string): string {
       ],
     },
     allowedSchemes: MAIL_SCHEMES,
-    transformTags: { "*": dropUnsafeStyle },
+    allowedSchemesByTag: IMG_SCHEMES,
+    transformTags: { img: keepSafeDataImage, "*": dropUnsafeStyle },
   });
 }
 
@@ -100,6 +121,7 @@ export function sanitizeRenderedEmailHtml(html: string): string {
       ],
     },
     allowedSchemes: MAIL_SCHEMES,
-    transformTags: { "*": dropUnsafeStyle },
+    allowedSchemesByTag: IMG_SCHEMES,
+    transformTags: { img: keepSafeDataImage, "*": dropUnsafeStyle },
   });
 }

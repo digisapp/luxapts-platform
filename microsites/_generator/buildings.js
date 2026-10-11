@@ -621,7 +621,7 @@ const BUILDINGS = [
       ["Where is Neo Edgewater?","2600 Biscayne Boulevard, in Miami's Edgewater neighborhood — a short walk from Margaret Pace Park and the bay, with Midtown and Wynwood just west."],
       ["Who built it?","Oak Row Equities, with architecture by Arquitectonica, interiors by Vida Design and residential leasing by Bozzuto."]
     ],
-    moveIn: ["As soon as possible","October 2026","Next 60 days","Flexible"],
+    moveIn: ["As soon as possible","Next 30 days","Next 60 days","Flexible"],
     ctaH2: "See what's open, and what it actually costs.",
     ctaP: "399 apartments releasing in waves, with concessions that change as floors fill. Tell us the bedroom count, budget and timing and we'll come back with what's available now."
   },

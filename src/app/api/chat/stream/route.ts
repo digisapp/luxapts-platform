@@ -1,10 +1,12 @@
 import { after } from "next/server";
 import { createXAIClient, AI_TOOLS, SYSTEM_PROMPT } from "@/lib/xai/client";
 import {
+  ensureChatSession,
   logChatTurn,
   isValidSessionKey,
   type LoggedToolCall,
 } from "@/lib/chat/session-log";
+import { resolveChatBuilding } from "@/lib/chat/building-context";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { executeTool, type ToolContext } from "@/lib/xai/tool-executor";
 import { chatRequestSchema } from "@/lib/validations";
@@ -39,8 +41,8 @@ export async function POST(req: Request) {
 
     const rawBody = await req.json();
 
-    // Validate with the same schema as /api/chat — city_slug and building_id
-    // are interpolated into the system prompt, so they must be constrained.
+    // city_slug is interpolated into the system prompt and building_id is
+    // looked up, so both are constrained by the schema.
     const parsedBody = chatRequestSchema.safeParse(rawBody);
     if (!parsedBody.success) {
       return new Response(
@@ -70,13 +72,36 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_APP_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
+    // Everything the transcript needs, filled in as the turn runs and written
+    // once at the end via after(), so persistence never delays a token.
+    const sessionKey = isValidSessionKey(body.session_key) ? body.session_key : null;
+    const lastUserMessage =
+      [...body.messages].reverse().find((m) => m.role === "user")?.content ?? "";
+
+    // building_id is the page's slug (or a UUID on old links); resolve it to
+    // the row. The session row must exist before a tool can link a lead to it.
+    const [building] = await Promise.all([
+      resolveChatBuilding(body.building_id),
+      sessionKey
+        ? ensureChatSession({
+            sessionKey,
+            surface: "chat",
+            citySlug: body.city_slug ?? null,
+            firstQuestion: body.messages.find((m) => m.role === "user")?.content ?? null,
+          })
+        : null,
+    ]);
+
     // Build context-aware system prompt
     let systemPrompt = SYSTEM_PROMPT;
     if (body.city_slug) {
       systemPrompt += `\n\nUser is browsing apartments in ${body.city_slug}. Default to this city for searches.`;
     }
-    if (body.building_id) {
-      systemPrompt += `\n\nUser is viewing building ID: ${body.building_id}. They may have questions about this specific building.`;
+    if (building) {
+      const which = building.name
+        ? `${building.name} (building ID: ${building.id})`
+        : `building ID: ${building.id}`;
+      systemPrompt += `\n\nUser is viewing ${which}. They may have questions about this specific building.`;
     }
 
     // Format messages for the API
@@ -116,11 +141,6 @@ export async function POST(req: Request) {
     };
     req.signal.addEventListener("abort", onRequestAbort, { once: true });
 
-    // Everything the transcript needs, filled in as the turn runs and written
-    // once at the end via after(), so persistence never delays a token.
-    const sessionKey = isValidSessionKey(body.session_key) ? body.session_key : null;
-    const lastUserMessage =
-      [...body.messages].reverse().find((m) => m.role === "user")?.content ?? "";
     const loggedTools: LoggedToolCall[] = [];
     const transcript = { answer: "", error: null as string | null };
 
@@ -164,6 +184,14 @@ export async function POST(req: Request) {
 
             let content = "";
             const partialToolCalls: AccumulatedToolCall[] = [];
+            // Each round's text is its own paragraph; back to back they read
+            // "Let me check.Here are…".
+            const separator =
+              !transcript.answer || transcript.answer.endsWith("\n\n")
+                ? ""
+                : transcript.answer.endsWith("\n")
+                  ? "\n"
+                  : "\n\n";
 
             for await (const chunk of completion) {
               if (abort.signal.aborted) break;
@@ -171,6 +199,10 @@ export async function POST(req: Request) {
               if (!delta) continue;
 
               if (delta.content) {
+                if (!content && separator) {
+                  transcript.answer += separator;
+                  send({ type: "content", content: separator });
+                }
                 content += delta.content;
                 transcript.answer += delta.content;
                 send({ type: "content", content: delta.content });
@@ -262,7 +294,7 @@ export async function POST(req: Request) {
               logChatTurn({
                 sessionKey,
                 surface: "chat",
-                buildingId: body.building_id ?? null,
+                buildingId: building?.id ?? null,
                 citySlug: body.city_slug ?? null,
                 userMessage: lastUserMessage,
                 assistantMessage: transcript.answer,

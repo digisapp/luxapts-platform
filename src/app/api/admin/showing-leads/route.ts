@@ -123,6 +123,9 @@ export async function GET(req: Request) {
       `, { count: "exact" })
       .order("preferred_date", { ascending: true })
       .order("preferred_time", { ascending: true })
+      // Since migration 033 a lead keeps its cancelled claims beside the live
+      // one, so showing_claims embeds as an array — newest claim first.
+      .order("claimed_at", { referencedTable: "showing_claims", ascending: false })
       .range(offset, offset + limit - 1);
 
     if (status) {

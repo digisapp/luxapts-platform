@@ -3,7 +3,8 @@ import { scrapeStatusOf } from "@/lib/scraper/db";
 import { createAdminClient } from "@/lib/supabase/server";
 import { checkAdminAuth } from "@/lib/admin/auth";
 import { apiError } from "@/lib/api-helpers";
-import { getFirstRelation } from "@/lib/db-helpers";
+import { fetchAllRows, getFirstRelation } from "@/lib/db-helpers";
+import { safeParseInt } from "@/lib/utils";
 
 // Admin endpoint for viewing and managing scraping status
 
@@ -17,40 +18,15 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const citySlug = url.searchParams.get("city");
     const status = url.searchParams.get("status"); // 'pending', 'success', 'failed'
+    // Optional cap on the returned list. It used to cap the query, unordered:
+    // the dashboard asked for 200 of 244 active buildings, so an arbitrary 44
+    // never appeared, and the summary and status filter only saw the rest.
     const limitParam = url.searchParams.get("limit");
-
-    const limit = limitParam ? parseInt(limitParam) : 50;
+    const limit = limitParam ? safeParseInt(limitParam, 50, 1, 5000) : null;
 
     const supabase = createAdminClient();
 
-    // Get scraping status with building info
-    let query = supabase
-      .from("buildings")
-      .select(`
-        id,
-        name,
-        website_url,
-        status,
-        cities:city_id (name, slug),
-        neighborhoods:neighborhood_id (name, slug),
-        building_scrape_status (
-          scrape_enabled,
-          amenities_scraped_at,
-          amenities_scrape_success,
-          amenities_scrape_error,
-          units_scraped_at,
-          units_scrape_success,
-          units_scrape_error,
-          units_found,
-          images_scraped_at,
-          images_scrape_success,
-          images_scrape_error,
-          images_found,
-          updated_at
-        )
-      `)
-      .eq("status", "active");
-
+    let cityId: string | null = null;
     if (citySlug) {
       const { data: city } = await supabase
         .from("cities")
@@ -59,19 +35,57 @@ export async function GET(req: Request) {
         .single();
 
       if (city) {
-        query = query.eq("city_id", city.id);
+        cityId = city.id;
       }
     }
 
-    const { data: buildings, error } = await query.limit(limit);
+    // Get scraping status with building info, every active building
+    let queryError: unknown = null;
+    const buildings = await fetchAllRows((from, to) => {
+      let query = supabase
+        .from("buildings")
+        .select(`
+          id,
+          name,
+          website_url,
+          status,
+          cities:city_id (name, slug),
+          neighborhoods:neighborhood_id (name, slug),
+          building_scrape_status (
+            scrape_enabled,
+            amenities_scraped_at,
+            amenities_scrape_success,
+            amenities_scrape_error,
+            units_scraped_at,
+            units_scrape_success,
+            units_scrape_error,
+            units_found,
+            images_scraped_at,
+            images_scrape_success,
+            images_scrape_error,
+            images_found,
+            updated_at
+          )
+        `)
+        .eq("status", "active");
+      if (cityId) query = query.eq("city_id", cityId);
+      return query
+        .order("name")
+        .order("id")
+        .range(from, to)
+        .then((res) => {
+          if (res.error) queryError = res.error;
+          return res;
+        });
+    });
 
-    if (error) {
-      console.error("Admin scrape query error:", error);
+    if (queryError) {
+      console.error("Admin scrape query error:", queryError);
       return apiError("Internal server error", 500);
     }
 
     // Process and filter buildings
-    const processed = (buildings || []).map((b) => {
+    const processed = buildings.map((b) => {
       const scrapeStatus = scrapeStatusOf(b);
       const city = getFirstRelation(b.cities);
       const neighborhood = getFirstRelation(b.neighborhoods);
@@ -147,7 +161,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       summary,
-      buildings: filtered,
+      buildings: limit ? filtered.slice(0, limit) : filtered,
       recent_jobs: recentJobs || [],
     });
   } catch (error) {

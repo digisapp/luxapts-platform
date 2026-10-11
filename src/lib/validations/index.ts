@@ -28,7 +28,12 @@ const citySlugSchema = z
 
 // ---- Lead creation ----
 
-export const createLeadSchema = z.object({
+/**
+ * Every lead field, without the contact requirement. Stacy adding details to
+ * a lead her conversation already saved validates against this; creating one
+ * goes through createLeadSchema.
+ */
+export const leadFieldsSchema = z.object({
   source: z.enum(["web_form", "chat", "voice"], {
     message: "Source must be web_form, chat, or voice",
   }),
@@ -63,7 +68,9 @@ export const createLeadSchema = z.object({
     .max(20)
     .optional(),
   conversation_summary: z.string().max(10000).optional(),
-})
+});
+
+export const createLeadSchema = leadFieldsSchema
   // leads carries a CHECK (user_email is not null or user_phone is not null);
   // without this refine an email-less, phone-less lead reached Postgres and
   // came back as an opaque 500 instead of a 400 the caller can act on.
@@ -170,6 +177,8 @@ export const micrositeAnalyticsSchema = z.discriminatedUnion("type", [
       "call_click",
       "chat_open",
       "chat_message",
+      // Generated microsites' live-availability strip reports when it renders.
+      "inventory_shown",
     ]),
     properties: z.record(z.string(), z.unknown()).optional(),
   }),
@@ -245,7 +254,15 @@ export const chatRequestSchema = z.object({
     .min(1, "At least one message is required")
     .max(50, "Too many messages. Maximum 50 allowed."),
   city_slug: citySlugSchema.optional(),
-  building_id: uuidSchema.optional(),
+  // The /buildings/<segment> the widget is on: a slug since migration 026,
+  // still a UUID on old links. The route resolves it to the real row id.
+  building_id: z
+    .string()
+    .regex(
+      /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[a-z0-9-]{1,120})$/i,
+      "Invalid building"
+    )
+    .optional(),
   // Client-generated, stable for one conversation, so a multi-turn chat is
   // stored as one transcript rather than one row per request.
   session_key: z

@@ -178,7 +178,6 @@ export async function POST(req: Request) {
             type: "images",
             success: false,
             error: imageResult.error,
-            websiteUrl: building.website_url!,
           });
 
           results.push({
@@ -212,7 +211,6 @@ export async function POST(req: Request) {
           type: "images",
           success: true,
           imagesFound: imagesSaved,
-          websiteUrl: building.website_url!,
         });
 
         results.push({
@@ -232,7 +230,6 @@ export async function POST(req: Request) {
           type: "images",
           success: false,
           error: errMsg,
-          websiteUrl: building.website_url!,
         });
 
         results.push({

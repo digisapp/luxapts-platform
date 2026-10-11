@@ -2,18 +2,20 @@ import { NextRequest } from "next/server";
 import { apiError, apiSuccess } from "@/lib/api-helpers";
 import { checkShowerAuth } from "@/lib/shower/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { PASSING_SCORE, gradeQuiz, quizBreakdown, type QuizQuestion } from "@/lib/shower/quiz";
 import { z } from "zod";
 
 const submitQuizSchema = z.object({
   answers: z.array(z.number().int().min(0)),
 });
 
-const PASSING_SCORE = 70; // percent
-
 // Minimum wait between a failed attempt and the next one. Without it the quiz
 // could be brute-forced in a tight loop (and, before this route stopped
 // returning the answer key on failures, harvested in a single attempt).
 const RETRY_COOLDOWN_MS = 10 * 60 * 1000;
+
+const cooldownMessage = (seconds: number) =>
+  `Please wait ${Math.max(1, Math.ceil(seconds / 60))} minute(s) before retrying this quiz.`;
 
 // GET /api/shower/certifications/[buildingId]/quiz — load questions to take
 // the quiz. Never returns correct_index (that would defeat the cert gate).
@@ -96,11 +98,7 @@ export async function POST(
       return apiError("No certification content found for this building", 404);
     }
 
-    const questions = content.quiz_questions as Array<{
-      question: string;
-      options: string[];
-      correct_index: number;
-    }>;
+    const questions = content.quiz_questions as QuizQuestion[];
 
     if (!questions.length) {
       return apiError("No quiz questions available", 400);
@@ -130,38 +128,43 @@ export async function POST(
     const isExpired = existing?.expires_at ? new Date(existing.expires_at) < new Date() : false;
     const needsKnowledgePass = !existing?.knowledge_passed_at || isExpired;
 
-    // Rate-limit retries after a failed attempt. Read separately and
-    // tolerantly: knowledge_last_attempt_at arrives in migration 024, and a
-    // missing column must not take the whole quiz down.
+    // Rate-limit retries. The cooldown is claimed with ONE conditional UPDATE
+    // before grading: a read-then-stamp check let N parallel submissions all
+    // pass and all be graded, and comparing their scores revealed the key.
+    // Exactly one concurrent request can match this row.
+    const attemptAt = new Date().toISOString();
     if (existing && needsKnowledgePass) {
-      const { data: lastAttempt } = await adminClient
+      const cutoff = new Date(Date.now() - RETRY_COOLDOWN_MS).toISOString();
+      const { data: gate, error: gateError } = await adminClient
         .from("shower_certifications")
-        .select("knowledge_last_attempt_at")
+        .update({ knowledge_last_attempt_at: attemptAt })
         .eq("id", existing.id)
-        .maybeSingle();
+        .or(`knowledge_last_attempt_at.is.null,knowledge_last_attempt_at.lt.${cutoff}`)
+        .select("id");
 
-      const lastAt = lastAttempt?.knowledge_last_attempt_at
-        ? new Date(lastAttempt.knowledge_last_attempt_at).getTime()
-        : null;
+      if (gateError) {
+        console.error("Quiz cooldown check error:", gateError);
+        return apiError("Failed to record quiz attempt", 500);
+      }
 
-      if (lastAt !== null && Number.isFinite(lastAt)) {
-        const elapsed = Date.now() - lastAt;
-        if (elapsed >= 0 && elapsed < RETRY_COOLDOWN_MS) {
-          const retryAfter = Math.ceil((RETRY_COOLDOWN_MS - elapsed) / 1000);
-          return apiError(
-            `Please wait ${Math.ceil(retryAfter / 60)} minute(s) before retrying this quiz.`,
-            429
-          );
-        }
+      if (!gate || gate.length !== 1) {
+        const { data: lastAttempt } = await adminClient
+          .from("shower_certifications")
+          .select("knowledge_last_attempt_at")
+          .eq("id", existing.id)
+          .maybeSingle();
+        const lastAt = lastAttempt?.knowledge_last_attempt_at
+          ? new Date(lastAttempt.knowledge_last_attempt_at).getTime()
+          : NaN;
+        const remainingMs = Number.isFinite(lastAt)
+          ? lastAt + RETRY_COOLDOWN_MS - Date.now()
+          : RETRY_COOLDOWN_MS;
+        return apiError(cooldownMessage(remainingMs / 1000), 429);
       }
     }
 
     // Grade the quiz
-    const correctCount = answers.filter(
-      (answer, i) => answer === questions[i].correct_index
-    ).length;
-    const score = Math.round((correctCount / questions.length) * 100);
-    const passed = score >= PASSING_SCORE;
+    const { correctCount, score, passed } = gradeQuiz(questions, answers);
 
     const newAttempts = (existing?.knowledge_attempts || 0) + 1;
     const bestScore = Math.max(score, existing?.knowledge_best_score || 0);
@@ -174,14 +177,13 @@ export async function POST(
       newStatus = content.shadows_required > 0 ? "shadow_pending" : "certified";
     }
 
-    let certificationId = existing?.id ?? null;
-
     if (existing) {
       const { error: updateError } = await adminClient
         .from("shower_certifications")
         .update({
           knowledge_attempts: newAttempts,
           knowledge_best_score: bestScore,
+          knowledge_last_attempt_at: attemptAt,
           ...(knowledgePassedAt ? { knowledge_passed_at: knowledgePassedAt, status: newStatus } : {}),
           ...(knowledgePassedAt && newStatus === "certified" ? {
             certified_at: new Date().toISOString(),
@@ -202,6 +204,7 @@ export async function POST(
           knowledge_attempts: 1,
           knowledge_best_score: score,
           knowledge_passed_at: knowledgePassedAt,
+          knowledge_last_attempt_at: attemptAt,
           shadow_count: 0,
           status: newStatus,
           ...(newStatus === "certified" ? {
@@ -212,34 +215,20 @@ export async function POST(
         .select("id")
         .single();
       if (insertError || !inserted) {
+        // unique(shower_id, building_id): a parallel first attempt won the
+        // insert. Treat this one as inside the cooldown — and say nothing
+        // about how it scored.
+        if (insertError?.code === "23505") {
+          return apiError(cooldownMessage(RETRY_COOLDOWN_MS / 1000), 429);
+        }
         console.error("Quiz attempt insert error:", insertError);
         return apiError("Failed to record quiz attempt", 500);
       }
-      certificationId = inserted.id;
     }
 
-    // Stamp the attempt time for the retry cooldown. Written separately and
-    // tolerantly so a pre-migration-024 database still records the attempt
-    // itself above.
-    if (certificationId) {
-      const { error: stampError } = await adminClient
-        .from("shower_certifications")
-        .update({ knowledge_last_attempt_at: new Date().toISOString() })
-        .eq("id", certificationId);
-      if (stampError) {
-        console.error("Quiz attempt timestamp not recorded:", stampError.message);
-      }
-    }
-
-    // Return score + question breakdown. The answer key is only disclosed once
-    // the shower has actually passed — returning correct_answer on every
-    // failed attempt let anyone harvest the full key in a single submission.
-    const breakdown = questions.map((q, i) => ({
-      question: q.question,
-      your_answer: q.options[answers[i]] || "No answer",
-      ...(passed ? { correct_answer: q.options[q.correct_index] } : {}),
-      correct: answers[i] === q.correct_index,
-    }));
+    // The per-question breakdown (and answer key) only accompanies a pass;
+    // see quizBreakdown.
+    const breakdown = quizBreakdown(questions, answers, passed);
 
     return apiSuccess({
       score,

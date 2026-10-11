@@ -69,6 +69,22 @@ export async function POST(req: Request) {
       case "page_view": {
         const { path, referrer, duration_ms, city_slug } = body.data;
 
+        // The session row is created with page_views_count = 1 and
+        // is_bounce = true, which stands for the landing page. Each later
+        // view in the session bumps the count and clears the bounce. A
+        // page_view carrying duration_ms is the unmount ping for a view that
+        // was already counted (useAnalytics.trackPageDuration), not a new one.
+        let isLaterView = false;
+        if (duration_ms == null) {
+          const { data: earlier } = await supabase
+            .from("page_views")
+            .select("id")
+            .eq("session_id", body.session_id)
+            .is("duration_ms", null)
+            .limit(1);
+          isLaterView = (earlier?.length ?? 0) > 0;
+        }
+
         await supabase.from("page_views").insert({
           session_id: body.session_id,
           user_id: userId,
@@ -79,6 +95,12 @@ export async function POST(req: Request) {
           city_slug,
           duration_ms,
         });
+
+        if (isLaterView) {
+          await supabase.rpc("increment_session_page_views", {
+            p_session_id: body.session_id,
+          });
+        }
         break;
       }
 
@@ -129,7 +151,11 @@ export async function POST(req: Request) {
           utm_campaign,
         } = body.data;
 
-        // Upsert session - create new or update existing
+        // Upsert session - create new or update existing. page_views_count
+        // and is_bounce are left to their defaults (1, true) and only moved
+        // by later page views: setting is_bounce: false here, plus an
+        // increment on this once-per-session event, recorded every session
+        // as 2 pages and no bounce.
         const { error } = await supabase
           .from("user_sessions")
           .upsert(
@@ -144,7 +170,6 @@ export async function POST(req: Request) {
               utm_source,
               utm_medium,
               utm_campaign,
-              is_bounce: false,
             },
             {
               onConflict: "session_id",
@@ -166,11 +191,6 @@ export async function POST(req: Request) {
             utm_campaign,
           });
         }
-
-        // Increment page view count
-        await supabase.rpc("increment_session_page_views", {
-          p_session_id: body.session_id,
-        });
         break;
       }
     }

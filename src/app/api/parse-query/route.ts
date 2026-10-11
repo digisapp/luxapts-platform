@@ -8,6 +8,7 @@ import { getNeighborhoodCatalog, resolveNeighborhoods } from "@/lib/search/neigh
 import { AMENITY_KEYWORDS } from "@/lib/constants/amenities";
 import { canonicalAmenityKey } from "@/lib/search/amenity-filter";
 import { sanitizeMoveInDate } from "@/lib/search/move-in-date";
+import { miamiToday } from "@/lib/chat/miami-time";
 
 const PARSE_MODEL = process.env.XAI_PARSE_MODEL || "grok-4.20-0309-non-reasoning";
 const PARSE_FALLBACK_MODEL = "grok-4.3";
@@ -19,7 +20,10 @@ const AMENITY_KEY_LIST = Object.keys(AMENITY_KEYWORDS).join(", ");
 
 const RequestSchema = z.object({
   query: z.string().min(1).max(500),
-  city_slug: z.string().optional(),
+  // The city the searcher is looking at, so "downtown"/"midtown" resolve
+  // there. Shorthand is normalized; anything that isn't one of our cities is
+  // ignored rather than rejected.
+  city_slug: z.string().max(100).optional(),
 });
 
 // Relative phrasing ("October 1", "next month", "ASAP") can only be resolved
@@ -67,8 +71,10 @@ export async function POST(req: Request) {
     }
 
     const { query } = parsed.data;
-    const contextCity = normalizeCitySlug(parsed.data.city_slug);
-    const today = new Date().toISOString().slice(0, 10);
+    const requestedCity = normalizeCitySlug(parsed.data.city_slug);
+    const contextCity = isKnownCitySlug(requestedCity) ? requestedCity : "";
+    // Miami's date, not UTC's: after 8 PM Eastern "ASAP" became tomorrow.
+    const today = miamiToday();
 
     const client = createXAIClient();
     const messages = [

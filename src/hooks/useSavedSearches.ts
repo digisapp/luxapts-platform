@@ -56,12 +56,16 @@ export function useSavedSearches() {
         if (response.ok) {
           const { searches: dbSearches } = await response.json();
 
-          // Merge local searches to database
+          // Merge local searches to database. Keep the id each upload gets:
+          // removeSearch/toggleEmailAlerts skip the API for local search_… ids,
+          // so an uploaded search left on its local id couldn't be deleted or
+          // muted this session and came back on the next load.
+          const uploadedIds = new Map<string, string>();
           const localSearches = savedSearchesStore.get();
           for (const search of localSearches) {
             const exists = dbSearches.some((s: { name: string }) => s.name === search.name);
             if (!exists) {
-              await fetch("/api/saved-searches", {
+              const res = await fetch("/api/saved-searches", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -70,6 +74,10 @@ export function useSavedSearches() {
                   email_alerts: search.emailAlerts ?? false,
                 }),
               });
+              if (res.ok) {
+                const { search: created } = await res.json();
+                if (created?.id) uploadedIds.set(search.id, created.id);
+              }
             }
           }
 
@@ -96,7 +104,8 @@ export function useSavedSearches() {
             const merged = [...dbItems];
             for (const localSearch of current) {
               if (!dbItems.some((db) => db.name === localSearch.name)) {
-                merged.push(localSearch);
+                const dbId = uploadedIds.get(localSearch.id);
+                merged.push(dbId ? { ...localSearch, id: dbId } : localSearch);
               }
             }
             return merged.slice(0, MAX_SEARCHES);
@@ -201,9 +210,21 @@ export function useSavedSearches() {
     }
   }, [user]);
 
-  const clearAll = useCallback(() => {
+  const clearAll = useCallback(async () => {
     savedSearchesStore.set(() => []);
-  }, []);
+
+    // Signed in, the rows (and their email alerts) live in the database too:
+    // clearing only the local copy brought them back on the next load and
+    // the alert cron kept mailing them.
+    if (user) {
+      try {
+        const res = await fetch("/api/saved-searches?all=true", { method: "DELETE" });
+        if (!res.ok) console.error("Error clearing saved searches from DB:", res.status);
+      } catch (e) {
+        console.error("Error clearing saved searches from DB:", e);
+      }
+    }
+  }, [user]);
 
   return {
     searches,

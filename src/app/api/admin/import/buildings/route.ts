@@ -92,10 +92,17 @@ export async function POST(req: Request) {
         };
 
         if (existing) {
-          // Update existing building
+          // Update existing building. A blank CSV cell means "leave it":
+          // writing the insert defaults nulled its website/policies and set
+          // deliberately deactivated buildings back to "active".
+          const updateData = Object.fromEntries(
+            Object.entries({ ...buildingData, status: row.status }).filter(
+              ([, value]) => value !== null && value !== undefined && value !== ""
+            )
+          );
           const { error } = await supabase
             .from("buildings")
-            .update(buildingData)
+            .update(updateData)
             .eq("id", existing.id);
 
           if (error) throw error;

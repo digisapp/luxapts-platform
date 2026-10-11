@@ -9,9 +9,11 @@ interface LeadEmailButtonProps {
   leadId: string;
   leadName: string | null;
   leadEmail: string;
+  /** Where the lead signed up — the dialog shows the building it sends as */
+  sourceDetail?: string | null;
 }
 
-export function LeadEmailButton({ leadId, leadName, leadEmail }: LeadEmailButtonProps) {
+export function LeadEmailButton({ leadId, leadName, leadEmail, sourceDetail }: LeadEmailButtonProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -26,6 +28,7 @@ export function LeadEmailButton({ leadId, leadName, leadEmail }: LeadEmailButton
         leadId={leadId}
         leadName={leadName}
         leadEmail={leadEmail}
+        sourceDetail={sourceDetail}
       />
     </>
   );

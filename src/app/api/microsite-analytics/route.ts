@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { micrositeAnalyticsSchema } from "@/lib/validations";
-import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
+import { corsHeaders, isAllowedOrigin, originMatches } from "@/lib/microsite-cors";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+import { sanitizeEventProperties } from "./event-properties";
 
 // Traffic tracking for the standalone building microsites. Writes into the
 // platform's own page_views / analytics_events tables tagged with
@@ -15,12 +16,24 @@ function deviceType(ua: string): "desktop" | "tablet" | "mobile" {
   return "desktop";
 }
 
+// The pages send time_on_page with navigator.sendBeacon and a JSON Blob. A
+// beacon always carries credentials and a JSON body is preflighted, so the
+// browser dropped every one: a credentialed request needs Allow-Credentials on
+// the preflight and the response. Safe because corsHeaders echoes only an
+// allowed microsite origin, never "*".
+function beaconCorsHeaders(req: Request): Record<string, string> {
+  const headers = corsHeaders(req);
+  return headers["Access-Control-Allow-Origin"]
+    ? { ...headers, "Access-Control-Allow-Credentials": "true" }
+    : headers;
+}
+
 export async function OPTIONS(req: Request) {
-  return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
+  return new NextResponse(null, { status: 204, headers: beaconCorsHeaders(req) });
 }
 
 export async function POST(req: Request) {
-  const cors = corsHeaders(req);
+  const cors = beaconCorsHeaders(req);
   if (!isAllowedOrigin(req)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -49,6 +62,9 @@ export async function POST(req: Request) {
       );
     }
     const body = parsed.data;
+    if (!originMatches(req, body.domain)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: cors });
+    }
 
     const supabase = createAdminClient();
     const ua = req.headers.get("user-agent") || "";
@@ -67,7 +83,7 @@ export async function POST(req: Request) {
         session_id: body.session_id,
         event_name: body.event_name,
         event_category: body.event_name === "form_submit" ? "conversion" : "engagement",
-        properties: body.properties ?? {},
+        properties: sanitizeEventProperties(body.event_name, body.properties),
         source_domain: body.domain,
       });
     }

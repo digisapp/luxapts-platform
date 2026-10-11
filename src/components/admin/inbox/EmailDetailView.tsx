@@ -19,6 +19,8 @@ interface EmailDetailViewProps {
   onBack: () => void;
   onRetry: () => void;
   onReply: () => void;
+  /** False when there is no one to reply to (a lead alert with no email address). */
+  canReply?: boolean;
   onToggleStar: (_id: string) => void;
   onMarkUnread: (_id: string) => void;
   onSetSpam: (_id: string, _isSpam: boolean) => void;
@@ -130,7 +132,7 @@ function Message({ msg, isLast }: { msg: EmailDetail; isLast: boolean }) {
 
 export function EmailDetailView({
   email, thread, loading, error, sending,
-  onBack, onRetry, onReply, onToggleStar, onMarkUnread, onSetSpam, onDelete, onUseAiDraft, onEditAiDraft,
+  onBack, onRetry, onReply, canReply = true, onToggleStar, onMarkUnread, onSetSpam, onDelete, onUseAiDraft, onEditAiDraft,
   onRegenerateDraft, regenerating, lead, onSetLeadStatus,
 }: EmailDetailViewProps) {
   if (loading && !email) {
@@ -263,9 +265,13 @@ export function EmailDetailView({
       </div>
 
       <div className="border-t border-white/[0.06] px-4 py-3 sm:px-5">
-        <Button onClick={onReply} className="w-full sm:w-auto">
-          <Reply className="h-4 w-4" /> Reply
-        </Button>
+        {canReply ? (
+          <Button onClick={onReply} className="w-full sm:w-auto">
+            <Reply className="h-4 w-4" /> Reply
+          </Button>
+        ) : (
+          <p className="text-sm text-muted-foreground">No email address for this lead. Call or text them instead.</p>
+        )}
       </div>
     </div>
   );

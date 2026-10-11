@@ -99,7 +99,8 @@ export function ScrapingDashboard({ cities }: ScrapingDashboardProps) {
       const params = new URLSearchParams();
       if (cityFilter !== "all") params.set("city", cityFilter);
       if (statusFilter !== "all") params.set("status", statusFilter);
-      params.set("limit", "200");
+      // No limit: the fleet (244 active) outgrew the old 200, and the
+      // route now returns every building that matches.
 
       const res = await fetch(`/api/admin/scrape?${params}`);
       if (res.ok) {

@@ -1,6 +1,13 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess } from "@/lib/api-helpers";
 import { checkShowerAuth, isShowerCertifiedForBuilding } from "@/lib/shower/auth";
+import {
+  LATE_CANCEL_HOURS,
+  cancelNoticeHours,
+  cancelWindowStart,
+  claimBlockedByCancels,
+  storedNoticeHours,
+} from "@/lib/shower/claim-rules";
 import { createAdminClient } from "@/lib/supabase/server";
 
 // POST /api/shower/leads/[id]/claim — claim an open showing lead
@@ -59,6 +66,39 @@ export async function POST(
       return apiError("You already have an active showing. Complete or cancel it before claiming another.", 409);
     }
 
+    // Cancel cap (see claimBlockedByCancels): every claim reveals the renter's
+    // contact details, so claim → cancel must not be repeatable at will. No
+    // re-claiming a lead you cancelled, and too many recent cancels pause
+    // claiming. Fails closed if the history can't be read.
+    const [sameLeadCancel, recentCancels] = await Promise.all([
+      adminClient
+        .from("showing_claims")
+        .select("id")
+        .eq("shower_id", auth.showerId)
+        .eq("showing_lead_id", leadId)
+        .eq("status", "cancelled")
+        .limit(1),
+      adminClient
+        .from("showing_claims")
+        .select("cancelled_at")
+        .eq("shower_id", auth.showerId)
+        .eq("status", "cancelled")
+        .gte("cancelled_at", cancelWindowStart()),
+    ]);
+
+    if (sameLeadCancel.error || recentCancels.error) {
+      console.error("Claim cancel-history error:", sameLeadCancel.error ?? recentCancels.error);
+      return apiError("Failed to claim lead", 500);
+    }
+
+    const cancelBlock = claimBlockedByCancels({
+      cancelledThisLeadBefore: (sameLeadCancel.data ?? []).length > 0,
+      recentCancelledAt: (recentCancels.data ?? []).map((c) => c.cancelled_at as string | null),
+    });
+    if (cancelBlock) {
+      return apiError(cancelBlock.error, cancelBlock.status);
+    }
+
     // Claim atomically — flip lead status open -> claimed as an optimistic
     // lock. A Supabase update matching zero rows returns error: null, so we
     // must inspect the returned rows: exactly one means we won the race.
@@ -93,8 +133,9 @@ export async function POST(
       // 23505 = unique_violation. showing_claims_one_active_per_shower
       // (migration 024) means this shower already holds an active claim —
       // the advisory check above misses that when two claims race. The other
-      // unique constraint on the table is showing_lead_id, i.e. this lead was
-      // claimed before.
+      // is showing_claims_one_live_per_lead (migration 033; before it, a
+      // plain UNIQUE on showing_lead_id that cancelled claims also tripped),
+      // i.e. the lead already has a live claim.
       if (claimError?.code === "23505") {
         const detail = `${claimError.message} ${claimError.details ?? ""}`;
         if (detail.includes("one_active_per_shower")) {
@@ -178,33 +219,47 @@ export async function DELETE(
       return apiError("No active claim found", 404);
     }
 
-    // Calculate notice hours
-    const lead = Array.isArray(claim.showing_leads) ? claim.showing_leads[0] : claim.showing_leads;
-    let noticeHours = 99; // default: plenty of notice
-    if (lead && "preferred_date" in lead && "preferred_time" in lead) {
-      const showingDateTime = new Date(`${lead.preferred_date}T${lead.preferred_time}`);
-      noticeHours = (showingDateTime.getTime() - Date.now()) / (1000 * 60 * 60);
-    }
+    // Notice hours. preferred_date/time are Miami wall clock — parsing them
+    // offset-less read them as UTC on Vercel and under-counted the notice by
+    // 4–5h, issuing late-cancel strikes for cancels made 2–6h ahead.
+    const lead = (Array.isArray(claim.showing_leads) ? claim.showing_leads[0] : claim.showing_leads) as
+      | { preferred_date?: string | null; preferred_time?: string | null }
+      | null;
+    const noticeHours = cancelNoticeHours(lead?.preferred_date, lead?.preferred_time);
 
-    const isLateCancel = noticeHours < 2;
+    const isLateCancel = noticeHours < LATE_CANCEL_HOURS;
 
-    await adminClient
+    // Conditional on the claim still being active, so a double-submitted
+    // cancel can't reopen the lead or issue a strike twice.
+    const { data: cancelledRows, error: cancelError } = await adminClient
       .from("showing_claims")
       .update({
         status: "cancelled",
         cancelled_at: new Date().toISOString(),
-        cancel_notice_hours: Math.max(0, noticeHours),
+        cancel_notice_hours: storedNoticeHours(noticeHours),
         cancel_reason: cancelReason || null,
       })
-      .eq("id", claim.id);
+      .eq("id", claim.id)
+      .eq("status", "active")
+      .select("id");
 
-    // Reopen the lead
+    if (cancelError) {
+      console.error("Cancel claim update error:", cancelError);
+      return apiError("Failed to cancel claim", 500);
+    }
+    if (!cancelledRows || cancelledRows.length !== 1) {
+      return apiError("No active claim found", 404);
+    }
+
+    // Reopen the lead (only from a claimed state — never resurrect a lead an
+    // admin has since cancelled).
     await adminClient
       .from("showing_leads")
       .update({ status: "open" })
-      .eq("id", leadId);
+      .eq("id", leadId)
+      .in("status", ["claimed", "in_progress"]);
 
-    // Issue a warning strike if late cancel (< 2 hours notice)
+    // Issue a warning strike if late cancel (< LATE_CANCEL_HOURS notice)
     if (isLateCancel) {
       const { error: strikeError } = await adminClient.from("shower_strikes").insert({
         shower_id: auth.showerId,

@@ -53,6 +53,42 @@ describe("sanitizeInboundEmailHtml", () => {
   });
 });
 
+describe("inline data: images (Resend returns inline images as data: URIs)", () => {
+  const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
+  for (const [name, sanitize] of [
+    ["sanitizeInboundEmailHtml", sanitizeInboundEmailHtml],
+    ["sanitizeRenderedEmailHtml", sanitizeRenderedEmailHtml],
+  ] as const) {
+    it(`${name}: keeps png, jpeg, gif and webp as an img src`, () => {
+      expect(sanitize(`<img src="${png}" alt="photo">`)).toContain(`src="${png}"`);
+      for (const type of ["jpeg", "jpg", "gif", "webp"]) {
+        const uri = `data:image/${type};base64,AAAA`;
+        expect(sanitize(`<img src="${uri}">`)).toContain(`src="${uri}"`);
+      }
+    });
+
+    it(`${name}: drops SVG and non-image data: URIs, even disguised with whitespace`, () => {
+      for (const src of [
+        "data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+",
+        " data:image/svg+xml;base64,PHN2Zz4=",
+        "data:\timage/svg+xml;base64,PHN2Zz4=",
+        "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==",
+        "data:image/png,not-base64<script>",
+      ]) {
+        const out = sanitize(`<img src="${src}" alt="x">`);
+        expect(out).not.toContain("data:");
+        expect(out).toContain('alt="x"');
+      }
+    });
+
+    it(`${name}: never allows data: outside an img src`, () => {
+      expect(sanitize(`<a href="${png}">x</a>`)).not.toContain("data:");
+      expect(sanitize(`<div src="${png}">x</div>`)).not.toContain("data:");
+    });
+  }
+});
+
 describe("sanitizeDraftHtml", () => {
   it("allows only https and mailto links", () => {
     expect(sanitizeDraftHtml('<a href="https://staycio.com">a</a>')).toContain("https://staycio.com");

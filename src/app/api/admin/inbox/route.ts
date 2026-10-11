@@ -78,7 +78,8 @@ export async function POST(req: NextRequest) {
       replyToEmailId: replyToEmailId ?? null,
     });
 
-    return NextResponse.json({ success: true, id: result.id, threadId: result.threadId });
+    // `warning`: sent, but a queued automatic note could not be pulled back.
+    return NextResponse.json({ success: true, id: result.id, threadId: result.threadId, warning: result.warning ?? null });
   } catch (error) {
     console.error("Send inbox email error:", error);
     return apiError("Failed to send email", 500);

@@ -2,32 +2,42 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { CSVUploader } from "@/components/admin/import/CSVUploader";
 import { CityImporter } from "@/components/admin/import/CityImporter";
 import { generateCSVTemplate } from "@/lib/admin/csv-parser";
+import { devRoutesEnabled } from "@/lib/api-helpers";
 
 export default function ImportPage() {
   const templateContent = generateCSVTemplate();
   const templateBlob = `data:text/csv;charset=utf-8,${encodeURIComponent(templateContent)}`;
+  // The city seeders' routes 404 in production (see /api/import/*): they
+  // re-stamp January rents as current and overwrite live building URLs and
+  // status, so the button that runs them is not offered there either.
+  const showCitySeeder = devRoutesEnabled();
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold sm:text-3xl">Bulk Import</h1>
         <p className="text-muted-foreground">
-          Seed cities from pre-loaded data or upload a custom CSV
+          {showCitySeeder
+            ? "Seed cities from pre-loaded data or upload a custom CSV"
+            : "Upload buildings from a CSV"}
         </p>
       </div>
 
-      {/* City seed importer */}
-      <Card>
-        <CardHeader>
-          <CardTitle>City Data Import</CardTitle>
-          <CardDescription>
-            Import pre-loaded building data for each city. Each import is idempotent — safe to re-run.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CityImporter />
-        </CardContent>
-      </Card>
+      {showCitySeeder && (
+        <Card>
+          <CardHeader>
+            <CardTitle>City Data Import (development only)</CardTitle>
+            <CardDescription>
+              Seeds a development database from the bundled January data. It writes units with
+              those rents as if captured today and overwrites existing buildings&apos; website
+              and status — never run it against production data.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CityImporter />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

@@ -178,18 +178,35 @@ export async function PUT(req: Request) {
   }
 }
 
-// DELETE - Remove a saved search (?id=...)
+// DELETE - Remove a saved search (?id=...), or all of them (?all=true)
 export async function DELETE(req: Request) {
   try {
     const user = await requireUser();
     if (!user) return apiError("Unauthorized", 401);
 
-    const id = new URL(req.url).searchParams.get("id");
+    const params = new URL(req.url).searchParams;
+    const adminClient = createAdminClient();
+
+    // "Clear all" on the saved page. The service-role client bypasses RLS,
+    // so the session user's id is the only thing scoping this delete.
+    if (params.get("all") === "true") {
+      const { error } = await adminClient
+        .from("user_saved_searches")
+        .delete()
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error clearing saved searches:", error);
+        return apiError("Failed to clear searches", 500);
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    const id = params.get("id");
     if (!id || !isValidUUID(id)) {
       return apiError("Valid id query param is required");
     }
 
-    const adminClient = createAdminClient();
     const { error } = await adminClient
       .from("user_saved_searches")
       .delete()

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, X, Send, Loader2, Sparkles, Building2, Minus, Phone } from "lucide-react";
 import { parseSSEStream } from "@/lib/chat/stream-parser";
+import { historyForApi, MAX_MESSAGE_CHARS, type HistoryMessage } from "@/lib/chat/history";
 import { useCompare } from "@/hooks/useCompare";
 import { isPortalRoute } from "@/hooks/portal-routes";
 import { OPEN_CHAT_EVENT } from "@/lib/chat/open-chat";
@@ -20,10 +21,10 @@ function newSessionKey(): string {
   return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
 }
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
+// excluded: shown but never sent back as history — error bubbles, and a user
+// message the server rejected. Re-sending a rejected (e.g. too long) message
+// with every later turn made the whole conversation fail from then on.
+type Message = HistoryMessage;
 
 const SUGGESTED_PROMPTS = [
   "2 bed in Miami with pool, gym, and concierge under $5,000",
@@ -31,9 +32,6 @@ const SUGGESTED_PROMPTS = [
   "Luxury high-rise with doorman and rooftop in Brickell",
   "Studios with in-unit washer dryer in Manhattan",
 ];
-
-// Max messages to send to the API to prevent unbounded context growth
-const MAX_HISTORY_MESSAGES = 20;
 
 /**
  * Phone chat sheet geometry. iOS Safari keeps position:fixed elements on the
@@ -85,6 +83,9 @@ export function ChatWidget() {
   const [loading, setLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [statusText, setStatusText] = useState("Thinking...");
+  // A tool round after text has started: the status stays visible under the
+  // partial answer until the next round's text arrives.
+  const [toolRunning, setToolRunning] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   // Follow new tokens only while the reader is at the bottom, so scrolling up
   // mid-stream to reread something is not yanked back down.
@@ -153,7 +154,7 @@ export function ChatWidget() {
   useEffect(() => {
     const list = listRef.current;
     if (list && stickToBottomRef.current) list.scrollTop = list.scrollHeight;
-  }, [messages, loading]);
+  }, [messages, loading, toolRunning]);
 
   useEffect(() => {
     // Only auto-focus where there is a hardware keyboard: on a phone it would
@@ -183,9 +184,14 @@ export function ChatWidget() {
     // instead of the generic fallback
     let serverErrorMessage: string | null = null;
 
+    let hasStartedResponse = false;
+    // Takes the message out of future history when the turn produced nothing.
+    const excludeUserMessage = () =>
+      setMessages((prev) => prev.map((m) => (m === userMessage ? { ...m, excluded: true } : m)));
+
     try {
-      // Send only the most recent messages to prevent unbounded context
-      const recentMessages = [...messages, userMessage].slice(-MAX_HISTORY_MESSAGES);
+      // Send only the most recent messages, within the API's limits
+      const recentMessages = historyForApi([...messages, userMessage]);
       const res = await fetch("/api/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -213,11 +219,14 @@ export function ChatWidget() {
       if (!reader) throw new Error("No response body");
 
       let assistantContent = "";
-      let hasStartedResponse = false;
 
       await parseSSEStream(reader, {
-        onStatus: (text) => setStatusText(text),
+        onStatus: (text) => {
+          setStatusText(text);
+          setToolRunning(true);
+        },
         onContent: (text) => {
+          setToolRunning(false);
           if (!hasStartedResponse) {
             setMessages((prev) => {
               streamingIndexRef.current = prev.length;
@@ -243,24 +252,30 @@ export function ChatWidget() {
       });
 
       if (!hasStartedResponse) {
+        excludeUserMessage();
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", content: "I couldn't generate a response. Please try again." },
+          { role: "assistant", content: "I couldn't generate a response. Please try again.", excluded: true },
         ]);
       }
     } catch (err) {
       // Aborted by unmount or a newer message — nothing to report
       if (err instanceof DOMException && err.name === "AbortError") return;
+      // A message that got no answer at all isn't part of the conversation;
+      // a partial answer is, so it and its question stay.
+      if (!hasStartedResponse) excludeUserMessage();
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
           content: serverErrorMessage || "Sorry, I encountered an error. Please try again.",
+          excluded: true,
         },
       ]);
     } finally {
       setLoading(false);
       setIsStreaming(false);
+      setToolRunning(false);
       streamingIndexRef.current = null;
     }
   };
@@ -425,7 +440,7 @@ export function ChatWidget() {
                   ))
                 )}
 
-                {loading && (
+                {(loading || toolRunning) && (
                   <div className="flex justify-start">
                     <div className="bg-zinc-800 rounded-2xl px-4 py-3 flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
@@ -445,6 +460,7 @@ export function ChatWidget() {
                     onKeyDown={handleKeyDown}
                     placeholder="Ask about apartments..."
                     enterKeyHint="send"
+                    maxLength={MAX_MESSAGE_CHARS}
                     className="flex-1 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-zinc-600"
                     disabled={loading}
                   />

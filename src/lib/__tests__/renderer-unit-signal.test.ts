@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { looksLikeUnitContent, unitSignalCount } from "@/lib/scraper/renderer";
+import { looksLikeUnitContent, unitSignalCount, settleForUnitContent } from "@/lib/scraper/renderer";
 
 describe("looksLikeUnitContent", () => {
   it("recognises inventory in either word order", () => {
@@ -26,5 +26,45 @@ describe("looksLikeUnitContent", () => {
     const rich = "$4,945 1 bed $5,050 1 bed $5,057 1 bed";
     expect(unitSignalCount(rich)).toBeGreaterThan(unitSignalCount(poor));
     expect(unitSignalCount("no prices here")).toBe(0);
+  });
+});
+
+describe("settleForUnitContent", () => {
+  /** A list of `n` priced one-bedroom rows. */
+  const list = (n: number) => Array.from({ length: n }, (_, i) => `<li>1 bed · $${3000 + i}</li>`).join("");
+
+  /** A fake page whose content() walks through `snapshots`, then repeats the last. */
+  function fakePage(snapshots: string[]) {
+    let calls = 0;
+    const page = {
+      content: async () => snapshots[Math.min(calls++, snapshots.length - 1)],
+      evaluate: async () => {},
+      waitForTimeout: async () => {},
+    };
+    return { page: page as unknown as Parameters<typeof settleForUnitContent>[0], calls: () => calls };
+  }
+
+  it("waits for a lazy list to stop growing instead of taking the first 3 prices", async () => {
+    const { page } = fakePage([list(3), list(5), list(12), list(30), list(59)]);
+    const html = await settleForUnitContent(page, 10_000);
+    expect(unitSignalCount(html)).toBe(59);
+  });
+
+  it("stops after two quiet polls once the list is complete", async () => {
+    const { page, calls } = fakePage([list(20)]);
+    const html = await settleForUnitContent(page, 10_000);
+    expect(unitSignalCount(html)).toBe(20);
+    expect(calls()).toBe(3); // the first look plus two polls with no new prices
+  });
+
+  it("keeps the richest snapshot when a virtualised list drops rows on scroll", async () => {
+    const { page } = fakePage([list(10), list(25), list(18)]);
+    expect(unitSignalCount(await settleForUnitContent(page, 10_000))).toBe(25);
+  });
+
+  it("gives up early on a page with no prices at all", async () => {
+    const { page, calls } = fakePage(["<p>Schedule a tour</p>"]);
+    expect(await settleForUnitContent(page, 10_000)).toBe("<p>Schedule a tour</p>");
+    expect(calls()).toBe(4);
   });
 });

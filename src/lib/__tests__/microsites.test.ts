@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { MICROSITE_DOMAINS, micrositeLeadSchema, micrositeAnalyticsSchema } from "@/lib/validations";
-import { corsHeaders, isAllowedOrigin } from "@/lib/microsite-cors";
+import { corsHeaders, isAllowedOrigin, originMatches, translateProxyHost } from "@/lib/microsite-cors";
 import { telHref, whatsappHref } from "@/lib/utils";
 import { MICROSITE_BUILDINGS, senderIdentityFor } from "@/lib/microsites";
 import { MICROSITE_CATALOG_SLUG } from "@/lib/microsite-inventory";
@@ -182,6 +182,20 @@ describe("microsite origin guard", () => {
       "https://biscayne18.com"
     );
     expect(corsHeaders(req("https://not-ours.example"))).toEqual({});
+  });
+
+  // A visitor who taps "Translate" runs the page's scripts on Google's proxy
+  // host; without these the form fails with "Load failed" and the lead is lost.
+  it("accepts the Google Translate proxy of each microsite, and only its own", () => {
+    expect(translateProxyHost("downtown6miami.com")).toBe("downtown6miami-com.translate.goog");
+    expect(translateProxyHost("a-b.com")).toBe("a--b-com.translate.goog");
+    for (const d of MICROSITE_DOMAINS) {
+      expect(isAllowedOrigin(req(`https://${translateProxyHost(d)}`)), d).toBe(true);
+      expect(isAllowedOrigin(req(`https://${translateProxyHost(`www.${d}`)}`)), `www.${d}`).toBe(true);
+    }
+    expect(originMatches(req("https://downtown6miami-com.translate.goog"), "downtown6miami.com")).toBe(true);
+    expect(originMatches(req("https://downtown6miami-com.translate.goog"), "perrinbrickell.com")).toBe(false);
+    expect(isAllowedOrigin(req("https://not-ours-example.translate.goog"))).toBe(false);
   });
 });
 
