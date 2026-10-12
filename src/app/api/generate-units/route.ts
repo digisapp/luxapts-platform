@@ -212,6 +212,8 @@ export async function POST() {
 }
 
 export async function GET() {
+  if (!devRoutesEnabled()) return notFound();
+
   return NextResponse.json({
     message: "POST to this endpoint to generate units for all buildings",
   });

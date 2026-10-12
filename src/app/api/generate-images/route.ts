@@ -281,6 +281,8 @@ export async function POST() {
 }
 
 export async function GET() {
+  if (!devRoutesEnabled()) return notFound();
+
   const authResult = await checkAdminAuth();
   if (!authResult.isAdmin) {
     return NextResponse.json({ error: authResult.error }, { status: authResult.status });

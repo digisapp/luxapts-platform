@@ -142,6 +142,8 @@ export async function POST() {
 }
 
 export async function GET() {
+  if (!devRoutesEnabled()) return notFound();
+
   return NextResponse.json({
     message: "POST to this endpoint to fix city slugs and create sample units",
   });
