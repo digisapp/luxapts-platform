@@ -291,7 +291,7 @@ export function ChatWidget() {
     ? "bottom-[calc(9.25rem+env(safe-area-inset-bottom,0px))] lg:bottom-[5.75rem]"
     : "bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:bottom-6";
   const headerButton =
-    "flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white sm:h-8 sm:w-8";
+    "flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-8 sm:w-8";
 
   // Don't show on portal pages (admin/shower/partner/agent) — the bubble
   // covers their content on mobile and consumers never see those routes —
@@ -308,7 +308,7 @@ export function ChatWidget() {
       {!isOpen && (!isHome || pastHero) && (
         <button
           onClick={() => setIsOpen(true)}
-          className={`fixed right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-white text-black shadow-lg hover:bg-zinc-100 transition-all hover:scale-105 group lg:right-6 ${
+          className={`fixed right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg shadow-black/20 hover:bg-foreground/85 transition-all hover:scale-105 group lg:right-6 ${
             hasStickyCta ? "max-lg:hidden " : ""
           }${floatOffset}`}
           aria-label="Open AI chat"
@@ -329,7 +329,7 @@ export function ChatWidget() {
           role="dialog"
           aria-label="Chat with Stacy"
           style={sheetBox ? { top: sheetBox.top, height: sheetBox.height } : undefined}
-          className={`fixed z-50 flex flex-col bg-zinc-900 border border-zinc-800 shadow-2xl ${
+          className={`fixed z-50 flex flex-col bg-popover border border-border shadow-2xl ${
             isMinimized
               ? `right-4 w-72 h-14 rounded-2xl lg:right-6 ${floatOffset}`
               : `inset-x-0 rounded-t-2xl ${sheetBox ? "" : "bottom-0 h-[90dvh]"} sm:inset-x-auto sm:bottom-6 sm:right-4 sm:w-[calc(100vw-2rem)] sm:max-w-sm sm:h-[32rem] sm:max-h-[calc(100dvh-6rem)] sm:rounded-2xl lg:right-6`
@@ -337,7 +337,7 @@ export function ChatWidget() {
         >
           {/* Header */}
           <div
-            className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 cursor-pointer"
+            className="flex items-center justify-between px-4 py-3 border-b border-border cursor-pointer"
             onClick={() => isMinimized && setIsMinimized(false)}
           >
             <div className="flex items-center gap-2">
@@ -345,8 +345,8 @@ export function ChatWidget() {
                 <Sparkles className="h-4 w-4 text-black" />
               </div>
               <div>
-                <p className="text-sm font-medium text-white">Stacy</p>
-                <p className="text-xs leading-tight text-zinc-400">Staycio assistant</p>
+                <p className="text-sm font-medium text-foreground">Stacy</p>
+                <p className="text-xs leading-tight text-muted-foreground">Staycio assistant</p>
               </div>
             </div>
             <div className="flex items-center gap-1 -mr-2 sm:mr-0">
@@ -397,20 +397,20 @@ export function ChatWidget() {
                 {messages.length === 0 ? (
                   <div className="space-y-4">
                     <div className="text-center py-4">
-                      <Building2 className="h-10 w-10 mx-auto text-zinc-600 mb-3" />
-                      <p className="text-zinc-400 text-sm px-4">
+                      <Building2 className="h-10 w-10 mx-auto text-muted-foreground/60 mb-3" />
+                      <p className="text-muted-foreground text-sm px-4">
                         Hi, I&apos;m Stacy. I can help you find apartments, compare buildings, and answer questions.
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-xs text-zinc-400 uppercase tracking-wider px-1">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider px-1">
                         Try asking
                       </p>
                       {SUGGESTED_PROMPTS.map((prompt, i) => (
                         <button
                           key={i}
                           onClick={() => handleSend(prompt)}
-                          className="w-full text-left px-3 py-2.5 text-sm text-zinc-300 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors border border-zinc-800"
+                          className="w-full text-left px-3 py-2.5 text-sm text-foreground/80 bg-muted/60 rounded-lg hover:bg-muted transition-colors border border-border"
                         >
                           {prompt}
                         </button>
@@ -428,8 +428,8 @@ export function ChatWidget() {
                       <div
                         className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
                           msg.role === "user"
-                            ? "bg-white text-black"
-                            : "bg-zinc-800 text-zinc-100"
+                            ? "bg-foreground text-background"
+                            : "bg-muted text-foreground"
                         }`}
                       >
                         <p className="text-sm whitespace-pre-wrap leading-relaxed">
@@ -442,16 +442,16 @@ export function ChatWidget() {
 
                 {(loading || toolRunning) && (
                   <div className="flex justify-start">
-                    <div className="bg-zinc-800 rounded-2xl px-4 py-3 flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
-                      <span className="text-sm text-zinc-400">{statusText}</span>
+                    <div className="bg-muted rounded-2xl px-4 py-3 flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">{statusText}</span>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Input */}
-              <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-4 border-t border-zinc-800">
+              <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-4 border-t border-border">
                 <div className="flex gap-2">
                   <Input
                     ref={inputRef}
@@ -461,7 +461,7 @@ export function ChatWidget() {
                     placeholder="Ask about apartments..."
                     enterKeyHint="send"
                     maxLength={MAX_MESSAGE_CHARS}
-                    className="flex-1 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-zinc-600"
+                    className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring"
                     disabled={loading}
                   />
                   <Button
@@ -469,7 +469,7 @@ export function ChatWidget() {
                     disabled={loading || isStreaming || !input.trim()}
                     size="icon"
                     aria-label="Send message"
-                    className="bg-white text-black hover:bg-zinc-200 disabled:opacity-50"
+                    className="bg-foreground text-background hover:bg-foreground/85 disabled:opacity-50"
                   >
                     <Send className="h-4 w-4" />
                   </Button>

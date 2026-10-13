@@ -53,6 +53,12 @@ export async function POST(req: Request) {
     }
     const body = parsed.data;
 
+    // Skipped under `next dev`, like search_events: .env.local points at the
+    // prod database, so local browsing landed in the real traffic numbers.
+    if (process.env.NODE_ENV === "development") {
+      return NextResponse.json({ success: true });
+    }
+
     const userAgent = req.headers.get("user-agent") || "";
     const deviceType = getDeviceType(userAgent);
 

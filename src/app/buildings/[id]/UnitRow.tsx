@@ -59,10 +59,10 @@ export function UnitRow({ unit, hidden = false }: { unit: UnitRowData; hidden?: 
     <li className={cn(hidden && "hidden")}>
       <Link
         href={unit.href}
-        className="group flex min-h-16 items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.015] px-3 py-2.5 outline-none transition-colors hover:border-white/15 hover:bg-white/[0.04] focus-visible:border-white/30 focus-visible:ring-2 focus-visible:ring-white/20 sm:px-4"
+        className="group flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 outline-none transition-colors hover:border-foreground/20 hover:bg-foreground/[0.02] focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-ring sm:px-4"
       >
         {unit.photoUrl && (
-          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-white/[0.04] sm:w-14">
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-muted sm:w-14">
             <SafeImage src={unit.photoUrl} alt="" fill sizes="56px" className="object-cover" />
             {unit.photoCount > 1 && (
               <span className="absolute bottom-0.5 right-0.5 rounded bg-black/75 px-1 text-xs font-medium leading-4 text-white">
@@ -74,9 +74,9 @@ export function UnitRow({ unit, hidden = false }: { unit: UnitRowData; hidden?: 
 
         <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 [grid-template-areas:'unit_price''specs_avail'] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_7.5rem_6.5rem] sm:gap-x-4 sm:[grid-template-areas:'unit_specs_avail_price']">
           <div className="flex min-w-0 items-center gap-2 [grid-area:unit]">
-            <span className="truncate font-medium text-white">{label}</span>
+            <span className="truncate font-medium text-foreground">{label}</span>
             {chip && (
-              <span className="max-w-[7rem] shrink-0 truncate rounded-md border border-white/10 px-1.5 py-px text-xs font-medium text-white/60">
+              <span className="max-w-[7rem] shrink-0 truncate rounded-md border border-border px-1.5 py-px text-xs font-medium text-muted-foreground">
                 {chip}
               </span>
             )}
@@ -89,7 +89,7 @@ export function UnitRow({ unit, hidden = false }: { unit: UnitRowData; hidden?: 
           <span
             className={cn(
               "whitespace-nowrap text-right text-[13px] [grid-area:avail] sm:text-left sm:text-sm",
-              unit.availableNow ? "text-emerald-400" : "text-muted-foreground"
+              unit.availableNow ? "text-positive" : "text-muted-foreground"
             )}
           >
             {unit.availableLabel}
@@ -97,7 +97,7 @@ export function UnitRow({ unit, hidden = false }: { unit: UnitRowData; hidden?: 
 
           <span className="whitespace-nowrap text-right [grid-area:price]">
             {unit.price ? (
-              <span className="font-semibold tabular-nums text-white">
+              <span className="font-semibold tabular-nums text-foreground">
                 {formatPrice(unit.price)}
                 <span className="text-xs font-normal text-muted-foreground">/mo</span>
               </span>
@@ -109,7 +109,7 @@ export function UnitRow({ unit, hidden = false }: { unit: UnitRowData; hidden?: 
 
         <ChevronRight
           aria-hidden="true"
-          className="h-4 w-4 shrink-0 text-white/30 transition-colors group-hover:text-white/70"
+          className="h-4 w-4 shrink-0 text-foreground/30 transition-colors group-hover:text-foreground/70"
         />
       </Link>
     </li>

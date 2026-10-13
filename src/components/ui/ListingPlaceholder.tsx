@@ -22,10 +22,10 @@ function stableIndex(seed: string, length: number): number {
 const TINTS = [
   "from-cyan-500/[0.07] via-transparent to-slate-400/[0.05]",
   "from-slate-400/[0.07] via-transparent to-cyan-500/[0.04]",
-  "from-white/[0.05] via-transparent to-cyan-400/[0.05]",
-  "from-cyan-400/[0.05] via-transparent to-white/[0.04]",
+  "from-foreground/[0.04] via-transparent to-cyan-400/[0.05]",
+  "from-cyan-400/[0.05] via-transparent to-foreground/[0.03]",
   "from-slate-500/[0.07] via-transparent to-cyan-500/[0.03]",
-  "from-white/[0.04] via-transparent to-slate-400/[0.05]",
+  "from-foreground/[0.03] via-transparent to-slate-400/[0.05]",
 ];
 
 export function ListingPlaceholder({
@@ -48,13 +48,13 @@ export function ListingPlaceholder({
       // Decorative: the listing's name is already in the card's text.
       aria-hidden="true"
     >
-      <Building2 className="h-10 w-10 text-white/20" strokeWidth={1.25} />
+      <Building2 className="h-10 w-10 text-foreground/20" strokeWidth={1.25} />
       {showName && name ? (
-        <span className="px-4 text-center text-xs font-medium uppercase tracking-[0.15em] text-white/40 line-clamp-2">
+        <span className="px-4 text-center text-xs font-medium uppercase tracking-[0.15em] text-foreground/40 line-clamp-2">
           {name}
         </span>
       ) : null}
-      <span className="text-xs uppercase tracking-[0.2em] text-white/30">Photo coming soon</span>
+      <span className="text-xs uppercase tracking-[0.2em] text-foreground/35">Photo coming soon</span>
     </div>
   );
 }

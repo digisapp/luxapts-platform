@@ -26,11 +26,11 @@ export function CompareBar() {
     // bar, or the Schedule Tour bar on building pages; both are 4rem plus the
     // home-indicator inset). A flat bottom-16 ignored the inset and slid over
     // the tab bar's icons once Safari's toolbar collapsed.
-    <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:bottom-0 left-0 right-0 z-40 bg-zinc-900 border-t border-zinc-800 shadow-lg lg:pb-[env(safe-area-inset-bottom,0px)]">
+    <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:bottom-0 left-0 right-0 z-40 bg-popover border-t border-border shadow-lg lg:pb-[env(safe-area-inset-bottom,0px)]">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 overflow-x-auto">
-            <div className="flex items-center gap-2 text-sm text-zinc-400 flex-shrink-0">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground flex-shrink-0">
               <GitCompare className="h-4 w-4" />
               <span>Compare ({buildings.length}/{MAX_COMPARE})</span>
             </div>
@@ -39,9 +39,9 @@ export function CompareBar() {
               {buildings.map((building) => (
                 <div
                   key={building.id}
-                  className="flex items-center gap-2 bg-zinc-800 rounded-lg pl-1 pr-2 py-1"
+                  className="flex items-center gap-2 bg-muted rounded-lg pl-1 pr-2 py-1"
                 >
-                  <div className="relative w-8 h-8 rounded overflow-hidden bg-zinc-700 flex-shrink-0">
+                  <div className="relative w-8 h-8 rounded overflow-hidden bg-foreground/10 flex-shrink-0">
                     {building.image ? (
                       <Image
                         src={building.image}
@@ -52,17 +52,17 @@ export function CompareBar() {
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <Building2 className="h-4 w-4 text-zinc-500" />
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
                       </div>
                     )}
                   </div>
-                  <span className="text-sm text-white truncate max-w-[120px]">
+                  <span className="text-sm text-foreground truncate max-w-[120px]">
                     {building.name}
                   </span>
                   <button
                     onClick={() => removeBuilding(building.id)}
                     aria-label="Remove from comparison"
-                    className="flex h-9 w-9 -my-1 -mr-1 items-center justify-center rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                    className="flex h-9 w-9 -my-1 -mr-1 items-center justify-center rounded-full hover:bg-foreground/10 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -76,7 +76,7 @@ export function CompareBar() {
               variant="ghost"
               size="sm"
               onClick={clearAll}
-              className="text-zinc-400 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
             >
               Clear
             </Button>

@@ -12,7 +12,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#000000",
+  themeColor: "#ffffff",
   interactiveWidget: "resizes-content",
 };
 
@@ -23,10 +23,11 @@ export const metadata: Metadata = {
   keywords: ["apartments", "rentals", "NYC", "Miami", "luxury apartments", "apartment search"],
   appleWebApp: {
     capable: true,
-    // "black", not "black-translucent": translucent draws the page under the
-    // status bar in a home-screen launch, and every page's fixed pt-16/pt-20
-    // offset then left its top edge under the clock. The theme is black anyway.
-    statusBarStyle: "black",
+    // "default" (dark text on a light bar), not "black-translucent":
+    // translucent draws the page under the status bar in a home-screen launch,
+    // and every page's fixed pt-16/pt-20 offset then left its top edge under
+    // the clock.
+    statusBarStyle: "default",
     title: "Staycio",
   },
   openGraph: {
@@ -58,9 +59,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body
-        className="antialiased min-h-screen bg-black"
+        className="antialiased min-h-screen bg-background"
       >
         <WebsiteJsonLd />
         <AuthProvider>

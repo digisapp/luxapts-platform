@@ -33,7 +33,7 @@ const DESKTOP_LINKS = [
 ] as const;
 
 const menuRow =
-  "flex min-h-12 items-center gap-3 py-3 text-lg text-zinc-300 hover:text-white transition-colors";
+  "flex min-h-12 items-center gap-3 py-3 text-lg text-foreground/80 hover:text-foreground transition-colors";
 
 const PORTAL_BY_ROLE: Record<string, { href: string; label: string }> = {
   admin: { href: "/admin", label: "Admin Dashboard" },
@@ -86,14 +86,15 @@ export function Header() {
 
   return (
     <header className="fixed top-0 z-50 w-full safe-area-pt">
-      {/* Glass background with subtle gradient */}
-      <div className="absolute inset-0 bg-black/85 backdrop-blur-xl border-b border-white/[0.05]" />
+      {/* Solid, not glass: over the home hero a translucent white bar went
+          grey from the dark photo behind it */}
+      <div className="absolute inset-0 bg-background border-b border-border" />
       <div className="relative mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-10">
           {/* Logo */}
           <Link href="/" className="-my-2 flex items-center gap-2 py-2 group">
-            <StaycioMark className="h-7 w-auto text-white group-hover:opacity-70 transition-opacity" />
-            <span className="text-lg font-medium tracking-tight text-white group-hover:opacity-70 transition-opacity">
+            <StaycioMark className="h-7 w-auto text-foreground group-hover:opacity-70 transition-opacity" />
+            <span className="text-lg font-medium tracking-tight text-foreground group-hover:opacity-70 transition-opacity">
               Staycio
             </span>
           </Link>
@@ -107,7 +108,7 @@ export function Header() {
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
-                    active ? "bg-white/[0.08] text-white" : "text-white/60 hover:text-white"
+                    active ? "bg-foreground/[0.06] text-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {label}
@@ -123,18 +124,18 @@ export function Header() {
           <Link
             href="/favorites"
             aria-label="Favorites"
-            className="relative p-2 text-white/60 hover:text-white transition-colors"
+            className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <Heart className="h-5 w-5" />
             {favoritesCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-white text-black text-[10px] font-semibold w-4 h-4 rounded-full flex items-center justify-center shadow-lg">
+              <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[10px] font-semibold w-4 h-4 rounded-full flex items-center justify-center shadow-lg">
                 {favoritesCount > 9 ? "9+" : favoritesCount}
               </span>
             )}
           </Link>
 
           {loading ? (
-            <div className="w-8 h-8 rounded-full bg-zinc-800 animate-pulse" />
+            <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
           ) : user ? (
             <div className="relative" ref={userMenuRef}>
               <button
@@ -145,7 +146,7 @@ export function Header() {
                 aria-expanded={userMenuOpen}
                 aria-haspopup="true"
                 aria-label={`Account menu for ${userName}`}
-                className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-zinc-600 to-zinc-800 flex items-center justify-center text-white text-sm font-medium">
                   {userInitial}
@@ -158,18 +159,18 @@ export function Header() {
                   onKeyDown={(e) => {
                     if (e.key === "Escape") setUserMenuOpen(false);
                   }}
-                  className="absolute right-0 mt-2 w-56 rounded-xl bg-black/80 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/50 py-1 animate-in fade-in-0 zoom-in-95"
+                  className="absolute right-0 mt-2 w-56 rounded-xl bg-popover/95 backdrop-blur-2xl border border-border shadow-2xl shadow-black/10 py-1 animate-in fade-in-0 zoom-in-95"
                 >
-                  <div className="px-4 py-3 border-b border-white/10">
-                    <p className="text-sm font-medium text-white truncate">{userName}</p>
-                    <p className="text-xs text-white/50 truncate">{user.email}</p>
+                  <div className="px-4 py-3 border-b border-border">
+                    <p className="text-sm font-medium text-foreground truncate">{userName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   </div>
                   {role && PORTAL_BY_ROLE[role] && (
                     <Link
                       href={PORTAL_BY_ROLE[role].href}
                       role="menuitem"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-3 text-sm text-white hover:bg-white/[0.06] transition-colors border-b border-white/10"
+                      className="flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-foreground/[0.05] transition-colors border-b border-border"
                     >
                       <LayoutDashboard className="h-4 w-4" />
                       {PORTAL_BY_ROLE[role].label}
@@ -179,7 +180,7 @@ export function Header() {
                     href="/favorites"
                     role="menuitem"
                     onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-3 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    className="flex items-center gap-2 px-4 py-3 text-sm text-foreground/75 hover:text-foreground hover:bg-foreground/[0.05] transition-colors"
                   >
                     <Heart className="h-4 w-4" />
                     Saved Listings
@@ -188,7 +189,7 @@ export function Header() {
                     href="/account"
                     role="menuitem"
                     onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-3 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    className="flex items-center gap-2 px-4 py-3 text-sm text-foreground/75 hover:text-foreground hover:bg-foreground/[0.05] transition-colors"
                   >
                     <Settings className="h-4 w-4" />
                     Account Settings
@@ -196,7 +197,7 @@ export function Header() {
                   <button
                     role="menuitem"
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground/75 hover:text-foreground hover:bg-foreground/[0.05] transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign Out
@@ -208,13 +209,13 @@ export function Header() {
             <>
               <Link
                 href="/auth/login"
-                className="-my-2 py-3 text-sm text-white/60 hover:text-white transition-colors"
+                className="-my-2 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sign in
               </Link>
               <Link
                 href="/auth/signup"
-                className="text-sm px-5 py-2.5 rounded-full bg-white text-black font-medium hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all"
+                className="text-sm px-5 py-2.5 rounded-full bg-foreground text-background font-medium hover:bg-foreground/85 transition-all"
               >
                 Sign up
               </Link>
@@ -224,7 +225,7 @@ export function Header() {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors -mr-2"
+          className="md:hidden flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] transition-colors -mr-2"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-expanded={mobileMenuOpen}
           aria-controls="mobile-menu"
@@ -244,25 +245,25 @@ export function Header() {
         createPortal(
           <div
             id="mobile-menu"
-            className="md:hidden fixed inset-x-0 bottom-0 top-[calc(4rem+env(safe-area-inset-top,0px))] z-[60] overflow-y-auto overscroll-contain bg-black"
+            className="md:hidden fixed inset-x-0 bottom-0 top-[calc(4rem+env(safe-area-inset-top,0px))] z-[60] overflow-y-auto overscroll-contain bg-background"
           >
             <nav className="flex flex-col px-6 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
               {BROWSE_LINKS.map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href} className={menuRow} onClick={() => setMobileMenuOpen(false)}>
-                  <Icon className="h-5 w-5 text-zinc-500" />
+                  <Icon className="h-5 w-5 text-muted-foreground" />
                   <span className="flex-1">{label}</span>
-                  <ChevronRight className="h-4 w-4 text-zinc-600" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
                 </Link>
               ))}
               <Link href="/favorites" className={menuRow} onClick={() => setMobileMenuOpen(false)}>
-                <Heart className="h-5 w-5 text-zinc-500" />
+                <Heart className="h-5 w-5 text-muted-foreground" />
                 <span className="flex-1">Saved</span>
                 {favoritesCount > 0 && (
                   <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
                     {favoritesCount}
                   </span>
                 )}
-                <ChevronRight className="h-4 w-4 text-zinc-600" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
               </Link>
 
               <div className="mt-6 grid grid-cols-2 gap-3">
@@ -272,14 +273,14 @@ export function Header() {
                     setMobileMenuOpen(false);
                     openChat();
                   }}
-                  className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-zinc-700 text-white hover:bg-white/[0.06] transition-colors"
+                  className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-foreground/20 text-foreground hover:bg-foreground/[0.05] transition-colors"
                 >
                   <MessageCircle className="h-4 w-4" />
                   Ask Stacy
                 </button>
                 <a
                   href={`tel:${STACY_MAIN_LINE.e164}`}
-                  className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-zinc-700 text-white hover:bg-white/[0.06] transition-colors"
+                  className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-foreground/20 text-foreground hover:bg-foreground/[0.05] transition-colors"
                   aria-label={`Call Stacy at ${STACY_MAIN_LINE.display}`}
                 >
                   <Phone className="h-4 w-4" />
@@ -287,7 +288,7 @@ export function Header() {
                 </a>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-zinc-800">
+              <div className="mt-8 pt-6 border-t border-border">
                 {user ? (
                   <>
                     <div className="flex items-center gap-3 py-3">
@@ -295,8 +296,8 @@ export function Header() {
                         {userInitial}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-white font-medium truncate">{userName}</p>
-                        <p className="text-sm text-zinc-400 truncate">{user.email}</p>
+                        <p className="text-foreground font-medium truncate">{userName}</p>
+                        <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                       </div>
                     </div>
                     {role && PORTAL_BY_ROLE[role] && (
@@ -305,12 +306,12 @@ export function Header() {
                         className={menuRow}
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        <LayoutDashboard className="h-5 w-5 text-zinc-500" />
+                        <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
                         {PORTAL_BY_ROLE[role].label}
                       </Link>
                     )}
                     <Link href="/account" className={menuRow} onClick={() => setMobileMenuOpen(false)}>
-                      <Settings className="h-5 w-5 text-zinc-500" />
+                      <Settings className="h-5 w-5 text-muted-foreground" />
                       Account Settings
                     </Link>
                     <button
@@ -320,7 +321,7 @@ export function Header() {
                       }}
                       className={`${menuRow} w-full`}
                     >
-                      <LogOut className="h-5 w-5 text-zinc-500" />
+                      <LogOut className="h-5 w-5 text-muted-foreground" />
                       Sign Out
                     </button>
                   </>
@@ -328,14 +329,14 @@ export function Header() {
                   <div className="grid grid-cols-2 gap-3">
                     <Link
                       href="/auth/login"
-                      className="flex min-h-12 items-center justify-center rounded-full border border-zinc-700 text-white hover:bg-white/[0.06] transition-colors"
+                      className="flex min-h-12 items-center justify-center rounded-full border border-foreground/20 text-foreground hover:bg-foreground/[0.05] transition-colors"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Sign in
                     </Link>
                     <Link
                       href="/auth/signup"
-                      className="flex min-h-12 items-center justify-center rounded-full bg-white text-black font-medium hover:bg-zinc-200 transition-colors"
+                      className="flex min-h-12 items-center justify-center rounded-full bg-foreground text-background font-medium hover:bg-foreground/85 transition-colors"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Sign up
@@ -346,7 +347,7 @@ export function Header() {
 
               <Link
                 href="/about"
-                className="mt-8 text-sm text-zinc-500 hover:text-white transition-colors"
+                className="mt-8 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 About Staycio

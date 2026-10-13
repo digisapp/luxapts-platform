@@ -24,6 +24,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-positive: var(--positive);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -83,13 +85,84 @@
 }
 
 /* ========================================
-   LIQUID GLASS LUXURY THEME
-   Inspired by xAI, Telegram, and modern glassmorphism
+   LIGHT THEME (default)
+   White page, near-black type, zinc greys. Renters compare prices, sizes and
+   policies here, and every rental marketplace they already use is light.
    ======================================== */
 
 :root {
   --radius: 0.75rem;
+  color-scheme: light;
 
+  --background: #ffffff;
+  --foreground: #18181b;
+
+  /* Translucent tints, dark-on-light */
+  --glass-1: rgba(24, 24, 27, 0.02);
+  --glass-2: rgba(24, 24, 27, 0.04);
+  --glass-3: rgba(24, 24, 27, 0.06);
+  --glass-4: rgba(24, 24, 27, 0.1);
+
+  --card: #ffffff;
+  --card-foreground: #18181b;
+
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+
+  /* Primary - near-black button, white label */
+  --primary: #18181b;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+
+  /* zinc-600 on white is 7.7:1, so long muted copy stays readable */
+  --muted: #f4f4f5;
+  --muted-foreground: #52525b;
+
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #e4e4e7;
+  --border-glow: #d4d4d8;
+
+  --input: #ffffff;
+  --ring: rgba(24, 24, 27, 0.25);
+
+  /* Brand cyan, darkened until it reads as text on white (cyan-700, 5.4:1) */
+  --brand: #0e7490;
+  /* Good news: "Available now", "Pricing verified" (emerald-700, 5.5:1) */
+  --positive: #047857;
+
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-cyan: #06b6d4;
+  --accent-pink: #ec4899;
+
+  --chart-1: #2563eb;
+  --chart-2: #16a34a;
+  --chart-3: #d97706;
+  --chart-4: #dc2626;
+  --chart-5: #7c3aed;
+
+  --sidebar: #fafafa;
+  --sidebar-foreground: #18181b;
+  --sidebar-primary: #18181b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: rgba(24, 24, 27, 0.25);
+}
+
+/* Dark: the original black "liquid glass" theme. Kept for the staff portals
+   (wrap them in .dark) and as the way back if light doesn't stick. */
+
+.dark {
+  color-scheme: dark;
   /* Core colors */
   --background: #000000;
   --foreground: #fafafa;
@@ -123,6 +196,9 @@
   /* Accent - liquid highlight */
   --accent: rgba(255, 255, 255, 0.08);
   --accent-foreground: #fafafa;
+
+  --brand: #67e8f9;
+  --positive: #34d399;
 
   /* Destructive */
   --destructive: #ef4444;
@@ -166,7 +242,6 @@
   }
 
   html {
-    color-scheme: dark;
     scroll-behavior: smooth;
     /* iOS Safari: keep text size stable in landscape, no grey tap flash */
     -webkit-text-size-adjust: 100%;
@@ -180,10 +255,6 @@
     overflow-x: clip;
     /* Tame rubber-band scroll chaining behind overlays on iOS */
     overscroll-behavior-y: contain;
-    /* Subtle noise texture for depth */
-    background-image:
-      radial-gradient(ellipse at top, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(6, 182, 212, 0.03) 0%, transparent 50%);
   }
 
   /* Premium selection */
@@ -653,21 +724,21 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
   border-radius: 4px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--foreground) 25%, transparent);
   background-clip: content-box;
 }
 
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-color: color-mix(in srgb, var(--foreground) 15%, transparent) transparent;
 }
 
 /* ========================================

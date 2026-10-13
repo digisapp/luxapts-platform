@@ -289,7 +289,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
       : "AI-powered apartment search";
 
   return (
-    <div className="flex min-h-screen flex-col bg-black">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
 
       <main className="flex-1">
@@ -336,12 +336,12 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
               </div>
             )}
             {/* Scrim stack: flat wash to drop the photos to texture, radial to
-                clear the centre for type, then top and bottom fades so the
-                header and the featured band below both meet pure black. */}
-            <div className="absolute inset-0 bg-black/[0.6]" />
+                clear the centre for type, and a top fade under the header.
+                No bottom fade: the band ends on a clean edge into the white
+                page, the way a photo hero does on any listing site. */}
+            <div className="absolute inset-0 bg-black/[0.5]" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_45%,rgba(0,0,0,0.86)_0%,rgba(0,0,0,0.66)_55%,rgba(0,0,0,0.4)_100%)]" />
             <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-black" />
             {/* Aurora, now over the photography rather than instead of it */}
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-cyan-500/[0.07] rounded-full blur-[120px]" />
             <div className="absolute top-1/2 right-1/4 w-[300px] h-[300px] bg-cyan-500/5 rounded-full blur-[80px]" />
@@ -373,7 +373,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             <div className="max-w-xl mx-auto animate-fade-in [animation-delay:300ms]">
               <div className="relative group">
                 {/* Glow effect on focus */}
-                <div className="absolute -inset-1 bg-cyan-500/20 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                <div className="absolute -inset-1 bg-cyan-400/25 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
                 <div className="relative flex items-center">
                   <input
                     type="text"
@@ -383,7 +383,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                     placeholder="2-bedroom in Miami under $3,500"
                     aria-label="Describe the apartment you want"
                     enterKeyHint="search"
-                    className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-48 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/[0.14] text-white text-base placeholder:text-white/50 focus:outline-none focus:border-white/30 focus:bg-white/[0.09] transition-all duration-300"
+                    className="w-full h-12 sm:h-14 px-5 sm:px-6 pr-14 sm:pr-48 rounded-full bg-white border border-white text-zinc-900 text-base placeholder:text-zinc-500 shadow-xl shadow-black/30 focus:outline-none focus:ring-4 focus:ring-cyan-400/30 transition-all duration-300"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2">
                     {/* Voice Search Button */}
@@ -393,7 +393,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                         className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center transition-all duration-300 ${
                           isListening
                             ? "bg-red-500 text-white animate-pulse"
-                            : "bg-white/[0.08] text-white/60 hover:bg-white/[0.15] hover:text-white"
+                            : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900"
                         }`}
                         aria-label={isListening ? "Stop listening" : "Voice search"}
                       >
@@ -407,7 +407,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                         below it becomes a full-width labelled CTA instead. */}
                     <button
                       onClick={handleSearch}
-                      className="hidden sm:flex h-10 px-5 rounded-full bg-white text-black font-medium text-sm items-center justify-center gap-2 hover:bg-white/90 hover:shadow-lg hover:shadow-white/20 transition-all duration-300"
+                      className="hidden sm:flex h-10 px-5 rounded-full bg-zinc-900 text-white font-medium text-sm items-center justify-center gap-2 hover:bg-zinc-700 transition-all duration-300"
                     >
                       <ArrowRight className="h-4 w-4" />
                       <span className="whitespace-nowrap">Ask Stacy</span>
@@ -461,23 +461,18 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             thing past the gradient is an actual apartment. */}
         {featured.length > 0 && (
           <section className="py-12 sm:py-20 relative overflow-hidden">
-            {/* Background effect */}
-            <div className="absolute inset-0">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-gradient-to-r from-cyan-500/5 to-cyan-500/5 rounded-full blur-[100px]" />
-            </div>
-
             <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6">
               <div className="flex items-end justify-between gap-4 mb-6 sm:mb-10">
                 <div>
                   {/* Solid, not gradient. The gradient belongs to the h1; when
                       every heading has it, it stops reading as an accent. */}
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-medium text-balance text-white">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-medium text-balance text-foreground">
                     Buildings with the most availability
                   </h2>
                 </div>
                 <Link
                   href="/search"
-                  className="inline-flex min-h-11 items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors shrink-0"
+                  className="inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
                 >
                   View all
                   <ArrowRight className="h-4 w-4" />
@@ -489,7 +484,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                   <Link
                     key={building.id}
                     href={buildingPath(building)}
-                    className="group rounded-2xl overflow-hidden bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.18] hover:bg-white/[0.05] transition-colors duration-300"
+                    className="group rounded-2xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-lg hover:shadow-black/[0.06] hover:border-foreground/20 transition-all duration-300"
                   >
                     <div className="relative h-44 sm:h-52 overflow-hidden">
                       <BuildingImage
@@ -498,7 +493,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                         alt={building.name}
                         eager={i < 3}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
                       {building.neighborhood && (
                         <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-xs text-white/90">
                           {building.neighborhood}
@@ -512,26 +507,26 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                     </div>
 
                     <div className="p-5">
-                      <h3 className="text-lg text-white font-medium leading-tight mb-1">{building.name}</h3>
+                      <h3 className="text-lg text-foreground font-medium leading-tight mb-1">{building.name}</h3>
                       {(building.cityName || building.bedRange) && (
-                        <p className="text-sm text-white/70 flex items-center gap-1 mb-4">
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mb-4">
                           <MapPin className="h-3.5 w-3.5 shrink-0" />
                           {building.cityName}
                           {building.cityName && building.bedRange && (
-                            <span aria-hidden="true" className="px-1 text-white/25">·</span>
+                            <span aria-hidden="true" className="px-1 text-foreground/25">·</span>
                           )}
                           {building.bedRange && formatBedRange(building.bedRange)}
                         </p>
                       )}
                       <div className="flex items-center justify-between">
                         {building.minPrice ? (
-                          <p className="text-base text-white/70">
-                            From <span className="text-white font-semibold">{formatPrice(building.minPrice)}</span>/mo
+                          <p className="text-base text-muted-foreground">
+                            From <span className="text-foreground font-semibold">{formatPrice(building.minPrice)}</span>/mo
                           </p>
                         ) : (
-                          <p className="text-base text-white/70">Contact for pricing</p>
+                          <p className="text-base text-muted-foreground">Contact for pricing</p>
                         )}
-                        <ArrowRight className="h-4 w-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all duration-300" />
+                        <ArrowRight className="h-4 w-4 text-foreground/40 group-hover:text-foreground group-hover:translate-x-0.5 transition-all duration-300" />
                       </div>
                     </div>
                   </Link>
@@ -552,10 +547,10 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                 layout accident; an even grid is the same links, deliberate. */}
             <div className="flex items-end justify-between gap-4 mb-6 sm:mb-8">
               <div>
-                <h2 className="text-2xl md:text-3xl font-medium text-white mb-2">
+                <h2 className="text-2xl md:text-3xl font-medium text-foreground mb-2">
                   Or browse by city
                 </h2>
-                <p className="text-white/60">
+                <p className="text-muted-foreground">
                   Prefer to look around yourself? Start here.
                 </p>
               </div>
@@ -564,7 +559,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
               <Link
                 href="/cities"
                 onClick={() => trackHeroEngagement("browse_link")}
-                className="inline-flex min-h-11 items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors shrink-0"
+                className="inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
               >
                 All cities
                 <ArrowRight className="h-4 w-4" />
@@ -577,7 +572,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                   key={city.slug}
                   href={`/cities/${city.slug}`}
                   onClick={() => trackHeroEngagement("browse_link")}
-                  className="px-4 py-3 rounded-full text-center bg-white/[0.03] border border-white/[0.08] text-base text-white/85 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.18] transition-colors duration-300"
+                  className="px-4 py-3 rounded-full text-center bg-background border border-foreground/15 text-base text-foreground/85 hover:text-foreground hover:bg-foreground/[0.04] hover:border-foreground/30 transition-colors duration-300"
                 >
                   {city.name}
                 </Link>
@@ -586,7 +581,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
 
             {neighborhoods.length > 0 && (
               <>
-                <h3 className="mt-10 sm:mt-12 mb-4 sm:mb-5 text-sm uppercase tracking-wider text-white/60">
+                <h3 className="mt-10 sm:mt-12 mb-4 sm:mb-5 text-sm uppercase tracking-wider text-muted-foreground">
                   Popular neighborhoods
                 </h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
@@ -599,16 +594,16 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                           : `/neighborhoods/${n.slug}`
                       }
                       onClick={() => trackHeroEngagement("browse_link")}
-                      className="px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-base text-white/90 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.18] transition-colors duration-300"
+                      className="px-4 py-3 rounded-2xl bg-background border border-foreground/15 text-base text-foreground/90 hover:text-foreground hover:bg-foreground/[0.04] hover:border-foreground/30 transition-colors duration-300"
                     >
                       <span className="block truncate">{n.name}</span>
                       {/* Two lines on phones: a half-width tile cannot fit
                           "Nashville · 114 available", and the count — the
                           reason to tap — was the part that got cut off. */}
-                      <span className="block text-sm text-white/60 sm:truncate">
+                      <span className="block text-sm text-muted-foreground sm:truncate">
                         <span className="block truncate sm:inline">{n.cityName}</span>
-                        {n.cityName && <span aria-hidden="true" className="hidden sm:inline px-1 text-white/25">·</span>}
-                        <span className="block sm:inline text-emerald-300">{n.units} available</span>
+                        {n.cityName && <span aria-hidden="true" className="hidden sm:inline px-1 text-foreground/25">·</span>}
+                        <span className="block sm:inline text-positive">{n.units} available</span>
                       </span>
                     </Link>
                   ))}
@@ -620,19 +615,15 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
 
         {/* Lead capture — the homepage previously had no way to catch anyone
             who did not click straight through to search. */}
-        <section className="py-12 sm:py-20 px-4 sm:px-6 relative overflow-hidden">
-          <div className="absolute inset-0">
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-r from-cyan-500/10 to-cyan-500/5 rounded-full blur-[110px]" />
-          </div>
-
+        <section className="py-12 sm:py-20 px-4 sm:px-6 relative overflow-hidden bg-foreground/[0.02] border-t border-border">
           <div className="relative z-10 max-w-xl mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-medium text-white mb-4">
+              <h2 className="text-3xl md:text-4xl font-medium text-foreground mb-4">
                 Still looking?
                 <br />
                 Let Stacy keep searching.
               </h2>
-              <p className="text-white/60">
+              <p className="text-muted-foreground">
                 Tell her what you&apos;re looking for, and she&apos;ll let you know when something matches — whether it&apos;s a new listing, a price drop, or new availability.
               </p>
             </div>
