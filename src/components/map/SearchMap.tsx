@@ -187,15 +187,27 @@ export function SearchMap({
     const light = currentTheme() === "light";
     mapContainer.current.classList.toggle("map-light", light);
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: light ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11",
-      ...(initial.length > 0
-        ? { bounds: initialBounds, fitBoundsOptions: { padding: paddingRef.current, maxZoom: 15 } }
-        : { center: center ?? DEFAULT_CENTER, zoom }),
-      maxZoom: MAX_ZOOM,
-      attributionControl: false,
-    });
+    // mapbox-gl 3 needs WebGL2 and throws from the constructor without it
+    // (hardware acceleration off or a blocklisted GPU — Chrome no longer falls
+    // back to software — remote desktops, hardened privacy browsers, iOS < 15).
+    // Uncaught, that took the whole search page down to the error screen;
+    // the list works fine without a map.
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: light ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11",
+        ...(initial.length > 0
+          ? { bounds: initialBounds, fitBoundsOptions: { padding: paddingRef.current, maxZoom: 15 } }
+          : { center: center ?? DEFAULT_CENTER, zoom }),
+        maxZoom: MAX_ZOOM,
+        attributionControl: false,
+      });
+    } catch (err) {
+      console.warn("Map unavailable:", err);
+      map.current = null;
+      setMapError("The map can't be shown in this browser.");
+      return;
+    }
 
     // On touch screens rotation/tilt are accidental and a compass is one more
     // control over the pins; mouse users keep the default control
@@ -869,7 +881,7 @@ export function SearchMap({
             role="status"
             className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm dark:bg-zinc-950/80"
           >
-            <p className="text-sm text-foreground/80 dark:text-zinc-300">{mapError} Listings are still available in the list.</p>
+            <p className="max-w-xs px-6 text-center text-sm text-foreground/80 dark:text-zinc-300">{mapError} Listings are still available in the list.</p>
           </div>
         )}
       </div>

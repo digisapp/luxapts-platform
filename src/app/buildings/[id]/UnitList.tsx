@@ -87,7 +87,7 @@ export function UnitList({ units, initialCount = 10 }: UnitListProps) {
                 )}
               >
                 {key === "all" ? "All" : layoutLabel(key)}
-                <span className={cn("tabular-nums", active ? "text-primary-foreground/60 dark:text-black/50" : "text-foreground/40")}>
+                <span className={cn("tabular-nums", active ? "text-primary-foreground/60 dark:text-black/50" : "text-muted-foreground dark:text-foreground/40")}>
                   {count}
                 </span>
               </button>

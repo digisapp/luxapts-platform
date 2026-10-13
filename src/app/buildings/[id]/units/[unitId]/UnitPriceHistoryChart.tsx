@@ -52,7 +52,7 @@ export function UnitPriceHistoryChart({ data }: UnitPriceHistoryProps) {
         {diff > 0 && (
           <div>
             <p className="text-muted-foreground">Change</p>
-            <p className={`font-semibold ${trend > 0 ? "text-red-500" : trend < 0 ? "text-green-600" : ""}`}>
+            <p className={`font-semibold ${trend > 0 ? "text-red-600 dark:text-red-500" : trend < 0 ? "text-positive dark:text-green-600" : ""}`}>
               {trend > 0 ? "+" : trend < 0 ? "-" : ""}{formatPrice(Math.abs(trend))}
             </p>
           </div>

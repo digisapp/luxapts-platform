@@ -79,13 +79,13 @@ export function PriceHistoryChart({
           <CardTitle className="text-base">{title}</CardTitle>
           <div className="flex items-center gap-2">
             {trend === "up" && (
-              <span className="flex items-center gap-1 text-sm text-red-500">
+              <span className="flex items-center gap-1 text-sm text-red-600 dark:text-red-500">
                 <TrendingUp className="h-4 w-4" />
                 +${Math.abs(priceChange).toLocaleString()} ({percentChange.toFixed(1)}%)
               </span>
             )}
             {trend === "down" && (
-              <span className="flex items-center gap-1 text-sm text-green-500">
+              <span className="flex items-center gap-1 text-sm text-positive dark:text-green-500">
                 <TrendingDown className="h-4 w-4" />
                 -${Math.abs(priceChange).toLocaleString()} ({Math.abs(percentChange).toFixed(1)}%)
               </span>
