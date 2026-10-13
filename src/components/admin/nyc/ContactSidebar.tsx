@@ -296,6 +296,7 @@ type Draft = Record<
   | "emails"
   | "source"
   | "kind"
+  | "company"
   | "move_in"
   | "price"
   | "beds"
@@ -313,6 +314,7 @@ function draftOf(c: CrmContact): Draft {
     emails: c.emails.join("\n"),
     source: c.source ?? "",
     kind: c.kind,
+    company: c.company ?? "",
     move_in: c.move_in ?? "",
     price: c.price === null ? "" : String(c.price),
     beds: c.beds === null ? "" : String(c.beds),
@@ -350,6 +352,7 @@ export function DetailsCard({ contact: c, sources, onSave }: DetailsCardProps) {
       emails: lines(draft.emails),
       source: draft.source,
       kind: draft.kind,
+      ...(draft.kind === "broker" ? { company: draft.company } : {}),
       move_in: draft.move_in,
       price,
       beds,
@@ -363,6 +366,7 @@ export function DetailsCard({ contact: c, sources, onSave }: DetailsCardProps) {
 
   const view: [string, React.ReactNode][] = [
     ["Type", KIND_LABEL[c.kind]],
+    ["Firm", c.kind === "broker" ? c.company : null],
     ["Source", c.source],
     ["Previous agent", c.previous_agent],
     ["Added", c.added_at ? new Date(c.added_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" }) : null],
@@ -428,6 +432,12 @@ export function DetailsCard({ contact: c, sources, onSave }: DetailsCardProps) {
               </select>
             </div>
           </div>
+          {draft.kind === "broker" && (
+            <div>
+              <label htmlFor={`${id}-co`} className={fieldLabel}>Firm (agents move: update it if they do)</label>
+              <Input id={`${id}-co`} value={draft.company} onChange={set("company")} maxLength={120} />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label htmlFor={`${id}-addr`} className={fieldLabel}>Listing they asked about</label>

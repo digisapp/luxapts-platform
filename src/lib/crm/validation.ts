@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { normalizeEmail, normalizePhone, uniqueValues } from "./normalize";
 import { crmFiltersSchema } from "./filters";
+import { PARTNER_STATUS_VALUES } from "./recruiting";
 
 export const CONTACT_KINDS = ["renter", "buyer", "broker"] as const;
 
@@ -54,6 +55,8 @@ export const contactPatchSchema = z
     stage: z.string().trim().min(1).max(80),
     source: text(80),
     kind: z.enum(CONTACT_KINDS),
+    company: text(120),
+    partner_status: z.enum(PARTNER_STATUS_VALUES),
     tags: tagList,
     price: z.number().int().min(0).max(100_000_000).nullable(),
     beds: z.number().int().min(0).max(20).nullable(),
@@ -111,13 +114,16 @@ export const bulkSchema = z
   .object({
     ids: z.array(z.uuid()).max(50_000).optional(),
     filters: crmFiltersSchema.optional(),
-    action: z.enum(["stage", "add_tag", "remove_tag", "kind", "delete", "restore", "purge"]),
+    action: z.enum(["stage", "add_tag", "remove_tag", "kind", "partner", "delete", "restore", "purge"]),
     value: z.string().trim().max(80).optional(),
   })
   .refine((b) => !!b.ids !== !!b.filters, { message: "Send ids or filters, not both." })
   .refine((b) => ["delete", "restore", "purge"].includes(b.action) || !!b.value, { message: "This action needs a value." })
   .refine((b) => b.action !== "kind" || (CONTACT_KINDS as readonly string[]).includes(b.value ?? ""), {
     message: "Type must be renter, buyer or broker.",
+  })
+  .refine((b) => b.action !== "partner" || (PARTNER_STATUS_VALUES as readonly string[]).includes(b.value ?? ""), {
+    message: "Unknown recruiting status.",
   });
 
 export const smartListCreateSchema = z.object({

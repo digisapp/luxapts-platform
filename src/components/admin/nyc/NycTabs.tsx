@@ -3,19 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarCheck2, Copy, FileText, Upload, Users } from "lucide-react";
+import { BriefcaseBusiness, CalendarCheck2, Copy, FileText, Upload, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/admin/nyc", label: "People", icon: Users },
   { href: "/admin/nyc/today", label: "Today", icon: CalendarCheck2 },
+  { href: "/admin/nyc/recruiting", label: "Recruiting", icon: BriefcaseBusiness },
   { href: "/admin/nyc/duplicates", label: "Duplicates", icon: Copy },
   { href: "/admin/nyc/templates", label: "Templates", icon: FileText },
   { href: "/admin/nyc/import", label: "Import", icon: Upload },
 ];
 
 /**
- * People · Today · Duplicates · Templates · Import. Today shows how many follow-ups are
+ * People · Today · Recruiting · Duplicates · Templates · Import. Today shows how many follow-ups are
  * due; People how many replies came in over the last three days unanswered.
  */
 export function NycTabs() {

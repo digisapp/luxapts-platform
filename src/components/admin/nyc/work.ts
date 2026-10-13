@@ -10,7 +10,11 @@ export interface WorkContext {
   label: string;
   index: number;
   total: number;
+  /** The page the list lives on, for "back" (default: People). */
+  base?: string;
 }
+
+const BASES = ["/admin/nyc", "/admin/nyc/recruiting"];
 
 export function contactHref(id: string, work?: WorkContext | null, log?: ReachKind): string {
   const params = new URLSearchParams();
@@ -19,6 +23,7 @@ export function contactHref(id: string, work?: WorkContext | null, log?: ReachKi
     params.set("wl", work.label);
     params.set("i", String(work.index));
     params.set("n", String(work.total));
+    if (work.base && work.base !== "/admin/nyc") params.set("wb", work.base);
   }
   if (log) params.set("log", log);
   const qs = params.toString();
@@ -32,11 +37,14 @@ export function readWork(params: Params): WorkContext | null {
   if (query === null) return null;
   const index = Number(params.get("i"));
   const total = Number(params.get("n"));
+  const base = params.get("wb");
   return {
     query,
     label: params.get("wl") || "List",
     index: Number.isInteger(index) && index >= 0 ? index : 0,
     total: Number.isInteger(total) && total >= 0 ? total : 0,
+    // Only known pages, so the URL cannot send "back" anywhere else.
+    ...(base && BASES.includes(base) ? { base } : {}),
   };
 }
 

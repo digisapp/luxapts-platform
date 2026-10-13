@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { NURTURE_STAGE, WORKING_STAGES } from "./stages";
 import { addDays } from "./dates";
+import { PARTNER_STATUS_VALUES } from "./recruiting";
 
 export const TOUCH_FILTERS = ["awaiting", "hot", "warm", "cold", "never", "replied", "stale30", "stale90", "stale180"] as const;
 export const KIND_FILTERS = ["renter", "buyer", "broker", "people"] as const;
@@ -50,6 +51,8 @@ export const crmFiltersSchema = z.object({
   source: z.string().max(80).optional(),
   agent: z.string().max(80).optional(),
   kind: z.enum(KIND_FILTERS).optional(),
+  company: z.string().max(120).optional(),
+  partner: z.enum(PARTNER_STATUS_VALUES).optional(),
   hood: z.string().max(80).optional(),
   budget: z.enum(BUDGET_FILTERS).optional(),
   beds: z.enum(BEDS_FILTERS).optional(),
@@ -160,14 +163,6 @@ export const BUILTIN_LISTS: BuiltinList[] = [
     group: "book",
   },
   {
-    key: "brokers",
-    label: "Brokers",
-    hint: "Other agents who asked about listings. Kept out of the calling lists.",
-    filters: { kind: "broker" },
-    sort: "recent",
-    group: "book",
-  },
-  {
     key: "deleted",
     label: "Recently deleted",
     hint: "Deleted contacts. Restore any of them, or delete them forever from here.",
@@ -201,7 +196,7 @@ type Params = { get(name: string): string | null; getAll(name: string): string[]
 /** Filters from a query string. Invalid values are dropped, not rejected. */
 export function filtersFromParams(params: Params): CrmFilters {
   const raw: Record<string, unknown> = {};
-  for (const key of ["q", "tag", "source", "agent", "kind", "hood", "budget", "beds", "reach", "touch", "lease", "scope", "added"] as const) {
+  for (const key of ["q", "tag", "source", "agent", "kind", "company", "partner", "hood", "budget", "beds", "reach", "touch", "lease", "scope", "added"] as const) {
     const v = params.get(key);
     if (v) raw[key] = v;
   }
@@ -225,6 +220,8 @@ export function filtersToParams(filters: CrmFilters, params = new URLSearchParam
   if (filters.source) params.set("source", filters.source);
   if (filters.agent) params.set("agent", filters.agent);
   if (filters.kind) params.set("kind", filters.kind);
+  if (filters.company) params.set("company", filters.company);
+  if (filters.partner) params.set("partner", filters.partner);
   if (filters.hood) params.set("hood", filters.hood);
   if (filters.budget) params.set("budget", filters.budget);
   if (filters.beds) params.set("beds", filters.beds);
@@ -322,6 +319,8 @@ export function applyContactFilters<T>(query: T, filters: CrmFilters, today: str
   // "people": renters and buyers, i.e. not other brokers.
   if (filters.kind === "people") q = q.neq("kind", "broker");
   else if (filters.kind) q = q.eq("kind", filters.kind);
+  if (filters.company) q = q.eq("company", filters.company);
+  if (filters.partner) q = q.eq("partner_status", filters.partner);
   if (filters.hood) q = q.eq("neighborhood", filters.hood);
 
   if (filters.budget) {

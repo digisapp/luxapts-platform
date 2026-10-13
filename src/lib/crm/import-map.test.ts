@@ -135,6 +135,11 @@ describe("rowToContact", () => {
     expect(c.extra["Agent tags"]).toBe("Alex Rivera");
   });
 
+  it("treats FUB's \"No name\" as no name, so templates say \"Hi there\"", () => {
+    const c = rowToContact(row({ ...base, Name: "No name", "First Name": "No name", "Last Name": "" }), mapping, agents)!;
+    expect([c.first_name, c.last_name]).toEqual([null, null]);
+  });
+
   it("honors FUB's Unsubscribed tag as do-not-contact", () => {
     expect(rowToContact(row({ ...base, Tags: "Unsubscribed" }), mapping, agents)!.do_not_contact).toBe(true);
   });

@@ -32,6 +32,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ [action === "restore" ? "restored" : "deleted"]: data ?? 0 });
     }
 
+    if (action === "partner") {
+      const { data, error } = await supabase.rpc("crm_bulk_set_partner", { p_ids: ids, p_status: value });
+      if (error) throw error;
+      return NextResponse.json({ updated: data ?? 0 });
+    }
+
     if (action === "kind") {
       const { data, error } = await supabase.rpc("crm_bulk_set_kind", { p_ids: ids, p_kind: value });
       if (error) throw error;

@@ -22,6 +22,7 @@ import { displayName, formatPhone, isRelayEmail } from "@/lib/crm/normalize";
 import type { CallOutcome, CrmFacets, CrmSender, CrmTask, CrmTemplate } from "@/lib/crm/types";
 import type { ContactBundle } from "@/lib/crm/service";
 import { StageMenu } from "./StageMenu";
+import { PartnerStatusMenu } from "./PartnerStatusMenu";
 import { ContactTimeline } from "./ContactTimeline";
 import { FollowUpPrompt, QuickLog, type LogKind } from "./QuickLog";
 import {
@@ -207,7 +208,7 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
     setPicker((p) => ({ channel, n: (p?.n ?? 0) + 1 }));
   }
 
-  const backHref = work ? `/admin/nyc?${work.query}` : "/admin/nyc";
+  const backHref = work ? `${work.base ?? "/admin/nyc"}?${work.query}` : c.kind === "broker" ? "/admin/nyc/recruiting" : "/admin/nyc";
 
   return (
     <div className="space-y-5">
@@ -215,7 +216,7 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link href={backHref} className="-my-2 inline-flex items-center gap-2 py-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          {work ? work.label : "NYC Contacts"}
+          {work ? work.label : c.kind === "broker" ? "Recruiting" : "NYC Contacts"}
         </Link>
         {work && (
           <div className="flex items-center gap-2">
@@ -314,6 +315,11 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
             <div className="min-w-0">
               <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
                 <span className="break-words">{name}</span>
+                {c.extra?.["Name guessed from email"] && (
+                  <span className="text-xs font-normal text-muted-foreground" title="Edit the details if this is wrong">
+                    (name guessed from email)
+                  </span>
+                )}
                 {c.do_not_contact && (
                   <span className="inline-flex items-center gap-1 rounded-md bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-200">
                     <Ban className="h-3 w-3" aria-hidden="true" />
@@ -334,6 +340,7 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
                   <span className={cn("rounded-md px-1.5 py-0.5 font-medium", KIND_BADGE[c.kind]!.className)}>{KIND_BADGE[c.kind]!.label}</span>
                 )}
                 {[
+                  c.kind === "broker" ? c.company : null,
                   c.source,
                   c.added_at ? `Inquired ${inquiredFormat.format(new Date(c.added_at))}` : null,
                   c.previous_agent ? `Previously with ${c.previous_agent}` : null,
@@ -342,8 +349,10 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
                   .join(" · ")}
               </p>
               <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm">
-                {touch && <span className={cn("font-medium", TONE_TEXT[touch.tone])}>{touch.label}</span>}
-                {leaseUpSoon(c.added_at, today) && (
+                {/* A broker's status pill says where recruiting stands; their old
+                    listing-inquiry history would read as a contradiction. */}
+                {touch && c.kind !== "broker" && <span className={cn("font-medium", TONE_TEXT[touch.tone])}>{touch.label}</span>}
+                {c.kind === "renter" && leaseUpSoon(c.added_at, today) && (
                   <span className="rounded-md bg-emerald-400/15 px-1.5 py-0.5 text-xs font-medium text-emerald-100">
                     Lease up soon
                   </span>
@@ -351,7 +360,11 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
               </div>
             </div>
           </div>
-          <StageMenu stage={c.stage} present={stagesPresent} who={name} size="md" onChange={(stage) => patch({ stage })} />
+          {c.kind === "broker" ? (
+            <PartnerStatusMenu status={c.partner_status} who={name} size="md" onChange={(partner_status) => patch({ partner_status })} />
+          ) : (
+            <StageMenu stage={c.stage} present={stagesPresent} who={name} size="md" onChange={(stage) => patch({ stage })} />
+          )}
         </div>
 
         {/* Deleted or merged records are reached from the live contact, if at all. */}
@@ -559,7 +572,8 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
           channel={picker.channel}
           contact={c}
           firstName={first}
-          templates={templates}
+          // Renter templates ("Is your lease coming up?") never go to another agent.
+          templates={c.kind === "broker" ? [] : templates}
           sender={sender}
           onSenderSaved={setSender}
           today={today}

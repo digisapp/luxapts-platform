@@ -72,6 +72,12 @@ describe("work links", () => {
     expect(readReach(params)).toBe("call");
   });
 
+  it("returns to the page the list lives on, and only to known pages", () => {
+    const back = new URL(contactHref("abc", { query: "kind=broker", label: "Recruiting", index: 0, total: 5, base: "/admin/nyc/recruiting" }), "https://x").searchParams;
+    expect(readWork(back)?.base).toBe("/admin/nyc/recruiting");
+    expect(readWork(new URLSearchParams("w=a&wb=https://evil.example"))?.base).toBeUndefined();
+  });
+
   it("opens without a list when none is given", () => {
     expect(contactHref("abc")).toBe("/admin/nyc/abc");
     expect(readWork(new URLSearchParams())).toBeNull();

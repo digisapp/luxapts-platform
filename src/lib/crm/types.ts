@@ -17,6 +17,10 @@ export interface CrmContact {
   /** FUB's "Assigned To": who worked them before; history, not ownership. */
   previous_agent: string | null;
   kind: ContactKind;
+  /** Brokers: their firm, from their work email (migration 037). */
+  company: string | null;
+  /** Brokers: where they are in recruiting to Staycio. */
+  partner_status: string | null;
   tags: string[];
   price: number | null;
   beds: number | null;
@@ -52,7 +56,7 @@ export interface CrmContact {
 
 /** What the list shows per row. */
 export const CONTACT_LIST_COLUMNS =
-  "id, first_name, last_name, emails, phones, stage, source, previous_agent, kind, tags, price, beds, property_address, neighborhood, do_not_contact, has_real_email, contacted, last_contacted_at, last_inbound_at, last_activity_at, awaiting_reply, next_task_on, added_at, deleted_at";
+  "id, first_name, last_name, emails, phones, stage, source, previous_agent, kind, company, partner_status, tags, price, beds, property_address, neighborhood, do_not_contact, has_real_email, contacted, last_contacted_at, last_inbound_at, last_activity_at, awaiting_reply, next_task_on, added_at, deleted_at, extra";
 
 export type CrmContactListRow = Pick<
   CrmContact,
@@ -65,6 +69,9 @@ export type CrmContactListRow = Pick<
   | "source"
   | "previous_agent"
   | "kind"
+  | "company"
+  | "partner_status"
+  | "extra"
   | "tags"
   | "price"
   | "beds"
@@ -124,6 +131,12 @@ export interface CrmFacets {
   agents: Facet[];
   tags: Facet[];
   neighborhoods: Facet[];
+  /** Brokers' firms. */
+  companies: Facet[];
+  /** Brokers per recruiting status. */
+  partner: Facet[];
+  /** Neighborhoods brokers asked about. */
+  broker_neighborhoods: Facet[];
 }
 
 export interface CrmTemplate {

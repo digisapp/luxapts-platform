@@ -287,9 +287,11 @@ export function rowToContact(
   };
   const all = (field: ImportField) => (mapping.fields[field] ?? []).map(cell);
 
-  let first = clip(get("first_name"), 80);
-  let last = clip(get("last_name"), 80);
-  const full = get("name");
+  // FUB writes "No name" when it has none; a template would say "Hi No name,".
+  const placeholder = (v: string | null) => (v && /^(no ?name|unknown|n\/?a|none)$/i.test(v.trim()) ? null : v);
+  let first = clip(placeholder(get("first_name")), 80);
+  let last = clip(placeholder(get("last_name")), 80);
+  const full = placeholder(get("name"));
   if (!first && !last && full) {
     const split = splitName(full);
     first = clip(split.first, 80);

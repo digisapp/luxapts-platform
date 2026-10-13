@@ -86,6 +86,9 @@ export async function getFacets(supabase: SupabaseClient): Promise<CrmFacets> {
     agents: f.agents ?? [],
     tags: f.tags ?? [],
     neighborhoods: f.neighborhoods ?? [],
+    companies: f.companies ?? [],
+    partner: f.partner ?? [],
+    broker_neighborhoods: f.broker_neighborhoods ?? [],
   };
 }
 
