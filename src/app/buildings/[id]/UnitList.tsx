@@ -82,12 +82,12 @@ export function UnitList({ units, initialCount = 10 }: UnitListProps) {
                 className={cn(
                   "inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition-colors sm:h-9",
                   active
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-foreground/15 bg-background text-foreground/80 hover:border-foreground/30 hover:text-foreground"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground/80 hover:border-foreground/25 hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:text-white/80 dark:hover:border-white/25"
                 )}
               >
                 {key === "all" ? "All" : layoutLabel(key)}
-                <span className={cn("tabular-nums", active ? "text-background/60" : "text-foreground/40")}>
+                <span className={cn("tabular-nums", active ? "text-primary-foreground/60 dark:text-black/50" : "text-foreground/40")}>
                   {count}
                 </span>
               </button>
@@ -110,7 +110,7 @@ export function UnitList({ units, initialCount = 10 }: UnitListProps) {
           type="button"
           onClick={toggleExpanded}
           aria-expanded={expanded}
-          className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-foreground/15 bg-background text-sm font-medium text-foreground/90 transition-colors hover:border-foreground/30 hover:bg-foreground/[0.04]"
+          className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-medium text-foreground/90 transition-colors hover:border-foreground/25 hover:text-link dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/25 dark:hover:bg-white/[0.06] dark:hover:text-foreground/90"
         >
           {expanded ? "Show fewer" : `Show all ${matching} units`}
           <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} />

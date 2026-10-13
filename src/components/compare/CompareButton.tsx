@@ -55,8 +55,9 @@ export function CompareButton({
         // after: pads the 32px circle's touch target out to 44px
         "relative p-2 rounded-full transition-all after:absolute after:-inset-1.5 after:content-['']",
         isSelected
-          ? "bg-white text-black"
-          : "bg-black/50 text-white hover:bg-black/70",
+          ? "bg-inverse text-white dark:bg-white dark:text-inverse"
+          : // Light: a white circle, matching the favourite button beside it
+            "bg-white/85 text-inverse backdrop-blur-sm hover:bg-white dark:bg-inverse/50 dark:text-white dark:backdrop-blur-none dark:hover:bg-inverse/70",
         className
       )}
       title={isSelected ? "Remove from compare" : "Add to compare"}

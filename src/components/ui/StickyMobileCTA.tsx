@@ -22,7 +22,7 @@ export function StickyMobileCTA({
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 lg:hidden">
       {/* Solid, not translucent: page text showed through behind the price. */}
-      <div className="bg-background border-t border-border px-4 py-3 safe-area-pb">
+      <div className="bg-card border-t border-border px-4 py-3 safe-area-pb dark:bg-background">
         <div className="flex items-center justify-between gap-3">
           {price && (
             <div className="flex-shrink-0">

@@ -5,6 +5,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Minus, Plus } from "lucide-react";
 import { clusterByOverlap } from "./screen-cluster";
+import { currentTheme } from "@/lib/theme";
 
 // Mapbox access token - using public token for client-side
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
@@ -180,9 +181,15 @@ export function SearchMap({
     const initialBounds = new mapboxgl.LngLatBounds();
     initial.forEach((l) => initialBounds.extend([l.lng, l.lat]));
 
+    // Light page, light basemap. Decided once here (client only, so SSR is
+    // untouched); the class scopes the light pin/popup styles below, which
+    // live inside this container.
+    const light = currentTheme() === "light";
+    mapContainer.current.classList.toggle("map-light", light);
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11",
+      style: light ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11",
       ...(initial.length > 0
         ? { bounds: initialBounds, fitBoundsOptions: { padding: paddingRef.current, maxZoom: 15 } }
         : { center: center ?? DEFAULT_CENTER, zoom }),
@@ -611,8 +618,8 @@ export function SearchMap({
 
   if (!MAPBOX_TOKEN) {
     return (
-      <div className={`bg-zinc-900 flex items-center justify-center ${className}`}>
-        <p className="text-zinc-500 text-sm">Map requires Mapbox configuration</p>
+      <div className={`bg-card dark:bg-zinc-900 flex items-center justify-center ${className}`}>
+        <p className="text-muted-foreground dark:text-zinc-500 text-sm">Map requires Mapbox configuration</p>
       </div>
     );
   }
@@ -756,6 +763,83 @@ export function SearchMap({
           color: #71717a;
           font-size: 11px;
         }
+        /* ── Light basemap (container has .map-light): white pills, navy
+           when lit; the dark rules above stay exactly as they were ── */
+        .map-light .cluster-marker,
+        .map-light .single-marker {
+          background: #ffffff;
+          border: 1px solid #e7e7e5;
+          box-shadow: 0 2px 8px rgba(20, 33, 43, 0.12);
+        }
+        .map-light .marker-price {
+          color: #171717;
+        }
+        .map-light .cluster-badge {
+          background: #f3f3f1;
+          color: #171717;
+        }
+        .map-light .single-marker:hover,
+        .map-light .cluster-marker:hover,
+        .map-light .single-marker.highlighted,
+        .map-light .cluster-marker.highlighted,
+        .map-light .single-marker.selected,
+        .map-light .cluster-marker.selected {
+          background: #14212b;
+          border-color: #14212b;
+          box-shadow: 0 6px 16px rgba(20, 33, 43, 0.25);
+        }
+        .map-light .single-marker:hover .marker-price,
+        .map-light .cluster-marker:hover .marker-price,
+        .map-light .single-marker.highlighted .marker-price,
+        .map-light .cluster-marker.highlighted .marker-price,
+        .map-light .single-marker.selected .marker-price,
+        .map-light .cluster-marker.selected .marker-price {
+          color: #ffffff;
+        }
+        .map-light .cluster-marker:hover .cluster-badge,
+        .map-light .cluster-marker.highlighted .cluster-badge,
+        .map-light .cluster-marker.selected .cluster-badge {
+          background: rgba(255, 255, 255, 0.18);
+          color: #ffffff;
+        }
+        /* Count bubbles invert the pills: navy, lit with a Stacy-cyan halo */
+        .map-light .map-cluster {
+          background: #14212b;
+          color: #ffffff;
+          box-shadow: 0 0 0 5px rgba(20, 33, 43, 0.14), 0 4px 14px rgba(20, 33, 43, 0.25);
+          transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+        .map-light .map-cluster:hover,
+        .map-light .map-cluster.highlighted,
+        .map-light .map-cluster.selected {
+          background: #14212b;
+          box-shadow: 0 0 0 5px rgba(34, 211, 238, 0.5), 0 4px 14px rgba(20, 33, 43, 0.25);
+        }
+        .map-light .map-popup-container .mapboxgl-popup-content {
+          background: #ffffff;
+          border: 1px solid #e7e7e5;
+          box-shadow: 0 8px 24px rgba(20, 33, 43, 0.12);
+        }
+        /* Only a bottom-anchored popup's tip points down; the others keep
+           Mapbox's own white tips */
+        .map-light .map-popup-container .mapboxgl-popup-tip {
+          border-top-color: transparent;
+        }
+        .map-light .map-popup-container.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+        .map-light .map-popup-container.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+        .map-light .map-popup-container.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+          border-top-color: #ffffff;
+        }
+        .map-light .map-popup h4,
+        .map-light .map-popup .popup-price {
+          color: #171717;
+        }
+        .map-light .map-popup p {
+          color: #525252;
+        }
+        .map-light .map-popup .popup-neighborhood {
+          color: #737373;
+        }
       `}</style>
       <div className={`relative w-full h-full ${className}`}>
         {/* h-full/w-full, not just inset-0: mapbox-gl.css sets .mapboxgl-map to
@@ -773,7 +857,7 @@ export function SearchMap({
                 type="button"
                 aria-label={label}
                 onClick={onZoom}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-zinc-950/85 text-white shadow-lg shadow-black/40 backdrop-blur-xl transition-transform active:scale-95"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/90 text-foreground shadow-lg shadow-black/10 backdrop-blur-xl transition-transform active:scale-95 dark:border-white/10 dark:bg-zinc-950/85 dark:shadow-black/40"
               >
                 <Icon className="h-4 w-4" />
               </button>
@@ -783,9 +867,9 @@ export function SearchMap({
         {mapError && (
           <div
             role="status"
-            className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm"
+            className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm dark:bg-zinc-950/80"
           >
-            <p className="text-sm text-zinc-300">{mapError} Listings are still available in the list.</p>
+            <p className="text-sm text-foreground/80 dark:text-zinc-300">{mapError} Listings are still available in the list.</p>
           </div>
         )}
       </div>

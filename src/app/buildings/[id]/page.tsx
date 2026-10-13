@@ -562,7 +562,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 {allImages.length > 0 ? (
                   <ImageGallery images={allImages} buildingName={building.name} />
                 ) : (
-                  <div className="relative h-64 md:h-96 rounded-xl overflow-hidden border border-border">
+                  <div className="relative h-64 md:h-96 rounded-xl overflow-hidden border border-border dark:border-white/[0.06]">
                     <ListingPlaceholder seed={building.id} name={building.name} />
                   </div>
                 )}
@@ -574,7 +574,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   <div className="mb-2 flex flex-wrap gap-2">
                     {building.neighborhoods && <Badge>{building.neighborhoods.name}</Badge>}
                     {buildingFacts.move_in_specials && (
-                      <Badge className="bg-brand/10 text-brand border-brand/30">
+                      <Badge className="bg-stacy/10 text-link border-stacy/40 dark:bg-cyan-400/15 dark:border-cyan-400/30">
                         Special offer
                       </Badge>
                     )}
@@ -613,7 +613,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   {(pricingVerified || lastTourDebrief) && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {pricingVerified && latestPriceDate && (
-                        <Badge variant="outline" className="gap-1 border-positive/40 bg-positive/[0.06] text-positive">
+                        <Badge variant="outline" className="gap-1 border-positive/30 bg-positive/[0.06] text-positive dark:border-emerald-700/60 dark:bg-transparent">
                           <BadgeCheck className="h-3.5 w-3.5" />
                           Pricing verified {formatDate(latestPriceDate, buildingTimeZone)}
                         </Badge>
@@ -652,7 +652,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   {unitCount > 0 && (
                     <a
                       href="#available-units"
-                      className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-medium text-brand hover:text-brand/80"
+                      className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-medium text-link hover:text-link/80 dark:hover:text-cyan-200"
                     >
                       {unitCount} unit{unitCount === 1 ? "" : "s"} available
                       <ChevronDown className="h-4 w-4" />
@@ -711,9 +711,9 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
             <div className="min-w-0 space-y-6 lg:col-span-2">
               {/* Move-in Specials */}
               {buildingFacts.move_in_specials && (
-                <Card className="border-brand/25 bg-brand/[0.04]">
+                <Card className="border-stacy/40 bg-stacy/[0.06] dark:border-cyan-400/25 dark:bg-cyan-400/[0.04]">
                   <CardContent className="flex items-start gap-3 p-4 sm:p-5">
-                    <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
+                    <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-link" />
                     <div>
                       <h2 className="font-semibold text-foreground">Move-in special</h2>
                       <p className="mt-1 text-sm text-foreground/80">{buildingFacts.move_in_specials}</p>
@@ -833,7 +833,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                         const name = Array.isArray(am) ? am[0]?.name : am?.name;
                         return (
                           <li key={i} className="flex items-start gap-2.5">
-                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-link" />
                             <div className="min-w-0">
                               <p className="text-sm font-medium">{name}</p>
                               {a.details && (
@@ -881,7 +881,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                       Frequently asked questions about {building.name}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="divide-y divide-border px-4 pb-2 sm:px-6 sm:pb-3">
+                  <CardContent className="divide-y divide-border dark:divide-white/[0.06] px-4 pb-2 sm:px-6 sm:pb-3">
                     {summary.faqs.map((faq) => (
                       <div key={faq.question} className="py-4 first:pt-0">
                         <h3 className="font-semibold text-sm mb-1">{faq.question}</h3>
@@ -936,7 +936,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                     </p>
                   )}
                   {(building.year_built || building.stories) && (
-                    <dl className="space-y-2 border-t border-border pt-4 text-sm">
+                    <dl className="space-y-2 border-t border-border pt-4 dark:border-white/[0.06] text-sm">
                       {building.year_built && (
                         <div className="flex justify-between">
                           <dt className="text-muted-foreground">Year built</dt>

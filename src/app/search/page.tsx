@@ -35,7 +35,7 @@ const SearchMap = dynamic(
   () => import("@/components/map/SearchMap").then((m) => m.SearchMap),
   {
     ssr: false,
-    loading: () => <div className="h-full w-full animate-pulse bg-white/[0.03]" />,
+    loading: () => <div className="h-full w-full animate-pulse bg-muted dark:bg-white/[0.03]" />,
   }
 );
 
@@ -223,7 +223,7 @@ const SORT_SHORT_LABELS: Record<string, string> = {
 // The phone map view fills the space between the fixed header and the fixed
 // bottom tab bar (both h-16 plus their safe-area insets)
 const MOBILE_MAP_VIEW =
-  "fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] z-30 overflow-hidden bg-zinc-950";
+  "fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] z-30 overflow-hidden bg-background dark:bg-zinc-950";
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -892,12 +892,12 @@ function SearchContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-black">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
 
       <main className="flex-1">
         {/* Background effects (clipped: the 500px glow is wider than a phone) */}
-        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <div className="pointer-events-none fixed inset-0 -z-10 hidden overflow-hidden dark:block" aria-hidden="true">
           <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-white/[0.02] rounded-full blur-[100px]" />
         </div>
@@ -915,8 +915,8 @@ function SearchContent() {
             <div className="flex gap-2 mb-2 md:hidden">
               <div className="relative min-w-0 flex-1 group">
                 {smartSearch
-                  ? <Brain className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
-                  : <Sparkles className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
+                  ? <Brain className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-link dark:text-cyan-400" />
+                  : <Sparkles className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-link dark:text-cyan-400" />
                 }
                 <Input
                   type="text"
@@ -926,7 +926,7 @@ function SearchContent() {
                   placeholder={smartSearch ? "Describe what you want" : "Try: 2BR under $3k"}
                   aria-label={smartSearch ? "Describe the apartment you want" : "Search apartments, e.g. 2 bedroom under $3,000"}
                   enterKeyHint="search"
-                  className={`pl-9 pr-3 text-base text-ellipsis placeholder:text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-cyan-500/30" : ""}`}
+                  className={`pl-9 pr-3 text-base text-ellipsis placeholder:text-sm bg-card backdrop-blur-none border-border focus:border-foreground/20 dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border-white/[0.08] ${smartSearch ? "border-stacy/60 dark:border-cyan-500/30" : ""}`}
                 />
               </div>
               <button
@@ -935,7 +935,7 @@ function SearchContent() {
                 aria-pressed={smartSearch}
                 aria-label="Best match mode: rank buildings by how well they fit your description"
                 title={smartSearch ? "Best match is on — tap to go back to exact filters" : "Best match: rank buildings by how well they fit your description"}
-                className={`flex h-11 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors ${smartSearch ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" : "bg-white/[0.03] text-white/60 border-white/[0.08] hover:text-white/80"}`}
+                className={`flex h-11 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors ${smartSearch ? "border-stacy/50 bg-stacy/10 text-link dark:border-cyan-500/40 dark:bg-cyan-500/20 dark:text-cyan-300" : "border-border bg-card text-muted-foreground hover:text-foreground/80 dark:bg-white/[0.03] dark:text-white/60"}`}
               >
                 <Brain className="h-4 w-4" aria-hidden="true" />
                 {/* "Match" on the narrowest phones so the query box keeps room */}
@@ -945,7 +945,7 @@ function SearchContent() {
               <Button
                 size="icon"
                 aria-label={smartSearch ? "Find best matches" : "Search"}
-                className={`shadow-lg bg-cyan-400 text-black hover:bg-cyan-300 shadow-cyan-500/20`}
+                className={`shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-black/10 dark:bg-cyan-400 dark:text-black dark:hover:bg-cyan-300 dark:shadow-cyan-500/20`}
                 onClick={handleAiSearch}
                 disabled={aiParsing || loading}
               >
@@ -959,7 +959,7 @@ function SearchContent() {
               </Button>
             </div>
             {smartSearch && (
-              <p className="mb-2 text-xs text-white/50 md:hidden">
+              <p className="mb-2 text-xs text-muted-foreground md:hidden">
                 Best match: buildings ranked by how well they fit your words. Map, sort and commute
                 work in exact search.
               </p>
@@ -969,10 +969,10 @@ function SearchContent() {
             <div className="flex gap-2 md:hidden">
               <div className="min-w-0 flex-1">
               <Select value={city} onValueChange={handleCityChange}>
-                <SelectTrigger aria-label="City" className="h-11 text-sm bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                <SelectTrigger aria-label="City" className="h-11 text-sm bg-card backdrop-blur-xl border-border dark:bg-white/[0.03] dark:border-white/[0.08]">
                   <SelectValue placeholder="City" />
                 </SelectTrigger>
-                <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
+                <SelectContent className="bg-popover backdrop-blur-xl border-border dark:bg-black/90 dark:border-white/[0.1]">
                   {SEARCH_CITIES.map((c) => (
                     <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
                   ))}
@@ -990,7 +990,7 @@ function SearchContent() {
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 {activeFilterCount > 0 && (
-                  <Badge variant="secondary" className="h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] bg-white/20">
+                  <Badge variant="secondary" className="h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] bg-primary-foreground/20 text-primary-foreground dark:bg-white/20 dark:text-secondary-foreground">
                     {activeFilterCount}
                   </Badge>
                 )}
@@ -1000,7 +1000,7 @@ function SearchContent() {
                 <Button
                   variant={commute ? "default" : "glass"}
                   size="sm"
-                  className={cn("h-11 w-11 px-0", commuteOpen && !commute && "border-white/30 bg-white/[0.12]")}
+                  className={cn("h-11 w-11 px-0", commuteOpen && !commute && "border-foreground/30 bg-foreground/[0.12] dark:border-white/30 dark:bg-white/[0.12]")}
                   aria-label={commute ? "Commute filter (on)" : "Commute filter"}
                   aria-expanded={commuteOpen}
                   aria-controls="commute-filter"
@@ -1036,7 +1036,7 @@ function SearchContent() {
               <div
                 role="group"
                 aria-label="Search mode"
-                className="flex h-12 shrink-0 items-center gap-1 rounded-full border border-white/[0.08] bg-white/[0.03] p-1"
+                className="flex h-12 shrink-0 items-center gap-1 rounded-full border border-border bg-card p-1 dark:bg-white/[0.03]"
               >
                 <button
                   type="button"
@@ -1045,8 +1045,8 @@ function SearchContent() {
                   title="Exact — AI turns your request into filters (city, beds, budget, amenities). Every result matches them."
                   onClick={() => { if (smartSearch) toggleSmartSearch(); }}
                   className={cn(
-                    "flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30",
-                    !smartSearch ? "bg-white/[0.1] text-white" : "text-white/50 hover:text-white/80"
+                    "flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    !smartSearch ? "bg-foreground/[0.1] text-foreground" : "text-muted-foreground hover:text-foreground/80"
                   )}
                 >
                   <Sparkles className="h-4 w-4" aria-hidden="true" />
@@ -1059,8 +1059,8 @@ function SearchContent() {
                   title="Best match — AI ranks buildings by how well they fit your description. Good for vibe, style or lifestyle requests."
                   onClick={() => { if (!smartSearch) toggleSmartSearch(); }}
                   className={cn(
-                    "flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40",
-                    smartSearch ? "bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-500/40" : "text-white/50 hover:text-white/80"
+                    "flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:focus-visible:ring-cyan-400/40",
+                    smartSearch ? "bg-stacy/10 text-link ring-1 ring-stacy/50 dark:bg-cyan-500/15 dark:text-cyan-300 dark:ring-cyan-500/40" : "text-muted-foreground hover:text-foreground/80"
                   )}
                 >
                   <Brain className="h-4 w-4" aria-hidden="true" />
@@ -1072,8 +1072,8 @@ function SearchContent() {
                 <div className={`absolute -inset-1 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 bg-cyan-500/15`} />
                 <div className="relative">
                   {smartSearch
-                    ? <Brain className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" aria-hidden="true" />
-                    : <Sparkles className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-400" aria-hidden="true" />
+                    ? <Brain className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-link dark:text-cyan-400" aria-hidden="true" />
+                    : <Sparkles className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-link dark:text-cyan-400" aria-hidden="true" />
                   }
                   <Input
                     type="text"
@@ -1083,17 +1083,17 @@ function SearchContent() {
                     placeholder={smartSearch ? "Describe your ideal apartment in plain English…" : "Try: '2 bedroom in Miami under $3,500' or 'pet-friendly studio'"}
                     aria-label={smartSearch ? "Describe the apartment you want" : "Search apartments, e.g. 2 bedroom in Miami under $3,500"}
                     enterKeyHint="search"
-                    className={`h-12 pl-10 text-ellipsis bg-white/[0.03] backdrop-blur-xl border-white/[0.08] focus:border-white/20 ${smartSearch ? "border-cyan-500/20" : ""}`}
+                    className={`h-12 pl-10 text-ellipsis bg-card backdrop-blur-none border-border focus:border-foreground/20 dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border-white/[0.08] ${smartSearch ? "border-stacy/50 dark:border-cyan-500/20" : ""}`}
                   />
                 </div>
               </div>
 
               <div className="flex items-center gap-3 md:col-span-3 md:row-start-2 lg:contents">
               <Select value={city} onValueChange={handleCityChange}>
-                <SelectTrigger aria-label="City" className="h-12 w-[180px] shrink-0 lg:w-[160px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                <SelectTrigger aria-label="City" className="h-12 w-[180px] shrink-0 lg:w-[160px] bg-card backdrop-blur-xl border-border dark:bg-white/[0.03] dark:border-white/[0.08]">
                   <SelectValue placeholder="Select city" />
                 </SelectTrigger>
-                <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
+                <SelectContent className="bg-popover backdrop-blur-xl border-border dark:bg-black/90 dark:border-white/[0.1]">
                   {SEARCH_CITIES.map((c) => (
                     <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
                   ))}
@@ -1111,7 +1111,7 @@ function SearchContent() {
                   <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
                   <span>Filters</span>
                   {activeFilterCount > 0 && (
-                    <Badge variant="secondary" className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-white/20">
+                    <Badge variant="secondary" className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-primary-foreground/20 text-primary-foreground dark:bg-white/20 dark:text-secondary-foreground">
                       {activeFilterCount}
                     </Badge>
                   )}
@@ -1133,7 +1133,7 @@ function SearchContent() {
               </div>
 
               <Button
-                className={`h-12 shrink-0 gap-2 shadow-lg bg-cyan-400 text-black hover:bg-cyan-300 shadow-cyan-500/20 md:col-start-3 md:row-start-1`}
+                className={`h-12 shrink-0 gap-2 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-black/10 dark:bg-cyan-400 dark:text-black dark:hover:bg-cyan-300 dark:shadow-cyan-500/20 md:col-start-3 md:row-start-1`}
                 onClick={handleAiSearch}
                 disabled={aiParsing || (smartSearch && loading)}
                 title={smartSearch ? "Rank buildings by how well they fit your description" : "Turn your request into filters and search"}
@@ -1150,7 +1150,7 @@ function SearchContent() {
             </div>
 
             {smartSearch && (
-              <p className="mt-2 hidden text-sm text-white/50 md:block">
+              <p className="mt-2 hidden text-sm text-muted-foreground md:block">
                 Best match ranks buildings by how well they fit your description. Switch to Exact
                 for filters, the map, sorting and commute times.
               </p>
@@ -1158,13 +1158,13 @@ function SearchContent() {
 
             {/* AI Summary Banner */}
             {aiSummary && (
-              <div className="mt-3 flex items-center gap-3 rounded-xl bg-cyan-500/[0.06] backdrop-blur-xl border border-cyan-500/20 p-3 pr-1 md:mt-4 md:p-4">
-                <Sparkles className="h-5 w-5 text-cyan-400 flex-shrink-0" />
-                <p className="text-sm font-medium text-white/90">{aiSummary}</p>
+              <div className="mt-3 flex items-center gap-3 rounded-xl bg-stacy/[0.06] backdrop-blur-xl border border-stacy/30 p-3 pr-1 md:mt-4 md:p-4 dark:bg-cyan-500/[0.06] dark:border-cyan-500/20">
+                <Sparkles className="h-5 w-5 text-link dark:text-cyan-400 flex-shrink-0" />
+                <p className="text-sm font-medium text-foreground/90">{aiSummary}</p>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="ml-auto h-11 w-11 shrink-0 px-0 hover:bg-white/10 md:h-8 md:w-auto md:px-3"
+                  className="ml-auto h-11 w-11 shrink-0 px-0 hover:bg-foreground/10 dark:hover:bg-white/10 md:h-8 md:w-auto md:px-3"
                   aria-label="Clear AI search"
                   onClick={() => {
                     setAiSummary(null);
@@ -1188,21 +1188,21 @@ function SearchContent() {
             {/* Filters Panel — bottom sheet on mobile, inline panel on md+ */}
             {showFilters && (
               <div
-                className="fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm md:hidden"
+                className="fixed inset-0 z-[55] bg-inverse/40 backdrop-blur-sm md:hidden dark:bg-inverse/60"
                 onClick={() => setShowFilters(false)}
                 aria-hidden="true"
               />
             )}
             {showFilters && (
-              <div className="fixed inset-x-0 bottom-0 z-[60] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-2xl border-t border-white/[0.1] bg-zinc-950/95 backdrop-blur-xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] space-y-6 md:static md:z-auto md:mt-4 md:max-h-none md:overflow-visible md:rounded-xl md:border md:border-white/[0.08] md:bg-white/[0.02] md:p-6 md:pb-6">
-                <div className="mx-auto h-1 w-10 rounded-full bg-white/20 md:hidden" aria-hidden="true" />
+              <div className="fixed inset-x-0 bottom-0 z-[60] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-2xl border-t border-border bg-popover backdrop-blur-xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] space-y-6 md:static md:z-auto md:mt-4 md:max-h-none md:overflow-visible md:rounded-xl md:border md:border-border md:bg-card md:p-6 md:pb-6 dark:border-white/[0.1] dark:bg-zinc-950/95 md:dark:border-white/[0.08] md:dark:bg-white/[0.02]">
+                <div className="mx-auto h-1 w-10 rounded-full bg-foreground/20 md:hidden" aria-hidden="true" />
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-white">Filters</h2>
+                  <h2 className="font-semibold text-foreground">Filters</h2>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowFilters(false)}
-                    className="-mr-2 h-11 w-11 px-0 hover:bg-white/10 md:mr-0 md:h-8 md:w-auto md:px-3"
+                    className="-mr-2 h-11 w-11 px-0 hover:bg-foreground/10 dark:hover:bg-white/10 md:mr-0 md:h-8 md:w-auto md:px-3"
                     aria-label="Close filters"
                   >
                     <X className="h-4 w-4" />
@@ -1211,7 +1211,7 @@ function SearchContent() {
 
                 {/* Basic Filters Row */}
                 <div>
-                  <h4 className="text-sm font-medium text-white/50 mb-3">Basic</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Basic</h4>
                   <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div>
                       <label htmlFor="filter-beds-min" className="mb-2 block text-sm font-medium">Beds (min)</label>
@@ -1271,7 +1271,7 @@ function SearchContent() {
 
                 {/* Advanced Filters Row */}
                 <div>
-                  <h4 className="text-sm font-medium text-white/50 mb-3">Advanced</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Advanced</h4>
                   <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
                     {/* Neighborhoods Multi-select */}
                     <div className="relative">
@@ -1351,7 +1351,7 @@ function SearchContent() {
 
                 {/* Amenities */}
                 <div>
-                  <h4 className="text-sm font-medium text-white/50 mb-3">Amenities</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Amenities</h4>
                   <div className="space-y-4">
                     {/* Amenity Multi-select */}
                     <div className="relative">
@@ -1406,12 +1406,12 @@ function SearchContent() {
                           <Badge
                             key={amenity}
                             variant="secondary"
-                            className="gap-1 bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+                            className="gap-1 bg-stacy/10 text-link border-stacy/30 dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/20"
                           >
                             {amenity}
                             <button
                               onClick={() => setSelectedAmenities((prev) => prev.filter((a) => a !== amenity))}
-                              className="-my-3.5 -mr-2.5 ml-0 p-3.5 hover:text-white md:my-0 md:mr-0 md:ml-1 md:p-0"
+                              className="-my-3.5 -mr-2.5 ml-0 p-3.5 hover:text-foreground md:my-0 md:mr-0 md:ml-1 md:p-0"
                               aria-label={`Remove ${amenity}`}
                             >
                               <X className="h-3 w-3" />
@@ -1429,7 +1429,7 @@ function SearchContent() {
                           onCheckedChange={setPetFriendly}
                         />
                         <span className="flex items-center gap-2 text-sm">
-                          <PawPrint className="h-4 w-4 text-white/60" />
+                          <PawPrint className="h-4 w-4 text-muted-foreground dark:text-white/60" />
                           Pet-friendly
                         </span>
                       </label>
@@ -1440,7 +1440,7 @@ function SearchContent() {
                           onCheckedChange={setParkingRequired}
                         />
                         <span className="flex items-center gap-2 text-sm">
-                          <Car className="h-4 w-4 text-white/60" />
+                          <Car className="h-4 w-4 text-muted-foreground dark:text-white/60" />
                           Parking available
                         </span>
                       </label>
@@ -1449,7 +1449,7 @@ function SearchContent() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t border-white/[0.06]">
+                <div className="flex gap-2 pt-4 border-t border-border dark:border-white/[0.06]">
                   <Button
                     onClick={() => {
                       setAiSummary(null);
@@ -1460,7 +1460,7 @@ function SearchContent() {
                         setShowFilters(false);
                       }
                     }}
-                    className="flex-1 md:flex-none bg-white text-black hover:bg-white/90"
+                    className="flex-1 md:flex-none bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     Apply Filters
                   </Button>
@@ -1495,23 +1495,23 @@ function SearchContent() {
               {smartSearch && semanticQuery ? (
                 <>
                   <div className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-cyan-400" aria-hidden="true" />
-                    <h2 className="text-lg font-bold text-white md:text-2xl">
+                    <Brain className="h-5 w-5 text-link dark:text-cyan-400" aria-hidden="true" />
+                    <h2 className="text-lg font-bold text-foreground md:text-2xl">
                       {loading ? "Finding matches…" : `${semanticResults.length} Building${semanticResults.length !== 1 ? "s" : ""} Matched`}
                     </h2>
                   </div>
-                  <p className="text-xs text-white/50 mt-0.5 md:text-sm">
+                  <p className="text-xs text-muted-foreground mt-0.5 md:text-sm">
                     Best match for &ldquo;{semanticQuery}&rdquo;
                   </p>
                 </>
               ) : smartSearch ? (
                 // Best match before a query: the standard count would describe
                 // results that aren't on screen
-                <h2 className="text-lg font-bold text-white md:text-2xl">Best match</h2>
+                <h2 className="text-lg font-bold text-foreground md:text-2xl">Best match</h2>
               ) : (
                 <>
                   {/* h2: the page's single h1 is in search/layout.tsx */}
-                  <h2 className="text-lg font-bold text-white md:text-2xl" aria-live="polite">
+                  <h2 className="text-lg font-bold text-foreground md:text-2xl" aria-live="polite">
                     {loading ? (
                       "Searching..."
                     ) : (
@@ -1524,7 +1524,7 @@ function SearchContent() {
                   </h2>
                   {/* Phone: building count, price date and commute notes on one line */}
                   {!loading && (buildingGroups.length > 1 || capturedAt) && (
-                    <p className="text-xs text-white/60 md:hidden">
+                    <p className="text-xs text-muted-foreground md:hidden dark:text-white/60">
                       {[
                         buildingGroups.length > 1 ? `${buildingGroups.length} buildings` : null,
                         capturedAt
@@ -1541,12 +1541,12 @@ function SearchContent() {
                   )}
                   <div className="hidden md:block">
                     {!loading && buildingGroups.length > 1 && (
-                      <p className="text-sm text-white/60">
+                      <p className="text-sm text-muted-foreground dark:text-white/60">
                         in {buildingGroups.length} buildings
                       </p>
                     )}
                     {capturedAt && (
-                      <p className="text-sm text-white/50">
+                      <p className="text-sm text-muted-foreground">
                         Prices updated {new Date(capturedAt).toLocaleDateString()}
                         {commute && commuteTimes && visibleResults.length < results.length &&
                           ` · ${results.length - visibleResults.length} hidden by commute filter`}
@@ -1569,11 +1569,11 @@ function SearchContent() {
                     className="h-11 w-11 px-0"
                   />
                   <Select value={sort} onValueChange={setSort}>
-                    <SelectTrigger aria-label="Sort results" className="h-11 w-auto gap-1.5 px-3 bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
-                      <ArrowUpDown className="h-4 w-4 shrink-0 text-white/60" aria-hidden="true" />
+                    <SelectTrigger aria-label="Sort results" className="h-11 w-auto gap-1.5 px-3 bg-card backdrop-blur-xl border-border dark:bg-white/[0.03] dark:border-white/[0.08]">
+                      <ArrowUpDown className="h-4 w-4 shrink-0 text-muted-foreground dark:text-white/60" aria-hidden="true" />
                       <span>{SORT_SHORT_LABELS[sort] ?? "Sort"}</span>
                     </SelectTrigger>
-                    <SelectContent className="right-0 w-48 bg-black/90 backdrop-blur-xl border-white/[0.1]">
+                    <SelectContent className="right-0 w-48 bg-popover backdrop-blur-xl border-border dark:bg-black/90 dark:border-white/[0.1]">
                       <SelectItem value="price_low">Price: Low to High</SelectItem>
                       <SelectItem value="price_high">Price: High to Low</SelectItem>
                       <SelectItem value="sqft_high">Largest First</SelectItem>
@@ -1588,10 +1588,10 @@ function SearchContent() {
                     resultCount={results.length}
                   />
                   <Select value={sort} onValueChange={setSort}>
-                    <SelectTrigger aria-label="Sort results" className="flex-1 sm:flex-none sm:w-[180px] bg-white/[0.03] backdrop-blur-xl border-white/[0.08]">
+                    <SelectTrigger aria-label="Sort results" className="flex-1 sm:flex-none sm:w-[180px] bg-card backdrop-blur-xl border-border dark:bg-white/[0.03] dark:border-white/[0.08]">
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
-                    <SelectContent className="bg-black/90 backdrop-blur-xl border-white/[0.1]">
+                    <SelectContent className="bg-popover backdrop-blur-xl border-border dark:bg-black/90 dark:border-white/[0.1]">
                       <SelectItem value="price_low">Price: Low to High</SelectItem>
                       <SelectItem value="price_high">Price: High to Low</SelectItem>
                       <SelectItem value="sqft_high">Largest First</SelectItem>
@@ -1625,8 +1625,8 @@ function SearchContent() {
           {/* Search error banner */}
           {searchError && !loading && (
             <div className="mb-6 flex items-center gap-3 rounded-xl bg-red-500/10 backdrop-blur-xl border border-red-500/20 p-4">
-              <X className="h-5 w-5 text-red-400 flex-shrink-0" />
-              <p className="text-sm font-medium text-red-300">{searchError}</p>
+              <X className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+              <p className="text-sm font-medium text-red-700 dark:text-red-300">{searchError}</p>
               <Button
                 variant="glass"
                 size="sm"
@@ -1670,25 +1670,25 @@ function SearchContent() {
                     ))
                   ) : semanticResults.length === 0 && semanticQuery ? (
                     <div className="col-span-full py-12 text-center">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] mb-4">
-                        <Brain className="h-8 w-8 text-white/30" />
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-card backdrop-blur-xl border border-border mb-4 dark:bg-white/[0.03]">
+                        <Brain className="h-8 w-8 text-foreground/30" />
                       </div>
-                      <h2 className="text-lg font-semibold text-white">No matches found</h2>
-                      <p className="mt-2 text-white/50">Try rephrasing your search or be more specific about location</p>
+                      <h2 className="text-lg font-semibold text-foreground">No matches found</h2>
+                      <p className="mt-2 text-muted-foreground">Try rephrasing your search or be more specific about location</p>
                     </div>
                   ) : semanticResults.length === 0 ? (
                     <div className="col-span-full py-10 text-center">
-                      <p className="text-white/50 text-sm">Describe what you&apos;re looking for and press Find matches</p>
+                      <p className="text-muted-foreground text-sm">Describe what you&apos;re looking for and press Find matches</p>
                     </div>
                   ) : (
                     semanticResults.map((building, index) => {
                       const score = Math.round(building.relevance_score * 100);
                       return (
                         <Link key={building.id} href={`/buildings/${building.id}`}>
-                          <Card className="group h-full cursor-pointer overflow-hidden bg-white/[0.02] backdrop-blur-xl border-white/[0.06] hover:bg-white/[0.04] hover:border-cyan-500/30 transition-all duration-500">
+                          <Card className="group h-full cursor-pointer overflow-hidden bg-card backdrop-blur-xl border-border transition-all duration-500 hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-[0_10px_30px_-12px_rgba(20,33,43,0.18)] dark:bg-white/[0.02] dark:border-white/[0.06] dark:shadow-xl dark:shadow-black/20 dark:hover:translate-y-0 dark:hover:bg-white/[0.04] dark:hover:border-cyan-500/30 dark:hover:shadow-xl">
                             <CardContent className="p-0">
                               {/* Image */}
-                              <div className="relative h-44 bg-gradient-to-br from-white/[0.03] to-black/20 overflow-hidden">
+                              <div className="relative h-44 bg-gradient-to-br from-muted to-foreground/[0.06] overflow-hidden dark:from-white/[0.03] dark:to-black/20">
                                 {building.hero_image_url ? (
                                   <SafeImage
                                     src={building.hero_image_url}
@@ -1703,38 +1703,39 @@ function SearchContent() {
                                     <Building2 className="h-14 w-14 text-muted-foreground/30" />
                                   </div>
                                 )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                                {/* Over a photo only in light: on the empty tile it was a dark smudge */}
+                                <div className={`absolute inset-0 bg-gradient-to-t from-black/50 to-transparent ${building.hero_image_url ? "" : "hidden dark:block"}`} />
                                 {building.neighborhoods && (
-                                  <Badge className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm" variant="secondary">
+                                  <Badge className="absolute top-3 left-3 bg-inverse/85 text-white backdrop-blur-sm dark:bg-background/90 dark:text-secondary-foreground" variant="secondary">
                                     {building.neighborhoods.name}
                                   </Badge>
                                 )}
                                 {/* Relevance score */}
-                                <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-cyan-500/90 backdrop-blur-sm px-2 py-0.5">
-                                  <Star className="h-3 w-3 text-white fill-white" />
+                                <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-inverse/80 backdrop-blur-sm px-2 py-0.5 dark:bg-cyan-500/90">
+                                  <Star className="h-3 w-3 text-stacy fill-stacy dark:text-white dark:fill-white" />
                                   <span className="text-xs font-medium text-white">{score}% match</span>
                                 </div>
                               </div>
 
                               <div className="p-4">
-                                <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors">
+                                <h3 className="text-lg font-semibold text-foreground group-hover:text-link transition-colors dark:text-base dark:group-hover:text-cyan-400">
                                   {building.name}
                                 </h3>
-                                <p className="mt-1 flex items-center gap-1 text-sm text-white/50">
+                                <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
                                   <MapPin className="h-3 w-3" />
                                   {building.address_1}
                                   {building.cities ? `, ${building.cities.name}` : ""}
                                 </p>
                                 {building.description && (
-                                  <p className="mt-2 text-xs text-white/50 line-clamp-2">
+                                  <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
                                     {building.description}
                                   </p>
                                 )}
                                 {/* Relevance bar */}
                                 <div className="mt-3">
-                                  <div className="h-1 w-full rounded-full bg-white/[0.06]">
+                                  <div className="h-1 w-full rounded-full bg-foreground/[0.06]">
                                     <div
-                                      className="h-1 rounded-full bg-cyan-400 transition-all"
+                                      className="h-1 rounded-full bg-stacy dark:bg-cyan-400 transition-all"
                                       style={{ width: `${score}%` }}
                                     />
                                   </div>
@@ -1772,11 +1773,11 @@ function SearchContent() {
                   ))
                 ) : visibleResults.length === 0 ? (
                   <div className="col-span-full py-12 text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] mb-4">
-                      <Building2 className="h-8 w-8 text-white/30" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-card backdrop-blur-xl border border-border mb-4 dark:bg-white/[0.03]">
+                      <Building2 className="h-8 w-8 text-foreground/30" />
                     </div>
-                    <h2 className="text-lg font-semibold text-white">No apartments found</h2>
-                    <p className="mt-2 text-white/50">
+                    <h2 className="text-lg font-semibold text-foreground">No apartments found</h2>
+                    <p className="mt-2 text-muted-foreground">
                       {commute && results.length > 0
                         ? "No results within that commute — try a longer time or clear the commute filter"
                         : "Try adjusting your filters or searching in a different city"}
@@ -1808,10 +1809,10 @@ function SearchContent() {
                         onMouseEnter={() => setHighlightedBuildingId(building.id)}
                         onMouseLeave={() => setHighlightedBuildingId(null)}
                       >
-                        <Card className={`group h-full cursor-pointer overflow-hidden bg-white/[0.02] backdrop-blur-xl border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-500 ${isHighlighted ? "ring-2 ring-cyan-400/60 shadow-lg shadow-cyan-500/10" : ""}`}>
+                        <Card className={`group h-full cursor-pointer overflow-hidden bg-card backdrop-blur-xl border-border transition-all duration-500 hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-[0_10px_30px_-12px_rgba(20,33,43,0.18)] dark:bg-white/[0.02] dark:border-white/[0.06] dark:shadow-xl dark:shadow-black/20 dark:hover:translate-y-0 dark:hover:bg-white/[0.04] dark:hover:border-white/[0.12] dark:hover:shadow-xl ${isHighlighted ? "ring-2 ring-stacy/60 shadow-[0_10px_30px_-12px_rgba(20,33,43,0.18)] dark:ring-cyan-400/60 dark:shadow-lg dark:shadow-cyan-500/10 dark:hover:shadow-lg" : ""}`}>
                           <CardContent className="p-0">
                             {/* Image section */}
-                            <div className="relative h-48 bg-gradient-to-br from-white/[0.03] to-black/20 overflow-hidden">
+                            <div className="relative h-48 bg-gradient-to-br from-muted to-foreground/[0.06] overflow-hidden dark:from-white/[0.03] dark:to-black/20">
                               {showImage && primaryImage ? (
                                 <Image
                                   src={primaryImage.url}
@@ -1837,30 +1838,30 @@ function SearchContent() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                               )}
                               {building.neighborhoods && (
-                                <Badge className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm" variant="secondary">
+                                <Badge className="absolute top-3 left-3 bg-inverse/85 text-white backdrop-blur-sm dark:bg-background/90 dark:text-secondary-foreground" variant="secondary">
                                   {building.neighborhoods.name}
                                 </Badge>
                               )}
                               <div className="absolute top-3 right-3 flex gap-2">
                                 {commute && commuteTimes?.[building.id] !== undefined && (
-                                  <Badge className="bg-black/80 text-white backdrop-blur-sm gap-1" variant="outline">
+                                  <Badge className="bg-inverse/85 text-white border-white/10 backdrop-blur-sm gap-1 dark:bg-inverse/80 dark:border-border" variant="outline">
                                     <Navigation className="h-3 w-3" />
                                     {commuteTimes[building.id]} min
                                   </Badge>
                                 )}
                                 {group.hasFloorplan && (
-                                  <Badge className="bg-background/90 backdrop-blur-sm gap-1" variant="outline">
+                                  <Badge className="bg-inverse/85 text-white border-white/10 backdrop-blur-sm gap-1 dark:bg-background/90 dark:text-foreground dark:border-border" variant="outline">
                                     <Layout className="h-3 w-3" />
                                     Floor Plan
                                   </Badge>
                                 )}
                                 {multi ? (
-                                  <Badge className="bg-background/90 backdrop-blur-sm" variant="outline">
+                                  <Badge className="bg-inverse/85 text-white border-white/10 backdrop-blur-sm dark:bg-background/90 dark:text-foreground dark:border-border" variant="outline">
                                     {units.length} units
                                   </Badge>
                                 ) : (
                                   lead.unit.unit_number && (
-                                    <Badge className="bg-background/90 backdrop-blur-sm" variant="outline">
+                                    <Badge className="bg-inverse/85 text-white border-white/10 backdrop-blur-sm dark:bg-background/90 dark:text-foreground dark:border-border" variant="outline">
                                       Unit {lead.unit.unit_number}
                                     </Badge>
                                   )
@@ -1868,7 +1869,7 @@ function SearchContent() {
                               </div>
                               {/* Image count indicator */}
                               {(imageUnit?.image_count ?? 0) > 1 && (
-                                <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                                <div className="absolute bottom-3 right-3 bg-inverse/75 text-white text-xs px-2 py-1 rounded-full dark:bg-inverse/60">
                                   +{(imageUnit?.image_count ?? 0) - 1} photos
                                 </div>
                               )}
@@ -1905,41 +1906,41 @@ function SearchContent() {
                             </div>
 
                             <div className="p-4">
-                              <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors">
+                              <h3 className="text-lg font-semibold text-foreground group-hover:text-link transition-colors dark:text-base dark:group-hover:text-cyan-400">
                                 {building.name}
                               </h3>
-                              <p className="mt-1 flex items-center gap-1 text-sm text-white/60">
+                              <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground dark:text-white/60">
                                 <MapPin className="h-3 w-3" />
                                 {building.address_1}
                               </p>
 
                               <div className="mt-3 flex flex-wrap gap-2">
                                 {beds && (
-                                  <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
+                                  <Badge variant="outline" className="gap-1 bg-foreground/[0.03] border-border text-muted-foreground dark:bg-white/[0.03] dark:border-white/[0.08] dark:text-white/70">
                                     <Bed className="h-3 w-3" />
                                     {beds}
                                   </Badge>
                                 )}
                                 {!multi && lead.unit.baths && (
-                                  <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
+                                  <Badge variant="outline" className="gap-1 bg-foreground/[0.03] border-border text-muted-foreground dark:bg-white/[0.03] dark:border-white/[0.08] dark:text-white/70">
                                     <Bath className="h-3 w-3" />
                                     {lead.unit.baths} bath
                                   </Badge>
                                 )}
                                 {sqft && (
-                                  <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
+                                  <Badge variant="outline" className="gap-1 bg-foreground/[0.03] border-border text-muted-foreground dark:bg-white/[0.03] dark:border-white/[0.08] dark:text-white/70">
                                     <Square className="h-3 w-3" />
                                     {sqft}
                                   </Badge>
                                 )}
                                 {petsAllowed(building.pet_policy) && (
-                                  <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
+                                  <Badge variant="outline" className="gap-1 bg-foreground/[0.03] border-border text-muted-foreground dark:bg-white/[0.03] dark:border-white/[0.08] dark:text-white/70">
                                     <PawPrint className="h-3 w-3" />
                                     Pets OK
                                   </Badge>
                                 )}
                                 {parkingAvailable(building.parking_policy) && (
-                                  <Badge variant="outline" className="gap-1 bg-white/[0.03] border-white/[0.08] text-white/70">
+                                  <Badge variant="outline" className="gap-1 bg-foreground/[0.03] border-border text-muted-foreground dark:bg-white/[0.03] dark:border-white/[0.08] dark:text-white/70">
                                     <Car className="h-3 w-3" />
                                     Parking
                                   </Badge>
@@ -1950,26 +1951,26 @@ function SearchContent() {
                                 <div>
                                   {group.minRent !== null ? (
                                     <>
-                                      {multi && <span className="text-sm text-white/60">From </span>}
-                                      <span className="text-xl font-bold text-white">
+                                      {multi && <span className="text-sm text-muted-foreground dark:text-white/60">From </span>}
+                                      <span className="text-2xl font-semibold text-foreground dark:text-xl dark:font-bold">
                                         {formatPrice(group.minRent)}
                                       </span>
-                                      <span className="text-white/60">/mo</span>
+                                      <span className="text-muted-foreground dark:text-white/60">/mo</span>
                                     </>
                                   ) : (
-                                    <span className="text-white/60">Contact for pricing</span>
+                                    <span className="text-muted-foreground dark:text-white/60">Contact for pricing</span>
                                   )}
                                 </div>
                                 <div className="flex flex-col items-end gap-0.5">
                                   {moveIn && (
-                                    <span className="flex items-center gap-1 text-sm text-white/60">
+                                    <span className="flex items-center gap-1 text-sm text-muted-foreground dark:text-white/60">
                                       <Calendar className="h-3 w-3" />
                                       {moveIn}
                                     </span>
                                   )}
                                   {priceAge && (
                                     <span
-                                      className={`flex items-center gap-1 text-xs ${priceAge.stale ? "text-amber-400/90" : "text-white/60"}`}
+                                      className={`flex items-center gap-1 text-xs ${priceAge.stale ? "text-amber-700 dark:text-amber-400/90" : "text-muted-foreground dark:text-white/60"}`}
                                       title={priceAge.stale ? "This price hasn't been re-verified recently" : "Price last verified"}
                                     >
                                       <Clock className="h-3 w-3" />
@@ -1996,7 +1997,7 @@ function SearchContent() {
                 onClick={() => setShowMap(true)}
                 aria-label="Show map"
                 className={cn(
-                  "fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-black shadow-lg shadow-black/50 transition-transform active:scale-95",
+                  "fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg shadow-black/10 transition-transform active:scale-95 dark:shadow-black/50",
                   compareBarVisible
                     ? "bottom-[calc(8.75rem+env(safe-area-inset-bottom,0px))]"
                     : "bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))]"
@@ -2017,11 +2018,11 @@ function SearchContent() {
                 className={
                   isLg === false
                     ? MOBILE_MAP_VIEW
-                    : `${isLg === null ? "hidden lg:block " : ""}lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100dvh-300px)] rounded-xl overflow-hidden border border-white/[0.08] sticky top-4 lg:top-20`
+                    : `${isLg === null ? "hidden lg:block " : ""}lg:w-1/2 xl:w-2/5 h-[400px] lg:h-[calc(100dvh-300px)] rounded-xl overflow-hidden border border-border sticky top-4 lg:top-20`
                 }
               >
                 {isLg === null ? (
-                  <div className="h-full w-full animate-pulse bg-white/[0.03]" />
+                  <div className="h-full w-full animate-pulse bg-muted dark:bg-white/[0.03]" />
                 ) : (
                   <SearchMap
                     listings={mapListings}
@@ -2044,10 +2045,10 @@ function SearchContent() {
                   />
                 )}
 
-                {/* The header is translucent: back it with solid black while
+                {/* The header is translucent: back it with the solid page colour while
                     the map view is open so the list doesn't show through */}
                 {isLg === false && (
-                  <div className="fixed inset-x-0 top-0 h-[calc(4rem+env(safe-area-inset-top,0px))] bg-black" aria-hidden="true" />
+                  <div className="fixed inset-x-0 top-0 h-[calc(4rem+env(safe-area-inset-top,0px))] bg-background" aria-hidden="true" />
                 )}
 
                 {/* Phone map view: filters + count on top */}
@@ -2056,8 +2057,8 @@ function SearchContent() {
                     <Button
                       variant={activeFilterCount > 0 ? "default" : "glass"}
                       className={cn(
-                        "pointer-events-auto h-11 rounded-full px-4 shadow-lg shadow-black/40 md:hidden",
-                        activeFilterCount === 0 && "bg-zinc-950/85"
+                        "pointer-events-auto h-11 rounded-full px-4 shadow-lg shadow-black/10 md:hidden dark:shadow-black/40",
+                        activeFilterCount === 0 && "bg-card/90 dark:bg-zinc-950/85"
                       )}
                       aria-label="Filters"
                       aria-expanded={showFilters}
@@ -2066,14 +2067,14 @@ function SearchContent() {
                       <SlidersHorizontal className="h-4 w-4" />
                       Filters
                       {activeFilterCount > 0 && (
-                        <Badge variant="secondary" className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-black/15">
+                        <Badge variant="secondary" className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-primary-foreground/20 text-primary-foreground dark:bg-black/15 dark:text-secondary-foreground">
                           {activeFilterCount}
                         </Badge>
                       )}
                     </Button>
                     <span
                       aria-live="polite"
-                      className="rounded-full bg-zinc-950/85 px-3 py-1.5 text-xs font-medium text-white/80 shadow-lg shadow-black/40 backdrop-blur-xl max-[359px]:sr-only"
+                      className="rounded-full bg-card/90 px-3 py-1.5 text-xs font-medium text-foreground/80 shadow-lg shadow-black/10 backdrop-blur-xl max-[359px]:sr-only dark:bg-zinc-950/85 dark:shadow-black/40"
                     >
                       {loading
                         ? "Searching…"
@@ -2121,7 +2122,7 @@ function SearchContent() {
                           setSelectedMapBuildingId(null);
                         }}
                         aria-label="Show list"
-                        className="pointer-events-auto inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-black shadow-lg shadow-black/50 transition-transform active:scale-95"
+                        className="pointer-events-auto inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg shadow-black/10 transition-transform active:scale-95 dark:shadow-black/50"
                       >
                         <List className="h-4 w-4" />
                         List
@@ -2142,15 +2143,15 @@ function SearchContent() {
 export default function SearchPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen flex-col bg-black">
+      <div className="flex min-h-screen flex-col bg-background">
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-xl animate-pulse" />
-              <Loader2 className="h-8 w-8 animate-spin text-cyan-400 relative" />
+              <Loader2 className="h-8 w-8 animate-spin text-link dark:text-cyan-400 relative" />
             </div>
-            <p className="text-white/50 text-sm">Loading apartments...</p>
+            <p className="text-muted-foreground text-sm">Loading apartments...</p>
           </div>
         </main>
       </div>

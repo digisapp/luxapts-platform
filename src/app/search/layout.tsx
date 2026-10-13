@@ -115,26 +115,26 @@ export default async function SearchLayout({ children }: { children: React.React
       {directory.length > 0 && (
         <nav
           aria-label="Browse apartments by city and layout"
-          className="border-t border-white/[0.06] bg-black py-12 md:py-16"
+          className="border-t border-border bg-background py-12 md:py-16 dark:border-white/[0.06]"
         >
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-            <h2 className="mb-6 text-xl font-medium text-white md:mb-8">
+            <h2 className="mb-6 text-xl font-medium text-foreground md:mb-8">
               Browse apartments for rent
             </h2>
             <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {directory.map((city) => (
                 <div key={city.id}>
-                  <h3 className="text-sm font-medium text-white">
+                  <h3 className="text-sm font-medium text-foreground">
                     {/* Rows are ~40px tall on phones (comfortable tap
                         targets) and tighten back to a compact list on md+. */}
                     <Link
                       href={`/cities/${city.slug}`}
-                      className="flex min-h-10 items-center transition-colors hover:text-cyan-300 md:pointer-fine:min-h-0 md:pointer-fine:py-0.5"
+                      className="flex min-h-10 items-center transition-colors hover:text-link dark:hover:text-cyan-300 md:pointer-fine:min-h-0 md:pointer-fine:py-0.5"
                     >
                       {city.name}, {city.state} apartments
                     </Link>
                   </h3>
-                  <p className="mb-1 text-xs text-white/50 md:mb-2">
+                  <p className="mb-1 text-xs text-muted-foreground md:mb-2">
                     {city.buildings} building{city.buildings === 1 ? "" : "s"}
                   </p>
                   <ul className="md:space-y-1">
@@ -142,7 +142,7 @@ export default async function SearchLayout({ children }: { children: React.React
                       <li key={f.slug}>
                         <Link
                           href={facetPath(city.slug, f.slug)}
-                          className="flex min-h-10 items-center text-sm text-white/60 transition-colors hover:text-white md:pointer-fine:min-h-0 md:pointer-fine:py-0.5"
+                          className="flex min-h-10 items-center text-sm text-muted-foreground transition-colors hover:text-foreground dark:text-white/60 md:pointer-fine:min-h-0 md:pointer-fine:py-0.5"
                         >
                           {f.label} in {city.name}
                         </Link>
@@ -152,16 +152,16 @@ export default async function SearchLayout({ children }: { children: React.React
                 </div>
               ))}
             </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 border-t border-white/[0.06] pt-4 text-sm text-white/60 md:pt-6">
+            <div className="mt-8 flex flex-wrap gap-x-6 border-t border-border pt-4 text-sm text-muted-foreground md:pt-6 dark:border-white/[0.06] dark:text-white/60">
               <Link
                 href="/cities"
-                className="inline-flex min-h-10 items-center transition-colors hover:text-white md:pointer-fine:min-h-0"
+                className="inline-flex min-h-10 items-center transition-colors hover:text-foreground md:pointer-fine:min-h-0"
               >
                 All cities
               </Link>
               <Link
                 href="/neighborhoods"
-                className="inline-flex min-h-10 items-center transition-colors hover:text-white md:pointer-fine:min-h-0"
+                className="inline-flex min-h-10 items-center transition-colors hover:text-foreground md:pointer-fine:min-h-0"
               >
                 All neighborhoods
               </Link>

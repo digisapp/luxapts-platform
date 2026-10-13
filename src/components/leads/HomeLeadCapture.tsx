@@ -71,10 +71,10 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
 
   if (done) {
     return (
-      <div className="rounded-3xl bg-card border border-border shadow-sm p-8 text-center">
+      <div className="rounded-3xl bg-card border border-border shadow-[0_1px_2px_rgba(20,33,43,0.04)] dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border-white/[0.08] dark:shadow-none p-8 text-center">
         <CheckCircle2 className="mx-auto h-10 w-10 text-positive" />
         <h3 className="mt-4 text-xl font-medium text-foreground">Stacy&apos;s on it.</h3>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-muted-foreground dark:text-white/60">
           We&apos;ll email you matches as they come up. Nothing else — no drip campaign.
         </p>
       </div>
@@ -84,11 +84,11 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-3xl bg-card border border-border shadow-sm p-6 sm:p-8 text-left"
+      className="rounded-3xl bg-card border border-border shadow-[0_1px_2px_rgba(20,33,43,0.04)] dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border-white/[0.08] dark:shadow-none p-6 sm:p-8 text-left"
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="home-lead-email" className="mb-2 block text-sm font-medium text-foreground/80">
+          <label htmlFor="home-lead-email" className="mb-2 block text-sm text-foreground/80 dark:text-white/70">
             Email
           </label>
           <input
@@ -99,11 +99,11 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@email.com"
-            className="w-full h-12 px-4 rounded-xl bg-background border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
+            className="w-full h-12 px-4 rounded-xl bg-card border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-link focus:ring-2 focus:ring-ring dark:bg-white/[0.04] dark:border-white/[0.08] dark:focus:border-white/25 dark:focus:bg-white/[0.06] dark:focus:ring-0 transition-colors"
           />
         </div>
         <div>
-          <label htmlFor="home-lead-city" className="mb-2 block text-sm font-medium text-foreground/80">
+          <label htmlFor="home-lead-city" className="mb-2 block text-sm text-foreground/80 dark:text-white/70">
             City
           </label>
           <select
@@ -111,15 +111,15 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
             required
             value={citySlug}
             onChange={(e) => setCitySlug(e.target.value)}
-            className="w-full h-12 px-4 rounded-xl bg-background border border-foreground/15 text-foreground focus:outline-none focus:border-foreground/40 transition-colors"
+            className="w-full h-12 px-4 rounded-xl bg-card border border-foreground/15 text-foreground focus:outline-none focus:border-link focus:ring-2 focus:ring-ring dark:bg-white/[0.04] dark:border-white/[0.08] dark:focus:border-white/25 dark:focus:bg-white/[0.06] dark:focus:ring-0 transition-colors"
           >
-            <option value="" disabled className="bg-popover text-popover-foreground">
+            <option value="" disabled className="bg-popover text-popover-foreground dark:bg-neutral-900 dark:text-white">
               Select a city
             </option>
             {cities.map((city) => (
               // Options render in the OS menu, which ignores the dark page —
               // set their colors explicitly or they are white-on-white.
-              <option key={city.slug} value={city.slug} className="bg-popover text-popover-foreground">
+              <option key={city.slug} value={city.slug} className="bg-popover text-popover-foreground dark:bg-neutral-900 dark:text-white">
                 {city.name}
               </option>
             ))}
@@ -128,7 +128,7 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
       </div>
 
       <div className="mt-4">
-        <label htmlFor="home-lead-notes" className="mb-2 block text-sm font-medium text-foreground/80">
+        <label htmlFor="home-lead-notes" className="mb-2 block text-sm text-foreground/80 dark:text-white/70">
           What are you looking for?
         </label>
         <textarea
@@ -137,16 +137,16 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
           value={notes}
           onChange={(e) => setNotesDraft(e.target.value)}
           placeholder="2 bed under $3,500, dog-friendly, walkable to the train, moving in June"
-          className="w-full px-4 py-3 rounded-xl bg-background border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors resize-none"
+          className="w-full px-4 py-3 rounded-xl bg-card border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-link focus:ring-2 focus:ring-ring dark:bg-white/[0.04] dark:border-white/[0.08] dark:focus:border-white/25 dark:focus:bg-white/[0.06] dark:focus:ring-0 transition-colors resize-none"
         />
       </div>
 
-      {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+      {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       <button
         type="submit"
         disabled={submitting}
-        className="mt-5 w-full h-12 rounded-xl bg-foreground text-background font-medium flex items-center justify-center gap-2 hover:bg-foreground/85 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+        className="mt-5 w-full h-12 rounded-xl bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
       >
         {submitting ? (
           <>
@@ -161,7 +161,7 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
         )}
       </button>
 
-      <p className="mt-3 text-center text-xs text-muted-foreground">
+      <p className="mt-3 text-center text-xs text-muted-foreground dark:text-white/55">
         One email when something fits. Unsubscribe any time.
       </p>
     </form>

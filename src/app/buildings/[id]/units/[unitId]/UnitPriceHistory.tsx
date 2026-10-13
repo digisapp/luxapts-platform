@@ -14,7 +14,7 @@ const UnitPriceHistoryChart = dynamic(
   () => import("./UnitPriceHistoryChart").then((m) => m.UnitPriceHistoryChart),
   {
     ssr: false,
-    loading: () => <div className="h-[240px] animate-pulse rounded-xl bg-white/[0.03]" />,
+    loading: () => <div className="h-[240px] animate-pulse rounded-xl bg-foreground/[0.03]" />,
   }
 );
 

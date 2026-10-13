@@ -7,12 +7,14 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
 import { CompareBar } from "@/components/compare/CompareBar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { WebsiteJsonLd } from "@/components/seo/JsonLd";
+import { ThemeController } from "@/components/ThemeController";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#ffffff",
+  themeColor: "#000000",
   interactiveWidget: "resizes-content",
 };
 
@@ -23,11 +25,10 @@ export const metadata: Metadata = {
   keywords: ["apartments", "rentals", "NYC", "Miami", "luxury apartments", "apartment search"],
   appleWebApp: {
     capable: true,
-    // "default" (dark text on a light bar), not "black-translucent":
-    // translucent draws the page under the status bar in a home-screen launch,
-    // and every page's fixed pt-16/pt-20 offset then left its top edge under
-    // the clock.
-    statusBarStyle: "default",
+    // "black", not "black-translucent": translucent draws the page under the
+    // status bar in a home-screen launch, and every page's fixed pt-16/pt-20
+    // offset then left its top edge under the clock. The theme is black anyway.
+    statusBarStyle: "black",
     title: "Staycio",
   },
   openGraph: {
@@ -59,10 +60,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+    // Dark is the server default; THEME_INIT_SCRIPT swaps to light before
+    // first paint for anyone who opted in (src/lib/theme.ts).
+    <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body
         className="antialiased min-h-screen bg-background"
       >
+        <ThemeController />
         <WebsiteJsonLd />
         <AuthProvider>
           <AnalyticsTracker />

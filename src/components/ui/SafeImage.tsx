@@ -15,8 +15,8 @@ export function SafeImage({ alt, ...props }: ImageProps) {
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-white/[0.03]" aria-hidden="true">
-        <Building2 className="h-1/4 max-h-10 w-1/4 max-w-10 text-white/15" />
+      <div className="absolute inset-0 flex items-center justify-center bg-foreground/[0.03]" aria-hidden="true">
+        <Building2 className="h-1/4 max-h-10 w-1/4 max-w-10 text-foreground/15" />
       </div>
     );
   }

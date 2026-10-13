@@ -31,7 +31,7 @@ export function MobileBottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden">
-      <div className="bg-background border-t border-border safe-area-pb">
+      <div className="bg-card border-t border-border safe-area-pb dark:bg-background">
         <div className="flex items-center justify-around">
           {navItems.map((item) => {
             const isActive = pathname === item.href ||

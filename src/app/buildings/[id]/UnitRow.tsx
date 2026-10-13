@@ -59,13 +59,13 @@ export function UnitRow({ unit, hidden = false }: { unit: UnitRowData; hidden?: 
     <li className={cn(hidden && "hidden")}>
       <Link
         href={unit.href}
-        className="group flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 outline-none transition-colors hover:border-foreground/20 hover:bg-foreground/[0.02] focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-ring sm:px-4"
+        className="group flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 outline-none transition-all hover:border-foreground/15 hover:shadow-[0_6px_20px_-10px_rgba(20,33,43,0.18)] focus-visible:border-link focus-visible:ring-2 focus-visible:ring-ring dark:border-white/[0.06] dark:bg-white/[0.015] dark:hover:border-white/15 dark:hover:bg-white/[0.04] dark:hover:shadow-none dark:focus-visible:border-white/30 dark:focus-visible:ring-white/20 sm:px-4"
       >
         {unit.photoUrl && (
-          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-muted sm:w-14">
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-foreground/[0.04] sm:w-14">
             <SafeImage src={unit.photoUrl} alt="" fill sizes="56px" className="object-cover" />
             {unit.photoCount > 1 && (
-              <span className="absolute bottom-0.5 right-0.5 rounded bg-black/75 px-1 text-xs font-medium leading-4 text-white">
+              <span className="absolute bottom-0.5 right-0.5 rounded bg-inverse/80 px-1 dark:bg-inverse/75 text-xs font-medium leading-4 text-white">
                 {unit.photoCount}
               </span>
             )}
@@ -76,7 +76,7 @@ export function UnitRow({ unit, hidden = false }: { unit: UnitRowData; hidden?: 
           <div className="flex min-w-0 items-center gap-2 [grid-area:unit]">
             <span className="truncate font-medium text-foreground">{label}</span>
             {chip && (
-              <span className="max-w-[7rem] shrink-0 truncate rounded-md border border-border px-1.5 py-px text-xs font-medium text-muted-foreground">
+              <span className="max-w-[7rem] shrink-0 truncate rounded-md border border-border px-1.5 py-px text-xs font-medium text-muted-foreground dark:border-white/10 dark:text-white/60">
                 {chip}
               </span>
             )}
@@ -109,7 +109,7 @@ export function UnitRow({ unit, hidden = false }: { unit: UnitRowData; hidden?: 
 
         <ChevronRight
           aria-hidden="true"
-          className="h-4 w-4 shrink-0 text-foreground/30 transition-colors group-hover:text-foreground/70"
+          className="h-4 w-4 shrink-0 text-foreground/30 transition-colors group-hover:text-link dark:group-hover:text-white/70"
         />
       </Link>
     </li>

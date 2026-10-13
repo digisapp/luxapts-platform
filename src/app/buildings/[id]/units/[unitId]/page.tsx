@@ -265,7 +265,7 @@ export default async function UnitPage({
                     sourceLabel="Building photos"
                   />
                 ) : (
-                  <div className="relative h-56 md:h-80 rounded-xl overflow-hidden border border-white/[0.06]">
+                  <div className="relative h-56 md:h-80 rounded-xl overflow-hidden border border-border dark:border-white/[0.06]">
                     <ListingPlaceholder
                       seed={unitId}
                       name={unit.unit_number ? `${building?.name ?? ""} · Unit ${unit.unit_number}` : building?.name}
@@ -335,19 +335,19 @@ export default async function UnitPage({
 
                 {/* Availability */}
                 {unit.is_available ? (
-                  <div className="flex items-center gap-2.5 rounded-xl border border-emerald-400/25 bg-emerald-400/[0.08] px-4 py-3">
+                  <div className="flex items-center gap-2.5 rounded-xl border border-positive/25 bg-positive/[0.06] px-4 py-3 dark:border-emerald-400/25 dark:bg-emerald-400/[0.08]">
                     {avail.now ? (
                       <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60 motion-reduce:hidden" />
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                       </span>
                     ) : (
-                      <CalendarDays className="h-4 w-4 shrink-0 text-emerald-300" />
+                      <CalendarDays className="h-4 w-4 shrink-0 text-positive dark:text-emerald-300" />
                     )}
-                    <p className="text-sm font-medium text-emerald-100">{avail.label}</p>
+                    <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">{avail.label}</p>
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
+                  <div className="rounded-xl border border-border bg-card px-4 py-3 dark:border-white/[0.06] dark:bg-white/[0.03]">
                     <p className="text-sm text-muted-foreground">Not currently available</p>
                   </div>
                 )}
@@ -444,7 +444,7 @@ export default async function UnitPage({
                     </ul>
                     <Link
                       href={`${buildingHref}#available-units`}
-                      className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm font-medium text-white/90 transition-colors hover:border-white/25 hover:bg-white/[0.06]"
+                      className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-medium text-foreground/90 transition-colors hover:border-foreground/25 hover:text-link dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/25 dark:hover:bg-white/[0.06] dark:hover:text-foreground/90"
                     >
                       {siblings.length > MORE_UNITS
                         ? `See all ${availableCount} units at ${building.name}`
@@ -468,16 +468,16 @@ export default async function UnitPage({
                   </CardHeader>
                   <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
                     {buildingFacts.length > 0 && (
-                      <p className="text-sm text-white/80">{buildingFacts.join(" · ")}</p>
+                      <p className="text-sm text-foreground/80">{buildingFacts.join(" · ")}</p>
                     )}
                     {amenityNames.length > 0 && (
                       <ul className="flex flex-wrap gap-2">
                         {amenityNames.slice(0, AMENITY_CHIPS).map((name) => (
                           <li
                             key={name}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/80"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground/80 dark:border-white/10 dark:bg-white/[0.03]"
                           >
-                            <Check className="h-3 w-3 text-cyan-300" />
+                            <Check className="h-3 w-3 text-link" />
                             {name}
                           </li>
                         ))}
@@ -490,7 +490,7 @@ export default async function UnitPage({
                     )}
                     <Link
                       href={buildingHref}
-                      className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-cyan-300 hover:text-cyan-200"
+                      className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-link hover:text-link/80 dark:hover:text-cyan-200"
                     >
                       Photos, amenities &amp; policies
                       <ArrowRight className="h-4 w-4" />

@@ -27,7 +27,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
     >
       <Link
         href="/"
-        className="-mx-3 flex h-10 min-w-10 shrink-0 items-center justify-center rounded-md px-3 hover:text-foreground transition-colors"
+        className="-mx-3 flex h-10 min-w-10 shrink-0 items-center justify-center rounded-md px-3 hover:text-link dark:hover:text-foreground transition-colors"
         aria-label="Home"
       >
         <Home className="h-4 w-4" />
@@ -39,7 +39,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
           {item.href ? (
             <Link
               href={item.href}
-              className="py-2.5 hover:text-foreground transition-colors"
+              className="py-2.5 hover:text-link dark:hover:text-foreground transition-colors"
             >
               {item.label}
             </Link>

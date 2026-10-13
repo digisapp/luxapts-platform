@@ -75,13 +75,13 @@ export function UnitGallery({ images: allImages, unitLabel, sourceLabel }: UnitG
         {(sourceLabel || image.category) && (
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
             {sourceLabel && (
-              <Badge className="gap-1 border border-white/20 bg-black/70 text-white backdrop-blur-sm hover:bg-black/70">
+              <Badge className="gap-1 border border-white/20 bg-inverse/80 text-white backdrop-blur-sm hover:bg-inverse/80 dark:bg-inverse/70 dark:hover:bg-inverse/70">
                 <Building2 className="h-3 w-3" />
                 {sourceLabel}
               </Badge>
             )}
             {image.category && (
-              <Badge className="bg-black/60 text-white border-0 backdrop-blur-sm hover:bg-black/60">
+              <Badge className="bg-inverse/75 text-white border-0 backdrop-blur-sm hover:bg-inverse/75 dark:bg-inverse/60 dark:hover:bg-inverse/60">
                 {categoryLabel(image.category)}
               </Badge>
             )}
@@ -95,7 +95,7 @@ export function UnitGallery({ images: allImages, unitLabel, sourceLabel }: UnitG
             <button onClick={next} aria-label="Next photo" className={`${arrow} right-3`}>
               <ChevronRight className="h-5 w-5" />
             </button>
-            <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full">
+            <div className="absolute bottom-3 right-3 bg-inverse/70 text-white dark:bg-inverse/50 text-xs px-2.5 py-1 rounded-full">
               {safeIndex + 1} / {count}
             </div>
           </>
@@ -112,7 +112,7 @@ export function UnitGallery({ images: allImages, unitLabel, sourceLabel }: UnitG
               aria-label={`Show photo ${i + 1}`}
               aria-current={i === safeIndex ? "true" : undefined}
               className={`relative h-16 w-24 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
-                i === safeIndex ? "border-primary" : "border-transparent"
+                i === safeIndex ? "border-stacy dark:border-primary" : "border-transparent"
               }`}
             >
               <Image

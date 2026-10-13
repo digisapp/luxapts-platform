@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* `dark:` follows the .dark class on <html> (set by src/lib/theme.ts), not the
+   OS setting. Converted components use light-first classes and keep their
+   original look under `dark:`. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -24,8 +29,11 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-brand: var(--brand);
+  --color-stacy: var(--stacy);
+  --color-link: var(--link);
   --color-positive: var(--positive);
+  --color-inverse: var(--inverse);
+  --color-inverse-foreground: var(--inverse-foreground);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -85,81 +93,87 @@
 }
 
 /* ========================================
-   LIGHT THEME (default)
-   White page, near-black type, zinc greys. Renters compare prices, sizes and
-   policies here, and every rental marketplace they already use is light.
+   LIGHT THEME
+   Quiet luxury: warm white page, white cards and navigation, near-black type,
+   deep navy for buttons and dark surfaces. Stacy's cyan is the one accent:
+   #22D3EE where it sits on navy or photos (and for rings and dots), #0891B2
+   wherever cyan has to read as text or an icon on white.
+   Applied only on routes listed in src/lib/theme.ts; everything else keeps
+   the .dark theme below until it is converted.
    ======================================== */
 
 :root {
   --radius: 0.75rem;
   color-scheme: light;
 
-  --background: #ffffff;
-  --foreground: #18181b;
+  --background: #fafaf9;
+  --foreground: #171717;
 
   /* Translucent tints, dark-on-light */
-  --glass-1: rgba(24, 24, 27, 0.02);
-  --glass-2: rgba(24, 24, 27, 0.04);
-  --glass-3: rgba(24, 24, 27, 0.06);
-  --glass-4: rgba(24, 24, 27, 0.1);
+  --glass-1: rgba(23, 23, 23, 0.02);
+  --glass-2: rgba(23, 23, 23, 0.04);
+  --glass-3: rgba(23, 23, 23, 0.06);
+  --glass-4: rgba(23, 23, 23, 0.1);
 
   --card: #ffffff;
-  --card-foreground: #18181b;
+  --card-foreground: #171717;
 
   --popover: #ffffff;
-  --popover-foreground: #18181b;
+  --popover-foreground: #171717;
 
-  /* Primary - near-black button, white label */
-  --primary: #18181b;
+  /* Deep navy, not black */
+  --primary: #14212b;
   --primary-foreground: #ffffff;
 
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
+  --secondary: #f3f3f1;
+  --secondary-foreground: #171717;
 
-  /* zinc-600 on white is 7.7:1, so long muted copy stays readable */
-  --muted: #f4f4f5;
-  --muted-foreground: #52525b;
+  --muted: #f3f3f1;
+  --muted-foreground: #737373;
 
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
+  --accent: #f3f3f1;
+  --accent-foreground: #171717;
 
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
 
-  --border: #e4e4e7;
-  --border-glow: #d4d4d8;
+  --border: #e7e7e5;
+  --border-glow: #d6d6d3;
 
-  --input: #ffffff;
-  --ring: rgba(24, 24, 27, 0.25);
+  --input: #e7e7e5;
+  /* Focus and active states: Stacy cyan */
+  --ring: rgba(34, 211, 238, 0.6);
 
-  /* Brand cyan, darkened until it reads as text on white (cyan-700, 5.4:1) */
-  --brand: #0e7490;
-  /* Good news: "Available now", "Pricing verified" (emerald-700, 5.5:1) */
+  /* Stacy's AI accent */
+  --stacy: #22d3ee;
+  /* Cyan that reads on white: links, hovers, small icons */
+  --link: #0891b2;
+  /* Good news: "Available now", "Pricing verified" (emerald-700) */
   --positive: #047857;
+  /* Dark surfaces on a light page: footer, chips over photos */
+  --inverse: #14212b;
+  --inverse-foreground: #ffffff;
 
   --accent-blue: #3b82f6;
   --accent-purple: #8b5cf6;
   --accent-cyan: #06b6d4;
   --accent-pink: #ec4899;
 
-  --chart-1: #2563eb;
+  --chart-1: #0891b2;
   --chart-2: #16a34a;
   --chart-3: #d97706;
   --chart-4: #dc2626;
   --chart-5: #7c3aed;
 
-  --sidebar: #fafafa;
-  --sidebar-foreground: #18181b;
-  --sidebar-primary: #18181b;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #14212b;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f4f5;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #e4e4e7;
-  --sidebar-ring: rgba(24, 24, 27, 0.25);
+  --sidebar-accent: #f3f3f1;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e7e7e5;
+  --sidebar-ring: rgba(34, 211, 238, 0.6);
 }
-
-/* Dark: the original black "liquid glass" theme. Kept for the staff portals
-   (wrap them in .dark) and as the way back if light doesn't stick. */
 
 .dark {
   color-scheme: dark;
@@ -197,8 +211,13 @@
   --accent: rgba(255, 255, 255, 0.08);
   --accent-foreground: #fafafa;
 
-  --brand: #67e8f9;
-  --positive: #34d399;
+  /* Tailwind's own cyan-400 / cyan-300 / emerald-400, so converted
+     components match the classes they replaced exactly */
+  --stacy: oklch(78.9% 0.154 211.53);
+  --link: oklch(86.5% 0.127 207.078);
+  --positive: oklch(76.5% 0.177 163.223);
+  --inverse: #000000;
+  --inverse-foreground: #fafafa;
 
   /* Destructive */
   --destructive: #ef4444;
@@ -234,6 +253,64 @@
   --sidebar-accent-foreground: #fafafa;
   --sidebar-border: rgba(255, 255, 255, 0.06);
   --sidebar-ring: rgba(255, 255, 255, 0.3);
+}
+
+/* ========================================
+   SHARED COMPONENT COLORS (Card, Input, outline Button)
+   In the components layer on purpose: a page's own utilities (a Card with
+   className="bg-… border-…") always beat this layer, in either theme. As
+   `dark:` utilities on the component itself they would have outranked those
+   overrides on every dark page. The .dark rules are the original classes,
+   applied verbatim, so the dark site is unchanged.
+   ======================================== */
+
+@layer components {
+  .ui-card {
+    @apply border-border bg-card shadow-[0_1px_2px_rgba(20,33,43,0.04)];
+  }
+  .dark .ui-card {
+    @apply border-white/[0.08] bg-white/[0.02] backdrop-blur-xl shadow-xl shadow-black/20;
+  }
+
+  .ui-input {
+    @apply border-foreground/15 bg-card;
+  }
+  .ui-input::placeholder {
+    color: var(--muted-foreground);
+  }
+  .ui-input:focus-visible {
+    @apply ring-stacy/50 border-link;
+  }
+  .dark .ui-input {
+    @apply border-white/10 bg-white/[0.03] backdrop-blur-sm;
+  }
+  .dark .ui-input::placeholder {
+    @apply text-white/40;
+  }
+  .dark .ui-input:focus-visible {
+    @apply ring-white/20 border-white/20 bg-white/[0.05];
+  }
+
+  .ui-btn:focus-visible {
+    @apply ring-stacy/50;
+  }
+  .dark .ui-btn:focus-visible {
+    @apply ring-white/20;
+  }
+  .ui-btn-outline {
+    @apply border-foreground/15 bg-card;
+  }
+  .dark .ui-btn-outline {
+    @apply border-white/10 bg-white/[0.03] backdrop-blur-sm;
+  }
+  /* Light: a white control with a hairline shadow (the dark glass shadow
+     read as a heavy grey slab on white) */
+  .ui-btn-glass {
+    @apply border-foreground/15 bg-card shadow-[0_1px_2px_rgba(20,33,43,0.06)];
+  }
+  .dark .ui-btn-glass {
+    @apply border-white/10 bg-white/[0.05] backdrop-blur-xl shadow-lg shadow-black/20;
+  }
 }
 
 @layer base {

@@ -149,14 +149,14 @@ export function ImageGallery({ images: allImages, buildingName }: ImageGalleryPr
 
         {/* Image Counter */}
         {images.length > 1 && (
-          <div className="absolute bottom-3 left-3 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
+          <div className="absolute bottom-3 left-3 bg-inverse/75 text-white text-sm px-3 py-1 rounded-full dark:bg-inverse/60">
             {safeIndex + 1} / {images.length}
           </div>
         )}
 
         {/* Category Badge */}
         {currentImage.category && (
-          <div className="absolute top-3 left-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
+          <div className="absolute top-3 left-3 bg-inverse/75 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm dark:bg-inverse/60">
             {categoryLabel(currentImage.category)}
           </div>
         )}
@@ -173,7 +173,7 @@ export function ImageGallery({ images: allImages, buildingName }: ImageGalleryPr
               className={cn(
                 "relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all",
                 index === safeIndex
-                  ? "border-primary ring-2 ring-primary/20"
+                  ? "border-stacy ring-2 ring-stacy/30 dark:border-primary dark:ring-primary/20"
                   : "border-transparent hover:border-muted-foreground/30"
               )}
             >
