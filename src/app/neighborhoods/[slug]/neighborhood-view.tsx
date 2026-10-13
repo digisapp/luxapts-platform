@@ -429,9 +429,9 @@ export async function NeighborhoodView({
                           <div className="shrink-0 sm:text-right">
                             {buildingPrice ? (
                               <>
-                                <p className="text-sm text-muted-foreground sm:text-base dark:text-white/70">
+                                <p className="text-sm text-muted-foreground dark:text-white/70 dark:sm:text-base">
                                   From{" "}
-                                  <span className="text-base font-semibold text-foreground sm:text-lg dark:text-sm dark:sm:text-base">
+                                  <span className="text-lg font-semibold tracking-tight text-foreground sm:text-xl dark:text-sm dark:tracking-normal dark:sm:text-base">
                                     {formatPrice(buildingPrice.min)}
                                   </span>
                                   /mo

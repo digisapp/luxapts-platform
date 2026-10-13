@@ -52,7 +52,7 @@ export function MapPreviewCard({
             {price !== null ? (
               <>
                 {unitCount > 1 && <span className="text-xs text-muted-foreground dark:text-white/60">From </span>}
-                <span className="text-base font-bold">{formatPrice(price)}</span>
+                <span className="text-lg font-bold tracking-tight dark:text-base dark:tracking-normal">{formatPrice(price)}</span>
                 <span className="text-xs text-muted-foreground dark:text-white/60">/mo</span>
               </>
             ) : (

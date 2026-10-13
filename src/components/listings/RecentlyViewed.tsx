@@ -84,8 +84,11 @@ export function RecentlyViewed({ currentBuildingId, className = "" }: RecentlyVi
               )}
               <div className="flex items-center gap-2 mt-1">
                 {item.price != null && item.price > 0 && (
-                  <span className="text-xs font-medium">
-                    {formatPrice(item.price)}/mo
+                  <span className="text-xs font-medium text-muted-foreground dark:text-foreground">
+                    <span className="text-sm font-semibold tracking-tight text-foreground dark:text-xs dark:font-medium dark:tracking-normal">
+                      {formatPrice(item.price)}
+                    </span>
+                    /mo
                   </span>
                 )}
                 {item.beds != null && (

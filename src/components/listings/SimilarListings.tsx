@@ -146,8 +146,12 @@ export function SimilarListings({
               {/* Wraps between items, never inside one — in the narrow
                   sidebar at 1024px "17 units" broke onto two lines */}
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-                <span className="whitespace-nowrap text-xs font-medium">
-                  From {formatPrice(listing.minPrice)}/mo
+                <span className="whitespace-nowrap text-xs font-medium text-muted-foreground dark:text-foreground">
+                  From{" "}
+                  <span className="text-sm font-semibold tracking-tight text-foreground dark:text-xs dark:font-medium dark:tracking-normal">
+                    {formatPrice(listing.minPrice)}
+                  </span>
+                  /mo
                 </span>
                 <Badge variant="secondary" className="whitespace-nowrap text-xs px-1.5 py-0">
                   {listing.unitCount} {listing.unitCount === 1 ? "unit" : "units"}

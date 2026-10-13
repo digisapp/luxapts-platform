@@ -87,7 +87,7 @@ export function BuildingCard({
           </span>
         )}
         {!!availableUnits && availableUnits > 0 && (
-          <span className="absolute right-3 top-3 rounded-full bg-inverse/75 px-2.5 py-1 text-xs font-medium text-emerald-300 ring-1 ring-emerald-400/30 backdrop-blur-sm dark:bg-inverse/60">
+          <span className="absolute right-3 top-3 rounded-full bg-inverse/75 px-2.5 py-1 text-xs font-medium text-[#5EEAD4] ring-1 ring-[#5EEAD4]/30 dark:text-emerald-300 dark:ring-emerald-400/30 backdrop-blur-sm dark:bg-inverse/60">
             {availableUnits} available
           </span>
         )}
@@ -107,8 +107,8 @@ export function BuildingCard({
         {detail && <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{detail}</p>}
         <div className="mt-auto flex items-center justify-between pt-4">
           {minPrice ? (
-            <p className="text-base text-muted-foreground dark:text-white/70">
-              From <span className="text-lg font-semibold text-foreground dark:text-base">{formatPrice(minPrice)}</span>/mo
+            <p className="text-sm text-muted-foreground dark:text-base dark:text-white/70">
+              From <span className="text-xl font-semibold tracking-tight text-foreground dark:text-base dark:tracking-normal">{formatPrice(minPrice)}</span>/mo
             </p>
           ) : (
             <p className="text-base text-muted-foreground dark:text-white/70">Contact for pricing</p>

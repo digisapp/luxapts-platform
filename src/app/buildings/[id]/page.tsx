@@ -764,24 +764,35 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                               </td>
                               <td className="hidden py-2.5 pr-3 text-muted-foreground sm:table-cell">{row.count}</td>
                               <td className="py-2.5 pr-3 text-muted-foreground">
+                                {/* Ranges may break after the dash, never inside a
+                                    number: unbreakable, "$10,450–$10,500" made this
+                                    table 344px wide on a 320px phone and the whole
+                                    page zoomed out */}
                                 {row.minSqft ? (
-                                  <span className="whitespace-nowrap">
-                                    {row.maxSqft && row.maxSqft !== row.minSqft
-                                      ? `${row.minSqft.toLocaleString()}–${row.maxSqft.toLocaleString()}`
-                                      : row.minSqft.toLocaleString()}
-                                    {" "}sq ft
-                                  </span>
+                                  row.maxSqft && row.maxSqft !== row.minSqft ? (
+                                    <>
+                                      <span className="whitespace-nowrap">{row.minSqft.toLocaleString()}–</span>
+                                      <wbr />
+                                      <span className="whitespace-nowrap">{row.maxSqft.toLocaleString()} sq ft</span>
+                                    </>
+                                  ) : (
+                                    <span className="whitespace-nowrap">{row.minSqft.toLocaleString()} sq ft</span>
+                                  )
                                 ) : (
                                   "—"
                                 )}
                               </td>
                               <td className="py-2.5 text-right text-muted-foreground sm:text-left">
                                 {row.minPrice ? (
-                                  <span className="whitespace-nowrap">
-                                    {row.maxPrice && row.maxPrice !== row.minPrice
-                                      ? `${formatPrice(row.minPrice)}–${formatPrice(row.maxPrice)}`
-                                      : formatPrice(row.minPrice)}
-                                  </span>
+                                  row.maxPrice && row.maxPrice !== row.minPrice ? (
+                                    <>
+                                      <span className="whitespace-nowrap">{formatPrice(row.minPrice)}–</span>
+                                      <wbr />
+                                      <span className="whitespace-nowrap">{formatPrice(row.maxPrice)}</span>
+                                    </>
+                                  ) : (
+                                    <span className="whitespace-nowrap">{formatPrice(row.minPrice)}</span>
+                                  )
                                 ) : (
                                   "—"
                                 )}

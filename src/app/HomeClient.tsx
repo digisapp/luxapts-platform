@@ -299,7 +299,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             `pt-28` is load-bearing, not spacing taste — the header is
             `fixed top-0 h-16`, so centered hero content taller than the
             viewport slides up underneath it and clips the badge on a phone. */}
-        <section className="relative flex min-h-[64svh] items-center justify-center px-4 sm:px-6 pt-28 pb-14 overflow-hidden">
+        <section className="relative flex min-h-[64svh] items-center justify-center px-4 sm:px-6 pt-28 pb-14 overflow-hidden lg:min-h-[58svh] lg:pt-24 lg:pb-12">
           {/* Real inventory as the backdrop. This page sells apartments, so the
               first screen has to contain some — the aurora on its own was a
               black rectangle with a paragraph on it, and the first photograph
@@ -367,7 +367,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
             {/* Hidden on phones: at four lines it pushed the example searches
                 below the fixed bottom nav, and the examples teach the same
                 thing — what to type — more concretely than the sentence. */}
-            <p className="hidden sm:block text-lg text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in [animation-delay:240ms]">
+            <p className="hidden sm:block text-lg text-[#B8C2C7] dark:text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in [animation-delay:240ms]">
               {hero.sub}
             </p>
 
@@ -507,7 +507,7 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                         </span>
                       )}
                       {building.availableUnits > 0 && (
-                        <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-inverse/75 ring-1 ring-emerald-400/30 backdrop-blur-sm text-xs text-emerald-300 font-medium dark:bg-inverse/60">
+                        <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-inverse/75 ring-1 ring-[#5EEAD4]/30 backdrop-blur-sm text-xs text-[#5EEAD4] font-medium dark:ring-emerald-400/30 dark:text-emerald-300 dark:bg-inverse/60">
                           {building.availableUnits} available
                         </span>
                       )}
@@ -527,8 +527,8 @@ export default function HomeClient({ stats, featured, neighborhoods, cities, bro
                       )}
                       <div className="flex items-center justify-between">
                         {building.minPrice ? (
-                          <p className="text-base text-muted-foreground dark:text-white/70">
-                            From <span className="text-lg text-foreground font-semibold dark:text-base">{formatPrice(building.minPrice)}</span>/mo
+                          <p className="text-sm text-muted-foreground dark:text-base dark:text-white/70">
+                            From <span className="text-xl font-semibold tracking-tight text-foreground dark:text-base dark:tracking-normal">{formatPrice(building.minPrice)}</span>/mo
                           </p>
                         ) : (
                           <p className="text-base text-muted-foreground dark:text-white/70">Contact for pricing</p>

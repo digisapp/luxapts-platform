@@ -1952,10 +1952,10 @@ function SearchContent() {
                                   {group.minRent !== null ? (
                                     <>
                                       {multi && <span className="text-sm text-muted-foreground dark:text-white/60">From </span>}
-                                      <span className="text-2xl font-semibold text-foreground dark:text-xl dark:font-bold">
+                                      <span className="text-2xl font-bold tracking-tight text-foreground dark:text-xl dark:tracking-normal">
                                         {formatPrice(group.minRent)}
                                       </span>
-                                      <span className="text-muted-foreground dark:text-white/60">/mo</span>
+                                      <span className="text-sm text-muted-foreground dark:text-base dark:text-white/60">/mo</span>
                                     </>
                                   ) : (
                                     <span className="text-muted-foreground dark:text-white/60">Contact for pricing</span>

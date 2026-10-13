@@ -47,9 +47,15 @@ export function StickyMobileCTA({
             buildingName={buildingName}
             citySlug={citySlug}
             trigger={
-              <Button size="lg" className="h-11 flex-1 gap-2">
+              <Button size="lg" className="h-11 min-w-0 flex-1 gap-2 px-4">
                 <Calendar className="h-4 w-4" />
-                Schedule Tour
+                {/* Just "Tour" below 370px: price + chat + the full label
+                    needed ~365px, so on a 360px phone the button ran off the
+                    edge and a 320px iPhone SE zoomed the whole page out.
+                    flex-1 still stretches it, so px-4 only lowers its floor. */}
+                <span>
+                  <span className="max-[369px]:hidden">Schedule </span>Tour
+                </span>
               </Button>
             }
           />
