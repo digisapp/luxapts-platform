@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { reportClientError } from "@/lib/client-errors/report";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -29,6 +30,9 @@ export class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("Error caught by boundary:", error, errorInfo);
+    reportClientError("boundary", error, {
+      componentStack: errorInfo.componentStack?.slice(0, 1500),
+    });
   }
 
   handleReset = () => {
@@ -98,6 +102,12 @@ export function ErrorFallback({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Every route's error.tsx renders this, so this is where a crashed page is
+  // reported. The digest matches the server log for server-side errors.
+  useEffect(() => {
+    reportClientError("boundary", error, { digest: error.digest });
+  }, [error]);
+
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-background">
       <div className="text-center max-w-md">

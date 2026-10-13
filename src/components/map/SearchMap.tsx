@@ -6,6 +6,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Minus, Plus } from "lucide-react";
 import { clusterByOverlap } from "./screen-cluster";
 import { currentTheme } from "@/lib/theme";
+import { reportClientError } from "@/lib/client-errors/report";
 
 // Mapbox access token - using public token for client-side
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
@@ -204,6 +205,8 @@ export function SearchMap({
       });
     } catch (err) {
       console.warn("Map unavailable:", err);
+      // Counted on /admin/errors: how many visitors can't see the map
+      reportClientError("map", err);
       map.current = null;
       setMapError("The map can't be shown in this browser.");
       return;

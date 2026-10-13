@@ -3,36 +3,11 @@ import { apiError } from "@/lib/api-helpers";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { analyticsTrackSchema } from "@/lib/validations";
+import { getDeviceType, parseUserAgent } from "@/lib/analytics/user-agent";
 
 // Analytics tables no longer have public RLS insert policies (they were
 // spoofable/spammable via direct PostgREST calls) — all writes go through
 // this route with the service-role client.
-
-function getDeviceType(userAgent: string): "desktop" | "tablet" | "mobile" {
-  if (/tablet|ipad|playbook|silk/i.test(userAgent)) return "tablet";
-  if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile/i.test(userAgent)) return "mobile";
-  return "desktop";
-}
-
-function parseUserAgent(userAgent: string): { browser: string; os: string } {
-  let browser = "Unknown";
-  let os = "Unknown";
-
-  // Browser detection
-  if (userAgent.includes("Chrome")) browser = "Chrome";
-  else if (userAgent.includes("Safari")) browser = "Safari";
-  else if (userAgent.includes("Firefox")) browser = "Firefox";
-  else if (userAgent.includes("Edge")) browser = "Edge";
-
-  // OS detection
-  if (userAgent.includes("Windows")) os = "Windows";
-  else if (userAgent.includes("Mac")) os = "macOS";
-  else if (userAgent.includes("Linux")) os = "Linux";
-  else if (userAgent.includes("Android")) os = "Android";
-  else if (userAgent.includes("iOS") || userAgent.includes("iPhone")) os = "iOS";
-
-  return { browser, os };
-}
 
 export async function POST(req: Request) {
   try {

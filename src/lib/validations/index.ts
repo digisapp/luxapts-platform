@@ -241,6 +241,24 @@ export const analyticsTrackSchema = z.discriminatedUnion("type", [
 
 export type AnalyticsTrackInput = z.infer<typeof analyticsTrackSchema>;
 
+// ---- Browser errors (/api/client-errors) ----
+
+export const CLIENT_ERROR_SOURCES = ["window", "promise", "boundary", "root", "map"] as const;
+
+export const clientErrorSchema = z.object({
+  source: z.enum(CLIENT_ERROR_SOURCES),
+  message: z.string().min(1).max(1000),
+  name: z.string().max(100).nullish(),
+  stack: z.string().max(8000).nullish(),
+  path: z.string().min(1).max(500),
+  session_id: z.string().max(100).nullish(),
+  extra: z
+    .record(z.string(), z.union([z.string().max(2000), z.number(), z.boolean(), z.null()]))
+    .optional(),
+});
+
+export type ClientErrorInput = z.infer<typeof clientErrorSchema>;
+
 // ---- Chat ----
 
 const chatMessageSchema = z.object({

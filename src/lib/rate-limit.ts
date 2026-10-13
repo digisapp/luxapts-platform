@@ -193,6 +193,9 @@ export const RATE_LIMITS = {
   // Lead creation - prevent spam
   leads: { limit: 10, windowMs: 60 * 1000 }, // 10 req/min
 
+  // Browser error reports — one crash loop must not flood analytics_events
+  clientErrors: { limit: 30, windowMs: 60 * 1000 }, // 30 req/min
+
   // Auth endpoints - prevent brute force
   auth: { limit: 10, windowMs: 5 * 60 * 1000 }, // 10 req/5min
 

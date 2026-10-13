@@ -8,6 +8,7 @@ import { CompareBar } from "@/components/compare/CompareBar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { WebsiteJsonLd } from "@/components/seo/JsonLd";
 import { ThemeController } from "@/components/ThemeController";
+import { ClientErrorReporter } from "@/components/ClientErrorReporter";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 
 export const viewport: Viewport = {
@@ -72,6 +73,7 @@ export default function RootLayout({
         className="antialiased min-h-screen bg-background"
       >
         <ThemeController />
+        <ClientErrorReporter />
         <WebsiteJsonLd />
         <AuthProvider>
           <AnalyticsTracker />
