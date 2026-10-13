@@ -124,7 +124,7 @@ export default function FavoritesPage() {
                           <div className="flex-1 min-w-0">
                             <Link
                               href={`/buildings/${item.id}`}
-                              className="font-medium hover:text-primary transition-colors block truncate"
+                              className="font-medium hover:text-link dark:hover:text-primary transition-colors block truncate"
                             >
                               {item.name}
                             </Link>
@@ -213,7 +213,7 @@ export default function FavoritesPage() {
                     <div className="space-y-3">
                       {!user && (
                         <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
-                          <Link href="/auth/login" className="text-primary hover:underline">Sign in</Link>
+                          <Link href="/auth/login" className="text-link hover:underline dark:text-primary">Sign in</Link>
                           {" "}to sync your searches across devices and enable email alerts.
                         </div>
                       )}

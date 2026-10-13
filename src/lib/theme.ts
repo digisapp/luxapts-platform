@@ -1,33 +1,26 @@
 // Light / dark theme switch.
 //
-// Dark is the default and what the server renders (<html class="dark">), so
-// every page is cached exactly as before and nobody sees a change unless they
-// opt in. `?theme=light` opts this browser in (remembered in localStorage),
-// `?theme=dark` opts back out.
-//
-// Light only applies on routes whose markup has been converted to theme
-// tokens. An unconverted page still hard-codes white-on-black, so showing it
-// with the light palette would be broken — those stay dark either way.
+// Light is the default and what the server renders (no class on <html>).
+// Dark — the original black "liquid glass" look, `<html class="dark">` — is
+// kept for the staff portals, which have not been redesigned, and for anyone
+// who asks for it: `?theme=dark` opts this browser in (remembered in
+// localStorage), `?theme=light` opts back out.
 
 export type Theme = "light" | "dark";
 
 export const THEME_STORAGE_KEY = "staycio-theme";
 
-/** Routes converted to theme tokens. Add a route here once its markup is. */
-const LIGHT_READY_ROUTES: RegExp[] = [
-  /^\/(index)?$/, // the homepage prerenders as "/index"
-  /^\/search(\/|$)/,
-  /^\/buildings\//, // building and unit pages
-];
+/** Staff portals: always dark, whatever the visitor chose. */
+const DARK_ONLY_ROUTES: RegExp[] = [/^\/(admin|agent|partner|shower)(\/|$)/];
 
 const THEME_COLOR: Record<Theme, string> = { light: "#ffffff", dark: "#000000" };
 
-export function isLightReady(pathname: string): boolean {
-  return LIGHT_READY_ROUTES.some((r) => r.test(pathname));
+export function isDarkOnly(pathname: string): boolean {
+  return DARK_ONLY_ROUTES.some((r) => r.test(pathname));
 }
 
 export function resolveTheme(pathname: string, preference: Theme | null): Theme {
-  return preference === "light" && isLightReady(pathname) ? "light" : "dark";
+  return preference === "dark" || isDarkOnly(pathname) ? "dark" : "light";
 }
 
 /** `?theme=` wins and is remembered; otherwise the remembered choice. */
@@ -59,16 +52,16 @@ export function applyTheme(theme: Theme): void {
 }
 
 /**
- * Runs in <head> before first paint, so a light page never flashes dark.
- * Self-contained (no imports exist at that point), built from the same
- * route list and storage key as the functions above.
+ * Runs in <head> before first paint, so a portal or an opted-in visitor never
+ * flashes light. Self-contained (no imports exist at that point), built from
+ * the same route list and storage key as the functions above.
  */
 export const THEME_INIT_SCRIPT = `(function(){try{
-var routes=[${LIGHT_READY_ROUTES.map((r) => r.toString()).join(",")}];
+var routes=[${DARK_ONLY_ROUTES.map((r) => r.toString()).join(",")}];
 var p=new URLSearchParams(location.search).get("theme"),pref=null;
 if(p==="light"||p==="dark"){localStorage.setItem(${JSON.stringify(THEME_STORAGE_KEY)},p);pref=p;}
 else{var s=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(s==="light"||s==="dark")pref=s;}
-if(pref==="light"&&routes.some(function(r){return r.test(location.pathname)})){
-document.documentElement.classList.remove("dark");
-var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",${JSON.stringify(THEME_COLOR.light)});
+if(pref==="dark"||routes.some(function(r){return r.test(location.pathname)})){
+document.documentElement.classList.add("dark");
+var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",${JSON.stringify(THEME_COLOR.dark)});
 }}catch(e){}})();`;

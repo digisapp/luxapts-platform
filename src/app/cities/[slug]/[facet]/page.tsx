@@ -254,9 +254,9 @@ export default async function FacetPage({ params }: FacetPageProps) {
             className="mb-6"
           />
 
-          <h1 className="text-3xl md:text-5xl font-semibold tracking-tight text-white mb-3">{heading}</h1>
+          <h1 className="text-3xl md:text-5xl font-semibold tracking-tight text-foreground mb-3">{heading}</h1>
 
-          <p className="text-white/60 text-base md:text-lg max-w-3xl mb-6">
+          <p className="text-muted-foreground text-base md:text-lg max-w-3xl mb-6 dark:text-white/60">
             {listed.length > 0 ? (
               <>
                 {totalUnits} available {facet.label.toLowerCase().replace(" apartments", "")} unit
@@ -286,21 +286,21 @@ export default async function FacetPage({ params }: FacetPageProps) {
               <Link
                 key={f.slug}
                 href={facetPath(city.slug, f.slug)}
-                className="inline-flex min-h-10 items-center rounded-full border border-white/[0.08] bg-white/[0.02] px-4 text-sm text-white/70 transition-colors hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
+                className="inline-flex min-h-10 items-center rounded-full border border-border bg-card px-4 text-sm text-foreground/80 transition-all hover:border-foreground/20 hover:text-foreground hover:shadow-[0_6px_20px_-10px_rgba(20,33,43,0.18)] dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-white/70 dark:hover:border-white/25 dark:hover:bg-white/[0.05] dark:hover:text-white dark:hover:shadow-none"
               >
                 {f.label} in {city.name}
               </Link>
             ))}
             <Link
               href={`/cities/${city.slug}`}
-              className="inline-flex min-h-10 items-center rounded-full border border-white/[0.08] bg-white/[0.02] px-4 text-sm text-white/70 transition-colors hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
+              className="inline-flex min-h-10 items-center rounded-full border border-border bg-card px-4 text-sm text-foreground/80 transition-all hover:border-foreground/20 hover:text-foreground hover:shadow-[0_6px_20px_-10px_rgba(20,33,43,0.18)] dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-white/70 dark:hover:border-white/25 dark:hover:bg-white/[0.05] dark:hover:text-white dark:hover:shadow-none"
             >
               All {city.name} apartments
             </Link>
           </nav>
 
           {listed.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/[0.1] p-12 text-center">
+            <div className="rounded-2xl border border-dashed border-foreground/15 p-12 text-center dark:border-white/[0.1]">
               <Building2 className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
               <p className="text-muted-foreground mb-4">
                 Nothing matching {facet.label.toLowerCase()} in {city.name} at the moment.
@@ -314,7 +314,7 @@ export default async function FacetPage({ params }: FacetPageProps) {
             </div>
           ) : (
             <>
-              <h2 className="text-2xl font-semibold text-white mb-6">
+              <h2 className="text-2xl font-semibold text-foreground mb-6">
                 Buildings with {facet.label.toLowerCase()} in {city.name}
               </h2>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -348,14 +348,14 @@ export default async function FacetPage({ params }: FacetPageProps) {
 
           {faqs.length > 0 && (
             <section className="mt-16 max-w-3xl">
-              <h2 className="text-2xl font-semibold text-white mb-6">
+              <h2 className="text-2xl font-semibold text-foreground mb-6">
                 {facet.label} in {city.name}: common questions
               </h2>
               <div className="space-y-6">
                 {faqs.map((f) => (
                   <div key={f.question}>
-                    <h3 className="font-medium text-white mb-1">{f.question}</h3>
-                    <p className="text-white/60 leading-relaxed">{f.answer}</p>
+                    <h3 className="font-medium text-foreground mb-1">{f.question}</h3>
+                    <p className="text-muted-foreground leading-relaxed dark:text-white/60">{f.answer}</p>
                   </div>
                 ))}
               </div>

@@ -19,7 +19,7 @@ export interface BuildingCardBuilding {
  * and so the slug URL is applied in one place rather than at each call site.
  *
  * Visually it mirrors the home page's "most availability" cards (rounded-2xl,
- * white/[0.08] border, glass pills over the photo, text ≥12px) so a building
+ * hairline border, navy/glass pills over the photo, text ≥12px) so a building
  * looks the same wherever it is listed.
  */
 export function BuildingCard({
@@ -48,9 +48,9 @@ export function BuildingCard({
   return (
     <Link
       href={buildingPath(building)}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] transition-colors duration-300 hover:border-white/[0.18] hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(20,33,43,0.04)] transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-[0_12px_32px_-12px_rgba(20,33,43,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/[0.08] dark:bg-white/[0.03] dark:shadow-none dark:hover:translate-y-0 dark:hover:border-white/[0.18] dark:hover:bg-white/[0.05] dark:hover:shadow-none"
     >
-      <div className="relative h-44 shrink-0 overflow-hidden bg-white/[0.02] sm:h-52">
+      <div className="relative h-44 shrink-0 overflow-hidden bg-muted sm:h-52 dark:bg-white/[0.02]">
         {heroImage ? (
           <>
             <SafeImage
@@ -67,36 +67,36 @@ export function BuildingCard({
               fetchPriority={eager ? "high" : undefined}
             />
             <div
-              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"
+              className="pointer-events-none absolute inset-0 hidden bg-gradient-to-t from-black/25 via-transparent to-transparent [img~&]:block dark:block dark:from-black/50"
               aria-hidden="true"
             />
           </>
         ) : (
           // Honest, quiet placeholder: no stock photo, no tiny caption text.
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-white/[0.05] via-transparent to-cyan-500/[0.04]"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-foreground/[0.03] via-transparent to-transparent dark:from-white/[0.05] dark:to-cyan-500/[0.04]"
             aria-hidden="true"
           >
-            <Building2 className="h-10 w-10 text-white/20" strokeWidth={1.25} />
-            <span className="text-xs text-white/35">Photos coming soon</span>
+            <Building2 className="h-10 w-10 text-foreground/20 dark:text-white/20" strokeWidth={1.25} />
+            <span className="text-xs text-muted-foreground dark:text-white/35">Photos coming soon</span>
           </div>
         )}
         {neighborhoodName && (
-          <span className="absolute left-3 top-3 max-w-[60%] truncate rounded-full bg-black/60 px-2.5 py-1 text-xs text-white/90 backdrop-blur-sm">
+          <span className="absolute left-3 top-3 max-w-[60%] truncate rounded-full bg-inverse/75 px-2.5 py-1 text-xs text-white/90 backdrop-blur-sm dark:bg-inverse/60">
             {neighborhoodName}
           </span>
         )}
         {!!availableUnits && availableUnits > 0 && (
-          <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-emerald-300 ring-1 ring-emerald-400/30 backdrop-blur-sm">
+          <span className="absolute right-3 top-3 rounded-full bg-inverse/75 px-2.5 py-1 text-xs font-medium text-emerald-300 ring-1 ring-emerald-400/30 backdrop-blur-sm dark:bg-inverse/60">
             {availableUnits} available
           </span>
         )}
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="mb-1 text-lg font-medium leading-tight text-white">{building.name}</h3>
+        <h3 className="mb-1 text-xl font-medium leading-tight text-foreground dark:text-lg">{building.name}</h3>
         {building.address_1 && (
-          <p className="flex items-center gap-1 text-sm text-white/70">
+          <p className="flex items-center gap-1 text-sm text-muted-foreground dark:text-white/70">
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="truncate">
               {building.address_1}
@@ -104,17 +104,17 @@ export function BuildingCard({
             </span>
           </p>
         )}
-        {detail && <p className="mt-2 line-clamp-2 text-sm text-white/50">{detail}</p>}
+        {detail && <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{detail}</p>}
         <div className="mt-auto flex items-center justify-between pt-4">
           {minPrice ? (
-            <p className="text-base text-white/70">
-              From <span className="font-semibold text-white">{formatPrice(minPrice)}</span>/mo
+            <p className="text-base text-muted-foreground dark:text-white/70">
+              From <span className="text-lg font-semibold text-foreground dark:text-base">{formatPrice(minPrice)}</span>/mo
             </p>
           ) : (
-            <p className="text-base text-white/70">Contact for pricing</p>
+            <p className="text-base text-muted-foreground dark:text-white/70">Contact for pricing</p>
           )}
           <ArrowRight
-            className="h-4 w-4 text-white/40 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-white"
+            className="h-4 w-4 text-foreground/40 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-link dark:group-hover:text-white"
             aria-hidden="true"
           />
         </div>

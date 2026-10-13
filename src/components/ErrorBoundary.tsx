@@ -44,13 +44,13 @@ export class ErrorBoundary extends React.Component<
       return (
         <div className="min-h-[400px] flex items-center justify-center p-8">
           <div className="text-center max-w-md">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 mb-6">
-              <AlertTriangle className="h-8 w-8 text-red-500" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 border border-red-200 mb-6 dark:bg-red-500/10 dark:border-red-500/20">
+              <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-500" />
             </div>
-            <h2 className="text-xl font-semibold text-white mb-2">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               Something went wrong
             </h2>
-            <p className="text-white/50 mb-6">
+            <p className="text-muted-foreground mb-6">
               We encountered an unexpected error. Please try refreshing the page.
             </p>
             <div className="flex gap-3 justify-center">
@@ -64,17 +64,17 @@ export class ErrorBoundary extends React.Component<
               </Button>
               <Button
                 onClick={() => window.location.reload()}
-                className="bg-white text-black hover:bg-white/90"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 Refresh Page
               </Button>
             </div>
             {process.env.NODE_ENV === "development" && this.state.error && (
               <details className="mt-6 text-left">
-                <summary className="text-sm text-white/50 cursor-pointer">
+                <summary className="text-sm text-muted-foreground cursor-pointer">
                   Error Details
                 </summary>
-                <pre className="mt-2 p-4 bg-white/5 rounded-lg text-xs text-red-400 overflow-auto">
+                <pre className="mt-2 p-4 bg-foreground/5 rounded-lg text-xs text-red-600 dark:text-red-400 overflow-auto">
                   {this.state.error.message}
                   {"\n\n"}
                   {this.state.error.stack}
@@ -99,15 +99,15 @@ export function ErrorFallback({
   reset: () => void;
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-black">
+    <div className="min-h-screen flex items-center justify-center p-8 bg-background">
       <div className="text-center max-w-md">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 mb-6">
-          <AlertTriangle className="h-8 w-8 text-red-500" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 border border-red-200 mb-6 dark:bg-red-500/10 dark:border-red-500/20">
+          <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-500" />
         </div>
-        <h2 className="text-xl font-semibold text-white mb-2">
+        <h2 className="text-xl font-semibold text-foreground mb-2">
           Something went wrong
         </h2>
-        <p className="text-white/50 mb-6">
+        <p className="text-muted-foreground mb-6">
           We encountered an unexpected error. Please try again.
         </p>
         <div className="flex gap-3 justify-center">
@@ -117,17 +117,17 @@ export function ErrorFallback({
           </Button>
           <Button
             onClick={() => (window.location.href = "/")}
-            className="bg-white text-black hover:bg-white/90"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
             Go Home
           </Button>
         </div>
         {process.env.NODE_ENV === "development" && (
           <details className="mt-6 text-left">
-            <summary className="text-sm text-white/50 cursor-pointer">
+            <summary className="text-sm text-muted-foreground cursor-pointer">
               Error Details
             </summary>
-            <pre className="mt-2 p-4 bg-white/5 rounded-lg text-xs text-red-400 overflow-auto">
+            <pre className="mt-2 p-4 bg-foreground/5 rounded-lg text-xs text-red-600 dark:text-red-400 overflow-auto">
               {error.message}
               {error.digest && `\n\nDigest: ${error.digest}`}
             </pre>

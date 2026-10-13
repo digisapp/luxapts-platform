@@ -1,41 +1,38 @@
 import { describe, it, expect } from "vitest";
-import { isLightReady, resolveTheme, THEME_INIT_SCRIPT } from "@/lib/theme";
+import { isDarkOnly, resolveTheme, THEME_INIT_SCRIPT } from "@/lib/theme";
 
-describe("isLightReady", () => {
-  it("covers the converted pages", () => {
-    expect(isLightReady("/")).toBe(true);
-    expect(isLightReady("/index")).toBe(true); // the homepage prerenders as /index
-    expect(isLightReady("/search")).toBe(true);
-    expect(isLightReady("/buildings/bezel-miami-worldcenter")).toBe(true);
-    expect(isLightReady("/buildings/bezel-miami-worldcenter/units/45b0c863")).toBe(true);
+describe("isDarkOnly", () => {
+  it("keeps the staff portals dark", () => {
+    expect(isDarkOnly("/admin")).toBe(true);
+    expect(isDarkOnly("/admin/leads/123")).toBe(true);
+    expect(isDarkOnly("/agent")).toBe(true);
+    expect(isDarkOnly("/partner/listings")).toBe(true);
+    expect(isDarkOnly("/shower")).toBe(true);
   });
 
-  it("leaves everything else dark until it is converted", () => {
-    expect(isLightReady("/cities/miami")).toBe(false);
-    expect(isLightReady("/admin")).toBe(false);
-    expect(isLightReady("/searches")).toBe(false);
-    expect(isLightReady("/buildings")).toBe(false);
+  it("leaves every public page light", () => {
+    for (const p of ["/", "/index", "/search", "/buildings/bezel-miami-worldcenter", "/cities/miami", "/auth/login", "/administrative-fees"]) {
+      expect(isDarkOnly(p)).toBe(false);
+    }
   });
 });
 
 describe("resolveTheme", () => {
-  it("is dark unless this browser opted in to light", () => {
-    expect(resolveTheme("/", null)).toBe("dark");
-    expect(resolveTheme("/", "dark")).toBe("dark");
+  it("is light unless the visitor chose dark or it's a portal", () => {
+    expect(resolveTheme("/", null)).toBe("light");
     expect(resolveTheme("/", "light")).toBe("light");
-  });
-
-  it("never applies light to a page that isn't ready for it", () => {
-    expect(resolveTheme("/admin/leads", "light")).toBe("dark");
+    expect(resolveTheme("/", "dark")).toBe("dark");
+    expect(resolveTheme("/admin", null)).toBe("dark");
+    expect(resolveTheme("/admin", "light")).toBe("dark");
   });
 });
 
 describe("THEME_INIT_SCRIPT", () => {
   // Run the inline <head> script against a fake page and report the class it leaves.
   function run(pathname: string, search: string, stored: string | null) {
-    const classes = new Set(["dark"]);
+    const classes = new Set<string>();
     const storage = new Map<string, string>(stored ? [["staycio-theme", stored]] : []);
-    let themeColor = "#000000";
+    let themeColor = "#ffffff";
     const fake = {
       location: { pathname, search },
       localStorage: {
@@ -43,7 +40,7 @@ describe("THEME_INIT_SCRIPT", () => {
         setItem: (k: string, v: string) => void storage.set(k, v),
       },
       document: {
-        documentElement: { classList: { remove: (c: string) => classes.delete(c) } },
+        documentElement: { classList: { add: (c: string) => classes.add(c) } },
         querySelector: () => ({ setAttribute: (_: string, v: string) => (themeColor = v) }),
       },
       URLSearchParams,
@@ -52,20 +49,17 @@ describe("THEME_INIT_SCRIPT", () => {
     return { dark: classes.has("dark"), stored: storage.get("staycio-theme") ?? null, themeColor };
   }
 
-  it("keeps the server's dark class by default", () => {
-    expect(run("/", "", null)).toMatchObject({ dark: true, stored: null });
+  it("leaves the server's light page alone by default", () => {
+    expect(run("/", "", null)).toEqual({ dark: false, stored: null, themeColor: "#ffffff" });
   });
 
-  it("switches a ready page to light from ?theme=light and remembers it", () => {
-    expect(run("/", "?theme=light", null)).toEqual({ dark: false, stored: "light", themeColor: "#ffffff" });
-    expect(run("/search", "", "light")).toMatchObject({ dark: false });
+  it("goes dark before first paint on a portal", () => {
+    expect(run("/admin/leads", "", null)).toMatchObject({ dark: true, themeColor: "#000000" });
   });
 
-  it("stays dark on a page that isn't ready, even when opted in", () => {
-    expect(run("/cities/miami", "", "light")).toMatchObject({ dark: true });
-  });
-
-  it("?theme=dark opts back out", () => {
-    expect(run("/", "?theme=dark", "light")).toMatchObject({ dark: true, stored: "dark" });
+  it("?theme=dark opts in and is remembered; ?theme=light opts back out", () => {
+    expect(run("/", "?theme=dark", null)).toMatchObject({ dark: true, stored: "dark" });
+    expect(run("/search", "", "dark")).toMatchObject({ dark: true });
+    expect(run("/", "?theme=light", "dark")).toMatchObject({ dark: false, stored: "light" });
   });
 });

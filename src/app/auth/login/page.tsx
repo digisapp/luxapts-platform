@@ -59,31 +59,31 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
       {/* Background effects */}
-      <div className="fixed inset-0 -z-10">
+      <div className="fixed inset-0 -z-10 hidden dark:block">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-cyan-500/[0.07] rounded-full blur-[120px]" />
       </div>
 
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-          <StaycioMark className="h-8 w-auto text-white" />
-          <span className="text-2xl font-medium tracking-tight text-white">Staycio</span>
+          <StaycioMark className="h-8 w-auto text-foreground" />
+          <span className="text-2xl font-medium tracking-tight text-foreground">Staycio</span>
         </Link>
 
         {/* Card */}
-        <div className="p-8 rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]">
+        <div className="p-8 rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_1px_2px_rgba(20,33,43,0.04)] dark:bg-white/[0.02] dark:border-white/[0.08] dark:shadow-none">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-semibold text-white mb-2">Welcome back</h1>
-            <p className="text-white/50">
+            <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome back</h1>
+            <p className="text-muted-foreground">
               Sign in to access your saved listings
             </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label htmlFor="login-email" className="mb-2 block text-sm font-medium text-white/70">Email</label>
+              <label htmlFor="login-email" className="mb-2 block text-sm font-medium text-foreground/80 dark:text-white/70">Email</label>
               <Input
                 id="login-email"
                 type="email"
@@ -92,16 +92,16 @@ function LoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                className="h-12 bg-white/[0.03] border-white/[0.08] focus:border-white/20"
+                className="h-12 dark:bg-white/[0.03] dark:border-white/[0.08] dark:focus:border-white/20"
               />
             </div>
 
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label htmlFor="login-password" className="block text-sm font-medium text-white/70">Password</label>
+                <label htmlFor="login-password" className="block text-sm font-medium text-foreground/80 dark:text-white/70">Password</label>
                 <Link
                   href="/auth/forgot-password"
-                  className="-my-3 py-3 text-sm text-white/50 hover:text-white/70 transition-colors"
+                  className="-my-3 py-3 text-sm text-muted-foreground hover:text-link dark:hover:text-white/70 transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -114,19 +114,19 @@ function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Your password"
                 required
-                className="h-12 bg-white/[0.03] border-white/[0.08] focus:border-white/20"
+                className="h-12 dark:bg-white/[0.03] dark:border-white/[0.08] dark:focus:border-white/20"
               />
             </div>
 
             {error && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                <p className="text-sm text-red-400">{error}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
               </div>
             )}
 
             <Button
               type="submit"
-              className="w-full h-12 bg-white text-black hover:bg-white/90 font-medium"
+              className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
               disabled={loading}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -134,16 +134,16 @@ function LoginForm() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-white/50">
+          <p className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link href="/auth/signup" className="py-3 text-white/70 hover:text-white transition-colors">
+            <Link href="/auth/signup" className="py-3 text-foreground hover:text-link dark:text-white/70 dark:hover:text-white transition-colors">
               Sign up
             </Link>
           </p>
         </div>
 
         <p className="mt-6 text-center text-sm">
-          <Link href="/" className="inline-flex min-h-11 items-center px-2 text-white/50 hover:text-white/70 transition-colors">
+          <Link href="/" className="inline-flex min-h-11 items-center px-2 text-muted-foreground hover:text-link dark:hover:text-white/70 transition-colors">
             Back to home
           </Link>
         </p>
@@ -156,19 +156,19 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-black px-4">
-          <div className="fixed inset-0 -z-10">
+        <div className="flex min-h-screen items-center justify-center bg-background px-4">
+          <div className="fixed inset-0 -z-10 hidden dark:block">
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-cyan-500/[0.07] rounded-full blur-[120px]" />
           </div>
           <div className="w-full max-w-md">
             <div className="flex items-center justify-center gap-2 mb-8">
-              <StaycioMark className="h-8 w-auto text-white" />
-              <span className="text-2xl font-medium tracking-tight text-white">Staycio</span>
+              <StaycioMark className="h-8 w-auto text-foreground" />
+              <span className="text-2xl font-medium tracking-tight text-foreground">Staycio</span>
             </div>
-            <div className="p-8 rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]">
+            <div className="p-8 rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_1px_2px_rgba(20,33,43,0.04)] dark:bg-white/[0.02] dark:border-white/[0.08] dark:shadow-none">
               <div className="flex flex-col items-center gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-white/50" />
-                <p className="text-white/50">Loading...</p>
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <p className="text-muted-foreground">Loading...</p>
               </div>
             </div>
           </div>

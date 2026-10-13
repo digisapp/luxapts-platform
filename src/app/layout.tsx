@@ -14,7 +14,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#000000",
+  themeColor: "#ffffff",
   interactiveWidget: "resizes-content",
 };
 
@@ -25,10 +25,11 @@ export const metadata: Metadata = {
   keywords: ["apartments", "rentals", "NYC", "Miami", "luxury apartments", "apartment search"],
   appleWebApp: {
     capable: true,
-    // "black", not "black-translucent": translucent draws the page under the
-    // status bar in a home-screen launch, and every page's fixed pt-16/pt-20
-    // offset then left its top edge under the clock. The theme is black anyway.
-    statusBarStyle: "black",
+    // "default" (dark text on a light bar), not "black-translucent":
+    // translucent draws the page under the status bar in a home-screen
+    // launch, and every page's fixed pt-16/pt-20 offset then left its top
+    // edge under the clock.
+    statusBarStyle: "default",
     title: "Staycio",
   },
   openGraph: {
@@ -60,9 +61,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // Dark is the server default; THEME_INIT_SCRIPT swaps to light before
-    // first paint for anyone who opted in (src/lib/theme.ts).
-    <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
+    // Light is the server default; THEME_INIT_SCRIPT adds .dark before first
+    // paint on the staff portals and for anyone who chose ?theme=dark
+    // (src/lib/theme.ts).
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>

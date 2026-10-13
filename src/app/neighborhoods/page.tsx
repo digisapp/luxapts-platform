@@ -72,7 +72,7 @@ export default async function NeighborhoodsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header />
       <main className="flex-1">
         {/* pt clears the fixed h-16 header */}
@@ -80,7 +80,7 @@ export default async function NeighborhoodsPage() {
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
             Explore Neighborhoods
           </h1>
-          <p className="mt-3 text-zinc-400 max-w-2xl">
+          <p className="mt-3 text-muted-foreground max-w-2xl dark:text-zinc-400">
             Find your next home by neighborhood — from Manhattan high-rises to
             Miami waterfront towers.
           </p>
@@ -94,7 +94,7 @@ export default async function NeighborhoodsPage() {
                   </h2>
                   <Link
                     href={`/cities/${city.slug}`}
-                    className="inline-flex min-h-10 shrink-0 items-center gap-1 text-sm text-zinc-400 transition-colors hover:text-white"
+                    className="inline-flex min-h-10 shrink-0 items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-link dark:text-zinc-400 dark:hover:text-white"
                   >
                     City guide <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </Link>
@@ -108,11 +108,11 @@ export default async function NeighborhoodsPage() {
                         href={`/neighborhoods/${hood.slug}?city=${city.slug}`}
                         className="group"
                       >
-                        <Card className="h-full rounded-2xl border-white/[0.08] bg-white/[0.02] transition-colors group-hover:border-white/[0.18] group-hover:bg-white/[0.04]">
+                        <Card className="h-full rounded-2xl border-border bg-card transition-all group-hover:border-foreground/20 group-hover:shadow-[0_6px_20px_-10px_rgba(20,33,43,0.18)] dark:border-white/[0.08] dark:bg-white/[0.02] dark:group-hover:border-white/[0.18] dark:group-hover:bg-white/[0.04] dark:group-hover:shadow-xl">
                           <CardContent className="flex h-full items-center justify-between gap-3 p-4">
                             <div className="flex items-center gap-3 min-w-0">
                               <MapPin
-                                className="h-4 w-4 shrink-0 text-zinc-500"
+                                className="h-4 w-4 shrink-0 text-muted-foreground dark:text-zinc-500"
                                 aria-hidden="true"
                               />
                               {/* Wrap to two lines rather than truncating
@@ -120,7 +120,7 @@ export default async function NeighborhoodsPage() {
                               <span className="line-clamp-2 font-medium leading-snug">{hood.name}</span>
                             </div>
                             {count > 0 && (
-                              <span className="shrink-0 whitespace-nowrap rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-white/70">
+                              <span className="shrink-0 whitespace-nowrap rounded-full bg-foreground/[0.05] px-2.5 py-1 text-xs text-muted-foreground dark:bg-white/[0.06] dark:text-white/70">
                                 {count} {count === 1 ? "building" : "buildings"}
                               </span>
                             )}
@@ -135,7 +135,7 @@ export default async function NeighborhoodsPage() {
           </div>
 
           {groups.length === 0 && (
-            <p className="mt-12 text-zinc-400">No neighborhoods available yet.</p>
+            <p className="mt-12 text-muted-foreground dark:text-zinc-400">No neighborhoods available yet.</p>
           )}
         </div>
       </main>

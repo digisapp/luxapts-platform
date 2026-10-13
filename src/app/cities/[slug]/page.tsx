@@ -284,12 +284,12 @@ export default async function CityPage({ params }: CityPageProps) {
               sizes="100vw"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-zinc-900 to-black" />
+            <div className="absolute inset-0 bg-gradient-to-br from-inverse via-inverse to-inverse dark:from-cyan-500/10 dark:via-zinc-900 dark:to-black" />
           )}
           {/* Scrim: a bottom-up fade for the text block plus a left-side wash,
               so white type stays legible over bright photos (Miami's neon). */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/25 to-transparent" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-t from-inverse via-inverse/60 to-inverse/30" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-r from-inverse/70 via-inverse/25 to-transparent" aria-hidden="true" />
 
           <div className="relative mx-auto w-full max-w-7xl px-4 pb-10 pt-24 sm:px-6 md:pb-14">
             <Breadcrumb
@@ -306,16 +306,16 @@ export default async function CityPage({ params }: CityPageProps) {
 
             {/* Stats: three equal tiles on phones, inline pills from sm up */}
             <div className="mb-8 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-              <div className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white backdrop-blur-md sm:px-4">
+              <div className="rounded-xl border border-white/15 bg-inverse/40 px-3 py-2 text-white backdrop-blur-md sm:px-4">
                 <span className="block text-xl font-semibold sm:inline sm:text-2xl">{totalBuildings}</span>
                 <span className="block text-xs text-white/70 sm:ml-1.5 sm:inline sm:text-sm">Buildings</span>
               </div>
-              <div className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white backdrop-blur-md sm:px-4">
+              <div className="rounded-xl border border-white/15 bg-inverse/40 px-3 py-2 text-white backdrop-blur-md sm:px-4">
                 <span className="block text-xl font-semibold sm:inline sm:text-2xl">{totalUnits}</span>
                 <span className="block text-xs text-white/70 sm:ml-1.5 sm:inline sm:text-sm">Available units</span>
               </div>
               {cityMinPrice && (
-                <div className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white backdrop-blur-md sm:px-4">
+                <div className="rounded-xl border border-white/15 bg-inverse/40 px-3 py-2 text-white backdrop-blur-md sm:px-4">
                   <span className="block text-xl font-semibold sm:inline sm:text-2xl">
                     {formatPrice(cityMinPrice)}
                   </span>
@@ -324,7 +324,7 @@ export default async function CityPage({ params }: CityPageProps) {
               )}
             </div>
 
-            <Button asChild size="lg" className="w-full gap-2 px-8 text-base sm:w-auto">
+            <Button asChild size="lg" className="w-full gap-2 bg-white px-8 text-base text-inverse hover:bg-white/90 sm:w-auto">
               <Link href={`/search?city=${city.slug}`}>
                 <Search className="h-5 w-5" aria-hidden="true" />
                 Search in {city.name}
@@ -338,12 +338,12 @@ export default async function CityPage({ params }: CityPageProps) {
               prose about a market we have no listings for is worse than none. */}
           {CITY_COPY[slug] && totalBuildings > 0 && (
             <section className="max-w-3xl">
-              <h2 className="text-2xl font-semibold text-white mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 Luxury Apartments in {city.name}
               </h2>
               <div className="space-y-4">
                 {CITY_COPY[slug].map((paragraph, i) => (
-                  <p key={i} className="text-white/60 leading-relaxed">
+                  <p key={i} className="text-muted-foreground leading-relaxed dark:text-white/60">
                     {paragraph.replace(/\{count\}/g, String(totalBuildings))}
                   </p>
                 ))}
@@ -354,8 +354,8 @@ export default async function CityPage({ params }: CityPageProps) {
           {/* Neighborhoods */}
           {neighborhoods.length > 0 && (
             <section>
-              <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-white/60" aria-hidden="true" />
+              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-muted-foreground dark:text-white/60" aria-hidden="true" />
                 Neighborhoods
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -367,7 +367,7 @@ export default async function CityPage({ params }: CityPageProps) {
                   <Link
                     key={n.id}
                     href={`/neighborhoods/${n.slug}?city=${city.slug}`}
-                    className="inline-flex min-h-10 items-center rounded-full border border-white/[0.08] bg-white/[0.02] px-4 text-sm text-white/75 transition-colors hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
+                    className="inline-flex min-h-10 items-center rounded-full border border-border bg-card px-4 text-sm text-foreground/80 transition-all hover:border-foreground/20 hover:text-foreground hover:shadow-[0_6px_20px_-10px_rgba(20,33,43,0.18)] dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-white/75 dark:hover:border-white/25 dark:hover:bg-white/[0.05] dark:hover:text-white dark:hover:shadow-none"
                   >
                     {n.name} apartments
                   </Link>
@@ -381,8 +381,8 @@ export default async function CityPage({ params }: CityPageProps) {
               in <city>". Only rendered where inventory backs the facet. */}
           {BED_FACETS.some((f) => (facetBuildingCounts[f.slug] || 0) >= MIN_FACET_BUILDINGS) && (
             <section>
-              <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-white/60" aria-hidden="true" />
+              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-muted-foreground dark:text-white/60" aria-hidden="true" />
                 Browse {city.name} apartments by layout
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -392,10 +392,10 @@ export default async function CityPage({ params }: CityPageProps) {
                   <Link
                     key={f.slug}
                     href={facetPath(city.slug, f.slug)}
-                    className="inline-flex min-h-10 items-center rounded-full border border-white/[0.08] bg-white/[0.02] px-4 text-sm text-white/75 transition-colors hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
+                    className="inline-flex min-h-10 items-center rounded-full border border-border bg-card px-4 text-sm text-foreground/80 transition-all hover:border-foreground/20 hover:text-foreground hover:shadow-[0_6px_20px_-10px_rgba(20,33,43,0.18)] dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-white/75 dark:hover:border-white/25 dark:hover:bg-white/[0.05] dark:hover:text-white dark:hover:shadow-none"
                   >
                     {f.label} in {city.name}
-                    <span className="ml-2 text-white/40">{facetBuildingCounts[f.slug]}</span>
+                    <span className="ml-2 text-muted-foreground dark:text-white/40">{facetBuildingCounts[f.slug]}</span>
                   </Link>
                 ))}
               </div>
@@ -405,19 +405,19 @@ export default async function CityPage({ params }: CityPageProps) {
           {/* Buildings Grid */}
           <section>
             <div className="mb-6 flex items-end justify-between gap-4 md:mb-8">
-              <h2 className="text-2xl font-semibold text-white md:text-3xl">
+              <h2 className="text-2xl font-semibold text-foreground md:text-3xl">
                 {city.name} apartment buildings
               </h2>
               <Link
                 href={`/search?city=${city.slug}`}
-                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
+                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-link dark:text-white/60 dark:hover:text-white"
               >
                 View all <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
 
             {sortedBuildings.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/[0.1] p-12 text-center">
+              <div className="rounded-2xl border border-dashed border-foreground/15 p-12 text-center dark:border-white/[0.1]">
                 <Building2 className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
                 <p className="text-muted-foreground">No active listings in {city.name} yet.</p>
                 <Button asChild variant="outline" size="sm" className="mt-4">
@@ -453,32 +453,32 @@ export default async function CityPage({ params }: CityPageProps) {
               from sm, 2x2 on phones) and the CTA gets its own row/column, so
               nothing wraps 3+1 beside the button. */}
           {totalBuildings > 0 && (
-            <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 md:p-8">
+            <section className="rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(20,33,43,0.04)] md:p-8 dark:border-white/[0.06] dark:bg-white/[0.02] dark:shadow-none">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
                 <div className="min-w-0 flex-1">
-                  <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
-                    <TrendingUp className="h-5 w-5 text-cyan-400" aria-hidden="true" />
+                  <h2 className="flex items-center gap-2 text-xl font-semibold text-foreground">
+                    <TrendingUp className="h-5 w-5 text-link dark:text-stacy" aria-hidden="true" />
                     {city.name} market snapshot
                   </h2>
                   <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
                     <div>
-                      <dt className="text-sm text-white/50">Active buildings</dt>
-                      <dd className="mt-1 text-2xl font-semibold text-white">{totalBuildings}</dd>
+                      <dt className="text-sm text-muted-foreground">Active buildings</dt>
+                      <dd className="mt-1 text-2xl font-semibold text-foreground">{totalBuildings}</dd>
                     </div>
                     <div>
-                      <dt className="text-sm text-white/50">Open units</dt>
-                      <dd className="mt-1 text-2xl font-semibold text-white">{totalUnits}</dd>
+                      <dt className="text-sm text-muted-foreground">Open units</dt>
+                      <dd className="mt-1 text-2xl font-semibold text-foreground">{totalUnits}</dd>
                     </div>
                     {cityMinPrice && (
                       <div>
-                        <dt className="text-sm text-white/50">Starting rent</dt>
-                        <dd className="mt-1 text-2xl font-semibold text-white">{formatPrice(cityMinPrice)}</dd>
+                        <dt className="text-sm text-muted-foreground">Starting rent</dt>
+                        <dd className="mt-1 text-2xl font-semibold text-foreground">{formatPrice(cityMinPrice)}</dd>
                       </div>
                     )}
                     {neighborhoods.length > 0 && (
                       <div>
-                        <dt className="text-sm text-white/50">Neighborhoods</dt>
-                        <dd className="mt-1 text-2xl font-semibold text-white">{neighborhoods.length}</dd>
+                        <dt className="text-sm text-muted-foreground">Neighborhoods</dt>
+                        <dd className="mt-1 text-2xl font-semibold text-foreground">{neighborhoods.length}</dd>
                       </div>
                     )}
                   </dl>

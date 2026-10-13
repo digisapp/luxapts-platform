@@ -12,18 +12,18 @@ const LAST_UPDATED = "July 12, 2026";
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header />
       <main className="flex-1">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-28 pb-16 md:pt-32">
           <h1 className="text-3xl lg:text-4xl font-semibold tracking-tight">
             Terms of Service
           </h1>
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-muted-foreground dark:text-zinc-400">
             Last updated: {LAST_UPDATED}
           </p>
 
-          <div className="mt-10 space-y-10 text-sm leading-relaxed text-zinc-400 [&_h2]:text-lg [&_h2]:font-medium [&_h2]:text-white [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_p]:mt-3">
+          <div className="mt-10 space-y-10 text-sm leading-relaxed text-foreground/80 dark:text-zinc-400 [&_h2]:text-lg [&_h2]:font-medium [&_h2]:text-foreground [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_p]:mt-3">
             <section>
               <h2>1. Acceptance of terms</h2>
               <p>
@@ -127,7 +127,7 @@ export default function TermsPage() {
                 effect constitutes acceptance. Questions:{" "}
                 <a
                   href="mailto:hello@staycio.com"
-                  className="py-3 text-white underline underline-offset-4 hover:text-zinc-300"
+                  className="py-3 text-link underline underline-offset-4 hover:text-link/80 dark:text-white dark:hover:text-zinc-300"
                 >
                   hello@staycio.com
                 </a>

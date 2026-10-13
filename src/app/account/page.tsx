@@ -192,7 +192,7 @@ export default function AccountPage() {
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
                 ) : profileLoadError ? (
-                  <p className="text-sm text-red-500 py-2">
+                  <p className="text-sm text-red-600 dark:text-red-500 py-2">
                     Failed to load your profile. Please refresh the page to try again.
                   </p>
                 ) : (
@@ -240,7 +240,7 @@ export default function AccountPage() {
                       </div>
                     )}
 
-                    {profileError && <p className="text-sm text-red-500">{profileError}</p>}
+                    {profileError && <p className="text-sm text-red-600 dark:text-red-500">{profileError}</p>}
 
                     <div className="flex items-center gap-3 pt-1">
                       <Button onClick={handleSaveProfile} disabled={savingProfile} size="sm">
@@ -248,7 +248,7 @@ export default function AccountPage() {
                         Save changes
                       </Button>
                       {profileSaved && (
-                        <span className="flex items-center gap-1.5 text-sm text-green-600">
+                        <span className="flex items-center gap-1.5 text-sm text-positive dark:text-green-600">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           Saved
                         </span>
@@ -276,7 +276,7 @@ export default function AccountPage() {
                     </p>
                   </div>
                   {resetSent ? (
-                    <span className="flex items-center gap-1.5 text-sm text-green-600">
+                    <span className="flex items-center gap-1.5 text-sm text-positive dark:text-green-600">
                       <CheckCircle2 className="h-4 w-4" />
                       Reset link sent
                     </span>

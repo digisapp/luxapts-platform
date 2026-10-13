@@ -8,8 +8,9 @@ export default function manifest(): MetadataRoute.Manifest {
       "AI-powered apartment discovery across major US cities. Your space, found.",
     start_url: "/",
     display: "standalone",
-    background_color: "#000000",
-    theme_color: "#000000",
+    // Splash and title bar match the light page (warm white, white nav)
+    background_color: "#fafaf9",
+    theme_color: "#ffffff",
     icons: [
       {
         src: "/icons/icon-192.png",

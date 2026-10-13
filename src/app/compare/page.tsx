@@ -145,7 +145,7 @@ export default function ComparePage() {
                 <button
                   onClick={() => removeBuilding(building.id)}
                   aria-label={`Remove ${building.name} from comparison`}
-                  className="absolute top-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/70 backdrop-blur-sm hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors z-10"
+                  className="absolute top-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-inverse/80 backdrop-blur-sm hover:bg-inverse text-zinc-300 hover:text-white dark:bg-inverse/70 dark:hover:bg-zinc-700 transition-colors z-10"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -218,7 +218,7 @@ export default function ComparePage() {
           ) : error ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-red-500 mb-4">{error}</p>
+                <p className="text-red-600 dark:text-red-500 mb-4">{error}</p>
                 <Button onClick={() => setRetryCount((c) => c + 1)}>Try Again</Button>
               </CardContent>
             </Card>
@@ -415,14 +415,14 @@ export default function ComparePage() {
                               <td className="py-3 px-4">{amenity}</td>
                               <td className="py-3 px-4 text-center">
                                 {hasA ? (
-                                  <Check className="h-5 w-5 text-green-500 mx-auto" />
+                                  <Check className="h-5 w-5 text-positive dark:text-green-500 mx-auto" />
                                 ) : (
                                   <Minus className="h-5 w-5 text-muted-foreground mx-auto" />
                                 )}
                               </td>
                               <td className="py-3 px-4 text-center">
                                 {hasB ? (
-                                  <Check className="h-5 w-5 text-green-500 mx-auto" />
+                                  <Check className="h-5 w-5 text-positive dark:text-green-500 mx-auto" />
                                 ) : (
                                   <Minus className="h-5 w-5 text-muted-foreground mx-auto" />
                                 )}

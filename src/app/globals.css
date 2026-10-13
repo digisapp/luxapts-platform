@@ -98,8 +98,7 @@
    deep navy for buttons and dark surfaces. Stacy's cyan is the one accent:
    #22D3EE where it sits on navy or photos (and for rings and dots), #0891B2
    wherever cyan has to read as text or an icon on white.
-   Applied only on routes listed in src/lib/theme.ts; everything else keeps
-   the .dark theme below until it is converted.
+   The default everywhere except the staff portals (src/lib/theme.ts).
    ======================================== */
 
 :root {
@@ -174,6 +173,12 @@
   --sidebar-border: #e7e7e5;
   --sidebar-ring: rgba(34, 211, 238, 0.6);
 }
+
+/* ========================================
+   DARK THEME — the original black "liquid glass" look, unchanged.
+   <html class="dark">: the staff portals, and visitors who chose
+   ?theme=dark.
+   ======================================== */
 
 .dark {
   color-scheme: dark;

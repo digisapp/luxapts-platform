@@ -94,10 +94,10 @@ function ResetPasswordForm() {
     return (
       <div className="text-center">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/20">
-          <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+          <CheckCircle2 className="h-8 w-8 text-positive" />
         </div>
-        <h1 className="text-2xl font-semibold text-white mb-2">Password updated!</h1>
-        <p className="text-white/50">Redirecting you home…</p>
+        <h1 className="text-2xl font-semibold text-foreground mb-2">Password updated!</h1>
+        <p className="text-muted-foreground">Redirecting you home…</p>
       </div>
     );
   }
@@ -106,17 +106,17 @@ function ResetPasswordForm() {
     return (
       <div className="text-center">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20">
-          <AlertCircle className="h-8 w-8 text-amber-400" />
+          <AlertCircle className="h-8 w-8 text-amber-700 dark:text-amber-400" />
         </div>
-        <h1 className="text-2xl font-semibold text-white mb-2">
+        <h1 className="text-2xl font-semibold text-foreground mb-2">
           {linkStatus === "expired" ? "This link has expired" : "This link can’t be used"}
         </h1>
-        <p className="text-white/50 mb-6">
+        <p className="text-muted-foreground mb-6">
           {linkStatus === "expired"
             ? "Reset links work once and expire after a while. Request a new one and we’ll email it right away."
             : "Open the link from your reset email on the same device and browser you requested it from, or request a new one."}
         </p>
-        <Button asChild className="w-full h-12 bg-white text-black hover:bg-white/90 font-medium">
+        <Button asChild className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-medium">
           <Link href="/auth/forgot-password">Request a new link</Link>
         </Button>
       </div>
@@ -126,8 +126,8 @@ function ResetPasswordForm() {
   if (linkStatus === "checking") {
     return (
       <div className="text-center" role="status">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-white/50 mb-4" />
-        <h1 className="text-white/70">Verifying your reset link…</h1>
+        <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground mb-4" />
+        <h1 className="text-foreground/80 dark:text-white/70">Verifying your reset link…</h1>
       </div>
     );
   }
@@ -135,13 +135,13 @@ function ResetPasswordForm() {
   return (
     <>
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-semibold text-white mb-2">Set new password</h1>
-        <p className="text-white/50">Choose a strong password for your account</p>
+        <h1 className="text-2xl font-semibold text-foreground mb-2">Set new password</h1>
+        <p className="text-muted-foreground">Choose a strong password for your account</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="reset-password-new-password" className="mb-2 block text-sm font-medium text-white/70">New password</label>
+          <label htmlFor="reset-password-new-password" className="mb-2 block text-sm font-medium text-foreground/80 dark:text-white/70">New password</label>
           <Input
             id="reset-password-new-password"
             type="password"
@@ -151,12 +151,12 @@ function ResetPasswordForm() {
             placeholder="At least 6 characters"
             required
             minLength={6}
-            className="h-12 bg-white/[0.03] border-white/[0.08] focus:border-white/20"
+            className="h-12 dark:bg-white/[0.03] dark:border-white/[0.08] dark:focus:border-white/20"
           />
         </div>
 
         <div>
-          <label htmlFor="reset-password-confirm-password" className="mb-2 block text-sm font-medium text-white/70">Confirm password</label>
+          <label htmlFor="reset-password-confirm-password" className="mb-2 block text-sm font-medium text-foreground/80 dark:text-white/70">Confirm password</label>
           <Input
             id="reset-password-confirm-password"
             type="password"
@@ -165,20 +165,20 @@ function ResetPasswordForm() {
             onChange={(e) => setConfirm(e.target.value)}
             placeholder="Same password again"
             required
-            className="h-12 bg-white/[0.03] border-white/[0.08] focus:border-white/20"
+            className="h-12 dark:bg-white/[0.03] dark:border-white/[0.08] dark:focus:border-white/20"
           />
         </div>
 
         {error && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-            <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
-            <p className="text-sm text-red-400">{error}</p>
+            <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 
         <Button
           type="submit"
-          className="w-full h-12 bg-white text-black hover:bg-white/90 font-medium"
+          className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
           disabled={loading}
         >
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -191,22 +191,22 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-4">
-      <div className="fixed inset-0 -z-10">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="fixed inset-0 -z-10 hidden dark:block">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-cyan-500/[0.07] rounded-full blur-[120px]" />
       </div>
 
       <div className="w-full max-w-md">
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-          <StaycioMark className="h-8 w-auto text-white" />
-          <span className="text-2xl font-medium tracking-tight text-white">Staycio</span>
+          <StaycioMark className="h-8 w-auto text-foreground" />
+          <span className="text-2xl font-medium tracking-tight text-foreground">Staycio</span>
         </Link>
 
-        <div className="p-8 rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]">
+        <div className="p-8 rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_1px_2px_rgba(20,33,43,0.04)] dark:bg-white/[0.02] dark:border-white/[0.08] dark:shadow-none">
           <Suspense
             fallback={
               <div className="text-center">
-                <Loader2 className="mx-auto h-8 w-8 animate-spin text-white/50" />
+                <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             }
           >
@@ -215,7 +215,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <p className="mt-6 text-center text-sm">
-          <Link href="/" className="inline-flex min-h-11 items-center px-2 text-white/50 hover:text-white/70 transition-colors">
+          <Link href="/" className="inline-flex min-h-11 items-center px-2 text-muted-foreground hover:text-link dark:hover:text-white/70 transition-colors">
             Back to home
           </Link>
         </p>

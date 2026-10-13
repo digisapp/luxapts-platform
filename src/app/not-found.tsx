@@ -12,15 +12,15 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col bg-black">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
       <main className="flex-1 pt-20 flex items-center justify-center">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 py-24 text-center">
-          <p className="text-sm uppercase tracking-wider text-white/50 mb-4">404</p>
-          <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
+          <p className="text-sm uppercase tracking-wider text-muted-foreground mb-4">404</p>
+          <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
             This page has moved out
           </h1>
-          <p className="text-white/60 mb-8 max-w-md mx-auto">
+          <p className="text-muted-foreground dark:text-white/60 mb-8 max-w-md mx-auto">
             The page you&apos;re looking for doesn&apos;t live here anymore. Let&apos;s
             find you a new place.
           </p>

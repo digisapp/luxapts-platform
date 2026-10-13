@@ -277,7 +277,7 @@ export async function NeighborhoodView({
       <main className="flex-1 pt-16">
         {/* Hero — same container as the body below, so the stats row and the
             building list share one left edge (and the header's). */}
-        <div className="bg-gradient-to-b from-zinc-900 to-black pt-6 pb-10 md:pt-10 md:pb-12">
+        <div className="bg-gradient-to-b from-muted to-background pt-6 pb-10 md:pt-10 md:pb-12 dark:from-zinc-900 dark:to-black">
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
             <Breadcrumb
               items={[
@@ -291,15 +291,15 @@ export async function NeighborhoodView({
             <div className="flex items-start justify-between gap-8">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <Badge variant="secondary" className="text-sm">
+                  <Badge variant="secondary" className="border-border bg-card text-sm dark:border-transparent dark:bg-secondary">
                     <MapPin className="h-3 w-3 mr-1" />
                     {city?.name}, {city?.state}
                   </Badge>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-white mb-4">
+                <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-4">
                   Apartments for Rent in {neighborhood.name}
                 </h1>
-                <p className="text-base md:text-lg text-zinc-400 max-w-3xl">
+                <p className="text-base md:text-lg text-muted-foreground max-w-3xl dark:text-zinc-400">
                   {description}
                 </p>
               </div>
@@ -307,49 +307,49 @@ export async function NeighborhoodView({
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-8 md:mt-10">
-              <Card className="rounded-2xl bg-white/[0.02] border-white/[0.08]">
+              <Card className="rounded-2xl border-border bg-card dark:border-white/[0.08] dark:bg-white/[0.02]">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-zinc-400 text-sm mb-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1 dark:text-zinc-400">
                     <Building2 className="h-4 w-4" />
                     Buildings
                   </div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-2xl font-bold text-foreground">
                     {buildings?.length || 0}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl bg-white/[0.02] border-white/[0.08]">
+              <Card className="rounded-2xl border-border bg-card dark:border-white/[0.08] dark:bg-white/[0.02]">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-zinc-400 text-sm mb-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1 dark:text-zinc-400">
                     <Home className="h-4 w-4" />
                     Available Units
                   </div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-2xl font-bold text-foreground">
                     {units?.length || 0}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl bg-white/[0.02] border-white/[0.08]">
+              <Card className="rounded-2xl border-border bg-card dark:border-white/[0.08] dark:bg-white/[0.02]">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-zinc-400 text-sm mb-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1 dark:text-zinc-400">
                     <DollarSign className="h-4 w-4" />
                     Starting From
                   </div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-2xl font-bold text-foreground">
                     {priceStats.min ? formatPrice(priceStats.min) : "N/A"}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl bg-white/[0.02] border-white/[0.08]">
+              <Card className="rounded-2xl border-border bg-card dark:border-white/[0.08] dark:bg-white/[0.02]">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-zinc-400 text-sm mb-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1 dark:text-zinc-400">
                     <TrendingUp className="h-4 w-4" />
                     Avg. Rent
                   </div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-2xl font-bold text-foreground">
                     {priceStats.avg ? formatPrice(priceStats.avg) : "N/A"}
                   </p>
                 </CardContent>
@@ -363,7 +363,7 @@ export async function NeighborhoodView({
             {/* Buildings List */}
             <div className="lg:col-span-2">
               <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-2xl font-semibold text-white">
+                <h2 className="text-2xl font-semibold text-foreground">
                   Apartment buildings in {neighborhood.name}
                   {city ? `, ${city.name}` : ""}
                 </h2>
@@ -385,9 +385,9 @@ export async function NeighborhoodView({
                       <Link
                         key={building.id}
                         href={buildingPath(building)}
-                        className="group flex gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3 transition-colors hover:border-white/[0.18] hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                        className="group flex gap-4 rounded-2xl border border-border bg-card p-3 shadow-[0_1px_2px_rgba(20,33,43,0.04)] transition-all hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-[0_12px_32px_-12px_rgba(20,33,43,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/[0.08] dark:bg-white/[0.03] dark:shadow-none dark:hover:translate-y-0 dark:hover:border-white/[0.18] dark:hover:bg-white/[0.05] dark:hover:shadow-none"
                       >
-                        <div className="relative h-24 w-28 shrink-0 overflow-hidden rounded-xl bg-white/[0.03] sm:h-28 sm:w-40">
+                        <div className="relative h-24 w-28 shrink-0 overflow-hidden rounded-xl bg-muted sm:h-28 sm:w-40 dark:bg-white/[0.03]">
                           {photo ? (
                             <SafeImage
                               src={photo}
@@ -399,24 +399,24 @@ export async function NeighborhoodView({
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-                              <Building2 className="h-8 w-8 text-white/20" strokeWidth={1.25} />
+                              <Building2 className="h-8 w-8 text-foreground/20 dark:text-white/20" strokeWidth={1.25} />
                             </div>
                           )}
                         </div>
 
                         <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                           <div className="min-w-0">
-                            <h3 className="text-base font-medium leading-tight text-white sm:text-lg">
+                            <h3 className="text-lg font-medium leading-tight text-foreground sm:text-xl dark:text-base dark:sm:text-lg">
                               {building.name}
                             </h3>
                             {building.address_1 && (
-                              <p className="mt-1 flex items-center gap-1 text-sm text-white/60">
+                              <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground dark:text-white/60">
                                 <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                                 <span className="truncate">{building.address_1}</span>
                               </p>
                             )}
                             {(building.year_built || building.stories) && (
-                              <p className="mt-1 hidden text-sm text-white/45 sm:block">
+                              <p className="mt-1 hidden text-sm text-muted-foreground sm:block dark:text-white/45">
                                 {[
                                   building.year_built ? `Built ${building.year_built}` : null,
                                   building.stories ? `${building.stories} stories` : null,
@@ -429,21 +429,21 @@ export async function NeighborhoodView({
                           <div className="shrink-0 sm:text-right">
                             {buildingPrice ? (
                               <>
-                                <p className="text-sm text-white/70 sm:text-base">
+                                <p className="text-sm text-muted-foreground sm:text-base dark:text-white/70">
                                   From{" "}
-                                  <span className="font-semibold text-white">
+                                  <span className="text-base font-semibold text-foreground sm:text-lg dark:text-sm dark:sm:text-base">
                                     {formatPrice(buildingPrice.min)}
                                   </span>
                                   /mo
                                 </p>
                                 {available > 0 && (
-                                  <p className="text-sm text-emerald-300">
+                                  <p className="text-sm text-positive dark:text-emerald-300">
                                     {available} {available === 1 ? "unit" : "units"} available
                                   </p>
                                 )}
                               </>
                             ) : (
-                              <p className="text-sm text-white/50 sm:text-base">Contact for pricing</p>
+                              <p className="text-sm text-muted-foreground sm:text-base">Contact for pricing</p>
                             )}
                           </div>
                         </div>
@@ -541,7 +541,7 @@ export async function NeighborhoodView({
                       <a
                         key={g.domain}
                         href={`https://${g.domain}/?utm_source=staycio&utm_medium=neighborhood`}
-                        className="flex min-h-11 items-center justify-between gap-3 py-2 border-b last:border-0 hover:text-white transition-colors"
+                        className="flex min-h-11 items-center justify-between gap-3 py-2 border-b last:border-0 hover:text-link dark:hover:text-white transition-colors"
                       >
                         <span className="text-sm font-medium">{g.name}</span>
                         <span className="text-xs text-muted-foreground">{g.blurb}</span>
@@ -552,7 +552,7 @@ export async function NeighborhoodView({
               )}
 
               {/* Search CTA */}
-              <Card className="rounded-2xl bg-white/[0.04] border-white/[0.1]">
+              <Card className="rounded-2xl border-border bg-card dark:border-white/[0.1] dark:bg-white/[0.04]">
                 <CardContent className="p-6 text-center">
                   <h3 className="font-semibold mb-2">
                     Find Your Perfect Apartment
