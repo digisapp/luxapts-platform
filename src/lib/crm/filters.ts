@@ -13,7 +13,7 @@ export const REACH_FILTERS = ["phone", "email", "none"] as const;
 export const ADDED_FILTERS = ["30", "90", "365"] as const;
 export const BUDGET_FILTERS = ["lt3", "3to45", "45to6", "6to8", "8plus"] as const;
 export const BEDS_FILTERS = ["0", "1", "2", "3"] as const;
-export const SCOPE_FILTERS = ["active", "archive"] as const;
+export const SCOPE_FILTERS = ["active", "archive", "deleted"] as const;
 export const SORTS = ["recent", "added", "name", "oldest_touch", "due", "price_high", "replied"] as const;
 export type CrmSort = (typeof SORTS)[number];
 
@@ -164,6 +164,14 @@ export const BUILTIN_LISTS: BuiltinList[] = [
     label: "Brokers",
     hint: "Other agents who asked about listings. Kept out of the calling lists.",
     filters: { kind: "broker" },
+    sort: "recent",
+    group: "book",
+  },
+  {
+    key: "deleted",
+    label: "Recently deleted",
+    hint: "Deleted contacts. Restore any of them, or delete them forever from here.",
+    filters: { scope: "deleted" },
     sort: "recent",
     group: "book",
   },
@@ -379,6 +387,11 @@ export function applyContactFilters<T>(query: T, filters: CrmFilters, today: str
 
   if (filters.due) q = q.lte("next_task_on", today);
   if (filters.added) q = q.gte("added_at", `${addDays(today, -Number(filters.added))}T00:00:00Z`);
+
+  // Deleted contacts live in "Recently deleted"; merged ones only show
+  // inside the contact they were merged into.
+  if (filters.scope === "deleted") q = q.not("deleted_at", "is", null).is("merged_into", null);
+  else q = q.eq("is_active", true);
 
   // Two .or() calls would send two `or` parameters; nest them in one instead.
   if (orGroups.length === 1) q = q.or(orGroups[0]);

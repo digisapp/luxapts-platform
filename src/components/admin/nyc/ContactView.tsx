@@ -30,6 +30,7 @@ import {
   FollowUpsCard,
   ImportedFieldsCard,
   InquiryCard,
+  MergedRecordsCard,
   TagsCard,
 } from "./ContactSidebar";
 import { DeleteContactsDialog, errorOf } from "./NycDialogs";
@@ -84,7 +85,8 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
   const now = useNow();
   const [stepping, setStepping] = useState(false);
   const [endOfList, setEndOfList] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState<"soft" | "forever" | null>(null);
+  const [undoing, setUndoing] = useState(false);
 
   const c = bundle.contact;
   const name = displayName(c);
@@ -157,6 +159,18 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
     for (const t of dueTasks) await call(`/api/admin/nyc/tasks/${t.id}`, "PATCH", { completed: true });
   }
 
+  async function undoMerge(mergeId: string) {
+    if (!window.confirm("Split these back into two separate contacts?")) return;
+    setUndoing(true);
+    const ok = await call(`/api/admin/nyc/merges/${mergeId}/undo`, "POST");
+    setUndoing(false);
+    if (ok) await reload();
+  }
+
+  async function restore() {
+    if (await call(`/api/admin/nyc/contacts/${c.id}/restore`, "POST")) await reload();
+  }
+
   async function deleteNote(id: string) {
     if (!window.confirm("Delete this note?")) return;
     if (await call(`/api/admin/nyc/activities/${id}`, "DELETE")) await reload();
@@ -221,6 +235,50 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
           </div>
         )}
       </div>
+
+      {c.deleted_at && (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+          <span>
+            {name} is in <span className="font-semibold">Recently deleted</span>. Nothing is lost: restore them to bring them back
+            with all their history.
+          </span>
+          <span className="flex gap-2">
+            <button type="button" onClick={restore} className="rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-black hover:bg-white/90">
+              Restore
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteOpen("forever")}
+              className="rounded-md border border-red-400/40 px-3 py-1.5 text-xs font-medium text-red-200 hover:bg-red-500/20"
+            >
+              Delete forever
+            </button>
+          </span>
+        </div>
+      )}
+
+      {bundle.mergedInto && (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-sky-400/30 bg-sky-400/10 px-4 py-3 text-sm text-sky-100">
+          <span>
+            This record was merged into <span className="font-semibold">{bundle.mergedInto.name}</span>. Its history shows there.
+          </span>
+          <span className="flex gap-2">
+            <Link href={`/admin/nyc/${bundle.mergedInto.id}`} className="rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-black hover:bg-white/90">
+              Open {bundle.mergedInto.name}
+            </Link>
+            {bundle.mergedInto.merge_id && (
+              <button
+                type="button"
+                onClick={() => undoMerge(bundle.mergedInto!.merge_id!)}
+                disabled={undoing}
+                className="rounded-md border border-sky-300/40 px-3 py-1.5 text-xs font-medium hover:bg-sky-400/20 disabled:opacity-50"
+              >
+                Undo merge
+              </button>
+            )}
+          </span>
+        </div>
+      )}
 
       {endOfList && (
         <div role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
@@ -296,7 +354,8 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
           <StageMenu stage={c.stage} present={stagesPresent} who={name} size="md" onChange={(stage) => patch({ stage })} />
         </div>
 
-        {!c.do_not_contact && (phone || email) && (
+        {/* Deleted or merged records are reached from the live contact, if at all. */}
+        {!c.do_not_contact && c.is_active && (phone || email) && (
           // Phones: four equal tiles, icon over label. Wider: one row.
           <div className="mt-4 grid grid-cols-4 gap-2 sm:flex sm:flex-wrap">
             {phone && (
@@ -334,7 +393,7 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
             )}
           </div>
         )}
-        {!c.do_not_contact && email && !c.has_real_email && (
+        {!c.do_not_contact && c.is_active && email && !c.has_real_email && (
           <p className="mt-2 text-xs text-amber-200/80">
             {isRelayEmail(email)
               ? "This email is a listing-site relay and probably no longer forwards. A text or call is the way to reach them."
@@ -461,7 +520,13 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
             </div>
           </form>
 
-          <ContactTimeline activities={bundle.activities} firstName={first} onDeleteNote={deleteNote} />
+          <ContactTimeline
+            activities={bundle.activities}
+            firstName={first}
+            onDeleteNote={deleteNote}
+            mergedNames={Object.fromEntries(bundle.merged.map((m) => [m.id, m.name]))}
+            onUndoMerge={undoMerge}
+          />
         </div>
 
         <div className="space-y-5">
@@ -477,7 +542,10 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
           <TagsCard tags={c.tags} allTags={facets.tags} onChange={(tags) => patch({ tags })} />
           <DetailsCard contact={c} sources={facets.sources} onSave={patch} />
           <ImportedFieldsCard extra={c.extra} />
-          <ContactSafetyCard contact={c} onDoNotContact={(v) => patch({ do_not_contact: v })} onDelete={() => setDeleteOpen(true)} />
+          <MergedRecordsCard records={bundle.merged} onUndo={undoMerge} undoing={undoing} />
+          {c.is_active && (
+            <ContactSafetyCard contact={c} onDoNotContact={(v) => patch({ do_not_contact: v })} onDelete={() => setDeleteOpen("soft")} />
+          )}
         </div>
       </div>
 
@@ -508,13 +576,25 @@ export function ContactView({ initial, facets, today, work, reach, templates, se
       )}
 
       <DeleteContactsDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
+        open={deleteOpen !== null}
+        onOpenChange={(open) => !open && setDeleteOpen(null)}
         count={1}
+        forever={deleteOpen === "forever"}
         onConfirm={async () => {
+          if (deleteOpen === "forever") {
+            const res = await fetch("/api/admin/nyc/bulk", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ids: [c.id], action: "purge" }),
+            });
+            const err = await errorOf(res);
+            if (!err) router.push("/admin/nyc?scope=deleted");
+            return err;
+          }
+          // Recoverable: stay here, where the banner offers Restore.
           const res = await fetch(`/api/admin/nyc/contacts/${c.id}`, { method: "DELETE" });
           const err = await errorOf(res);
-          if (!err) router.push(backHref);
+          if (!err) await reload();
           return err;
         }}
       />

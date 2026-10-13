@@ -56,10 +56,23 @@ export async function POST(req: Request) {
   }
   const existing = findMatch(
     { external_id: null, first_name: input.first_name ?? null, emails, phones },
-    (candidates ?? []) as { id: string; external_id: string | null; first_name: string | null; emails: string[]; phones: string[] }[]
+    (candidates ?? []) as {
+      id: string;
+      external_id: string | null;
+      first_name: string | null;
+      emails: string[];
+      phones: string[];
+      merged_into: string | null;
+      deleted_at: string | null;
+    }[]
   );
   if (existing) {
-    return NextResponse.json({ error: "Already in the book.", existing_id: existing.id }, { status: 409 });
+    // A merged record lives on in the contact it was merged into.
+    const id = existing.merged_into ?? existing.id;
+    const message = existing.deleted_at
+      ? "This person is in Recently deleted. Open them to restore."
+      : "Already in the book.";
+    return NextResponse.json({ error: message, existing_id: id }, { status: 409 });
   }
 
   const now = new Date().toISOString();

@@ -23,10 +23,13 @@ export async function POST(req: Request) {
     const ids = givenIds ?? (await collectIds(supabase, filters ?? {}, listContext()));
     if (ids.length === 0) return NextResponse.json({ updated: 0 });
 
-    if (action === "delete") {
-      const { data, error } = await supabase.rpc("crm_bulk_delete", { p_ids: ids });
+    // Delete is recoverable (Recently deleted); purge, forever, only
+    // touches contacts already there.
+    if (action === "delete" || action === "restore" || action === "purge") {
+      const fn = { delete: "crm_bulk_delete", restore: "crm_bulk_restore", purge: "crm_purge_deleted" }[action];
+      const { data, error } = await supabase.rpc(fn, { p_ids: ids });
       if (error) throw error;
-      return NextResponse.json({ deleted: data ?? 0 });
+      return NextResponse.json({ [action === "restore" ? "restored" : "deleted"]: data ?? 0 });
     }
 
     if (action === "kind") {

@@ -114,13 +114,19 @@ interface DeleteContactsDialogProps {
   onOpenChange: (open: boolean) => void;
   count: number;
   onConfirm: () => Promise<string | null>;
+  /** From Recently deleted: gone for good. Otherwise: recoverable. */
+  forever?: boolean;
 }
 
-/** Permanent delete. Over 100 contacts it asks for the word DELETE. */
-export function DeleteContactsDialog({ open, onOpenChange, count, onConfirm }: DeleteContactsDialogProps) {
+/**
+ * Delete moves contacts to Recently deleted, where they can be restored.
+ * "Delete forever" (only from there) cannot be undone, and past 10
+ * contacts asks for the word DELETE.
+ */
+export function DeleteContactsDialog({ open, onOpenChange, count, onConfirm, forever = false }: DeleteContactsDialogProps) {
   const [typed, setTyped] = useState("");
   const { busy, error, run } = useSubmit();
-  const needsTyping = count > 100;
+  const needsTyping = forever && count > 10;
   const id = useId();
 
   async function confirm() {
@@ -135,16 +141,21 @@ export function DeleteContactsDialog({ open, onOpenChange, count, onConfirm }: D
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            Delete {count === 1 ? "this contact" : `${count.toLocaleString()} contacts`}?
+            {forever ? "Delete forever: " : "Delete "}
+            {count === 1 ? "this contact" : `${count.toLocaleString()} contacts`}?
           </DialogTitle>
           <DialogDescription>
-            This removes {count === 1 ? "them" : "them all"} with every note, call, text and follow-up. It cannot be undone.
+            {forever
+              ? `This removes ${count === 1 ? "them" : "them all"} with every note, call, text and follow-up. It cannot be undone.`
+              : `${count === 1 ? "They move" : "They all move"} to Recently deleted, with all their history. You can restore ${count === 1 ? "them" : "any of them"} from there at any time.`}
           </DialogDescription>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          For someone who is just not interested, move them to <span className="font-medium text-foreground">Trash</span> or
-          mark them <span className="font-medium text-foreground">Do not contact</span> instead, so the history is kept.
-        </p>
+        {!forever && (
+          <p className="text-sm text-muted-foreground">
+            For someone who is just not interested, the stage <span className="font-medium text-foreground">Trash</span> or{" "}
+            <span className="font-medium text-foreground">Do not contact</span> keeps them out of your lists without deleting.
+          </p>
+        )}
         {needsTyping && (
           <div>
             <label htmlFor={id} className={label}>
@@ -164,7 +175,13 @@ export function DeleteContactsDialog({ open, onOpenChange, count, onConfirm }: D
           </Button>
           <Button variant="destructive" onClick={confirm} disabled={busy || (needsTyping && typed !== "DELETE")}>
             <Trash2 className="h-4 w-4" />
-            {busy ? "Deleting..." : count === 1 ? "Delete contact" : `Delete ${count.toLocaleString()}`}
+            {busy
+              ? "Deleting..."
+              : forever
+                ? "Delete forever"
+                : count === 1
+                  ? "Delete contact"
+                  : `Delete ${count.toLocaleString()}`}
           </Button>
         </div>
       </DialogContent>

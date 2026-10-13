@@ -111,11 +111,11 @@ export const bulkSchema = z
   .object({
     ids: z.array(z.uuid()).max(50_000).optional(),
     filters: crmFiltersSchema.optional(),
-    action: z.enum(["stage", "add_tag", "remove_tag", "kind", "delete"]),
+    action: z.enum(["stage", "add_tag", "remove_tag", "kind", "delete", "restore", "purge"]),
     value: z.string().trim().max(80).optional(),
   })
   .refine((b) => !!b.ids !== !!b.filters, { message: "Send ids or filters, not both." })
-  .refine((b) => b.action === "delete" || !!b.value, { message: "This action needs a value." })
+  .refine((b) => ["delete", "restore", "purge"].includes(b.action) || !!b.value, { message: "This action needs a value." })
   .refine((b) => b.action !== "kind" || (CONTACT_KINDS as readonly string[]).includes(b.value ?? ""), {
     message: "Type must be renter, buyer or broker.",
   });

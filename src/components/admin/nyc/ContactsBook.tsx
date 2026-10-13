@@ -326,7 +326,10 @@ export function ContactsBook({
     }
   }
 
-  async function bulk(action: "stage" | "add_tag" | "remove_tag" | "kind" | "delete", value?: string): Promise<string | null> {
+  async function bulk(
+    action: "stage" | "add_tag" | "remove_tag" | "kind" | "delete" | "restore" | "purge",
+    value?: string
+  ): Promise<string | null> {
     setBusy(true);
     setActionError(null);
     try {
@@ -339,11 +342,15 @@ export function ContactsBook({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return data.error || `Bulk change failed (${res.status}).`;
-      const n: number = data.updated ?? data.deleted ?? 0;
+      const n: number = data.updated ?? data.deleted ?? data.restored ?? 0;
       const who = `${n.toLocaleString()} ${n === 1 ? "contact" : "contacts"}`;
       setNotice(
         action === "delete"
-          ? `Deleted ${who}.`
+          ? `Moved ${who} to Recently deleted. You can restore them from there.`
+          : action === "restore"
+            ? `Restored ${who}.`
+            : action === "purge"
+              ? `Deleted ${who} forever.`
           : action === "stage"
             ? `Moved ${who} to ${stageMeta(value ?? "").label}.`
             : action === "kind"
@@ -352,7 +359,8 @@ export function ContactsBook({
                 ? `Tagged ${who} “${value}”.`
                 : `Removed “${value}” from ${who}.`
       );
-      await Promise.all([fetchContacts(action === "delete" ? 0 : offset), loadOverview()]);
+      const removed = action === "delete" || action === "restore" || action === "purge";
+      await Promise.all([fetchContacts(removed ? 0 : offset), loadOverview()]);
       return null;
     } catch {
       return "Could not reach the server. Check your connection and retry.";
@@ -389,6 +397,7 @@ export function ContactsBook({
   }
 
   const filtered = Object.keys(filters).length > 0;
+  const inDeleted = filters.scope === "deleted";
   const described = describeFilters(filters);
   const stageValue = filters.stages?.length === 1 ? filters.stages[0] : filters.stages?.length ? "__multi" : undefined;
   const reach = REACH_OPTIONS.find((o) => o.key === (filters.reach ?? "")) ?? REACH_OPTIONS[0];
@@ -749,6 +758,11 @@ export function ContactsBook({
       </div>
 
       <NycBulkBar
+        deletedMode={inDeleted}
+        onRestore={async () => {
+          const err = await bulk("restore");
+          if (err) setActionError(err);
+        }}
         count={bulkCount}
         stages={stagesPresent}
         busy={busy}
@@ -773,7 +787,8 @@ export function ContactsBook({
         open={dialog === "delete"}
         onOpenChange={(o) => setDialog(o ? "delete" : null)}
         count={bulkCount}
-        onConfirm={() => bulk("delete")}
+        forever={inDeleted}
+        onConfirm={() => bulk(inDeleted ? "purge" : "delete")}
       />
       <SaveListDialog
         open={dialog === "save"}

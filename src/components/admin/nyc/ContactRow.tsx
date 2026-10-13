@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChevronRight, Mail, MessageSquare, PhoneCall, Ban } from "lucide-react";
 import { cn, telHref } from "@/lib/utils";
-import { avatarTone, initials } from "@/components/admin/leads/lead-format";
+import { ageLabel, avatarTone, initials } from "@/components/admin/leads/lead-format";
 import { displayName, formatPhone, isRelayEmail } from "@/lib/crm/normalize";
 import { dueLabel } from "@/lib/crm/dates";
 import type { CrmContactListRow } from "@/lib/crm/types";
@@ -133,6 +133,11 @@ export function ContactRow({
               )}
             >
               {c.kind === "buyer" ? "Buyer" : "Broker"}
+            </span>
+          )}
+          {c.deleted_at && now !== null && (
+            <span className="shrink-0 rounded-md bg-red-500/10 px-1.5 py-0.5 text-[11px] font-medium text-red-200/90">
+              Deleted {ageLabel(c.deleted_at, now)}
             </span>
           )}
           {c.do_not_contact && (

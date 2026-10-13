@@ -41,11 +41,18 @@ export interface CrmContact {
   added_at: string | null;
   import_batch: string | null;
   extra: Record<string, string>;
+  /** In "Recently deleted" since then (migration 036). */
+  deleted_at: string | null;
+  /** Merged into this contact: hidden, its history shown there. */
+  merged_into: string | null;
+  merged_at: string | null;
+  /** Neither deleted nor merged (generated). */
+  is_active: boolean;
 }
 
 /** What the list shows per row. */
 export const CONTACT_LIST_COLUMNS =
-  "id, first_name, last_name, emails, phones, stage, source, previous_agent, kind, tags, price, beds, property_address, neighborhood, do_not_contact, has_real_email, contacted, last_contacted_at, last_inbound_at, last_activity_at, awaiting_reply, next_task_on, added_at";
+  "id, first_name, last_name, emails, phones, stage, source, previous_agent, kind, tags, price, beds, property_address, neighborhood, do_not_contact, has_real_email, contacted, last_contacted_at, last_inbound_at, last_activity_at, awaiting_reply, next_task_on, added_at, deleted_at";
 
 export type CrmContactListRow = Pick<
   CrmContact,
@@ -72,6 +79,7 @@ export type CrmContactListRow = Pick<
   | "awaiting_reply"
   | "next_task_on"
   | "added_at"
+  | "deleted_at"
 >;
 
 export type ActivityKind = "note" | "call" | "text" | "email" | "whatsapp" | "inquiry" | "stage" | "task";
@@ -131,6 +139,39 @@ export interface CrmTemplate {
 export interface CrmSender {
   name: string;
   company: string;
+}
+
+/** One side of a suggested duplicate pair. */
+export interface DuplicateSide {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  emails: string[];
+  phones: string[];
+  stage: string;
+  kind: ContactKind;
+  source: string | null;
+  previous_agent: string | null;
+  added_at: string | null;
+  property_address: string | null;
+  neighborhood: string | null;
+  price: number | null;
+  beds: number | null;
+  do_not_contact: boolean;
+  last_activity_at: string | null;
+  last_inbound_at: string | null;
+  external_id: string | null;
+  history: number;
+  open_tasks: number;
+}
+
+export interface DuplicatePair {
+  a: DuplicateSide;
+  b: DuplicateSide;
+  /** The emails/phones they share. */
+  shared: string[];
+  /** First names agree (or one is missing): very likely the same person. */
+  names_agree: boolean;
 }
 
 export interface CrmSmartList {

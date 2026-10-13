@@ -302,8 +302,13 @@ export function rowToContact(
   if (!first && !last && emails.length === 0 && phones.length === 0) return null;
 
   const propertyState = clip(get("property_state"), 40);
+  // FUB tags naming the old agents or team inboxes are history, not
+  // categories: they go to extra."Agent tags" (migration 036 did the same
+  // for the first import).
+  const rawTags = all("tags").flatMap(parseTags);
+  const agentTags = rawTags.filter((t) => agentKeys.has(nameKey(t)));
   const tags = uniqueValues([
-    ...all("tags").flatMap(parseTags),
+    ...rawTags.filter((t) => !agentKeys.has(nameKey(t))),
     propertyState?.toUpperCase() === "FL" ? FLORIDA_TAG : null,
   ]).slice(0, 50);
 
@@ -389,6 +394,7 @@ export function rowToContact(
   const isContacted = /^(yes|y|true|1)$/i.test(get("is_contacted") ?? "");
 
   const extra: Record<string, string> = {};
+  if (agentTags.length) extra["Agent tags"] = agentTags.join(", ");
   for (const i of mapping.extra) {
     const v = cell(i);
     if (!v) continue;

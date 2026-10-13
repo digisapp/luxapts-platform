@@ -7,6 +7,7 @@ import {
   ExternalLink,
   Home,
   Mail,
+  Merge,
   MessageCircle,
   MessageSquare,
   PhoneIncoming,
@@ -50,9 +51,12 @@ interface ContactTimelineProps {
   activities: CrmActivity[];
   firstName: string;
   onDeleteNote: (id: string) => void;
+  /** Records merged into this contact, by id, to label their history. */
+  mergedNames?: Record<string, string>;
+  onUndoMerge?: (mergeId: string) => void;
 }
 
-export function ContactTimeline({ activities, firstName, onDeleteNote }: ContactTimelineProps) {
+export function ContactTimeline({ activities, firstName, onDeleteNote, mergedNames = {}, onUndoMerge }: ContactTimelineProps) {
   const [filter, setFilter] = useState<"all" | ActivityKind>("all");
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -89,7 +93,14 @@ export function ContactTimeline({ activities, firstName, onDeleteNote }: Contact
       ) : (
         <ol className="divide-y divide-white/[0.05]">
           {shown.map((a) => (
-            <TimelineItem key={a.id} activity={a} firstName={firstName} onDeleteNote={onDeleteNote} />
+            <TimelineItem
+              key={a.id}
+              activity={a}
+              firstName={firstName}
+              onDeleteNote={onDeleteNote}
+              fromRecord={mergedNames[a.contact_id]}
+              onUndoMerge={onUndoMerge}
+            />
           ))}
         </ol>
       )}
@@ -101,11 +112,17 @@ function TimelineItem({
   activity: a,
   firstName,
   onDeleteNote,
+  fromRecord,
+  onUndoMerge,
 }: {
   activity: CrmActivity;
   firstName: string;
   onDeleteNote: (id: string) => void;
+  /** Set when this entry belongs to a record merged into the contact. */
+  fromRecord?: string;
+  onUndoMerge?: (mergeId: string) => void;
 }) {
+  const mergeId = typeof a.meta.merge_id === "string" ? a.meta.merge_id : null;
   const inbound = a.direction === "inbound";
   const actor = a.actor || (inbound ? firstName : "You");
   let Icon = StickyNote;
@@ -192,10 +209,25 @@ function TimelineItem({
       );
       break;
     default:
-      title = `${actor} wrote a note`;
+      if (mergeId) {
+        Icon = Merge;
+        tone = "bg-sky-400/15 text-sky-300";
+        title = (
+          <>
+            {a.body}
+            {onUndoMerge && (
+              <button type="button" onClick={() => onUndoMerge(mergeId)} className="ml-2 text-xs font-medium text-sky-300 hover:text-sky-200">
+                Undo merge
+              </button>
+            )}
+          </>
+        );
+      } else {
+        title = `${actor} wrote a note`;
+      }
   }
 
-  const showBody = a.body && a.kind !== "stage" && a.kind !== "task";
+  const showBody = a.body && a.kind !== "stage" && a.kind !== "task" && !mergeId;
   const link = a.kind === "inquiry" && typeof a.meta.link === "string" ? safeHttpUrl(a.meta.link) : null;
 
   return (
@@ -207,6 +239,11 @@ function TimelineItem({
         <div className="flex flex-wrap items-baseline justify-between gap-x-3">
           <p className="min-w-0 text-sm">{title}</p>
           <span className="flex items-center gap-2">
+            {fromRecord && (
+              <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[11px] text-muted-foreground" title="From a record merged into this contact">
+                {fromRecord}&apos;s record
+              </span>
+            )}
             <time dateTime={a.occurred_at} className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
               {when.format(new Date(a.occurred_at))}
             </time>

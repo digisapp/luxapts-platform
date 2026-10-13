@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, CircleDot, Tag, Trash2, UserRound, X } from "lucide-react";
+import { ChevronDown, CircleDot, RotateCcw, Tag, Trash2, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PopoverMenu } from "@/components/admin/leads/PopoverMenu";
 import { orderedStages } from "@/lib/crm/stages";
@@ -15,13 +15,27 @@ interface NycBulkBarProps {
   onTags: () => void;
   onDelete: () => void;
   onClear: () => void;
+  /** In Recently deleted the only actions are Restore and Delete forever. */
+  deletedMode?: boolean;
+  onRestore?: () => void;
 }
 
 const action =
   "inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-foreground/90 transition-colors hover:bg-white/[0.08] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 disabled:opacity-50 sm:h-9";
 
 /** Floating toolbar for selected contacts, styled like the Leads one. */
-export function NycBulkBar({ count, stages, busy, onStage, onKind, onTags, onDelete, onClear }: NycBulkBarProps) {
+export function NycBulkBar({
+  count,
+  stages,
+  busy,
+  onStage,
+  onKind,
+  onTags,
+  onDelete,
+  onClear,
+  deletedMode,
+  onRestore,
+}: NycBulkBarProps) {
   if (count === 0) return null;
 
   return (
@@ -41,59 +55,79 @@ export function NycBulkBar({ count, stages, busy, onStage, onKind, onTags, onDel
 
         <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" aria-hidden="true" />
 
-        <PopoverMenu
-          label="Set stage for selected contacts"
-          disabled={busy}
-          triggerClassName={action}
-          triggerContent={
-            <>
-              <CircleDot className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              Stage
-              <ChevronDown className="h-3.5 w-3.5 opacity-50" aria-hidden="true" />
-            </>
-          }
-          items={orderedStages(stages).map((s) => ({
-            key: s.value,
-            text: s.label,
-            label: s.label,
-            icon: <span className={cn("h-2 w-2 shrink-0 rounded-full", s.dot)} aria-hidden="true" />,
-          }))}
-          onSelect={onStage}
-        />
+        {deletedMode ? (
+          <>
+            <button type="button" onClick={onRestore} disabled={busy} className={action}>
+              <RotateCcw className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              Restore
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              disabled={busy}
+              className={cn(action, "text-red-300 hover:bg-red-500/15 hover:text-red-200")}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Delete forever
+            </button>
+          </>
+        ) : (
+          <>
+            <PopoverMenu
+              label="Set stage for selected contacts"
+              disabled={busy}
+              triggerClassName={action}
+              triggerContent={
+                <>
+                  <CircleDot className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  Stage
+                  <ChevronDown className="h-3.5 w-3.5 opacity-50" aria-hidden="true" />
+                </>
+              }
+              items={orderedStages(stages).map((s) => ({
+                key: s.value,
+                text: s.label,
+                label: s.label,
+                icon: <span className={cn("h-2 w-2 shrink-0 rounded-full", s.dot)} aria-hidden="true" />,
+              }))}
+              onSelect={onStage}
+            />
 
-        <button type="button" onClick={onTags} disabled={busy} className={action}>
-          <Tag className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-          Tags
-        </button>
+            <button type="button" onClick={onTags} disabled={busy} className={action}>
+              <Tag className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              Tags
+            </button>
 
-        <PopoverMenu
-          label="Set the type of the selected contacts"
-          disabled={busy}
-          triggerClassName={action}
-          triggerContent={
-            <>
-              <UserRound className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              Type
-              <ChevronDown className="h-3.5 w-3.5 opacity-50" aria-hidden="true" />
-            </>
-          }
-          items={[
-            { key: "renter", text: "Renter", label: "Renter" },
-            { key: "buyer", text: "Buyer", label: "Buyer" },
-            { key: "broker", text: "Broker", label: "Broker (another agent)" },
-          ]}
-          onSelect={onKind}
-        />
+            <PopoverMenu
+              label="Set the type of the selected contacts"
+              disabled={busy}
+              triggerClassName={action}
+              triggerContent={
+                <>
+                  <UserRound className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  Type
+                  <ChevronDown className="h-3.5 w-3.5 opacity-50" aria-hidden="true" />
+                </>
+              }
+              items={[
+                { key: "renter", text: "Renter", label: "Renter" },
+                { key: "buyer", text: "Buyer", label: "Buyer" },
+                { key: "broker", text: "Broker", label: "Broker (another agent)" },
+              ]}
+              onSelect={onKind}
+            />
 
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={busy}
-          className={cn(action, "text-red-300 hover:bg-red-500/15 hover:text-red-200")}
-        >
-          <Trash2 className="h-4 w-4" aria-hidden="true" />
-          Delete
-        </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              disabled={busy}
+              className={cn(action, "text-red-300 hover:bg-red-500/15 hover:text-red-200")}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Delete
+            </button>
+          </>
+        )}
 
         <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" aria-hidden="true" />
 

@@ -129,6 +129,12 @@ describe("rowToContact", () => {
     expect(c.do_not_contact).toBe(false);
   });
 
+  it("moves tags naming the old agents out of the tag list, keeping them", () => {
+    const c = rowToContact(row({ ...base, Tags: "Alex Rivera, VIP, Brooklyn" }), mapping, agents)!;
+    expect(c.tags).toEqual(["VIP", "Brooklyn"]);
+    expect(c.extra["Agent tags"]).toBe("Alex Rivera");
+  });
+
   it("honors FUB's Unsubscribed tag as do-not-contact", () => {
     expect(rowToContact(row({ ...base, Tags: "Unsubscribed" }), mapping, agents)!.do_not_contact).toBe(true);
   });

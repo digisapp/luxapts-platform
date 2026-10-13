@@ -11,20 +11,29 @@ import {
   searchTokens,
 } from "./filters";
 
-/** Records every builder call instead of querying. */
+const ACTIVE = ["eq", "is_active", true];
+
+/**
+ * Records every builder call instead of querying. `calls` leaves out the
+ * "in the book" filter every list ends with (tested on its own below);
+ * `all` keeps it.
+ */
 function recorder() {
+  const all: unknown[][] = [];
   const calls: unknown[][] = [];
   const proxy: Record<string, unknown> = new Proxy(
     {},
     {
       get: (_t, method: string) =>
         (...args: unknown[]) => {
-          calls.push([method, ...args]);
+          const call = [method, ...args];
+          all.push(call);
+          if (JSON.stringify(call) !== JSON.stringify(ACTIVE)) calls.push(call);
           return proxy;
         },
     }
   );
-  return { proxy, calls };
+  return { proxy, all, calls };
 }
 
 const NOW = new Date("2026-10-12T15:00:00Z");
@@ -184,6 +193,23 @@ describe("categories", () => {
       expect(BUILTIN_LISTS.find((l) => l.key === key)?.filters.kind).toBe("people");
     }
     expect(BUILTIN_LISTS.find((l) => l.key === "lease")?.filters.kind).toBe("renter");
+  });
+});
+
+describe("deleted and merged contacts", () => {
+  it("leaves them out of every list", () => {
+    const { proxy, all } = recorder();
+    applyContactFilters(proxy, { touch: "hot" }, TODAY, NOW);
+    expect(all.at(-1)).toEqual(ACTIVE);
+  });
+
+  it("shows only deleted (not merged) ones in Recently deleted", () => {
+    const { proxy, all } = recorder();
+    applyContactFilters(proxy, { scope: "deleted" }, TODAY, NOW);
+    expect(all).toEqual([
+      ["not", "deleted_at", "is", null],
+      ["is", "merged_into", null],
+    ]);
   });
 });
 

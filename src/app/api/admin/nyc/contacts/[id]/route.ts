@@ -77,12 +77,12 @@ export async function DELETE(_req: Request, { params }: Context) {
   const { id } = await params;
   if (!isValidUUID(id)) return apiError("Invalid contact id.");
 
-  // Activities and tasks cascade.
-  const { data, error } = await createAdminClient().from("crm_contacts").delete().eq("id", id).select("id");
+  // Recoverable: the contact moves to Recently deleted (migration 036).
+  const { data, error } = await createAdminClient().rpc("crm_bulk_delete", { p_ids: [id] });
   if (error) {
     console.error("NYC contact delete error:", error);
     return apiError("Could not delete the contact.", 500);
   }
-  if (!data?.length) return apiError("Contact not found.", 404);
+  if (!data) return apiError("Contact not found, or already deleted.", 404);
   return NextResponse.json({ deleted: 1 });
 }

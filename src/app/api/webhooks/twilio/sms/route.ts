@@ -22,10 +22,14 @@ export async function POST(req: Request) {
   if (!from || !MessageSid) return twiml();
 
   const supabase = createAdminClient();
+  // Merged records are skipped (their numbers live on the kept contact);
+  // a deleted contact who texts in comes back.
   const { data: matches, error: findError } = await supabase
     .from("crm_contacts")
-    .select("id, first_name, last_name, do_not_contact")
+    .select("id, first_name, last_name, do_not_contact, deleted_at")
     .contains("phones", arrayLiteral(from))
+    .is("merged_into", null)
+    .order("deleted_at", { ascending: true, nullsFirst: true })
     .order("last_activity_at", { ascending: false, nullsFirst: false })
     .limit(1);
   if (findError) {
@@ -39,13 +43,20 @@ export async function POST(req: Request) {
     const { data: created, error } = await supabase
       .from("crm_contacts")
       .insert({ phones: [from], source: "Text message", added_at: now, last_activity_at: now })
-      .select("id, first_name, last_name, do_not_contact")
+      .select("id, first_name, last_name, do_not_contact, deleted_at")
       .single();
     if (error || !created) {
       console.error("Twilio inbound contact create error:", error);
       return twiml(500);
     }
     contact = created;
+  } else if (contact.deleted_at) {
+    await supabase.from("crm_contacts").update({ deleted_at: null }).eq("id", contact.id);
+    await supabase.from("crm_activities").insert({
+      contact_id: contact.id,
+      kind: "note",
+      body: "Texted in while in Recently deleted, so restored.",
+    });
   }
 
   const { error: logError } = await supabase.from("crm_activities").insert({

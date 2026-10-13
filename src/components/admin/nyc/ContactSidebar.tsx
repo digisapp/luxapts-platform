@@ -546,3 +546,47 @@ export function ContactSafetyCard({ contact: c, onDoNotContact, onDelete }: Cont
     </section>
   );
 }
+
+// ---------------------------------------------------------------------------
+
+interface MergedRecordsCardProps {
+  records: { id: string; name: string; source: string | null; added_at: string | null; merge_id: string | null }[];
+  onUndo: (mergeId: string) => void;
+  undoing: boolean;
+}
+
+const mergedDate = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric", timeZone: "America/New_York" });
+
+/** Records merged into this contact, each with its own Undo. */
+export function MergedRecordsCard({ records, onUndo, undoing }: MergedRecordsCardProps) {
+  if (records.length === 0) return null;
+  return (
+    <section className={card} aria-label="Merged records">
+      <div className={cardHead}>
+        <h2 className="text-sm font-semibold">Merged records</h2>
+      </div>
+      <ul className="divide-y divide-white/[0.05]">
+        {records.map((r) => (
+          <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+            <span className="min-w-0">
+              <span className="block truncate">{r.name}</span>
+              <span className="text-xs text-muted-foreground">
+                {[r.source, r.added_at ? mergedDate.format(new Date(r.added_at)) : null].filter(Boolean).join(" · ")}
+              </span>
+            </span>
+            {r.merge_id && (
+              <button
+                type="button"
+                onClick={() => onUndo(r.merge_id!)}
+                disabled={undoing}
+                className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-sky-300 hover:bg-white/[0.06] disabled:opacity-50"
+              >
+                Undo merge
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

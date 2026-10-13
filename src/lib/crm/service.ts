@@ -22,6 +22,7 @@ import {
   type CrmFacets,
   type CrmSmartList,
   type CrmTask,
+  type DuplicatePair,
 } from "./types";
 import { addDays, nyDateKey } from "./dates";
 
@@ -230,38 +231,105 @@ export function savedFilters(list: Pick<CrmSmartList, "filters">): CrmFilters {
   return parsed.success ? parsed.data : {};
 }
 
+/** A record merged into this contact, with the merge that can be undone. */
+export interface MergedRecord {
+  id: string;
+  name: string;
+  source: string | null;
+  added_at: string | null;
+  merge_id: string | null;
+}
+
 export interface ContactBundle {
   contact: CrmContact;
   activities: CrmActivity[];
   tasks: CrmTask[];
+  /** Records merged into this one. */
+  merged: MergedRecord[];
+  /** When this record was itself merged: where to, and the merge to undo. */
+  mergedInto: { id: string; name: string; merge_id: string | null } | null;
 }
 
-/** A contact with its timeline (newest first) and follow-ups. Null if missing. */
+const nameOf = (c: { first_name: string | null; last_name: string | null; emails?: string[]; phones?: string[] }) =>
+  [c.first_name, c.last_name].filter(Boolean).join(" ") || c.emails?.[0] || c.phones?.[0] || "Unnamed contact";
+
+/**
+ * A contact with its timeline (newest first) and follow-ups, including the
+ * history of every record merged into it. Null if missing.
+ */
 export async function getContactBundle(supabase: SupabaseClient, id: string): Promise<ContactBundle | null> {
-  const [contactRes, activitiesRes, tasksRes] = await Promise.all([
+  const [contactRes, childrenRes, mergesRes] = await Promise.all([
     supabase.from("crm_contacts").select("*").eq("id", id).maybeSingle(),
     supabase
-      .from("crm_activities")
-      .select("*")
-      .eq("contact_id", id)
-      .order("occurred_at", { ascending: false })
-      .limit(500),
+      .from("crm_contacts")
+      .select("id, first_name, last_name, emails, phones, source, added_at")
+      .eq("merged_into", id)
+      .order("merged_at", { ascending: true }),
+    supabase
+      .from("crm_merges")
+      .select("id, keep_id, merged_id")
+      .or(`keep_id.eq.${id},merged_id.eq.${id}`)
+      .is("undone_at", null),
+  ]);
+  const firstError = contactRes.error ?? childrenRes.error ?? mergesRes.error;
+  if (firstError) throw new Error(`Could not load the contact: ${firstError.message}`);
+  if (!contactRes.data) return null;
+  const contact = contactRes.data as CrmContact;
+  const children = childrenRes.data ?? [];
+  const merges = mergesRes.data ?? [];
+  const ids = [id, ...children.map((c) => c.id as string)];
+
+  const [activitiesRes, tasksRes, parentRes] = await Promise.all([
+    supabase.from("crm_activities").select("*").in("contact_id", ids).order("occurred_at", { ascending: false }).limit(800),
     supabase
       .from("crm_tasks")
       .select("*")
-      .eq("contact_id", id)
+      .in("contact_id", ids)
       .order("completed_at", { ascending: false, nullsFirst: true })
       .order("due_on", { ascending: true })
-      .limit(50),
+      .limit(80),
+    contact.merged_into
+      ? supabase.from("crm_contacts").select("id, first_name, last_name, emails, phones").eq("id", contact.merged_into).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
-  const error = contactRes.error ?? activitiesRes.error ?? tasksRes.error;
+  const error = activitiesRes.error ?? tasksRes.error ?? parentRes.error;
   if (error) throw new Error(`Could not load the contact: ${error.message}`);
-  if (!contactRes.data) return null;
+
   return {
-    contact: contactRes.data as CrmContact,
+    contact,
     activities: (activitiesRes.data ?? []) as CrmActivity[],
     tasks: (tasksRes.data ?? []) as CrmTask[],
+    merged: children.map((c) => ({
+      id: c.id as string,
+      name: nameOf(c as { first_name: string | null; last_name: string | null; emails: string[]; phones: string[] }),
+      source: (c.source as string | null) ?? null,
+      added_at: (c.added_at as string | null) ?? null,
+      merge_id: (merges.find((m) => m.keep_id === id && m.merged_id === c.id)?.id as string | undefined) ?? null,
+    })),
+    mergedInto: parentRes.data
+      ? {
+          id: parentRes.data.id as string,
+          name: nameOf(parentRes.data as { first_name: string | null; last_name: string | null }),
+          merge_id: (merges.find((m) => m.merged_id === id)?.id as string | undefined) ?? null,
+        }
+      : null,
   };
+}
+
+export async function getDuplicatePairs(
+  supabase: SupabaseClient,
+  confidence: "high" | "check",
+  offset: number,
+  limit = 20
+): Promise<{ high: number; check: number; pairs: DuplicatePair[] }> {
+  const { data, error } = await supabase.rpc("crm_duplicate_pairs", {
+    p_confidence: confidence,
+    p_limit: limit,
+    p_offset: offset,
+  });
+  if (error) throw new Error(`Could not find duplicates: ${error.message}`);
+  const d = (data ?? {}) as { high?: number; check?: number; pairs?: DuplicatePair[] };
+  return { high: Number(d.high ?? 0), check: Number(d.check ?? 0), pairs: d.pairs ?? [] };
 }
 
 /** How many contacts have a follow-up due today or overdue. */
@@ -269,6 +337,7 @@ export async function countDue(supabase: SupabaseClient, today: string): Promise
   const { count, error } = await supabase
     .from("crm_contacts")
     .select("id", { count: "exact", head: true })
+    .eq("is_active", true)
     .lte("next_task_on", today);
   if (error) throw new Error(`Could not count follow-ups: ${error.message}`);
   return count ?? 0;
@@ -280,6 +349,7 @@ export async function countNewReplies(supabase: SupabaseClient, now: Date = new 
     .from("crm_contacts")
     .select("id", { count: "exact", head: true })
     .eq("awaiting_reply", true)
+    .eq("is_active", true)
     .gte("last_inbound_at", new Date(now.getTime() - 3 * 86_400_000).toISOString());
   if (error) throw new Error(`Could not count replies: ${error.message}`);
   return count ?? 0;
@@ -294,8 +364,9 @@ export async function getAgenda(supabase: SupabaseClient, today: string): Promis
   const { data, error } = await supabase
     .from("crm_tasks")
     .select(
-      "id, contact_id, created_at, title, kind, due_on, completed_at, contact:crm_contacts(id, first_name, last_name, emails, phones, stage, do_not_contact)"
+      "id, contact_id, created_at, title, kind, due_on, completed_at, contact:crm_contacts!inner(id, first_name, last_name, emails, phones, stage, do_not_contact)"
     )
+    .eq("contact.is_active", true)
     .is("completed_at", null)
     .lte("due_on", addDays(today, 7))
     .order("due_on", { ascending: true })
