@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-const LAST_UPDATED = "July 12, 2026";
+const LAST_UPDATED = "October 13, 2026";
 
 export default function PrivacyPage() {
   return (
@@ -49,8 +49,11 @@ export default function PrivacyPage() {
                 </li>
                 <li>
                   <span className="text-foreground dark:text-zinc-300">Usage data</span> — pages
-                  visited, device and browser type, and approximate location
-                  derived from IP address, used for analytics and security.
+                  visited, device and browser type, approximate location
+                  derived from IP address, and reports of errors your browser
+                  runs into on our pages (the page, browser and error, without
+                  what you typed), used for analytics, security and fixing
+                  problems.
                 </li>
               </ul>
             </section>

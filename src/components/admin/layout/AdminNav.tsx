@@ -34,7 +34,7 @@ const navLinks = [
   { href: "/admin/buildings", label: "Buildings", icon: Building2, exact: false },
   { href: "/admin/incentives", label: "Broker Incentives", icon: HandCoins, exact: false },
   { href: "/admin/data-quality", label: "Data Quality", icon: BarChart3, exact: false },
-  { href: "/admin/errors", label: "Site Errors", icon: Bug, exact: false },
+  { href: "/admin/errors", label: "Site Errors", icon: Bug, exact: false, badge: "errors" as const },
   { href: "/admin/microsites", label: "Microsites", icon: Globe, exact: false },
   { href: "/admin/agents", label: "Agents", icon: FileText, exact: false },
   { href: "/admin/showers", label: "Showers", icon: UserCheck, exact: false },
@@ -49,12 +49,13 @@ const navLinks = [
 ];
 
 /**
- * Unread, non-spam mail waiting in /admin/email, shown as a sidebar badge.
+ * A sidebar badge count from an admin endpoint returning `{ count }`: unread
+ * mail in /admin/email, browser errors in the last 24 hours on /admin/errors.
  * Refetched on navigation and when the tab comes back into focus
- * (throttled), so a reply that arrived while the admin was elsewhere is
+ * (throttled), so something that happened while the admin was elsewhere is
  * visible without opening the page.
  */
-function useUnreadInbox(pathname: string) {
+function useSidebarCount(url: string, pathname: string) {
   const [count, setCount] = useState(0);
   const lastFetch = useRef(0);
   useEffect(() => {
@@ -62,7 +63,7 @@ function useUnreadInbox(pathname: string) {
     const load = () => {
       if (Date.now() - lastFetch.current < 30_000) return;
       lastFetch.current = Date.now();
-      fetch("/api/admin/inbox/unread")
+      fetch(url)
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => {
           if (!cancelled && d && typeof d.count === "number") setCount(d.count);
@@ -81,13 +82,14 @@ function useUnreadInbox(pathname: string) {
       cancelled = true;
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [pathname]);
+  }, [url, pathname]);
   return count;
 }
 
 export function AdminNav() {
   const pathname = usePathname();
-  const unreadInbox = useUnreadInbox(pathname);
+  const unreadInbox = useSidebarCount("/api/admin/inbox/unread", pathname);
+  const recentErrors = useSidebarCount("/api/admin/errors/recent", pathname);
 
   function isActive(href: string, exact: boolean) {
     if (exact) return pathname === href;
@@ -129,6 +131,14 @@ export function AdminNav() {
                   aria-label={`${unreadInbox} unread`}
                 >
                   {unreadInbox > 99 ? "99+" : unreadInbox}
+                </span>
+              )}
+              {"badge" in link && link.badge === "errors" && recentErrors > 0 && (
+                <span
+                  className="rounded-full bg-red-500/20 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-red-200"
+                  aria-label={`${recentErrors} errors in the last 24 hours`}
+                >
+                  {recentErrors > 99 ? "99+" : recentErrors}
                 </span>
               )}
             </Link>

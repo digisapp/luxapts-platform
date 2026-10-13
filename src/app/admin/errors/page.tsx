@@ -1,10 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { fetchAllRows } from "@/lib/db-helpers";
-import {
-  groupClientErrors,
-  summarizeClientErrors,
-  type ClientErrorRow,
-} from "@/lib/client-errors/group";
+import { loadClientErrorRows } from "@/lib/client-errors/load";
+import { groupClientErrors, summarizeClientErrors } from "@/lib/client-errors/group";
 import { ClientErrorsView } from "@/components/admin/errors/ClientErrorsView";
 
 export const dynamic = "force-dynamic";
@@ -18,27 +14,13 @@ async function loadClientErrors() {
   const now = Date.now();
   const since = new Date(now - DAYS * 24 * 60 * 60 * 1000).toISOString();
 
-  // Property mutation, not reassignment: react-hooks/immutability forbids
-  // reassigning a captured binding inside an async callback.
-  const loadError: { message: string | null } = { message: null };
-  const rows = await fetchAllRows<ClientErrorRow>(async (from, to) => {
-    const res = await supabase
-      .from("analytics_events")
-      .select("session_id, created_at, properties")
-      .eq("event_name", "client_error")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .order("id")
-      .range(from, to);
-    if (res.error) loadError.message = res.error.message ?? "Unknown error";
-    return res as unknown as { data: ClientErrorRow[] | null; error: unknown };
-  });
+  const { rows, error } = await loadClientErrorRows(supabase, since);
 
   return {
     now,
     groups: groupClientErrors(rows, now),
     summary: summarizeClientErrors(rows, now),
-    loadError: loadError.message,
+    loadError: error,
   };
 }
 

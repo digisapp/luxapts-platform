@@ -22,7 +22,21 @@ export function extractAddress(value: string): string {
  * mailbox you actually read. Empty by default.
  */
 export function getLeadNotificationRecipients(): string[] {
-  const configured = (process.env.LEAD_NOTIFY_EMAIL || "")
+  return parseAddressList(process.env.LEAD_NOTIFY_EMAIL || "");
+}
+
+/**
+ * Who gets the daily site-error digest (/api/cron/error-digest):
+ * ERROR_ALERT_EMAIL (comma-separated), else the LEAD_NOTIFY_EMAIL mailbox.
+ * Empty means no email; errors are still on /admin/errors and counted in the
+ * admin sidebar.
+ */
+export function getErrorAlertRecipients(): string[] {
+  return parseAddressList(process.env.ERROR_ALERT_EMAIL || process.env.LEAD_NOTIFY_EMAIL || "");
+}
+
+function parseAddressList(raw: string): string[] {
+  const configured = raw
     .split(/[,;\s]+/)
     .map(extractAddress)
     .filter((email) => EMAIL_RE.test(email));

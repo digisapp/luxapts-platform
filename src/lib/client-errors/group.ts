@@ -33,6 +33,8 @@ export interface ClientErrorGroup {
   /** Distinct visitor sessions that hit it (reports without one count once each) */
   sessions: number;
   last24h: number;
+  /** Sessions that hit it in the last 24 hours */
+  sessions24h: number;
   firstSeen: string;
   lastSeen: string;
   topPaths: Tally[];
@@ -94,6 +96,7 @@ export function groupClientErrors(rows: ClientErrorRow[], now: number = Date.now
       count: sorted.length,
       sessions: sessionCount(sorted),
       last24h: sorted.filter((r) => now - Date.parse(r.created_at) < DAY).length,
+      sessions24h: sessionCount(sorted.filter((r) => now - Date.parse(r.created_at) < DAY)),
       firstSeen: sorted[sorted.length - 1].created_at,
       lastSeen: sorted[0].created_at,
       topPaths: tally(sorted.map((r) => r.properties?.path || "/"), 3),
