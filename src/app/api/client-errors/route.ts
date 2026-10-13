@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { apiError } from "@/lib/api-helpers";
 import { createAdminClient } from "@/lib/supabase/server";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { clientErrorSchema } from "@/lib/validations";
 import { getDeviceType, isBotUserAgent, osMajorVersion, parseUserAgent } from "@/lib/analytics/user-agent";
 import { pathOnly, scrubText } from "@/lib/client-errors/scrub";
+import { maybeSendUrgentAlert } from "@/lib/client-errors/urgent";
 
 // Errors from visitors' browsers (sent by src/lib/client-errors/report.ts).
 // Stored as analytics_events rows with event_category "error" — the table
@@ -41,7 +42,11 @@ export async function POST(req: Request) {
         )
       : undefined;
 
-    const { error } = await createAdminClient()
+    const supabase = createAdminClient();
+    const message = scrubText(body.message).slice(0, 500);
+    const path = pathOnly(body.path);
+    const release = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null;
+    const { error } = await supabase
       .from("analytics_events")
       .insert({
         session_id: body.session_id || "none",
@@ -49,19 +54,22 @@ export async function POST(req: Request) {
         event_category: "error",
         properties: {
           source: body.source,
-          message: scrubText(body.message).slice(0, 500),
+          message,
           name: body.name ?? null,
           stack: body.stack ? scrubText(body.stack).slice(0, 4000) : null,
-          path: pathOnly(body.path),
+          path,
           browser,
           os: version ? `${os} ${version}` : os,
           device: getDeviceType(userAgent),
           // Which deploy threw it
-          release: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+          release,
           ...(extra && { extra }),
         },
       });
     if (error) console.error("client-errors: insert failed:", error.message);
+    // A page broken for several visitors at once (a bad deploy) emails right
+    // away instead of waiting for the daily digest; after the response
+    else after(() => maybeSendUrgentAlert(supabase, { source: body.source, message, path, release }));
 
     return noContent();
   } catch (err) {

@@ -6,6 +6,20 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const inserts: unknown[] = [];
 let rateLimited = false;
+const afterTasks: (() => unknown)[] = [];
+const urgentChecks: unknown[] = [];
+
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  after: (task: () => unknown) => afterTasks.push(task),
+}));
+
+vi.mock("@/lib/client-errors/urgent", () => ({
+  maybeSendUrgentAlert: async (_supabase: unknown, report: unknown) => {
+    urgentChecks.push(report);
+    return "skipped";
+  },
+}));
 
 vi.mock("@/lib/supabase/server", () => ({
   createAdminClient: () => ({
@@ -52,6 +66,8 @@ const valid = {
 beforeEach(() => {
   inserts.length = 0;
   rateLimited = false;
+  afterTasks.length = 0;
+  urgentChecks.length = 0;
 });
 
 describe("POST /api/client-errors", () => {
@@ -72,12 +88,18 @@ describe("POST /api/client-errors", () => {
       extra: { note: "contact [email]" },
     });
     expect((row.properties as { stack: string }).stack).toContain("x.js?…");
+
+    // The urgent-alert check runs after the response, on the scrubbed report
+    expect(afterTasks).toHaveLength(1);
+    await afterTasks[0]();
+    expect(urgentChecks).toEqual([{ source: "map", message: "Failed to initialize WebGL.", path: "/search", release: null }]);
   });
 
   it("rejects malformed reports", async () => {
     const res = await report({ source: "nonsense", message: "", path: "/" });
     expect(res.status).toBe(400);
     expect(inserts).toHaveLength(0);
+    expect(afterTasks).toHaveLength(0);
   });
 
   it("ignores bots without storing anything", async () => {
