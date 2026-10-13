@@ -14,6 +14,15 @@ describe("formatDate", () => {
     expect(formatDate("2026-12-31")).toBe("Dec 31, 2026");
   });
 
+  it("formats timestamps on the calendar day of the given zone", () => {
+    // 11:54pm in Miami is already the 13th in UTC
+    const lateEvening = "2026-10-13T03:54:00+00:00";
+    expect(formatDate(lateEvening, "America/New_York")).toBe("Oct 12, 2026");
+    expect(formatDate(lateEvening, "UTC")).toBe("Oct 13, 2026");
+    // a date-only string is a calendar date: the zone never shifts it
+    expect(formatDate("2026-05-01", "America/Los_Angeles")).toBe("May 1, 2026");
+  });
+
   it("handles invalid input", () => {
     expect(formatDate("not-a-date")).toBe("Invalid date");
   });

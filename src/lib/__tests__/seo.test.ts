@@ -155,6 +155,16 @@ describe("buildSummary", () => {
     expect(three.overview.join(" ")).toContain("pool, gym, and rooftop");
   });
 
+  it("dates the price check on the building's calendar day", () => {
+    // 10:30pm in Dallas is already Oct 13 in UTC, where the server runs
+    const s = buildSummary({
+      ...base,
+      pricesVerifiedAt: "2026-10-13T03:30:00+00:00",
+      timeZone: "America/Chicago",
+    });
+    expect(s.overview.join(" ")).toContain("last verified on October 12, 2026");
+  });
+
   it("gives two buildings with different inventory different copy", () => {
     const a = buildSummary(base).overview.join(" ");
     const b = buildSummary({

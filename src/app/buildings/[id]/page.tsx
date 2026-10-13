@@ -360,6 +360,10 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
 
   const lastTourDebrief = debriefRes.data;
 
+  // Dates on this page are the building's calendar day: the server runs in
+  // UTC, which put "Pricing verified" a day ahead every evening after 8pm ET.
+  const buildingTimeZone = timeZoneForState(building.cities?.state);
+
   // Aggregate price history by date (average rent per date)
   const priceByDate: Record<string, { total: number; count: number }> = {};
   for (const snap of historyRows) {
@@ -463,11 +467,12 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
       price: unitPrices[u.id]?.rent ?? null,
     })),
     pricesVerifiedAt: latestPriceDate,
+    timeZone: buildingTimeZone,
   });
 
   // Unit rows, resolved here so the client list only filters and collapses.
   // Cheapest first: that is the question a renter opens this list to answer.
-  const today = todayKey(timeZoneForState(building.cities?.state));
+  const today = todayKey(buildingTimeZone);
   const basePath = buildingPath(building);
   const unitRows: UnitRowData[] = (units || [])
     .map((u) =>
@@ -610,13 +615,13 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                       {pricingVerified && latestPriceDate && (
                         <Badge variant="outline" className="gap-1 border-emerald-700/60 text-emerald-400">
                           <BadgeCheck className="h-3.5 w-3.5" />
-                          Pricing verified {formatDate(latestPriceDate)}
+                          Pricing verified {formatDate(latestPriceDate, buildingTimeZone)}
                         </Badge>
                       )}
                       {lastTourDebrief && (
                         <Badge variant="outline" className="gap-1 border-white/20 text-white/80">
                           <Footprints className="h-3.5 w-3.5" />
-                          Toured by Staycio {formatDate(lastTourDebrief.submitted_at)}
+                          Toured by Staycio {formatDate(lastTourDebrief.submitted_at, buildingTimeZone)}
                         </Badge>
                       )}
                     </div>
@@ -982,7 +987,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                         ? `${unitCount} unit${unitCount === 1 ? "" : "s"} available`
                         : "No units listed right now"}
                       {pricingVerified && latestPriceDate && (
-                        <span className="text-emerald-400"> · verified {formatDate(latestPriceDate)}</span>
+                        <span className="text-emerald-400"> · verified {formatDate(latestPriceDate, buildingTimeZone)}</span>
                       )}
                     </p>
                   </div>

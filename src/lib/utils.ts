@@ -14,18 +14,24 @@ export function formatPrice(price: number): string {
   }).format(price);
 }
 
-export function formatDate(date: string | Date): string {
+/**
+ * "Oct 12, 2026". Pass `timeZone` for timestamps shown to renters: without it
+ * an instant is formatted in the server's zone (UTC on Vercel), so anything
+ * after 8pm Eastern reads as tomorrow.
+ */
+export function formatDate(date: string | Date, timeZone?: string): string {
   try {
     const d = new Date(date);
     if (isNaN(d.getTime())) return "Invalid date";
     // Date-only strings (e.g. "2026-05-01") are parsed as UTC midnight,
     // so format them in UTC to avoid shifting a day in western timezones.
     const isDateOnly = typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date);
+    const zone = isDateOnly ? "UTC" : timeZone;
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-      ...(isDateOnly && { timeZone: "UTC" }),
+      ...(zone && { timeZone: zone }),
     }).format(d);
   } catch {
     return "Invalid date";

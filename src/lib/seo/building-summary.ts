@@ -35,6 +35,8 @@ export interface SummaryInput {
   units: SummaryUnit[];
   /** ISO date of the freshest rent snapshot, when one exists. */
   pricesVerifiedAt?: string | null;
+  /** The building's IANA zone, so the verified date is its calendar day, not the server's. */
+  timeZone?: string;
 }
 
 export interface UnitMixRow {
@@ -131,6 +133,7 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
     amenities = [],
     units,
     pricesVerifiedAt,
+    timeZone,
   } = input;
 
   const place = neighborhoodName && cityName
@@ -188,6 +191,7 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
               month: "long",
               day: "numeric",
               year: "numeric",
+              timeZone,
             })}.`
           : ""
       }`
