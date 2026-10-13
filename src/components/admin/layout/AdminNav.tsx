@@ -21,6 +21,7 @@ import {
   SlidersHorizontal,
   Globe,
   HandCoins,
+  BookUser,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils";
 const navLinks = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/leads", label: "Leads", icon: Users, exact: false },
+  { href: "/admin/nyc", label: "NYC Contacts", icon: BookUser, exact: false },
   { href: "/admin/buildings", label: "Buildings", icon: Building2, exact: false },
   { href: "/admin/incentives", label: "Broker Incentives", icon: HandCoins, exact: false },
   { href: "/admin/data-quality", label: "Data Quality", icon: BarChart3, exact: false },

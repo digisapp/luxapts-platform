@@ -193,7 +193,8 @@ export function PopoverMenu({
               visibility: pos ? "visible" : "hidden",
             }}
             className={cn(
-              "fixed z-[60] min-w-[11rem] rounded-xl border border-white/10 bg-zinc-900/95 p-1 shadow-2xl shadow-black/60 backdrop-blur-xl",
+              // Long menus (the NYC book's agent list) scroll inside themselves.
+              "fixed z-[60] max-h-[min(24rem,calc(100dvh-2rem))] min-w-[11rem] overflow-y-auto overscroll-contain rounded-xl border border-white/10 bg-zinc-900/95 p-1 shadow-2xl shadow-black/60 backdrop-blur-xl",
               pos && "animate-pop-in"
             )}
           >
