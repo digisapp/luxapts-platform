@@ -7,11 +7,14 @@
  *   npx tsx --env-file=.env.local scripts/import-nyc-contacts.ts "<file.csv>"           # dry run: counts only, writes nothing
  *   npx tsx --env-file=.env.local scripts/import-nyc-contacts.ts "<file.csv>" --apply   # write
  *
- * Options: --limit N (first N rows), --batch-size N (default 250).
+ * Options: --limit N (first N rows), --from N (skip the first N people, to
+ * resume a run), --batch-size N (default 250).
  *
  * Safe to rerun: rows match by Follow Up Boss ID (then email/phone), merges
  * never overwrite what is already in the book, and history entries are keyed
- * so nothing is added twice.
+ * so nothing is added twice. That also makes a failed batch safe to retry,
+ * which it is, a few times, since a dropped connection ("fetch failed")
+ * should not end a 36k-row run.
  */
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";
@@ -30,6 +33,20 @@ const option = (name: string, fallback: number) => {
 };
 const limit = option("limit", Infinity);
 const batchSize = option("batch-size", 250);
+const from = option("from", 0);
+
+async function withRetry<T>(label: string, fn: () => Promise<T>, attempts = 6): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (attempt >= attempts) throw err;
+      const wait = 3000 * attempt;
+      console.warn(`\n  ${label} failed (${err instanceof Error ? err.message : err}); retry ${attempt} in ${wait / 1000}s`);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+}
 
 async function main() {
   if (!file) throw new Error('Usage: import-nyc-contacts.ts "<file.csv>" [--apply]');
@@ -72,8 +89,8 @@ async function main() {
   const supabase = createAdminClient();
   const batch = `${basename(file)} ${new Date().toISOString().slice(0, 10)}`;
   const totals = { created: 0, merged: 0, activities: 0 };
-  for (let i = 0; i < contacts.length; i += batchSize) {
-    const result = await importContacts(supabase, contacts.slice(i, i + batchSize), batch);
+  for (let i = from; i < contacts.length; i += batchSize) {
+    const result = await withRetry(`Batch at ${i}`, () => importContacts(supabase, contacts.slice(i, i + batchSize), batch));
     totals.created += result.created;
     totals.merged += result.merged;
     totals.activities += result.activities;
