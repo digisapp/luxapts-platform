@@ -76,6 +76,10 @@ describe("labels", () => {
     expect(sourceLabel("voice", "phone:+13059521558")).toBe("Phone call");
     expect(sourceLabel("voice", "phone:unknown")).toBe("Phone call");
   });
+  it("names the listing site and the property a listing lead asked about", () => {
+    expect(sourceLabel("apartments.com", "Bayline Residences")).toBe("Apartments.com · Bayline Residences");
+    expect(sourceLabel("apartments.com", null)).toBe("Apartments.com");
+  });
   it("falls back to New styling for an unknown status", () => {
     expect(statusMeta("bogus").label).toBe("New");
   });

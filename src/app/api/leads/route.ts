@@ -301,7 +301,7 @@ export async function GET(req: Request) {
       .from("leads")
       .select(`
         id, created_at, status, name, user_email, user_phone,
-        budget_min, budget_max, beds, move_in_date, source, source_detail, notes,
+        budget_min, budget_max, beds, move_in_date, source, source_detail, notes, needs_review,
         cities:city_id (name, slug)
       `, { count: "exact" })
       .order("created_at", { ascending: false })

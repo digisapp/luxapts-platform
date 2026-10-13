@@ -63,15 +63,18 @@ const SOURCE_LABELS: Record<string, string> = {
   chat: "Chat",
   voice: "Phone call",
   microsite: "Microsite",
+  "apartments.com": "Apartments.com",
 };
 
 /**
  * Microsite leads name the building they asked about, not just "Microsite".
  * Stacy's phone line also sets source_detail, to "phone:<dialed number>",
- * which read as a site name; a call is labelled as a call.
+ * which read as a site name; a call is labelled as a call. A listing-site
+ * lead (its source is the site's domain) names the site and the property.
  */
 export function sourceLabel(source: string, sourceDetail?: string | null): string {
   if (sourceDetail?.startsWith("phone:")) return SOURCE_LABELS.voice;
+  if (source.includes(".")) return [SOURCE_LABELS[source] ?? source, sourceDetail].filter(Boolean).join(" · ");
   if (sourceDetail) return MICROSITE_BUILDINGS[sourceDetail] ?? sourceDetail;
   return SOURCE_LABELS[source] ?? source;
 }

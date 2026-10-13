@@ -34,6 +34,10 @@ const classify = vi.fn();
 const sendAutoReply = vi.fn();
 vi.mock("@/lib/ai-email", () => ({ classifyAndDraftReply: classify, sendAutoReply }));
 
+const createListingLead = vi.fn();
+vi.mock("@/lib/leads/listing-lead", () => ({ createListingLead }));
+vi.mock("@/lib/supabase/server", () => ({ createAdminClient: () => ({}) }));
+
 // after() needs a request scope in Next; run the callback inline here.
 vi.mock("next/server", async (importOriginal) => {
   const mod = await importOriginal<typeof import("next/server")>();
@@ -79,6 +83,8 @@ describe("POST /api/webhooks/resend", () => {
     updateDeliveryStatus.mockReset();
     classify.mockReset();
     sendAutoReply.mockReset();
+    createListingLead.mockReset();
+    createListingLead.mockResolvedValue({ leadId: "lead-new", created: true });
     verify.mockImplementation((raw: string) => JSON.parse(raw));
     vi.spyOn(console, "log").mockImplementation(() => {});
     vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -219,6 +225,63 @@ describe("POST /api/webhooks/resend", () => {
     await vi.waitFor(() =>
       expect(sendInboxAlert).toHaveBeenCalledWith(expect.objectContaining({ id: "e9", phoneSaved: "+17865550142", building: "Downtown 6" }))
     );
+  });
+
+  const listingEmail = (subject: string, from: string, replyTo: string, text: string) => ({
+    data: {
+      id: "r20",
+      from,
+      to: ["team@staycio.com"],
+      cc: [],
+      received_for: ["team@staycio.com"],
+      reply_to: [replyTo],
+      subject,
+      text,
+      html: "",
+      message_id: "<m20@email.apartments.com>",
+      headers: {
+        From: `"Apartments.com" <${from}>`,
+        "Message-ID": "<m20@email.apartments.com>",
+        "Authentication-Results": "amazonses.com; spf=pass smtp.mailfrom=email.apartments.com; dkim=pass header.i=@email.apartments.com; dmarc=pass header.from=email.apartments.com",
+      },
+      attachments: [],
+    },
+    error: null,
+  });
+
+  it("stores an Apartments.com inquiry as usual and makes it a lead linked to the stored email", async () => {
+    receivingGet.mockResolvedValue(
+      listingEmail(
+        "New Apartments.com Lead for Bayline Residences",
+        "noreply@email.apartments.com",
+        "jordan.rivera@example.com",
+        "Name: Jordan Rivera\nEmail: jordan.rivera@example.com\nPhone: (305) 555-0142"
+      )
+    );
+    // Spam-flagged by the heuristic: still a lead.
+    storeInboundEmail.mockResolvedValue({ id: "e20", is_spam: true, thread_id: "e20", headers: {}, lead_id: null });
+
+    const res = await post({ type: "email.received", data: { email_id: "r20", from: "noreply@email.apartments.com", to: ["team@staycio.com"] } });
+    expect(res.status).toBe(200);
+    expect(storeInboundEmail).toHaveBeenCalledWith(expect.objectContaining({ from: "noreply@email.apartments.com", to: "team@staycio.com", replyTo: "jordan.rivera@example.com" }));
+    await vi.waitFor(() =>
+      expect(createListingLead).toHaveBeenCalledWith(expect.anything(), {
+        lead: expect.objectContaining({ source: "apartments.com", name: "Jordan Rivera", email: "jordan.rivera@example.com", phone: "(305) 555-0142", propertyName: "Bayline Residences" }),
+        emailId: "e20",
+        senderVerified: true,
+      })
+    );
+  });
+
+  it("makes no lead from the site's account mail or from ordinary mail", async () => {
+    receivingGet.mockResolvedValue(
+      listingEmail("Welcome to the Apartments.com Network", "landlord-info@email.apartments.com", "landlord-info@reply.email.apartments.com", "Welcome!")
+    );
+    storeInboundEmail.mockResolvedValue({ id: "e21", is_spam: false, thread_id: "e21", headers: {}, lead_id: null });
+    await post({ type: "email.received", data: { email_id: "r21", from: "landlord-info@email.apartments.com", to: ["team@staycio.com"] } });
+    await vi.waitFor(() => expect(sendInboxAlert).toHaveBeenCalledWith(expect.objectContaining({ id: "e21" })));
+    expect(storeInboundEmail).toHaveBeenCalled();
+    expect(createListingLead).not.toHaveBeenCalled();
   });
 
   it("answers 502 when the body fetch fails so Resend retries", async () => {

@@ -7,6 +7,9 @@ import { draftContextFor } from "@/lib/leads/draft-context";
 import { sendInboxAlert } from "@/lib/email/inbox-notify";
 import { extractPhone, stripQuotedHistory } from "@/lib/email/phone-capture";
 import { parseAuthResults, senderAuthenticated } from "@/lib/email/sender-auth";
+import { parseListingLeadEmail } from "@/lib/email/parse-listing-lead";
+import { createListingLead } from "@/lib/leads/listing-lead";
+import { createAdminClient } from "@/lib/supabase/server";
 import {
   findOurRecipient,
   parseEmailAddress,
@@ -171,6 +174,27 @@ export async function POST(request: Request) {
         cc: toList(full?.cc ?? data.cc).map((c) => parseEmailAddress(c).email),
         attachments,
       });
+
+      // A renter inquiry from a listing site (Apartments.com) also becomes a
+      // lead on /admin/leads, linked to this email. Spam-flagged ones too:
+      // the site's sender domain says more than the spam heuristic, and an
+      // inquiry is never dropped. Runs after the 200, like the work below.
+      const listingLead = stored
+        ? parseListingLeadEmail({ from, fromName, replyTo, subject, text: full?.text, html: full?.html })
+        : null;
+      if (stored && listingLead) {
+        after(async () => {
+          try {
+            await createListingLead(createAdminClient(), {
+              lead: listingLead,
+              emailId: stored.id,
+              senderVerified: senderAuthenticated(parseAuthResults(headers["authentication-results"])),
+            });
+          } catch (err) {
+            console.error(`[Listing lead] Failed for email ${stored.id}:`, err);
+          }
+        });
+      }
 
       // Phone capture, the AI draft, the (optional) auto-reply and the
       // (optional) email alert run after the 200 is sent. after() keeps the

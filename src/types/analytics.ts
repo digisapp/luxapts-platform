@@ -12,7 +12,7 @@ export interface LeadFunnelMetrics {
 export interface LeadSourceMetrics {
   // 'microsite' exists in the DB since migration 021 and is the source of
   // nearly every production lead.
-  source: "web_form" | "chat" | "voice" | "microsite";
+  source: "web_form" | "chat" | "voice" | "microsite" | "apartments.com";
   count: number;
   percentage: number;
 }

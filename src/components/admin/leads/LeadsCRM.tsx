@@ -53,6 +53,7 @@ const SOURCES = [
   { key: "web_form", label: "Web form", icon: FileText },
   { key: "chat", label: "Chat", icon: MessageCircle },
   { key: "voice", label: "Phone call", icon: Phone },
+  { key: "apartments.com", label: "Apartments.com", icon: Globe },
 ];
 
 const LIMIT = 25;

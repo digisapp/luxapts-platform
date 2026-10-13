@@ -44,6 +44,8 @@ export interface LeadRowData {
   /** Originating microsite domain, when the lead came from one. */
   source_detail?: string | null;
   notes: string | null;
+  /** A listing-site email the parser could not fully read (migration 038). */
+  needs_review?: boolean;
   cities: { name: string; slug: string } | { name: string; slug: string }[] | null;
 }
 
@@ -178,6 +180,14 @@ export function LeadRow({ lead, selected, now, onSelect, onStatusChange, onEmail
             <SourceIcon className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
             {sourceLabel(lead.source, lead.source_detail)}
           </span>
+          {lead.needs_review && (
+            <span
+              title="Read the original email: the lead's notes say why"
+              className="inline-flex items-center rounded-md border border-amber-400/25 bg-amber-400/10 px-1.5 py-0.5 font-medium text-amber-200"
+            >
+              Needs review
+            </span>
+          )}
           {/* Lines break only between items, with the dot ending its line,
               so "Move-in Nov 1" never splits. */}
           {details.length > 0 && (

@@ -1,7 +1,8 @@
 /**
  * A minimal in-memory stand-in for the Supabase admin client, enough for the
- * Stacy lead/session code paths: select/eq/is/order/limit with maybeSingle,
- * single or await; insert (optionally .select().single()); update().eq().
+ * Stacy and listing lead code paths: select/eq/ilike/is/order/limit with
+ * maybeSingle, single or await; insert (optionally .select().single());
+ * update().eq(). `is`, `in`, `order` and `limit` do not filter or sort.
  * Every write is recorded so tests can assert on it.
  */
 
@@ -25,11 +26,12 @@ export function fakeClient(db: FakeDb) {
   return {
     from(table: string) {
       const filters: [string, unknown][] = [];
+      const preds: ((r: Row) => boolean)[] = [];
       let op: "select" | "insert" | "update" = "select";
       let values: Row = {};
       let inserted: Row[] = [];
       const matching = () =>
-        (db.tables[table] ?? []).filter((r) => filters.every(([k, v]) => r[k] === v));
+        (db.tables[table] ?? []).filter((r) => filters.every(([k, v]) => r[k] === v) && preds.every((p) => p(r)));
 
       const exec = async (): Promise<{ data: unknown; error: unknown }> => {
         if (op === "insert") {
@@ -53,6 +55,12 @@ export function fakeClient(db: FakeDb) {
         select: () => query,
         eq: (k: string, v: unknown) => {
           filters.push([k, v]);
+          return query;
+        },
+        // Case-insensitive equality: the code's patterns escape their wildcards.
+        ilike: (k: string, pattern: string) => {
+          const want = pattern.replace(/\\(.)/g, "$1").toLowerCase();
+          preds.push((r) => String(r[k] ?? "").toLowerCase() === want);
           return query;
         },
         is: () => query,

@@ -19,6 +19,7 @@ const COLORS: Record<LeadSourceMetrics["source"], string> = {
   chat: "#8b5cf6",
   voice: "#22c55e",
   microsite: "#f59e0b",
+  "apartments.com": "#14b8a6",
 };
 
 const LABELS: Record<LeadSourceMetrics["source"], string> = {
@@ -26,6 +27,7 @@ const LABELS: Record<LeadSourceMetrics["source"], string> = {
   chat: "AI Chat",
   voice: "Voice",
   microsite: "Microsite",
+  "apartments.com": "Apartments.com",
 };
 
 export function LeadSourceChart({ data }: LeadSourceChartProps) {

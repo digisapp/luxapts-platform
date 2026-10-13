@@ -23,7 +23,7 @@ const LEAD_STATUSES = [
 // 'microsite' has existed since migration 021 and is now the source of
 // essentially every production lead; leaving it out of this list reported the
 // funnel as empty on the analytics dashboard.
-const LEAD_SOURCES = ["web_form", "chat", "voice", "microsite"] as const;
+const LEAD_SOURCES = ["web_form", "chat", "voice", "microsite", "apartments.com"] as const;
 
 /** Exact row count for a single-column equality filter (head:true sends no rows). */
 async function countLeads(column: string, value: string): Promise<number> {

@@ -3,7 +3,16 @@
 
 export type UserRole = "admin" | "agent" | "partner" | "renter";
 export type BuildingStatus = "active" | "inactive" | "coming_soon";
-export type LeadSource = "web_form" | "chat" | "voice";
+export type LeadSource =
+  | "web_form"
+  | "chat"
+  | "voice"
+  | "microsite"
+  // Listing sites (migration 038); only Apartments.com is parsed so far.
+  | "apartments.com"
+  | "zillow.com"
+  | "rent.com"
+  | "apartmentlist.com";
 export type LeadStatus = "new" | "contacted" | "touring" | "applied" | "leased" | "lost";
 export type AssignmentStatus = "assigned" | "accepted" | "declined" | "reassigned";
 export type AgentStatus = "active" | "paused";
@@ -204,6 +213,8 @@ export interface Lead {
   source: LeadSource;
   status: LeadStatus;
   notes: string | null;
+  /** A listing-site email the parser could not fully read (migration 038). */
+  needs_review?: boolean;
 }
 
 export interface LeadTarget {
