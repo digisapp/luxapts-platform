@@ -127,7 +127,7 @@ export default function TermsPage() {
                 effect constitutes acceptance. Questions:{" "}
                 <a
                   href="mailto:hello@staycio.com"
-                  className="py-3 text-link underline underline-offset-4 hover:text-link/80 dark:text-white dark:hover:text-zinc-300"
+                  className="py-3 text-link underline underline-offset-4 hover:text-foreground dark:text-white dark:hover:text-zinc-300"
                 >
                   hello@staycio.com
                 </a>

@@ -652,7 +652,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   {unitCount > 0 && (
                     <a
                       href="#available-units"
-                      className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-medium text-link hover:text-link/80 dark:hover:text-cyan-200"
+                      className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-medium text-link underline-offset-4 hover:underline dark:hover:text-cyan-200 dark:hover:no-underline"
                     >
                       {unitCount} unit{unitCount === 1 ? "" : "s"} available
                       <ChevronDown className="h-4 w-4" />

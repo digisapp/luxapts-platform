@@ -149,7 +149,7 @@ export default function PrivacyPage() {
                 will be reflected by the date above. Questions or requests:{" "}
                 <a
                   href="mailto:hello@staycio.com"
-                  className="py-3 text-link underline underline-offset-4 hover:text-link/80 dark:text-white dark:hover:text-zinc-300"
+                  className="py-3 text-link underline underline-offset-4 hover:text-foreground dark:text-white dark:hover:text-zinc-300"
                 >
                   hello@staycio.com
                 </a>
