@@ -10,6 +10,7 @@ import {
   MessageCircle,
   MessageSquare,
   PhoneIncoming,
+  PhoneMissed,
   PhoneOutgoing,
   StickyNote,
   Trash2,
@@ -28,6 +29,15 @@ const when = new Intl.DateTimeFormat("en-US", {
   minute: "2-digit",
   timeZone: CRM_TIME_ZONE,
 });
+
+/** Twilio delivery states worth showing on a sent text. */
+const DELIVERY: Record<string, { label: string; className: string } | undefined> = {
+  queued: { label: "Sending", className: "text-muted-foreground" },
+  sent: { label: "Sent", className: "text-muted-foreground" },
+  delivered: { label: "Delivered", className: "text-emerald-300" },
+  undelivered: { label: "Not delivered", className: "text-red-300" },
+  failed: { label: "Failed", className: "text-red-300" },
+};
 
 const FILTERS: { key: "all" | ActivityKind; label: string }[] = [
   { key: "all", label: "Everything" },
@@ -118,11 +128,18 @@ function TimelineItem({
       );
       break;
     }
-    case "text":
+    case "text": {
       Icon = MessageSquare;
       tone = inbound ? "bg-sky-400/15 text-sky-300" : "bg-white/[0.06] text-white/70";
-      title = inbound ? `${actor} replied` : `${actor} texted`;
+      const status = typeof a.meta.status === "string" ? DELIVERY[a.meta.status] : undefined;
+      title = (
+        <>
+          {inbound ? `${actor} replied` : `${actor} texted`}
+          {status && <span className={status.className}> · {status.label}</span>}
+        </>
+      );
       break;
+    }
     case "whatsapp":
       Icon = MessageCircle;
       tone = "bg-emerald-400/10 text-emerald-300";
@@ -134,16 +151,20 @@ function TimelineItem({
       title = inbound ? `${actor} emailed` : `${actor} sent an email`;
       break;
     case "call": {
-      Icon = inbound ? PhoneIncoming : PhoneOutgoing;
-      tone = inbound
-        ? "bg-sky-400/15 text-sky-300"
-        : a.outcome === "talked"
-          ? "bg-emerald-400/10 text-emerald-300"
-          : "bg-white/[0.06] text-white/70";
-      const summary = callSummary(a.outcome, a.meta.duration_sec);
+      // They called and nobody picked up: worth a call back, so it stands out.
+      const missed = inbound && a.outcome === "no_answer";
+      Icon = missed ? PhoneMissed : inbound ? PhoneIncoming : PhoneOutgoing;
+      tone = missed
+        ? "bg-red-500/15 text-red-300"
+        : inbound
+          ? "bg-sky-400/15 text-sky-300"
+          : a.outcome === "talked"
+            ? "bg-emerald-400/10 text-emerald-300"
+            : "bg-white/[0.06] text-white/70";
+      const summary = missed ? callSummary(null, a.meta.duration_sec) : callSummary(a.outcome, a.meta.duration_sec);
       title = (
         <>
-          {actor} called
+          {missed ? `Missed call from ${actor}` : `${actor} called`}
           {summary && <span className="text-muted-foreground"> · {summary}</span>}
         </>
       );

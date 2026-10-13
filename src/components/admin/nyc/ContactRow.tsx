@@ -125,6 +125,16 @@ export function ContactRow({
           >
             {name}
           </Link>
+          {c.kind !== "renter" && (
+            <span
+              className={cn(
+                "shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium",
+                c.kind === "buyer" ? "bg-amber-400/15 text-amber-100" : "bg-white/[0.08] text-foreground/75"
+              )}
+            >
+              {c.kind === "buyer" ? "Buyer" : "Broker"}
+            </span>
+          )}
           {c.do_not_contact && (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-red-500/15 px-1.5 py-0.5 text-[11px] font-medium text-red-200">
               <Ban className="h-3 w-3" aria-hidden="true" />
@@ -137,9 +147,18 @@ export function ContactRow({
           <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] text-muted-foreground lg:flex-nowrap">
             {phone && <span className="shrink-0 whitespace-nowrap tabular-nums">{formatPhone(phone)}</span>}
             {email && hasName && (
-              <span className="min-w-0 max-w-full truncate" title={isRelayEmail(email) ? `${email} — a listing-site relay, probably no longer forwarding` : email}>
+              <span
+                className="min-w-0 max-w-full truncate"
+                title={
+                  c.has_real_email
+                    ? email
+                    : isRelayEmail(email)
+                      ? `${email}: a listing-site relay, probably no longer forwarding`
+                      : `${email}: bounced before`
+                }
+              >
                 {email}
-                {isRelayEmail(email) && <span className="text-amber-300/80"> · relay</span>}
+                {!c.has_real_email && <span className="text-amber-300/80"> · {isRelayEmail(email) ? "relay" : "bounced"}</span>}
               </span>
             )}
           </div>
@@ -194,7 +213,7 @@ export function ContactRow({
               </a>
             </>
           )}
-          {email && !c.do_not_contact && (
+          {email && c.has_real_email && !c.do_not_contact && (
             <a
               href={`mailto:${email}`}
               onClick={() => onReach(c.id, "email")}

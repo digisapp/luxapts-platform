@@ -284,9 +284,10 @@ export function TagsCard({ tags, allTags, onChange }: TagsCardProps) {
 interface DetailsCardProps {
   contact: CrmContact;
   sources: Facet[];
-  agents: Facet[];
   onSave: (patch: Record<string, unknown>) => Promise<boolean>;
 }
+
+const KIND_LABEL: Record<string, string> = { renter: "Renter", buyer: "Buyer", broker: "Broker (another agent)" };
 
 type Draft = Record<
   | "first_name"
@@ -294,7 +295,7 @@ type Draft = Record<
   | "phones"
   | "emails"
   | "source"
-  | "assigned_to"
+  | "kind"
   | "move_in"
   | "price"
   | "beds"
@@ -311,7 +312,7 @@ function draftOf(c: CrmContact): Draft {
     phones: c.phones.map(formatPhone).join("\n"),
     emails: c.emails.join("\n"),
     source: c.source ?? "",
-    assigned_to: c.assigned_to ?? "",
+    kind: c.kind,
     move_in: c.move_in ?? "",
     price: c.price === null ? "" : String(c.price),
     beds: c.beds === null ? "" : String(c.beds),
@@ -323,13 +324,13 @@ function draftOf(c: CrmContact): Draft {
 
 const lines = (v: string) => v.split(/[\n,;]+/).map((x) => x.trim()).filter(Boolean);
 
-export function DetailsCard({ contact: c, sources, agents, onSave }: DetailsCardProps) {
+export function DetailsCard({ contact: c, sources, onSave }: DetailsCardProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Draft>(() => draftOf(c));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const id = useId();
-  const set = (k: keyof Draft) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const set = (k: keyof Draft) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setDraft((d) => ({ ...d, [k]: e.target.value }));
 
   async function save(e: React.FormEvent) {
@@ -348,7 +349,7 @@ export function DetailsCard({ contact: c, sources, agents, onSave }: DetailsCard
       phones: lines(draft.phones),
       emails: lines(draft.emails),
       source: draft.source,
-      assigned_to: draft.assigned_to,
+      kind: draft.kind,
       move_in: draft.move_in,
       price,
       beds,
@@ -361,8 +362,9 @@ export function DetailsCard({ contact: c, sources, agents, onSave }: DetailsCard
   }
 
   const view: [string, React.ReactNode][] = [
+    ["Type", KIND_LABEL[c.kind]],
     ["Source", c.source],
-    ["Agent", c.assigned_to],
+    ["Previous agent", c.previous_agent],
     ["Added", c.added_at ? new Date(c.added_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York" }) : null],
     ["Follow Up Boss ID", c.external_id],
   ];
@@ -413,9 +415,17 @@ export function DetailsCard({ contact: c, sources, agents, onSave }: DetailsCard
               <datalist id={`${id}-srcs`}>{sources.map((s) => <option key={s.value} value={s.value} />)}</datalist>
             </div>
             <div>
-              <label htmlFor={`${id}-ag`} className={fieldLabel}>Agent</label>
-              <Input id={`${id}-ag`} list={`${id}-ags`} value={draft.assigned_to} onChange={set("assigned_to")} maxLength={80} />
-              <datalist id={`${id}-ags`}>{agents.map((a) => <option key={a.value} value={a.value} />)}</datalist>
+              <label htmlFor={`${id}-kind`} className={fieldLabel}>Type</label>
+              <select
+                id={`${id}-kind`}
+                value={draft.kind}
+                onChange={set("kind")}
+                className="h-11 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 text-base md:h-10 md:text-sm"
+              >
+                {Object.entries(KIND_LABEL).map(([k, label]) => (
+                  <option key={k} value={k}>{label}</option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">

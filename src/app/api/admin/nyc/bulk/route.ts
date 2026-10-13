@@ -6,7 +6,7 @@ import { actorName, collectIds, listContext } from "@/lib/crm/service";
 import { bulkSchema } from "@/lib/crm/validation";
 
 /**
- * Stage, tag, agent or delete for many contacts at once: the selected ids,
+ * Stage, tag, type or delete for many contacts at once: the selected ids,
  * or everyone a filter matches ("all 10,583 in this list"). Ids travel in
  * the RPC's POST body, so there is no URL-length ceiling.
  */
@@ -29,12 +29,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ deleted: data ?? 0 });
     }
 
+    if (action === "kind") {
+      const { data, error } = await supabase.rpc("crm_bulk_set_kind", { p_ids: ids, p_kind: value });
+      if (error) throw error;
+      return NextResponse.json({ updated: data ?? 0 });
+    }
+
     const { data, error } = await supabase.rpc("crm_bulk_update", {
       p_ids: ids,
       p_stage: action === "stage" ? value : null,
       p_add_tag: action === "add_tag" ? value : null,
       p_remove_tag: action === "remove_tag" ? value : null,
-      p_assigned: action === "assign" ? (value ?? "") : null,
       p_actor: await actorName(supabase, auth.userId),
       p_actor_id: auth.userId,
     });

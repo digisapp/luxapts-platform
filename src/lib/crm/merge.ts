@@ -5,6 +5,7 @@
 import { nameKey, uniqueValues } from "./normalize";
 import type { ImportContact } from "./import-map";
 import { DEFAULT_STAGE } from "./stages";
+import type { ContactKind } from "./types";
 
 /** The contact columns the importer writes (no ids or generated columns). */
 export interface ContactWrite {
@@ -16,7 +17,8 @@ export interface ContactWrite {
   phones: string[];
   stage: string;
   source: string | null;
-  assigned_to: string | null;
+  previous_agent: string | null;
+  kind: ContactKind;
   tags: string[];
   price: number | null;
   beds: number | null;
@@ -28,6 +30,7 @@ export interface ContactWrite {
   neighborhood: string | null;
   background: string | null;
   added_at: string | null;
+  do_not_contact: boolean;
   contacted: boolean;
   last_contacted_at: string | null;
   last_inbound_at: string | null;
@@ -118,7 +121,9 @@ export function mergeContact(existing: ContactWrite, incoming: ImportContact): C
     phones: uniqueValues([...existing.phones, ...incoming.phones]).slice(0, 10),
     stage: existing.stage === DEFAULT_STAGE ? incoming.stage : existing.stage,
     source: fill("source"),
-    assigned_to: fill("assigned_to"),
+    previous_agent: fill("previous_agent"),
+    // Re-classified only from the default, so a type set by hand stays.
+    kind: existing.kind === "renter" ? incoming.kind : existing.kind,
     tags: uniqueValues([...existing.tags, ...incoming.tags]).slice(0, 50),
     price: fill("price"),
     beds: fill("beds"),
@@ -130,6 +135,8 @@ export function mergeContact(existing: ContactWrite, incoming: ImportContact): C
     neighborhood: fill("neighborhood"),
     background,
     added_at: earlier(existing.added_at, incoming.added_at),
+    // An opt-out is never undone by an import.
+    do_not_contact: existing.do_not_contact || incoming.do_not_contact,
     contacted: existing.contacted || incoming.contacted,
     last_contacted_at: later(existing.last_contacted_at, incoming.last_contacted_at),
     last_inbound_at: later(existing.last_inbound_at, incoming.last_inbound_at),
@@ -156,7 +163,8 @@ export function toContactWrite(row: Record<string, unknown>): ContactWrite {
     phones: (row.phones as string[] | null) ?? [],
     stage: (row.stage as string | null) ?? DEFAULT_STAGE,
     source: (row.source as string | null) ?? null,
-    assigned_to: (row.assigned_to as string | null) ?? null,
+    previous_agent: (row.previous_agent as string | null) ?? null,
+    kind: ((row.kind as ContactKind | null) ?? "renter"),
     tags: (row.tags as string[] | null) ?? [],
     price: (row.price as number | null) ?? null,
     beds: (row.beds as number | null) ?? null,
@@ -168,6 +176,7 @@ export function toContactWrite(row: Record<string, unknown>): ContactWrite {
     neighborhood: (row.neighborhood as string | null) ?? null,
     background: (row.background as string | null) ?? null,
     added_at: (row.added_at as string | null) ?? null,
+    do_not_contact: Boolean(row.do_not_contact),
     contacted: Boolean(row.contacted),
     last_contacted_at: (row.last_contacted_at as string | null) ?? null,
     last_inbound_at: (row.last_inbound_at as string | null) ?? null,

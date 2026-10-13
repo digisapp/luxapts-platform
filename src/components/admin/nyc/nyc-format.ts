@@ -80,6 +80,7 @@ export function firstNameOf(c: Pick<CrmContact, "first_name" | "last_name">): st
 }
 
 const TOUCH_TEXT: Record<string, string> = {
+  awaiting: "Waiting on you",
   hot: "Hot (replied in 6 months)",
   warm: "Warm (replied, not lately)",
   cold: "Cold (never replied)",
@@ -88,6 +89,13 @@ const TOUCH_TEXT: Record<string, string> = {
   stale30: "No touch in 30+ days",
   stale90: "No touch in 90+ days",
   stale180: "No touch in 180+ days",
+};
+
+const KIND_TEXT: Record<string, string> = {
+  people: "Renters & buyers",
+  renter: "Renters",
+  buyer: "Buyers",
+  broker: "Brokers",
 };
 
 const REACH_TEXT: Record<string, string> = {
@@ -106,6 +114,7 @@ export function describeFilters(f: CrmFilters): string[] {
   if (f.tag) out.push(`Tag: ${f.tag}`);
   if (f.source) out.push(`Source: ${f.source}`);
   if (f.agent) out.push(`Agent: ${f.agent === NO_AGENT ? "Unassigned" : f.agent}`);
+  if (f.kind) out.push(KIND_TEXT[f.kind]);
   if (f.hood) out.push(f.hood);
   if (f.budget) out.push(BUDGET_BANDS[f.budget].label);
   if (f.beds) out.push(f.beds === "0" ? "Studio" : f.beds === "3" ? "3+ beds" : `${f.beds} bed`);

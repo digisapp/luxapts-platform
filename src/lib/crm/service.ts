@@ -16,6 +16,8 @@ import {
   CONTACT_LIST_COLUMNS,
   type CrmActivity,
   type CrmContact,
+  type CrmSender,
+  type CrmTemplate,
   type CrmContactListRow,
   type CrmFacets,
   type CrmSmartList,
@@ -80,7 +82,7 @@ export async function getFacets(supabase: SupabaseClient): Promise<CrmFacets> {
   return {
     stages: f.stages ?? [],
     sources: f.sources ?? [],
-    assigned: f.assigned ?? [],
+    agents: f.agents ?? [],
     tags: f.tags ?? [],
     neighborhoods: f.neighborhoods ?? [],
   };
@@ -272,6 +274,17 @@ export async function countDue(supabase: SupabaseClient, today: string): Promise
   return count ?? 0;
 }
 
+/** Replies in the last three days that nobody has answered yet. */
+export async function countNewReplies(supabase: SupabaseClient, now: Date = new Date()): Promise<number> {
+  const { count, error } = await supabase
+    .from("crm_contacts")
+    .select("id", { count: "exact", head: true })
+    .eq("awaiting_reply", true)
+    .gte("last_inbound_at", new Date(now.getTime() - 3 * 86_400_000).toISOString());
+  if (error) throw new Error(`Could not count replies: ${error.message}`);
+  return count ?? 0;
+}
+
 export interface AgendaTask extends CrmTask {
   contact: Pick<CrmContact, "id" | "first_name" | "last_name" | "emails" | "phones" | "stage" | "do_not_contact"> | null;
 }
@@ -290,6 +303,54 @@ export async function getAgenda(supabase: SupabaseClient, today: string): Promis
     .limit(500);
   if (error) throw new Error(`Could not load follow-ups: ${error.message}`);
   return (data ?? []) as unknown as AgendaTask[];
+}
+
+export async function getTemplates(supabase: SupabaseClient): Promise<CrmTemplate[]> {
+  const { data, error } = await supabase
+    .from("crm_templates")
+    .select("id, name, channel, subject, body, position")
+    .order("position")
+    .order("created_at");
+  if (error) throw new Error(`Could not load templates: ${error.message}`);
+  return (data ?? []) as CrmTemplate[];
+}
+
+/** Who the templates say is writing ({my_name}, {company}). */
+export async function getSender(supabase: SupabaseClient): Promise<CrmSender> {
+  const { data, error } = await supabase.from("crm_settings").select("key, value").in("key", ["sender_name", "company"]);
+  if (error) throw new Error(`Could not load settings: ${error.message}`);
+  const get = (k: string) => (data ?? []).find((r) => r.key === k)?.value ?? "";
+  return { name: get("sender_name"), company: get("company") };
+}
+
+export interface TodayStats {
+  calls: number;
+  talked: number;
+  texts: number;
+  emails: number;
+  replies: number;
+  followUpsDone: number;
+}
+
+/** What was done in the book today (New York day), not counting imports. */
+export async function getTodayStats(supabase: SupabaseClient, since: Date): Promise<TodayStats> {
+  const { data, error } = await supabase
+    .from("crm_activities")
+    .select("kind, direction, outcome")
+    .is("import_key", null)
+    .gte("created_at", since.toISOString())
+    .limit(5000);
+  if (error) throw new Error(`Could not load today's activity: ${error.message}`);
+  const rows = data ?? [];
+  const out = (kind: string) => rows.filter((r) => r.kind === kind && r.direction === "outbound").length;
+  return {
+    calls: out("call"),
+    talked: rows.filter((r) => r.kind === "call" && r.outcome === "talked").length,
+    texts: out("text") + out("whatsapp"),
+    emails: out("email"),
+    replies: rows.filter((r) => r.direction === "inbound").length,
+    followUpsDone: rows.filter((r) => r.kind === "task").length,
+  };
 }
 
 /** "Benjamin" from the signed-in admin's profile, for timeline entries. */

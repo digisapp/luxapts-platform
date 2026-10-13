@@ -153,6 +153,38 @@ describe("categories", () => {
       ["eq", "has_real_email", true],
     ]);
   });
+
+  it("keeps sale prices out of the top rent band", () => {
+    const { proxy, calls } = recorder();
+    applyContactFilters(proxy, { budget: "8plus" }, TODAY, NOW);
+    expect(calls).toEqual([
+      ["gte", "price", 8000],
+      ["lt", "price", 50000],
+    ]);
+  });
+
+  it("finds replies still waiting on an answer, and filters by type", () => {
+    const waiting = recorder();
+    applyContactFilters(waiting.proxy, { touch: "awaiting" }, TODAY, NOW);
+    expect(waiting.calls).toEqual([
+      ["eq", "awaiting_reply", true],
+      ["gte", "last_inbound_at", "2026-04-15T15:00:00Z"],
+      ["eq", "do_not_contact", false],
+    ]);
+    const people = recorder();
+    applyContactFilters(people.proxy, { kind: "people", agent: NO_AGENT }, TODAY, NOW);
+    expect(people.calls).toEqual([
+      ["is", "previous_agent", null],
+      ["neq", "kind", "broker"],
+    ]);
+  });
+
+  it("keeps brokers out of every calling list", () => {
+    for (const key of ["hot", "warm", "never", "cold"]) {
+      expect(BUILTIN_LISTS.find((l) => l.key === key)?.filters.kind).toBe("people");
+    }
+    expect(BUILTIN_LISTS.find((l) => l.key === "lease")?.filters.kind).toBe("renter");
+  });
 });
 
 describe("arrayLiteral", () => {

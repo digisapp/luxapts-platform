@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isValidUUID } from "@/lib/utils";
-import { getContactBundle, getFacets } from "@/lib/crm/service";
+import { getContactBundle, getFacets, getSender, getTemplates } from "@/lib/crm/service";
+import { twilioConfig } from "@/lib/crm/twilio";
 import { nyDateKey } from "@/lib/crm/dates";
 import { ContactView } from "@/components/admin/nyc/ContactView";
 import { SetupNotice } from "@/components/admin/nyc/SetupNotice";
@@ -21,9 +22,14 @@ export default async function NycContactPage({ params, searchParams }: PageProps
   const sp = { get: (k: string) => (typeof raw[k] === "string" ? (raw[k] as string) : null) };
 
   const supabase = createAdminClient();
-  let bundle, facets;
+  let bundle, facets, templates, sender;
   try {
-    [bundle, facets] = await Promise.all([getContactBundle(supabase, id), getFacets(supabase)]);
+    [bundle, facets, templates, sender] = await Promise.all([
+      getContactBundle(supabase, id),
+      getFacets(supabase),
+      getTemplates(supabase),
+      getSender(supabase),
+    ]);
   } catch (err) {
     console.error("NYC contact page error:", err);
     return <SetupNotice detail={err instanceof Error ? err.message : String(err)} />;
@@ -39,6 +45,9 @@ export default async function NycContactPage({ params, searchParams }: PageProps
       today={nyDateKey()}
       work={readWork(sp)}
       reach={readReach(sp)}
+      templates={templates}
+      sender={sender}
+      twilioReady={twilioConfig() !== null}
     />
   );
 }

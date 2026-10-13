@@ -16,8 +16,8 @@ import {
   Plus,
   RefreshCw,
   Search,
+  SlidersHorizontal,
   Users,
-  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ import { NycBulkBar } from "./NycBulkBar";
 import { AddContactDialog, DeleteContactsDialog, errorOf, SaveListDialog, TagsDialog } from "./NycDialogs";
 import { describeFilters } from "./nyc-format";
 import { contactHref, type ReachKind, type WorkContext } from "./work";
+import { ListPicker, ListSidebar, type NavList } from "./ListNav";
 import { useNow } from "./use-now";
 
 const PAGE_SIZE = 50;
@@ -75,6 +76,16 @@ const TOUCH_OPTIONS = [
   { key: "stale90", label: "No touch in 90+ days" },
   { key: "stale180", label: "No touch in 180+ days" },
 ] as const;
+
+const KIND_OPTIONS = [
+  { key: "", label: "Any type" },
+  { key: "people", label: "Renters & buyers" },
+  { key: "renter", label: "Renters" },
+  { key: "buyer", label: "Buyers" },
+  { key: "broker", label: "Brokers" },
+];
+
+const KIND_LABELS: Record<string, string> = { renter: "renters", buyer: "buyers", broker: "brokers" };
 
 const BUDGET_OPTIONS = [
   { key: "", label: "Any budget" },
@@ -124,6 +135,7 @@ export function ContactsBook({
   const [notice, setNotice] = useState<string | null>(null);
   const now = useNow();
   const [dialog, setDialog] = useState<"add" | "tags" | "delete" | "save" | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const requestIdRef = useRef(0);
   const firstRender = useRef(true);
@@ -166,18 +178,16 @@ export function ContactsBook({
   }, [search]);
 
   const stagesPresent = useMemo(() => overview.facets.stages.map((s) => s.value), [overview]);
-  const agents = useMemo(() => overview.facets.assigned.map((a) => a.value), [overview]);
 
-  const lists = useMemo(
+  const lists = useMemo<NavList[]>(
     () => [
-      ...BUILTIN_LISTS.map((l) => ({ key: l.key, label: l.label, hint: l.hint, filters: l.filters, sort: l.sort, saved: false })),
+      ...BUILTIN_LISTS.map((l) => ({ key: l.key, label: l.label, hint: l.hint, filters: l.filters, sort: l.sort, group: l.group })),
       ...overview.smartLists.map((l) => ({
         key: l.id,
         label: l.name,
         hint: describeFilters(l.filters as CrmFilters).join(" · "),
         filters: l.filters as CrmFilters,
-        sort: undefined as CrmSort | undefined,
-        saved: true,
+        group: "saved" as const,
       })),
     ],
     [overview]
@@ -267,7 +277,7 @@ export function ContactsBook({
     });
   }
 
-  function chooseList(list: (typeof lists)[number]) {
+  function chooseList(list: NavList) {
     setFilters(list.filters);
     setSearch(list.filters.q ?? "");
     if (list.sort) setSort(list.sort);
@@ -316,7 +326,7 @@ export function ContactsBook({
     }
   }
 
-  async function bulk(action: "stage" | "add_tag" | "remove_tag" | "assign" | "delete", value?: string): Promise<string | null> {
+  async function bulk(action: "stage" | "add_tag" | "remove_tag" | "kind" | "delete", value?: string): Promise<string | null> {
     setBusy(true);
     setActionError(null);
     try {
@@ -336,10 +346,8 @@ export function ContactsBook({
           ? `Deleted ${who}.`
           : action === "stage"
             ? `Moved ${who} to ${stageMeta(value ?? "").label}.`
-            : action === "assign"
-              ? value
-                ? `Assigned ${who} to ${value}.`
-                : `Unassigned ${who}.`
+            : action === "kind"
+              ? `Marked ${who} as ${KIND_LABELS[value ?? ""] ?? value}.`
               : action === "add_tag"
                 ? `Tagged ${who} “${value}”.`
                 : `Removed “${value}” from ${who}.`
@@ -353,7 +361,7 @@ export function ContactsBook({
     }
   }
 
-  async function runBulk(action: "stage" | "assign", value: string) {
+  async function runBulk(action: "stage" | "kind", value: string) {
     const err = await bulk(action, value);
     if (err) setActionError(err);
   }
@@ -372,9 +380,9 @@ export function ContactsBook({
     return err;
   }
 
-  async function deleteList(id: string, name: string) {
-    if (!window.confirm(`Delete the list “${name}”? Its contacts stay in the book.`)) return;
-    const res = await fetch(`/api/admin/nyc/smart-lists/${id}`, { method: "DELETE" });
+  async function deleteList(list: NavList) {
+    if (!window.confirm(`Delete the list “${list.label}”? Its contacts stay in the book.`)) return;
+    const res = await fetch(`/api/admin/nyc/smart-lists/${list.key}`, { method: "DELETE" });
     const err = await errorOf(res);
     if (err) return setActionError(err);
     loadOverview();
@@ -386,6 +394,9 @@ export function ContactsBook({
   const reach = REACH_OPTIONS.find((o) => o.key === (filters.reach ?? "")) ?? REACH_OPTIONS[0];
   const touch = TOUCH_OPTIONS.find((o) => o.key === (filters.touch ?? "")) ?? TOUCH_OPTIONS[0];
   const budget = BUDGET_OPTIONS.find((o) => o.key === (filters.budget ?? "")) ?? BUDGET_OPTIONS[0];
+  const kind = KIND_OPTIONS.find((o) => o.key === (filters.kind ?? "")) ?? KIND_OPTIONS[0];
+  // Filters beyond the chosen list's own, for the phone "Filters (n)" button.
+  const extraFilterCount = activeList ? 0 : Object.keys(filters).filter((k) => k !== "q").length;
   const beds = BEDS_OPTIONS.find((o) => o.key === (filters.beds ?? "")) ?? BEDS_OPTIONS[0];
   const added = ADDED_OPTIONS.find((o) => o.key === (filters.added ?? "")) ?? ADDED_OPTIONS[0];
   const everyone = overview.counts.all ?? 0;
@@ -426,343 +437,323 @@ export function ContactsBook({
         </div>
       </div>
 
-      {/* Smart lists */}
-      <nav aria-label="Lists" className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
-        <ul className="flex gap-2 pb-1">
-          {lists.map((l) => {
-            const active = activeList?.key === l.key;
-            const count = overview.counts[l.key];
-            return (
-              <li key={l.key} className="flex shrink-0">
-                <button
-                  type="button"
-                  onClick={() => chooseList(l)}
-                  aria-pressed={active}
-                  title={l.hint}
-                  className={cn(
-                    "inline-flex h-10 items-center gap-2 border px-3.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25",
-                    l.saved ? "rounded-l-full border-r-0 pr-2.5" : "rounded-full",
-                    active
-                      ? "border-white/25 bg-white/[0.1] font-semibold text-foreground"
-                      : "border-white/10 bg-white/[0.02] text-foreground/80 hover:bg-white/[0.06]"
-                  )}
-                >
-                  {l.saved && <Bookmark className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />}
-                  {l.label}
-                  {count !== undefined && count >= 0 && (
-                    <span
-                      className={cn(
-                        "rounded-full px-1.5 text-xs tabular-nums",
-                        l.key === "due" && count > 0 ? "bg-amber-400/20 text-amber-100" : "bg-white/[0.07] text-muted-foreground"
-                      )}
-                    >
-                      {count.toLocaleString()}
-                    </span>
-                  )}
-                </button>
-                {l.saved && (
+      <div className="xl:grid xl:grid-cols-[14rem_minmax(0,1fr)] xl:items-start xl:gap-6">
+        <aside className="hidden xl:sticky xl:top-6 xl:block">
+          <ListSidebar
+            lists={lists}
+            counts={overview.counts}
+            activeKey={activeList?.key}
+            onChoose={chooseList}
+            onDelete={deleteList}
+          />
+        </aside>
+
+        <div className="min-w-0 space-y-5">
+          <div className="xl:hidden">
+            <ListPicker lists={lists} counts={overview.counts} activeKey={activeList?.key} onChoose={chooseList} />
+          </div>
+
+          {/* Search + filters */}
+          <div className="space-y-3">
+            <div className="relative">
+              <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                ref={searchRef}
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape" && search) {
+                    e.preventDefault();
+                    setSearch("");
+                  }
+                }}
+                placeholder="Search name, phone, email, tag or listing address"
+                aria-label="Search contacts"
+                aria-keyshortcuts="/"
+                className="pl-9"
+              />
+            </div>
+
+            {/* Phones: filters fold behind one button so the list is on screen. */}
+            <div className="flex gap-2 sm:hidden">
+              <button
+                type="button"
+                onClick={() => setShowFilters((v) => !v)}
+                aria-expanded={showFilters}
+                className={cn(chip, "flex-1 justify-center", extraFilterCount ? "border-sky-400/30 bg-sky-400/10 text-sky-100" : "border-white/10 bg-white/[0.03]")}
+              >
+                <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                {showFilters ? "Hide filters" : extraFilterCount ? `Filters (${extraFilterCount})` : "Filters"}
+              </button>
+            </div>
+
+            <div className={cn("flex-wrap gap-2 sm:flex", showFilters ? "flex" : "hidden")}>
+              <FacetPicker
+                label="Stage"
+                value={stageValue}
+                options={overview.facets.stages}
+                special={stageValue === "__multi" ? [{ value: "__multi", label: `${filters.stages!.length} stages` }] : []}
+                display={(v) => stageMeta(v).label}
+                onChange={(v) => setFilter("stages", v && v !== "__multi" ? [v] : v === "__multi" ? filters.stages : undefined)}
+              />
+              <FacetPicker
+                label="Neighborhood"
+                value={filters.hood}
+                options={overview.facets.neighborhoods}
+                onChange={(v) => setFilter("hood", v)}
+              />
+              <FacetPicker label="Tag" value={filters.tag} options={overview.facets.tags} onChange={(v) => setFilter("tag", v)} />
+              <FacetPicker label="Source" value={filters.source} options={overview.facets.sources} onChange={(v) => setFilter("source", v)} />
+              <FacetPicker
+                label="Previous agent"
+                value={filters.agent}
+                options={overview.facets.agents}
+                special={[{ value: NO_AGENT, label: "None" }]}
+                onChange={(v) => setFilter("agent", v)}
+              />
+              {(
+                [
+                  ["kind", kind, KIND_OPTIONS, "Type"],
+                  ["budget", budget, BUDGET_OPTIONS, "Budget"],
+                  ["beds", beds, BEDS_OPTIONS, "Size"],
+                  ["touch", touch, TOUCH_OPTIONS, "Contact history"],
+                  ["reach", reach, REACH_OPTIONS, "Reachable by"],
+                  ["added", added, ADDED_OPTIONS, "Date added"],
+                ] as const
+              ).map(([key, current, options, name]) => (
+                <PopoverMenu
+                  key={key}
+                  label={`${name}: ${current.label}`}
+                  triggerClassName={cn(chip, current.key ? "border-sky-400/30 bg-sky-400/10 text-sky-100" : "border-white/10 bg-white/[0.03]")}
+                  triggerContent={
+                    <>
+                      {current.label}
+                      <ChevronDown className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
+                    </>
+                  }
+                  items={options.map((o) => ({ key: o.key || "any", text: o.label, label: o.label, checked: o.key === current.key }))}
+                  onSelect={(k) => setFilter(key, (k === "any" ? undefined : k) as never)}
+                />
+              ))}
+              <PopoverMenu
+                label={`Sort: ${SORT_LABELS[sort]}`}
+                align="end"
+                triggerClassName={cn(chip, "border-white/10 bg-white/[0.03] sm:ml-auto")}
+                triggerContent={
+                  <>
+                    <ArrowDownUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    {SORT_LABELS[sort]}
+                    <ChevronDown className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
+                  </>
+                }
+                items={SORTS.map((s) => ({ key: s, text: SORT_LABELS[s], label: SORT_LABELS[s], checked: s === sort }))}
+                onSelect={(s) => setSort(s as CrmSort)}
+              />
+            </div>
+
+            {activeList && activeList.key !== "all" ? (
+              // A list explains itself; its filters are not "your filters".
+              <p className="text-sm text-muted-foreground">{activeList.hint}</p>
+            ) : (
+              filtered && (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <span className="text-muted-foreground">{described.join(" · ")}</span>
+                  <button type="button" onClick={() => setDialog("save")} className="inline-flex items-center gap-1 font-medium text-sky-300 hover:text-sky-200">
+                    <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
+                    Save as list
+                  </button>
+                  <button type="button" onClick={clearFilters} className="font-medium text-foreground/80 hover:text-foreground">
+                    Clear
+                  </button>
+                </div>
+              )
+            )}
+          </div>
+
+          {[loadError, actionError].map(
+            (msg, i) =>
+              msg && (
+                <div key={i} role="alert" className="flex items-center justify-between gap-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  <span className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {msg}
+                  </span>
                   <button
                     type="button"
-                    onClick={() => deleteList(l.key, l.label)}
-                    aria-label={`Delete the list ${l.label}`}
-                    title="Delete list"
-                    className={cn(
-                      "inline-flex h-10 w-8 items-center justify-center rounded-r-full border border-l-0 text-muted-foreground transition-colors hover:text-red-300",
-                      active ? "border-white/25 bg-white/[0.1]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.06]"
-                    )}
+                    onClick={() => (i === 0 ? fetchContacts(offset) : setActionError(null))}
+                    className="shrink-0 rounded-md border border-red-500/40 px-3 py-1 text-xs font-medium hover:bg-red-500/20"
                   >
-                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    {i === 0 ? "Retry" : "Dismiss"}
                   </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+                </div>
+              )
+          )}
 
-      {/* Search + filters */}
-      <div className="space-y-3">
-        <div className="relative">
-          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            ref={searchRef}
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape" && search) {
-                e.preventDefault();
-                setSearch("");
-              }
-            }}
-            placeholder="Search name, phone, email, tag or listing address"
-            aria-label="Search contacts"
-            aria-keyshortcuts="/"
-            className="pl-9"
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <FacetPicker
-            label="Stage"
-            value={stageValue}
-            options={overview.facets.stages}
-            special={stageValue === "__multi" ? [{ value: "__multi", label: `${filters.stages!.length} stages` }] : []}
-            display={(v) => stageMeta(v).label}
-            onChange={(v) => setFilter("stages", v && v !== "__multi" ? [v] : v === "__multi" ? filters.stages : undefined)}
-          />
-          <FacetPicker
-            label="Neighborhood"
-            value={filters.hood}
-            options={overview.facets.neighborhoods}
-            onChange={(v) => setFilter("hood", v)}
-          />
-          <FacetPicker label="Tag" value={filters.tag} options={overview.facets.tags} onChange={(v) => setFilter("tag", v)} />
-          <FacetPicker label="Source" value={filters.source} options={overview.facets.sources} onChange={(v) => setFilter("source", v)} />
-          <FacetPicker
-            label="Agent"
-            value={filters.agent}
-            options={overview.facets.assigned}
-            special={[{ value: NO_AGENT, label: "Unassigned" }]}
-            onChange={(v) => setFilter("agent", v)}
-          />
-          {(
-            [
-              ["budget", budget, BUDGET_OPTIONS, "Budget"],
-              ["beds", beds, BEDS_OPTIONS, "Size"],
-              ["touch", touch, TOUCH_OPTIONS, "Contact history"],
-              ["reach", reach, REACH_OPTIONS, "Reachable by"],
-              ["added", added, ADDED_OPTIONS, "Date added"],
-            ] as const
-          ).map(([key, current, options, name]) => (
-            <PopoverMenu
-              key={key}
-              label={`${name}: ${current.label}`}
-              triggerClassName={cn(chip, current.key ? "border-sky-400/30 bg-sky-400/10 text-sky-100" : "border-white/10 bg-white/[0.03]")}
-              triggerContent={
-                <>
-                  {current.label}
-                  <ChevronDown className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
-                </>
-              }
-              items={options.map((o) => ({ key: o.key || "any", text: o.label, label: o.label, checked: o.key === current.key }))}
-              onSelect={(k) => setFilter(key, (k === "any" ? undefined : k) as never)}
-            />
-          ))}
-          <PopoverMenu
-            label={`Sort: ${SORT_LABELS[sort]}`}
-            align="end"
-            triggerClassName={cn(chip, "border-white/10 bg-white/[0.03] sm:ml-auto")}
-            triggerContent={
-              <>
-                <ArrowDownUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                {SORT_LABELS[sort]}
-                <ChevronDown className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
-              </>
-            }
-            items={SORTS.map((s) => ({ key: s, text: SORT_LABELS[s], label: SORT_LABELS[s], checked: s === sort }))}
-            onSelect={(s) => setSort(s as CrmSort)}
-          />
-        </div>
-
-        {filtered && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            <span className="text-muted-foreground">{described.join(" · ")}</span>
-            {!activeList && (
-              <button type="button" onClick={() => setDialog("save")} className="inline-flex items-center gap-1 font-medium text-sky-300 hover:text-sky-200">
-                <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
-                Save as list
-              </button>
-            )}
-            <button type="button" onClick={clearFilters} className="font-medium text-foreground/80 hover:text-foreground">
-              Clear
-            </button>
-          </div>
-        )}
-      </div>
-
-      {[loadError, actionError].map(
-        (msg, i) =>
-          msg && (
-            <div key={i} role="alert" className="flex items-center justify-between gap-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-              <span className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {msg}
-              </span>
-              <button
-                type="button"
-                onClick={() => (i === 0 ? fetchContacts(offset) : setActionError(null))}
-                className="shrink-0 rounded-md border border-red-500/40 px-3 py-1 text-xs font-medium hover:bg-red-500/20"
-              >
-                {i === 0 ? "Retry" : "Dismiss"}
-              </button>
+          {notice && (
+            <div role="status" className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {notice}
             </div>
-          )
-      )}
+          )}
 
-      {notice && (
-        <div role="status" className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {notice}
-        </div>
-      )}
-
-      {/* The list */}
-      <section aria-label="Contacts" className="overflow-clip rounded-xl border border-white/[0.08] bg-white/[0.02] shadow-xl shadow-black/20">
-        <div className="flex min-h-[52px] flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-2 sm:px-5">
-          <label className={cn("-m-2 flex items-center gap-3 p-2", contacts.length > 0 ? "cursor-pointer" : "opacity-50")}>
-            <input
-              ref={selectAllRef}
-              type="checkbox"
-              checked={allOnPage}
-              disabled={contacts.length === 0}
-              onChange={(e) => {
-                setSelected(e.target.checked ? new Set(pageIds) : new Set());
-                setAllMatching(false);
-              }}
-              aria-label="Select everyone on this page"
-              className="h-4 w-4 cursor-pointer rounded border-white/20 bg-transparent accent-white disabled:cursor-default"
-            />
-            <span className="text-sm font-semibold">
-              <span className="tabular-nums">{total.toLocaleString()}</span> {total === 1 ? "person" : "people"}
-              <span className="font-normal text-muted-foreground"> · {listLabel}</span>
-            </span>
-          </label>
-          <div className="flex items-center gap-3">
-            {loading && (
-              <span role="status" className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                Updating
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={startWorking}
-              disabled={total === 0}
-              title={`Open the first person and step through the list with Next (${SORT_LABELS[workSort].toLowerCase()})`}
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 text-sm font-medium text-emerald-100 transition-colors hover:bg-emerald-400/20 disabled:opacity-40"
-            >
-              <PhoneForwarded className="h-4 w-4" aria-hidden="true" />
-              Work this list
-            </button>
-          </div>
-        </div>
-
-        {allOnPage && total > contacts.length && (
-          <div className="border-b border-white/[0.06] bg-sky-400/[0.06] px-4 py-2 text-center text-sm sm:px-5">
-            {allMatching ? (
-              <>
-                All <span className="font-semibold tabular-nums">{total.toLocaleString()}</span> people in this list are selected.{" "}
-                <button type="button" onClick={() => setAllMatching(false)} className="font-medium text-sky-300 hover:text-sky-200">
-                  Just this page
-                </button>
-              </>
-            ) : (
-              <>
-                {contacts.length} on this page selected.{" "}
-                <button type="button" onClick={() => setAllMatching(true)} className="font-medium text-sky-300 hover:text-sky-200">
-                  Select all {total.toLocaleString()} in this list
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
-        {contacts.length === 0 && loading ? (
-          <ul aria-hidden="true" className="divide-y divide-white/[0.06]">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <li key={i} className={cn(CONTACT_GRID, "px-4 py-4 sm:px-5")}>
-                <span className="mt-2.5 h-4 w-4 rounded bg-white/[0.06] lg:mt-0" />
-                <span className="h-9 w-9 animate-pulse rounded-full bg-white/[0.06]" />
-                <span className="space-y-2">
-                  <span className="block h-3.5 w-40 animate-pulse rounded bg-white/[0.08]" />
-                  <span className="block h-3 w-56 animate-pulse rounded bg-white/[0.05]" />
+          {/* The list */}
+          <section aria-label="Contacts" className="overflow-clip rounded-xl border border-white/[0.08] bg-white/[0.02] shadow-xl shadow-black/20">
+            <div className="flex min-h-[52px] flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-2 sm:px-5">
+              <label className={cn("-m-2 flex items-center gap-3 p-2", contacts.length > 0 ? "cursor-pointer" : "opacity-50")}>
+                <input
+                  ref={selectAllRef}
+                  type="checkbox"
+                  checked={allOnPage}
+                  disabled={contacts.length === 0}
+                  onChange={(e) => {
+                    setSelected(e.target.checked ? new Set(pageIds) : new Set());
+                    setAllMatching(false);
+                  }}
+                  aria-label="Select everyone on this page"
+                  className="h-4 w-4 cursor-pointer rounded border-white/20 bg-transparent accent-white disabled:cursor-default"
+                />
+                <span className="text-sm font-semibold">
+                  <span className="tabular-nums">{total.toLocaleString()}</span> {total === 1 ? "person" : "people"}
+                  <span className="font-normal text-muted-foreground"> · {listLabel}</span>
                 </span>
-              </li>
-            ))}
-          </ul>
-        ) : contacts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
-              <Users className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            </span>
-            <p className="text-sm font-semibold">{filtered ? "Nobody matches" : "The book is empty"}</p>
-            <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-              {filtered ? "Try another search, or clear the filters." : "Import a Follow Up Boss export to fill it."}
-            </p>
-            {filtered ? (
-              <button type="button" onClick={clearFilters} className="mt-5 inline-flex h-9 items-center rounded-lg border border-white/10 bg-white/[0.04] px-4 text-sm font-medium hover:bg-white/[0.08]">
-                Clear filters
-              </button>
-            ) : (
-              <Link href="/admin/nyc/import" className="mt-5 inline-flex h-9 items-center rounded-lg border border-white/10 bg-white/[0.04] px-4 text-sm font-medium hover:bg-white/[0.08]">
-                Import contacts
-              </Link>
-            )}
-          </div>
-        ) : (
-          <ul className={cn("divide-y divide-white/[0.06] transition-opacity", loading && "opacity-60")}>
-            {contacts.map((c, i) => (
-              <ContactRow
-                key={c.id}
-                contact={c}
-                href={hrefFor(c.id, i)}
-                selected={allMatching || selected.has(c.id)}
-                now={now}
-                today={today}
-                stages={stagesPresent}
-                onSelect={(id, checked) => {
-                  setAllMatching(false);
-                  setSelected((prev) => {
-                    const next = new Set(prev);
-                    if (checked) next.add(id);
-                    else next.delete(id);
-                    return next;
-                  });
-                }}
-                onStageChange={changeStage}
-                onReach={(id, kind) => router.push(hrefFor(id, i, kind))}
-              />
-            ))}
-          </ul>
-        )}
-
-        {total > PAGE_SIZE && (
-          <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] px-4 py-2.5 sm:px-5">
-            <p className="text-xs tabular-nums text-muted-foreground">
-              {(offset + 1).toLocaleString()}–{Math.min(offset + PAGE_SIZE, total).toLocaleString()} of {total.toLocaleString()}
-            </p>
-            <div className="flex gap-1">
-              <button
-                type="button"
-                disabled={offset === 0 || loading}
-                onClick={() => fetchContacts(Math.max(0, offset - PAGE_SIZE))}
-                className="inline-flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium hover:bg-white/[0.06] disabled:pointer-events-none disabled:opacity-40"
-              >
-                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                Previous
-              </button>
-              <button
-                type="button"
-                disabled={offset + PAGE_SIZE >= total || loading}
-                onClick={() => fetchContacts(offset + PAGE_SIZE)}
-                className="inline-flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium hover:bg-white/[0.06] disabled:pointer-events-none disabled:opacity-40"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </button>
+              </label>
+              <div className="flex items-center gap-3">
+                {loading && (
+                  <span role="status" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    Updating
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={startWorking}
+                  disabled={total === 0}
+                  title={`Open the first person and step through the list with Next (${SORT_LABELS[workSort].toLowerCase()})`}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 text-sm font-medium text-emerald-100 transition-colors hover:bg-emerald-400/20 disabled:opacity-40"
+                >
+                  <PhoneForwarded className="h-4 w-4" aria-hidden="true" />
+                  Work this list
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </section>
+
+            {allOnPage && total > contacts.length && (
+              <div className="border-b border-white/[0.06] bg-sky-400/[0.06] px-4 py-2 text-center text-sm sm:px-5">
+                {allMatching ? (
+                  <>
+                    All <span className="font-semibold tabular-nums">{total.toLocaleString()}</span> people in this list are selected.{" "}
+                    <button type="button" onClick={() => setAllMatching(false)} className="font-medium text-sky-300 hover:text-sky-200">
+                      Just this page
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {contacts.length} on this page selected.{" "}
+                    <button type="button" onClick={() => setAllMatching(true)} className="font-medium text-sky-300 hover:text-sky-200">
+                      Select all {total.toLocaleString()} in this list
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {contacts.length === 0 && loading ? (
+              <ul aria-hidden="true" className="divide-y divide-white/[0.06]">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <li key={i} className={cn(CONTACT_GRID, "px-4 py-4 sm:px-5")}>
+                    <span className="mt-2.5 h-4 w-4 rounded bg-white/[0.06] lg:mt-0" />
+                    <span className="h-9 w-9 animate-pulse rounded-full bg-white/[0.06]" />
+                    <span className="space-y-2">
+                      <span className="block h-3.5 w-40 animate-pulse rounded bg-white/[0.08]" />
+                      <span className="block h-3 w-56 animate-pulse rounded bg-white/[0.05]" />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : contacts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
+                <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
+                  <Users className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                </span>
+                <p className="text-sm font-semibold">{filtered ? "Nobody matches" : "The book is empty"}</p>
+                <p className="mt-1 max-w-xs text-sm text-muted-foreground">
+                  {filtered ? "Try another search, or clear the filters." : "Import a Follow Up Boss export to fill it."}
+                </p>
+                {filtered ? (
+                  <button type="button" onClick={clearFilters} className="mt-5 inline-flex h-9 items-center rounded-lg border border-white/10 bg-white/[0.04] px-4 text-sm font-medium hover:bg-white/[0.08]">
+                    Clear filters
+                  </button>
+                ) : (
+                  <Link href="/admin/nyc/import" className="mt-5 inline-flex h-9 items-center rounded-lg border border-white/10 bg-white/[0.04] px-4 text-sm font-medium hover:bg-white/[0.08]">
+                    Import contacts
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <ul className={cn("divide-y divide-white/[0.06] transition-opacity", loading && "opacity-60")}>
+                {contacts.map((c, i) => (
+                  <ContactRow
+                    key={c.id}
+                    contact={c}
+                    href={hrefFor(c.id, i)}
+                    selected={allMatching || selected.has(c.id)}
+                    now={now}
+                    today={today}
+                    stages={stagesPresent}
+                    onSelect={(id, checked) => {
+                      setAllMatching(false);
+                      setSelected((prev) => {
+                        const next = new Set(prev);
+                        if (checked) next.add(id);
+                        else next.delete(id);
+                        return next;
+                      });
+                    }}
+                    onStageChange={changeStage}
+                    onReach={(id, kind) => router.push(hrefFor(id, i, kind))}
+                  />
+                ))}
+              </ul>
+            )}
+
+            {total > PAGE_SIZE && (
+              <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] px-4 py-2.5 sm:px-5">
+                <p className="text-xs tabular-nums text-muted-foreground">
+                  {(offset + 1).toLocaleString()}–{Math.min(offset + PAGE_SIZE, total).toLocaleString()} of {total.toLocaleString()}
+                </p>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    disabled={offset === 0 || loading}
+                    onClick={() => fetchContacts(Math.max(0, offset - PAGE_SIZE))}
+                    className="inline-flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium hover:bg-white/[0.06] disabled:pointer-events-none disabled:opacity-40"
+                  >
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    disabled={offset + PAGE_SIZE >= total || loading}
+                    onClick={() => fetchContacts(offset + PAGE_SIZE)}
+                    className="inline-flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium hover:bg-white/[0.06] disabled:pointer-events-none disabled:opacity-40"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
 
       <NycBulkBar
         count={bulkCount}
         stages={stagesPresent}
-        agents={agents}
         busy={busy}
         onStage={(s) => runBulk("stage", s)}
-        onAssign={(a) => runBulk("assign", a)}
+        onKind={(k) => runBulk("kind", k)}
         onTags={() => setDialog("tags")}
         onDelete={() => setDialog("delete")}
         onClear={() => {

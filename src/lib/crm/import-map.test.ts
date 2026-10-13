@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   agentKeysFrom,
+  contactKind,
   FLORIDA_TAG,
   guessMapping,
   neighborhoodFromDescription,
@@ -119,6 +120,27 @@ describe("rowToContact", () => {
       agents
     )!;
     expect(c.emails).toEqual(["dana@gmail.com", "rh-dana-1@renthop-mail.com"]);
+  });
+
+  it("keeps the old agent as history, not ownership", () => {
+    const c = rowToContact(row(base), mapping, agents)!;
+    expect(c.previous_agent).toBe("Alex Rivera");
+    expect(c.kind).toBe("renter");
+    expect(c.do_not_contact).toBe(false);
+  });
+
+  it("honors FUB's Unsubscribed tag as do-not-contact", () => {
+    expect(rowToContact(row({ ...base, Tags: "Unsubscribed" }), mapping, agents)!.do_not_contact).toBe(true);
+  });
+
+  it("tells renters, buyers and brokers apart", () => {
+    expect(contactKind({ tags: [], emails: ["a@gmail.com"], price: 5400 })).toBe("renter");
+    expect(contactKind({ tags: [], emails: ["a@gmail.com"], price: 1_315_000 })).toBe("buyer");
+    expect(contactKind({ tags: [], emails: ["a@gmail.com"], price: null, dealStage: "Buyers - Closed" })).toBe("buyer");
+    expect(contactKind({ tags: ["Agent Inquiry"], emails: ["a@gmail.com"], price: 5400 })).toBe("broker");
+    // A broker asking about a sale listing is still a broker.
+    expect(contactKind({ tags: [], emails: ["agent@compass.com"], price: 1_200_000 })).toBe("broker");
+    expect(rowToContact(row({ ...base, "Property Price": "1315000" }), mapping, agents)!.kind).toBe("buyer");
   });
 
   it("tags Florida inquiries and ignores FUB's <unspecified> source", () => {

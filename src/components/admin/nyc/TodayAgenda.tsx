@@ -9,13 +9,14 @@ import { PopoverMenu } from "@/components/admin/leads/PopoverMenu";
 import { addDays, dueLabel } from "@/lib/crm/dates";
 import { displayName, formatPhone } from "@/lib/crm/normalize";
 import { stageMeta } from "@/lib/crm/stages";
-import type { AgendaTask } from "@/lib/crm/service";
+import type { AgendaTask, TodayStats } from "@/lib/crm/service";
 import { errorOf } from "./NycDialogs";
 import { contactHref, type ReachKind } from "./work";
 
 interface TodayAgendaProps {
   initialTasks: AgendaTask[];
   today: string;
+  stats: TodayStats;
 }
 
 const SNOOZE = [
@@ -29,7 +30,7 @@ const iconButton =
   "inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
 
 /** Follow-ups to do: overdue, today, then the rest of the week. */
-export function TodayAgenda({ initialTasks, today }: TodayAgendaProps) {
+export function TodayAgenda({ initialTasks, today, stats }: TodayAgendaProps) {
   const router = useRouter();
   const [tasks, setTasks] = useState(initialTasks);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +84,22 @@ export function TodayAgenda({ initialTasks, today }: TodayAgendaProps) {
         </p>
       </div>
 
+      <dl className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        {[
+          ["Calls", stats.calls],
+          ["Talked", stats.talked],
+          ["Texts", stats.texts],
+          ["Emails", stats.emails],
+          ["Replies in", stats.replies],
+          ["Follow-ups done", stats.followUpsDone],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2.5">
+            <dt className="text-xs text-muted-foreground">{label} today</dt>
+            <dd className={cn("mt-0.5 text-xl font-semibold tabular-nums", value === 0 && "text-white/30")}>{value}</dd>
+          </div>
+        ))}
+      </dl>
+
       {error && (
         <div role="alert" className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -95,11 +112,15 @@ export function TodayAgenda({ initialTasks, today }: TodayAgendaProps) {
           <CalendarCheck2 className="mb-3 h-8 w-8 text-emerald-300" aria-hidden="true" />
           <p className="text-sm font-semibold">You&apos;re all caught up</p>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            Want something to do? Open{" "}
-            <Link href="/admin/nyc?touch=replied&sort=oldest_touch" className="font-medium text-sky-300 hover:text-sky-200">
-              Replied before
-            </Link>{" "}
-            and work through the people who answered last time.
+            Next up:{" "}
+            <Link href="/admin/nyc?touch=awaiting&sort=replied" className="font-medium text-sky-300 hover:text-sky-200">
+              Waiting on you
+            </Link>
+            , people who replied and never heard back, then{" "}
+            <Link href="/admin/nyc?lease=soon&kind=renter&scope=active&sort=price_high" className="font-medium text-sky-300 hover:text-sky-200">
+              Lease up soon
+            </Link>
+            .
           </p>
         </div>
       ) : (

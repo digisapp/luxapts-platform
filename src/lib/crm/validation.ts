@@ -4,6 +4,8 @@ import { z } from "zod";
 import { normalizeEmail, normalizePhone, uniqueValues } from "./normalize";
 import { crmFiltersSchema } from "./filters";
 
+export const CONTACT_KINDS = ["renter", "buyer", "broker"] as const;
+
 const text = (max: number) =>
   z
     .string()
@@ -51,7 +53,7 @@ export const contactPatchSchema = z
     phones: phoneList,
     stage: z.string().trim().min(1).max(80),
     source: text(80),
-    assigned_to: text(80),
+    kind: z.enum(CONTACT_KINDS),
     tags: tagList,
     price: z.number().int().min(0).max(100_000_000).nullable(),
     beds: z.number().int().min(0).max(20).nullable(),
@@ -109,12 +111,13 @@ export const bulkSchema = z
   .object({
     ids: z.array(z.uuid()).max(50_000).optional(),
     filters: crmFiltersSchema.optional(),
-    action: z.enum(["stage", "add_tag", "remove_tag", "assign", "delete"]),
+    action: z.enum(["stage", "add_tag", "remove_tag", "kind", "delete"]),
     value: z.string().trim().max(80).optional(),
   })
   .refine((b) => !!b.ids !== !!b.filters, { message: "Send ids or filters, not both." })
-  .refine((b) => b.action === "delete" || b.action === "assign" || !!b.value, {
-    message: "This action needs a value.",
+  .refine((b) => b.action === "delete" || !!b.value, { message: "This action needs a value." })
+  .refine((b) => b.action !== "kind" || (CONTACT_KINDS as readonly string[]).includes(b.value ?? ""), {
+    message: "Type must be renter, buyer or broker.",
   });
 
 export const smartListCreateSchema = z.object({
@@ -141,7 +144,8 @@ const importContact = z.object({
   phones: z.array(z.string().max(16)).max(10),
   stage: z.string().min(1).max(80),
   source: z.string().max(80).nullable(),
-  assigned_to: z.string().max(80).nullable(),
+  previous_agent: z.string().max(80).nullable(),
+  kind: z.enum(CONTACT_KINDS),
   tags: z.array(z.string().max(60)).max(50),
   price: z.number().int().nullable(),
   beds: z.number().int().nullable(),
@@ -153,6 +157,7 @@ const importContact = z.object({
   neighborhood: z.string().max(80).nullable(),
   background: z.string().max(10_000).nullable(),
   added_at: z.iso.datetime({ offset: true }).nullable(),
+  do_not_contact: z.boolean(),
   contacted: z.boolean(),
   last_contacted_at: z.iso.datetime({ offset: true }).nullable(),
   last_inbound_at: z.iso.datetime({ offset: true }).nullable(),
@@ -164,4 +169,23 @@ const importContact = z.object({
 export const importBatchSchema = z.object({
   batch: z.string().trim().min(1).max(120),
   contacts: z.array(importContact).min(1).max(500),
+});
+
+export const templateSchema = z
+  .object({
+    name: z.string().trim().min(1).max(60),
+    channel: z.enum(["text", "email"]),
+    subject: z.string().trim().max(200).optional().nullable(),
+    body: z.string().trim().min(1).max(2000),
+  })
+  .transform((t) => ({ ...t, subject: t.channel === "email" ? t.subject || null : null }));
+
+export const senderSchema = z.object({
+  name: z.string().trim().max(60),
+  company: z.string().trim().max(80),
+});
+
+/** One text to send through Twilio. 1,600 characters is Twilio's limit. */
+export const smsSchema = z.object({
+  body: z.string().trim().min(1, "Write a message first.").max(1600),
 });

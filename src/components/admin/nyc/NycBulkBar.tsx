@@ -1,19 +1,17 @@
 "use client";
 
-import { ChevronDown, CircleDot, Tag, Trash2, UserPlus, X } from "lucide-react";
+import { ChevronDown, CircleDot, Tag, Trash2, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PopoverMenu } from "@/components/admin/leads/PopoverMenu";
 import { orderedStages } from "@/lib/crm/stages";
-import { NO_AGENT } from "@/lib/crm/filters";
 
 interface NycBulkBarProps {
   /** How many contacts the action will touch (page selection or all matching). */
   count: number;
   stages: string[];
-  agents: string[];
   busy: boolean;
   onStage: (stage: string) => void;
-  onAssign: (agent: string) => void;
+  onKind: (kind: string) => void;
   onTags: () => void;
   onDelete: () => void;
   onClear: () => void;
@@ -23,7 +21,7 @@ const action =
   "inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-foreground/90 transition-colors hover:bg-white/[0.08] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 disabled:opacity-50 sm:h-9";
 
 /** Floating toolbar for selected contacts, styled like the Leads one. */
-export function NycBulkBar({ count, stages, agents, busy, onStage, onAssign, onTags, onDelete, onClear }: NycBulkBarProps) {
+export function NycBulkBar({ count, stages, busy, onStage, onKind, onTags, onDelete, onClear }: NycBulkBarProps) {
   if (count === 0) return null;
 
   return (
@@ -69,21 +67,22 @@ export function NycBulkBar({ count, stages, agents, busy, onStage, onAssign, onT
         </button>
 
         <PopoverMenu
-          label="Assign selected contacts to an agent"
+          label="Set the type of the selected contacts"
           disabled={busy}
           triggerClassName={action}
           triggerContent={
             <>
-              <UserPlus className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              Agent
+              <UserRound className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              Type
               <ChevronDown className="h-3.5 w-3.5 opacity-50" aria-hidden="true" />
             </>
           }
           items={[
-            ...agents.map((a) => ({ key: a, text: a, label: a })),
-            { key: NO_AGENT, text: "Unassigned", label: <span className="italic">Unassigned</span> },
+            { key: "renter", text: "Renter", label: "Renter" },
+            { key: "buyer", text: "Buyer", label: "Buyer" },
+            { key: "broker", text: "Broker", label: "Broker (another agent)" },
           ]}
-          onSelect={(key) => onAssign(key === NO_AGENT ? "" : key)}
+          onSelect={onKind}
         />
 
         <button

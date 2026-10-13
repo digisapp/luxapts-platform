@@ -1,5 +1,7 @@
 // Row shapes for the NYC contacts book (migration 034).
 
+export type ContactKind = "renter" | "buyer" | "broker";
+
 export interface CrmContact {
   id: string;
   created_at: string;
@@ -10,7 +12,11 @@ export interface CrmContact {
   phones: string[];
   stage: string;
   source: string | null;
+  /** Unused while the admin works the book alone (migration 035). */
   assigned_to: string | null;
+  /** FUB's "Assigned To": who worked them before; history, not ownership. */
+  previous_agent: string | null;
+  kind: ContactKind;
   tags: string[];
   price: number | null;
   beds: number | null;
@@ -28,6 +34,8 @@ export interface CrmContact {
   last_contacted_at: string | null;
   last_inbound_at: string | null;
   last_activity_at: string | null;
+  /** Their last message came after ours (generated column). */
+  awaiting_reply: boolean;
   next_task_on: string | null;
   external_id: string | null;
   added_at: string | null;
@@ -37,7 +45,7 @@ export interface CrmContact {
 
 /** What the list shows per row. */
 export const CONTACT_LIST_COLUMNS =
-  "id, first_name, last_name, emails, phones, stage, source, assigned_to, tags, price, beds, property_address, neighborhood, do_not_contact, contacted, last_contacted_at, last_inbound_at, last_activity_at, next_task_on, added_at";
+  "id, first_name, last_name, emails, phones, stage, source, previous_agent, kind, tags, price, beds, property_address, neighborhood, do_not_contact, has_real_email, contacted, last_contacted_at, last_inbound_at, last_activity_at, awaiting_reply, next_task_on, added_at";
 
 export type CrmContactListRow = Pick<
   CrmContact,
@@ -48,17 +56,20 @@ export type CrmContactListRow = Pick<
   | "phones"
   | "stage"
   | "source"
-  | "assigned_to"
+  | "previous_agent"
+  | "kind"
   | "tags"
   | "price"
   | "beds"
   | "property_address"
   | "neighborhood"
   | "do_not_contact"
+  | "has_real_email"
   | "contacted"
   | "last_contacted_at"
   | "last_inbound_at"
   | "last_activity_at"
+  | "awaiting_reply"
   | "next_task_on"
   | "added_at"
 >;
@@ -101,9 +112,25 @@ export interface Facet {
 export interface CrmFacets {
   stages: Facet[];
   sources: Facet[];
-  assigned: Facet[];
+  /** Previous agents. */
+  agents: Facet[];
   tags: Facet[];
   neighborhoods: Facet[];
+}
+
+export interface CrmTemplate {
+  id: string;
+  name: string;
+  channel: "text" | "email";
+  subject: string | null;
+  body: string;
+  position: number;
+}
+
+/** Sender details the templates fill in ({my_name}, {company}). */
+export interface CrmSender {
+  name: string;
+  company: string;
 }
 
 export interface CrmSmartList {

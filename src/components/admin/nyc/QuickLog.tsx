@@ -22,6 +22,8 @@ const NOUN: Record<LogKind, string> = { call: "call", text: "text", email: "emai
 interface QuickLogProps {
   kind: LogKind;
   firstName: string;
+  /** The message as it was opened in the phone or mail app. */
+  initialBody?: string;
   onLog: (outcome: CallOutcome | null, body: string) => Promise<boolean>;
   onDismiss: () => void;
 }
@@ -31,9 +33,9 @@ interface QuickLogProps {
  * opened, and this records what happened. Nothing is logged until a button
  * here is pressed, so an abandoned text never counts as contact.
  */
-export function QuickLog({ kind, firstName, onLog, onDismiss }: QuickLogProps) {
+export function QuickLog({ kind, firstName, initialBody = "", onLog, onDismiss }: QuickLogProps) {
   const [outcome, setOutcome] = useState<CallOutcome | null>(null);
-  const [body, setBody] = useState("");
+  const [body, setBody] = useState(initialBody);
   const [saving, setSaving] = useState(false);
 
   async function save(chosen: CallOutcome | null) {

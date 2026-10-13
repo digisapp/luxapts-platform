@@ -15,11 +15,11 @@ import {
   PhoneCall,
   SkipForward,
 } from "lucide-react";
-import { cn, telHref, whatsappHref } from "@/lib/utils";
+import { cn, telHref } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { avatarTone, initials } from "@/components/admin/leads/lead-format";
-import { displayName, formatPhone } from "@/lib/crm/normalize";
-import type { CallOutcome, CrmFacets, CrmTask } from "@/lib/crm/types";
+import { displayName, formatPhone, isRelayEmail } from "@/lib/crm/normalize";
+import type { CallOutcome, CrmFacets, CrmSender, CrmTask, CrmTemplate } from "@/lib/crm/types";
 import type { ContactBundle } from "@/lib/crm/service";
 import { StageMenu } from "./StageMenu";
 import { ContactTimeline } from "./ContactTimeline";
@@ -35,6 +35,7 @@ import {
 import { DeleteContactsDialog, errorOf } from "./NycDialogs";
 import { firstNameOf, leaseUpSoon, TONE_TEXT, touchSummary } from "./nyc-format";
 import { contactHref, type ReachKind, type WorkContext } from "./work";
+import { MessagePicker, type MessageChannel } from "./MessagePicker";
 import { useNow } from "./use-now";
 
 interface ContactViewProps {
@@ -44,7 +45,18 @@ interface ContactViewProps {
   work: WorkContext | null;
   /** Set when the list's call/text/email link opened this page. */
   reach: ReachKind | null;
+  templates: CrmTemplate[];
+  sender: CrmSender;
+  /** Texts can be sent from the brokerage's Twilio number. */
+  twilioReady: boolean;
 }
+
+const KIND_BADGE: Record<string, { label: string; className: string } | undefined> = {
+  buyer: { label: "Buyer", className: "bg-amber-400/15 text-amber-100" },
+  broker: { label: "Broker", className: "bg-white/[0.08] text-foreground/80" },
+};
+
+const inquiredFormat = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric", timeZone: "America/New_York" });
 
 const COMPOSE_KINDS: { key: "note" | LogKind; label: string }[] = [
   { key: "note", label: "Note" },
@@ -54,12 +66,15 @@ const COMPOSE_KINDS: { key: "note" | LogKind; label: string }[] = [
 ];
 
 const bigAction =
-  "inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 sm:flex-none sm:px-4";
+  "inline-flex h-14 flex-col items-center justify-center gap-1 rounded-xl border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 sm:h-11 sm:flex-row sm:gap-2 sm:px-4 sm:text-sm";
 
-export function ContactView({ initial, facets, today, work, reach }: ContactViewProps) {
+export function ContactView({ initial, facets, today, work, reach, templates, sender: initialSender, twilioReady }: ContactViewProps) {
   const router = useRouter();
   const [bundle, setBundle] = useState(initial);
   const [logging, setLogging] = useState<LogKind | null>(reach);
+  const [logBody, setLogBody] = useState("");
+  const [picker, setPicker] = useState<{ channel: MessageChannel; n: number } | null>(null);
+  const [sender, setSender] = useState(initialSender);
   const [followUpAfter, setFollowUpAfter] = useState<LogKind | "note" | null>(null);
   const [compose, setCompose] = useState<"note" | LogKind>("note");
   const [composeBody, setComposeBody] = useState("");
@@ -174,6 +189,10 @@ export function ContactView({ initial, facets, today, work, reach }: ContactView
     }
   }
 
+  function openPicker(channel: MessageChannel) {
+    setPicker((p) => ({ channel, n: (p?.n ?? 0) + 1 }));
+  }
+
   const backHref = work ? `/admin/nyc?${work.query}` : "/admin/nyc";
 
   return (
@@ -252,6 +271,18 @@ export function ContactView({ initial, facets, today, work, reach }: ContactView
                   <span key={e} className="break-all">{e}</span>
                 ))}
               </div>
+              <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                {KIND_BADGE[c.kind] && (
+                  <span className={cn("rounded-md px-1.5 py-0.5 font-medium", KIND_BADGE[c.kind]!.className)}>{KIND_BADGE[c.kind]!.label}</span>
+                )}
+                {[
+                  c.source,
+                  c.added_at ? `Inquired ${inquiredFormat.format(new Date(c.added_at))}` : null,
+                  c.previous_agent ? `Previously with ${c.previous_agent}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
               <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm">
                 {touch && <span className={cn("font-medium", TONE_TEXT[touch.tone])}>{touch.label}</span>}
                 {leaseUpSoon(c.added_at, today) && (
@@ -266,43 +297,58 @@ export function ContactView({ initial, facets, today, work, reach }: ContactView
         </div>
 
         {!c.do_not_contact && (phone || email) && (
-          <div className="mt-4 flex flex-wrap gap-2">
+          // Phones: four equal tiles, icon over label. Wider: one row.
+          <div className="mt-4 grid grid-cols-4 gap-2 sm:flex sm:flex-wrap">
             {phone && (
               <>
-                <a href={`tel:${telHref(phone)}`} onClick={() => setLogging("call")} className={cn(bigAction, "border-emerald-400/30 bg-emerald-400/15 text-emerald-50 hover:bg-emerald-400/25")}>
+                <a
+                  href={`tel:${telHref(phone)}`}
+                  onClick={() => {
+                    setLogBody("");
+                    setLogging("call");
+                  }}
+                  className={cn(bigAction, "border-emerald-400/30 bg-emerald-400/15 text-emerald-50 hover:bg-emerald-400/25")}
+                >
                   <PhoneCall className="h-4 w-4" aria-hidden="true" />
                   Call
                 </a>
-                <a href={`sms:${telHref(phone)}`} onClick={() => setLogging("text")} className={cn(bigAction, "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]")}>
+                <button type="button" onClick={() => openPicker("text")} className={cn(bigAction, "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]")}>
                   <MessageSquare className="h-4 w-4" aria-hidden="true" />
                   Text
-                </a>
-                <a
-                  href={whatsappHref(phone)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setLogging("whatsapp")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openPicker("whatsapp")}
                   className={cn(bigAction, "border-white/10 bg-white/[0.04] text-emerald-300 hover:bg-white/[0.08]")}
                 >
                   <MessageCircle className="h-4 w-4" aria-hidden="true" />
                   WhatsApp
-                </a>
+                </button>
               </>
             )}
             {email && (
-              <a href={`mailto:${email}`} onClick={() => setLogging("email")} className={cn(bigAction, "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]")}>
+              <button type="button" onClick={() => openPicker("email")} className={cn(bigAction, "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]")}>
                 <Mail className="h-4 w-4" aria-hidden="true" />
                 Email
-              </a>
+              </button>
             )}
           </div>
+        )}
+        {!c.do_not_contact && email && !c.has_real_email && (
+          <p className="mt-2 text-xs text-amber-200/80">
+            {isRelayEmail(email)
+              ? "This email is a listing-site relay and probably no longer forwards. A text or call is the way to reach them."
+              : "Email to this address bounced before. A text or call is the way to reach them."}
+          </p>
         )}
       </section>
 
       {logging && (
         <QuickLog
+          key={`${logging}-${logBody}`}
           kind={logging}
           firstName={first}
+          initialBody={logBody}
           onDismiss={() => setLogging(null)}
           onLog={async (outcome, body) => {
             const ok = await logActivity(logging, outcome, body);
@@ -429,11 +475,37 @@ export function ContactView({ initial, facets, today, work, reach }: ContactView
           />
           <InquiryCard contact={c} />
           <TagsCard tags={c.tags} allTags={facets.tags} onChange={(tags) => patch({ tags })} />
-          <DetailsCard contact={c} sources={facets.sources} agents={facets.assigned} onSave={patch} />
+          <DetailsCard contact={c} sources={facets.sources} onSave={patch} />
           <ImportedFieldsCard extra={c.extra} />
           <ContactSafetyCard contact={c} onDoNotContact={(v) => patch({ do_not_contact: v })} onDelete={() => setDeleteOpen(true)} />
         </div>
       </div>
+
+      {picker && (
+        <MessagePicker
+          key={picker.n}
+          open
+          onOpenChange={(open) => {
+            if (!open) setPicker(null);
+          }}
+          channel={picker.channel}
+          contact={c}
+          firstName={first}
+          templates={templates}
+          sender={sender}
+          onSenderSaved={setSender}
+          today={today}
+          twilioReady={twilioReady}
+          onOpenedApp={(channel, body) => {
+            setLogBody(body);
+            setLogging(channel === "whatsapp" ? "whatsapp" : channel === "email" ? "email" : "text");
+          }}
+          onSent={async () => {
+            await reload();
+            setFollowUpAfter("text");
+          }}
+        />
+      )}
 
       <DeleteContactsDialog
         open={deleteOpen}

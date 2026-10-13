@@ -16,7 +16,7 @@ import {
   uniqueValues,
 } from "./normalize";
 import { parseCalls, parseNotes, parseTexts, shortHash, type HistoryEntry } from "./fub-history";
-import type { ActivityDirection, ActivityKind, CallOutcome } from "./types";
+import type { ActivityDirection, ActivityKind, CallOutcome, ContactKind } from "./types";
 
 export type ImportField =
   | "external_id"
@@ -27,7 +27,7 @@ export type ImportField =
   | "phones"
   | "stage"
   | "source"
-  | "assigned_to"
+  | "previous_agent"
   | "tags"
   | "price"
   | "beds"
@@ -53,7 +53,7 @@ const ALIASES: Record<Exclude<ImportField, "emails" | "phones" | "tags">, string
   name: ["name", "fullname", "contactname"],
   stage: ["stage", "leadstage", "status"],
   source: ["leadsource", "source"],
-  assigned_to: ["assignedto", "assignedagent", "agent", "owner"],
+  previous_agent: ["assignedto", "assignedagent", "agent", "owner"],
   price: ["propertyprice", "budget", "maxprice", "price", "listingprice"],
   beds: ["propertybeds", "beds", "bedrooms"],
   move_in: ["month", "movein", "moveindate", "movedate", "timeframe"],
@@ -84,7 +84,7 @@ export const FIELD_LABELS: Record<ImportField, string> = {
   phones: "Phones",
   stage: "Stage",
   source: "Lead source",
-  assigned_to: "Assigned agent",
+  previous_agent: "Previous agent",
   tags: "Tags",
   price: "Price",
   beds: "Beds",
@@ -105,6 +105,41 @@ export const FIELD_LABELS: Record<ImportField, string> = {
 
 /** Tag added to anyone whose inquiry was for a Florida listing. */
 export const FLORIDA_TAG = "Florida inquiry";
+
+/** FUB tags that carry meaning: an opt-out, a dead email, a broker. */
+export const UNSUBSCRIBED_TAG = "Unsubscribed";
+export const BROKER_TAG = "Agent Inquiry";
+
+/** A listing price this high is a sale, not a monthly rent. */
+export const BUYER_MIN_PRICE = 50_000;
+
+/**
+ * Brokerages whose agents inquire about listings for their own clients.
+ * Keep in step with migration 035's backfill.
+ */
+export const BROKER_EMAIL_DOMAINS = [
+  "corcoran.com", "compass.com", "elliman.com", "douglaselliman.com", "bhsusa.com",
+  "brownharrisstevens.com", "sothebys.realty", "sothebysrealty.com", "serhant.com",
+  "nestseekers.com", "kw.com", "theagencyre.com", "bondnewyork.com", "livingny.com",
+  "coldwellbanker.com", "halstead.com", "citihabitats.com", "exprealty.com",
+  "warburgrealty.com", "spireny.com", "mns.com",
+];
+
+/**
+ * Renter, buyer or another broker. Brokers first: a Compass agent asking
+ * about a $1.2M condo is a broker, not a buyer.
+ */
+export function contactKind(c: {
+  tags: string[];
+  emails: string[];
+  price: number | null;
+  dealStage?: string | null;
+}): ContactKind {
+  const domain = c.emails[0]?.split("@")[1] ?? "";
+  if (c.tags.includes(BROKER_TAG) || BROKER_EMAIL_DOMAINS.includes(domain)) return "broker";
+  if ((c.price ?? 0) >= BUYER_MIN_PRICE || /buyers/i.test(c.dealStage ?? "")) return "buyer";
+  return "renter";
+}
 
 export function headerKey(header: string): string {
   return header.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -177,7 +212,8 @@ export interface ImportContact {
   phones: string[];
   stage: string;
   source: string | null;
-  assigned_to: string | null;
+  previous_agent: string | null;
+  kind: ContactKind;
   tags: string[];
   price: number | null;
   beds: number | null;
@@ -189,6 +225,7 @@ export interface ImportContact {
   neighborhood: string | null;
   background: string | null;
   added_at: string | null;
+  do_not_contact: boolean;
   contacted: boolean;
   last_contacted_at: string | null;
   last_inbound_at: string | null;
@@ -368,7 +405,8 @@ export function rowToContact(
     phones,
     stage: clip(get("stage"), 80) ?? DEFAULT_STAGE,
     source,
-    assigned_to: clip(get("assigned_to"), 80),
+    previous_agent: clip(get("previous_agent"), 80),
+    kind: contactKind({ tags, emails, price, dealStage: dealStageOf(row, mapping) }),
     tags,
     price,
     beds,
@@ -380,6 +418,7 @@ export function rowToContact(
     neighborhood,
     background: clip(get("background"), 10_000),
     added_at: addedAt,
+    do_not_contact: tags.includes(UNSUBSCRIBED_TAG),
     contacted: isContacted || lastContacted !== null,
     last_contacted_at: lastContacted,
     last_inbound_at: lastInbound,
@@ -389,9 +428,15 @@ export function rowToContact(
   };
 }
 
+/** FUB's "Deal Stage" ("Buyers - Closed"), kept in extra but read for kind. */
+function dealStageOf(row: string[], mapping: ImportMapping): string | null {
+  const i = mapping.headers.findIndex((h) => headerKey(h) === "dealstage");
+  return i >= 0 ? (row[i] ?? null) : null;
+}
+
 /** nameKey of every agent named in the file's assigned-agent column. */
 export function agentKeysFrom(rows: string[][], mapping: ImportMapping): Set<string> {
-  const cols = mapping.fields.assigned_to ?? [];
+  const cols = mapping.fields.previous_agent ?? [];
   const keys = new Set<string>();
   for (const row of rows) {
     for (const i of cols) {

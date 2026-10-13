@@ -7,16 +7,17 @@ import { z } from "zod";
 import { NURTURE_STAGE, WORKING_STAGES } from "./stages";
 import { addDays } from "./dates";
 
-export const TOUCH_FILTERS = ["hot", "warm", "cold", "never", "replied", "stale30", "stale90", "stale180"] as const;
+export const TOUCH_FILTERS = ["awaiting", "hot", "warm", "cold", "never", "replied", "stale30", "stale90", "stale180"] as const;
+export const KIND_FILTERS = ["renter", "buyer", "broker", "people"] as const;
 export const REACH_FILTERS = ["phone", "email", "none"] as const;
 export const ADDED_FILTERS = ["30", "90", "365"] as const;
 export const BUDGET_FILTERS = ["lt3", "3to45", "45to6", "6to8", "8plus"] as const;
 export const BEDS_FILTERS = ["0", "1", "2", "3"] as const;
 export const SCOPE_FILTERS = ["active", "archive"] as const;
-export const SORTS = ["recent", "added", "name", "oldest_touch", "due", "price_high"] as const;
+export const SORTS = ["recent", "added", "name", "oldest_touch", "due", "price_high", "replied"] as const;
 export type CrmSort = (typeof SORTS)[number];
 
-/** "Unassigned" in the agent filter. */
+/** "No previous agent" in the agent filter. */
 export const NO_AGENT = "__none";
 
 /** Replied within this many days = hot; replied longer ago = warm. */
@@ -33,12 +34,13 @@ export const LEASE_WINDOW_MONTHS = 3;
 export const LEASE_MIN_AGE_DAYS = 300;
 
 /** Price bands (monthly rent of the listing they asked about). */
-export const BUDGET_BANDS: Record<(typeof BUDGET_FILTERS)[number], { label: string; min?: number; max?: number }> = {
+export const BUDGET_BANDS: Record<(typeof BUDGET_FILTERS)[number], { label: string; min?: number; max: number }> = {
   lt3: { label: "Under $3k", max: 3000 },
   "3to45": { label: "$3k–4.5k", min: 3000, max: 4500 },
   "45to6": { label: "$4.5k–6k", min: 4500, max: 6000 },
   "6to8": { label: "$6k–8k", min: 6000, max: 8000 },
-  "8plus": { label: "$8k+", min: 8000 },
+  // Capped where sale prices start (BUYER_MIN_PRICE): rents only.
+  "8plus": { label: "$8k+", min: 8000, max: 50_000 },
 };
 
 export const crmFiltersSchema = z.object({
@@ -47,6 +49,7 @@ export const crmFiltersSchema = z.object({
   tag: z.string().max(60).optional(),
   source: z.string().max(80).optional(),
   agent: z.string().max(80).optional(),
+  kind: z.enum(KIND_FILTERS).optional(),
   hood: z.string().max(80).optional(),
   budget: z.enum(BUDGET_FILTERS).optional(),
   beds: z.enum(BEDS_FILTERS).optional(),
@@ -66,6 +69,7 @@ export interface BuiltinList {
   hint: string;
   filters: CrmFilters;
   sort: CrmSort;
+  group: "today" | "reengage" | "book";
 }
 
 /**
@@ -75,20 +79,13 @@ export interface BuiltinList {
  * yearly), and three years of silence means archive.
  */
 export const BUILTIN_LISTS: BuiltinList[] = [
-  { key: "all", label: "Everyone", hint: "Every contact in the book", filters: {}, sort: "recent" },
   {
-    key: "lease",
-    label: "Lease up soon",
-    hint: "First inquired around this time of year, 10+ months ago: their lease is likely ending. Biggest budgets first.",
-    filters: { lease: "soon", scope: "active" },
-    sort: "price_high",
-  },
-  {
-    key: "hot",
-    label: "Hot",
-    hint: "Replied in the last 6 months",
-    filters: { touch: "hot" },
-    sort: "oldest_touch",
+    key: "awaiting",
+    label: "Waiting on you",
+    hint: "Replied in the last 6 months and never heard back. Newest replies first.",
+    filters: { touch: "awaiting" },
+    sort: "replied",
+    group: "today",
   },
   {
     key: "due",
@@ -96,6 +93,23 @@ export const BUILTIN_LISTS: BuiltinList[] = [
     hint: "A follow-up is due today or overdue",
     filters: { due: true },
     sort: "due",
+    group: "today",
+  },
+  {
+    key: "lease",
+    label: "Lease up soon",
+    hint: "Renters who first inquired around this time of year, 10+ months ago: their lease is likely ending. Biggest budgets first.",
+    filters: { lease: "soon", kind: "renter", scope: "active" },
+    sort: "price_high",
+    group: "today",
+  },
+  {
+    key: "hot",
+    label: "Hot",
+    hint: "Replied in the last 6 months",
+    filters: { touch: "hot", kind: "people" },
+    sort: "oldest_touch",
+    group: "today",
   },
   {
     key: "working",
@@ -103,27 +117,31 @@ export const BUILTIN_LISTS: BuiltinList[] = [
     hint: "Following up, interested, options sent, showing or applied",
     filters: { stages: WORKING_STAGES },
     sort: "oldest_touch",
+    group: "today",
   },
   {
     key: "warm",
     label: "Warm",
     hint: "Replied before, but not in the last 6 months",
-    filters: { touch: "warm" },
+    filters: { touch: "warm", kind: "people" },
     sort: "oldest_touch",
+    group: "reengage",
   },
   {
     key: "never",
     label: "Never contacted",
     hint: "No call, text or email yet (archive excluded)",
-    filters: { touch: "never", scope: "active" },
+    filters: { touch: "never", kind: "people", scope: "active" },
     sort: "added",
+    group: "reengage",
   },
   {
     key: "cold",
     label: "Cold",
     hint: "Contacted but never replied (archive excluded)",
-    filters: { touch: "cold", scope: "active" },
+    filters: { touch: "cold", kind: "people", scope: "active" },
     sort: "oldest_touch",
+    group: "reengage",
   },
   {
     key: "nurture",
@@ -131,6 +149,23 @@ export const BUILTIN_LISTS: BuiltinList[] = [
     hint: "Future move-ins and long-term nurture",
     filters: { stages: [NURTURE_STAGE] },
     sort: "oldest_touch",
+    group: "reengage",
+  },
+  {
+    key: "buyers",
+    label: "Buyers",
+    hint: "Asked about a listing for sale ($50k+) or have a buyer deal",
+    filters: { kind: "buyer" },
+    sort: "recent",
+    group: "book",
+  },
+  {
+    key: "brokers",
+    label: "Brokers",
+    hint: "Other agents who asked about listings. Kept out of the calling lists.",
+    filters: { kind: "broker" },
+    sort: "recent",
+    group: "book",
   },
   {
     key: "archive",
@@ -138,7 +173,15 @@ export const BUILTIN_LISTS: BuiltinList[] = [
     hint: "First inquired 3+ years ago and never replied. Kept, but out of the calling lists.",
     filters: { scope: "archive" },
     sort: "added",
+    group: "book",
   },
+  { key: "all", label: "Everyone", hint: "Every contact in the book", filters: {}, sort: "recent", group: "book" },
+];
+
+export const LIST_GROUPS: { key: BuiltinList["group"]; label: string }[] = [
+  { key: "today", label: "Work these first" },
+  { key: "reengage", label: "Re-engage" },
+  { key: "book", label: "The book" },
 ];
 
 export function builtinList(key: string | null | undefined): BuiltinList | undefined {
@@ -150,7 +193,7 @@ type Params = { get(name: string): string | null; getAll(name: string): string[]
 /** Filters from a query string. Invalid values are dropped, not rejected. */
 export function filtersFromParams(params: Params): CrmFilters {
   const raw: Record<string, unknown> = {};
-  for (const key of ["q", "tag", "source", "agent", "hood", "budget", "beds", "reach", "touch", "lease", "scope", "added"] as const) {
+  for (const key of ["q", "tag", "source", "agent", "kind", "hood", "budget", "beds", "reach", "touch", "lease", "scope", "added"] as const) {
     const v = params.get(key);
     if (v) raw[key] = v;
   }
@@ -173,6 +216,7 @@ export function filtersToParams(filters: CrmFilters, params = new URLSearchParam
   if (filters.tag) params.set("tag", filters.tag);
   if (filters.source) params.set("source", filters.source);
   if (filters.agent) params.set("agent", filters.agent);
+  if (filters.kind) params.set("kind", filters.kind);
   if (filters.hood) params.set("hood", filters.hood);
   if (filters.budget) params.set("budget", filters.budget);
   if (filters.beds) params.set("beds", filters.beds);
@@ -265,14 +309,17 @@ export function applyContactFilters<T>(query: T, filters: CrmFilters, today: str
 
   if (filters.tag) q = q.contains("tags", arrayLiteral(filters.tag));
   if (filters.source) q = q.eq("source", filters.source);
-  if (filters.agent === NO_AGENT) q = q.is("assigned_to", null);
-  else if (filters.agent) q = q.eq("assigned_to", filters.agent);
+  if (filters.agent === NO_AGENT) q = q.is("previous_agent", null);
+  else if (filters.agent) q = q.eq("previous_agent", filters.agent);
+  // "people": renters and buyers, i.e. not other brokers.
+  if (filters.kind === "people") q = q.neq("kind", "broker");
+  else if (filters.kind) q = q.eq("kind", filters.kind);
   if (filters.hood) q = q.eq("neighborhood", filters.hood);
 
   if (filters.budget) {
     const band = BUDGET_BANDS[filters.budget];
     if (band.min !== undefined) q = q.gte("price", band.min);
-    if (band.max !== undefined) q = q.lt("price", band.max);
+    q = q.lt("price", band.max);
   }
   if (filters.beds === "3") q = q.gte("beds", 3);
   else if (filters.beds) q = q.eq("beds", Number(filters.beds));
@@ -283,6 +330,12 @@ export function applyContactFilters<T>(query: T, filters: CrmFilters, today: str
   else if (filters.reach === "none") q = q.eq("phones", "{}").eq("has_real_email", false);
 
   switch (filters.touch) {
+    case "awaiting":
+      q = q
+        .eq("awaiting_reply", true)
+        .gte("last_inbound_at", isoDaysAgo(now, HOT_DAYS))
+        .eq("do_not_contact", false);
+      break;
     case "hot":
       q = q.gte("last_inbound_at", isoDaysAgo(now, HOT_DAYS));
       break;
@@ -358,6 +411,9 @@ export function applyContactSort<T>(query: T, sort: CrmSort): T {
     case "price_high":
       q = q.order("price", { ascending: false, nullsFirst: false });
       break;
+    case "replied":
+      q = q.order("last_inbound_at", { ascending: false, nullsFirst: false });
+      break;
     default:
       q = q.order("last_activity_at", { ascending: false, nullsFirst: false });
   }
@@ -383,4 +439,5 @@ export const SORT_LABELS: Record<CrmSort, string> = {
   oldest_touch: "Longest since contact",
   due: "Follow-up date",
   price_high: "Biggest budget first",
+  replied: "Latest reply first",
 };
