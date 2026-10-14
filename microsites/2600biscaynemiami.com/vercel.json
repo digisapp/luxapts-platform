@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.2600biscaynemiami.com"
+        }
+      ],
+      "destination": "https://2600biscaynemiami.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.mohawkwynwood.com"
+        }
+      ],
+      "destination": "https://mohawkwynwood.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

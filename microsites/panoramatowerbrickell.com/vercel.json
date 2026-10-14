@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.panoramatowerbrickell.com"
+        }
+      ],
+      "destination": "https://panoramatowerbrickell.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.artplazaapartments.com"
+        }
+      ],
+      "destination": "https://artplazaapartments.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

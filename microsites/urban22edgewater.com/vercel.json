@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.urban22edgewater.com"
+        }
+      ],
+      "destination": "https://urban22edgewater.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

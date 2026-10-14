@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.neoedgewatermiami.com"
+        }
+      ],
+      "destination": "https://neoedgewatermiami.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

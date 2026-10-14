@@ -744,10 +744,14 @@ for (const b of BUILDINGS) {
   fs.writeFileSync(path.join(dir, `${VERIFY}.txt`), VERIFY + "\n");
   // www.<domain> served the same page with a 200, a second copy of every site
   // for Google to choose between. The canonical tag points at the apex; this
-  // makes the server say so too.
+  // makes the server say so too. "/" needs its own rule: on these static
+  // deployments "/:path*" redirected every www path except the bare root.
+  const www = [{ type: "host", value: `www.${b.domain}` }];
   fs.writeFileSync(path.join(dir, "vercel.json"), JSON.stringify({
-    redirects: [{ source: "/:path*", has: [{ type: "host", value: `www.${b.domain}` }],
-      destination: `https://${b.domain}/:path*`, permanent: true }],
+    redirects: [
+      { source: "/", has: www, destination: `https://${b.domain}/`, permanent: true },
+      { source: "/:path*", has: www, destination: `https://${b.domain}/:path*`, permanent: true },
+    ],
   }, null, 2) + "\n");
   fs.writeFileSync(path.join(dir, ".gitignore"), ".vercel\n");
   // Tab icon and Google's result-page icon. None of the 23 sites had one

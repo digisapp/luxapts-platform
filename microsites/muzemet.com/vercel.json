@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.muzemet.com"
+        }
+      ],
+      "destination": "https://muzemet.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.biscayne18.com"
+        }
+      ],
+      "destination": "https://biscayne18.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

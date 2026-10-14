@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.2900terrace.com"
+        }
+      ],
+      "destination": "https://2900terrace.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

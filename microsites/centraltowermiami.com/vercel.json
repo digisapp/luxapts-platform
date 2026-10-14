@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.centraltowermiami.com"
+        }
+      ],
+      "destination": "https://centraltowermiami.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

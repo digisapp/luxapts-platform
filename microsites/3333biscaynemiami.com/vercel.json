@@ -1,6 +1,17 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.3333biscaynemiami.com"
+        }
+      ],
+      "destination": "https://3333biscaynemiami.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {
