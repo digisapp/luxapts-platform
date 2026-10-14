@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.remitheriver.com"
+        }
+      ],
+      "destination": "https://remitheriver.com/:path*",
+      "permanent": true
+    }
+  ]
+}

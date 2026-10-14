@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -194,8 +200,8 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">In Permitting · First of Three Towers</span>
-      <h1>667 apartments.<br>An entire<br>Edgewater<br><span class="aqua">city block.</span></h1>
-      <p class="sub">Beitel Group's three-tower redevelopment of 3333 Biscayne begins with a 45-story, 667-unit building — the largest rental project in the Edgewater pipeline.</p>
+      <h1>3333 Biscayne:<br>667 new<br>Edgewater<br><span class="aqua">apartments.</span></h1>
+      <p class="sub">The first tower at 3333 Biscayne Boulevard is a 45-story rental building with 667 apartments in upper Edgewater, minutes from Midtown, Wynwood and the Design District. Beitel Group expects to deliver it in 2028.</p>
       <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
@@ -217,9 +223,9 @@
     <div class="split">
       <div class="reveal">
         <p class="kicker">3333 Biscayne Boulevard</p>
-        <h2>A whole block of Biscayne, rebuilt</h2>
-        <p class="prose">Beitel Group is redeveloping the entire city block at 3333 Biscayne Boulevard into three towers. The first is a 45-story building with 667 residences, structured parking and roughly 7,400 square feet of ground-floor retail.</p>
-        <p class="prose">Site preparation and demolition are already underway under approved permits, with the construction crane scheduled from December 2026 through July 2028. John Moriarty &amp; Associates is the general contractor.</p>
+        <h2>New apartments on a whole Edgewater block</h2>
+        <p class="prose">Beitel Group is rebuilding the entire city block at 3333 Biscayne Boulevard as three towers. The first is a 45-story building with 667 apartments, garage parking and roughly 7,400 square feet of shops at street level.</p>
+        <p class="prose">Site work and demolition are underway on approved permits, with the construction crane scheduled from December 2026 through July 2028. John Moriarty &amp; Associates is the general contractor.</p>
       </div>
       <img class="reveal" src="img/split.jpg" alt="3333 Biscayne — Edgewater, Miami" loading="lazy">
     </div>
@@ -228,27 +234,27 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes 3333 Biscayne worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What 3333 Biscayne will offer</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>The biggest in the pipeline</b><p>667 units in tower one alone — more than any other Edgewater rental project currently moving toward construction.</p></div>
-      <div class="card reveal"><span class="num">02</span><b>Upper Edgewater</b><p>North of the Arts &amp; Entertainment District, minutes from Midtown, Wynwood and the Design District.</p></div>
-      <div class="card reveal"><span class="num">03</span><b>Early is the point</b><p>Permits are filed and demolition has started. Getting on the list now means hearing about pricing years before it is advertised.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>667 apartments to choose from</b><p>The first tower alone has 667 homes, so there should be plenty of floors and layouts to pick from when leasing opens.</p></div>
+      <div class="card reveal"><span class="num">02</span><b>Upper Edgewater</b><p>North of the Arts &amp; Entertainment District and minutes from Midtown, Wynwood and the Design District.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>Hear about pricing early</b><p>Nothing is advertised yet. Leave your details and you'll get pricing as soon as pre-leasing opens.</p></div>
     </div>
   </div>
 </section>
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>3333 Biscayne pricing goes to this list before it reaches the listing sites.</p>
+    <p>Be first to see 3333 Biscayne pricing and floor plans when they're released.</p>
     <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Edgewater, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at 3333 Biscayne</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="3333 Biscayne — The New Design" loading="lazy"><figcaption>The New Design</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="3333 Biscayne — Three-Tower Master Plan" loading="lazy"><figcaption>Three-Tower Master Plan</figcaption></figure>
@@ -260,7 +266,7 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about 3333 Biscayne</h2>
     <details class="reveal"><summary>When will 3333 Biscayne be finished?</summary><p>The crane schedule runs December 2026 through July 2028, so delivery is expected in 2028. Pre-leasing typically opens several months ahead of completion.</p></details>
     <details class="reveal"><summary>Is this rental or condo?</summary><p>The first tower is planned as residential rental. Beitel and Aimco have partnered on the site since 2022.</p></details>
     <details class="reveal"><summary>What about towers two and three?</summary><p>The full block is master-planned for three towers. Only the first has filed a master construction permit so far.</p></details>
@@ -272,9 +278,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#ddf6ef">The Waitlist</p>
-        <h2>Be first on the biggest one.</h2>
-        <p class="prose">667 residences, three towers, one Edgewater block. We'll email you the moment pre-leasing and pricing open.</p>
+        <p class="kicker" style="color:#ddf6ef">Early Pricing</p>
+        <h2>Get 3333 Biscayne pricing first.</h2>
+        <p class="prose">667 apartments in the first of three towers on one Edgewater block. We'll email you as soon as pre-leasing and pricing open.</p>
 
       </div>
       <form data-lead class="reveal">

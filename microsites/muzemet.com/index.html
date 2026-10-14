@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -172,7 +173,7 @@
     header{padding:12px 0}
     header.scrolled{padding:8px 0}
     header .wrap{gap:12px}
-    header .wordmark{font-size:min(18px,6.06vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
+    header .wordmark{font-size:min(18px,5.47vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
     .nav-cta{flex:none;display:inline-block;line-height:44px;padding:0 16px;font-size:.75rem;letter-spacing:.05em;white-space:nowrap}
     .nav-cta .cta-x{display:none}
     .hero-inner{padding:88px 0 76px}
@@ -182,6 +183,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -195,7 +201,7 @@
 <header id="hdr">
   <div class="wrap">
     <a class="wordmark" href="#top">MUZE<span>AT MET</span></a>
-    <a class="nav-cta" href="#signup">Get <span class="cta-x">Current </span>Pricing</a>
+    <a class="nav-cta" href="#signup">Check Pricing<span class="cta-x"> &amp; Availability</span></a>
   </div>
 </header>
 
@@ -203,22 +209,23 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Open · Leasing Now</span>
-      <h1>391 apartments<br>above a cinema,<br>four restaurants<br><span class="aqua">and a plaza.</span></h1>
-      <p class="sub">Muze at Met sits inside Metropolitan Miami — a 714,000 sq ft downtown complex with an 18-screen Silverspot cinema, restaurants and retail beneath the residences.</p>
-      <a class="btn btn-aqua" href="#signup">Get Current Pricing</a>
+      <h1>Muze at Met:<br>391 apartments<br>above a cinema<br><span class="aqua">and restaurants.</span></h1>
+      <p class="sub">Muze at Met sits inside Metropolitan Miami, a downtown complex with an 18-screen Silverspot cinema, restaurants and shops beneath the apartments. Studios to three-bedrooms, between Downtown and Brickell.</p>
+      <a class="btn btn-aqua" href="#signup">Check Pricing & Availability</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
   </div>
-  <div class="hero-ticker"><div>391 residences &nbsp;·&nbsp; Metropolitan Miami &nbsp;·&nbsp; 18-screen Silverspot cinema &nbsp;·&nbsp; Four restaurants &nbsp;·&nbsp; Leasing now &nbsp;·&nbsp; 391 residences &nbsp;·&nbsp; Metropolitan Miami &nbsp;·&nbsp; 18-screen Silverspot cinema &nbsp;·&nbsp; Four restaurants &nbsp;·&nbsp; Leasing now &nbsp;·&nbsp; </div></div>
+  <div class="hero-ticker"><div>391 residences &nbsp;·&nbsp; Studios to 3 bedrooms &nbsp;·&nbsp; 18-screen Silverspot cinema &nbsp;·&nbsp; Four restaurants &nbsp;·&nbsp; Leasing now &nbsp;·&nbsp; 391 residences &nbsp;·&nbsp; Studios to 3 bedrooms &nbsp;·&nbsp; 18-screen Silverspot cinema &nbsp;·&nbsp; Four restaurants &nbsp;·&nbsp; Leasing now &nbsp;·&nbsp; </div></div>
 </div>
 
 <div class="stats">
   <div class="wrap">
+    <div class="stat reveal"><b>$2,735+</b><small>Studios From</small></div>
     <div class="stat reveal"><b>391</b><small>Residences</small></div>
-    <div class="stat reveal"><b>714k</b><small>Sq Ft Complex</small></div>
+    <div class="stat reveal"><b>519–1,410</b><small>Sq Ft</small></div>
     <div class="stat reveal"><b>18</b><small>Cinema Screens</small></div>
-    <div class="stat reveal"><b>$2,500+</b><small>Recent Low</small></div>
   </div>
+  <div class="wrap"><p class="stat-note">Rents as listed on the leasing office's online floor plans (total monthly price including required fees), checked October 13, 2026. Prices and availability change daily.</p></div>
 </div>
 
 <section id="building">
@@ -237,27 +244,27 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes Muze at Met worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What you get at Muze at Met</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>Downstairs is the point</b><p>Cinema, restaurants and retail inside the complex — the amenity is the neighborhood, not a rooftop deck.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>Dinner and a movie downstairs</b><p>An 18-screen cinema, four restaurants and shops are inside the complex, right below the apartments.</p></div>
       <div class="card reveal"><span class="num">02</span><b>Between Downtown and Brickell</b><p>Walkable to both, which almost nothing else manages without a long bridge crossing.</p></div>
-      <div class="card reveal"><span class="num">03</span><b>Real turnover</b><p>At 391 residences, units open regularly — usually before they hit the listing sites.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>Studios to three-bedrooms</b><p>Layouts from 519 sq ft studios and 681 sq ft one-bedrooms up to 1,410 sq ft three-bedrooms.</p></div>
     </div>
   </div>
 </section>
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Tell us what you need and we'll come back with what's actually open at Muze at Met.</p>
-    <a class="btn btn-aqua" href="#signup">Get Current Pricing</a>
+    <p>Tell us your bedroom count and move-in date, and we'll send today's prices and what's open at Muze at Met.</p>
+    <a class="btn btn-aqua" href="#signup">Check Pricing & Availability</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Downtown Miami, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at Muze at Met</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="Muze at Met — Kitchens" loading="lazy"><figcaption>Kitchens</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="Muze at Met — Residences" loading="lazy"><figcaption>Residences</figcaption></figure>
@@ -269,9 +276,10 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>Is Muze at Met currently available?</summary><p>Yes — it's an operating rental building with frequent turnover. Send your bedroom count and timing and we'll check what's open.</p></details>
-    <details class="reveal"><summary>How much is rent?</summary><p>Recent listings have ranged roughly $2,500 to $4,250 depending on size, floor and term.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about Muze at Met</h2>
+    <details class="reveal"><summary>Is Muze at Met leasing now?</summary><p>Yes. It's an open rental building and homes come open regularly. Send your bedroom count and move-in date and we'll check what's available.</p></details>
+    <details class="reveal"><summary>How much is rent at Muze at Met?</summary><p>When we checked on October 13, 2026, studios were listed from about $2,735 a month, one-bedrooms from about $2,834, two-bedrooms from about $3,934 and three-bedrooms from about $5,279, including required monthly fees. Prices change daily, so send your budget and we'll check today's.</p></details>
+    <details class="reveal"><summary>Are there move-in specials?</summary><p>On October 13, 2026, ApartmentList and Zumper showed up to two months free. Specials change often; ask and we'll check what's on today.</p></details>
     <details class="reveal"><summary>What is Metropolitan Miami?</summary><p>A 714,000 sq ft mixed-use complex containing Muze, an 18-screen Silverspot cinema, four restaurants and retail.</p></details>
     <details class="reveal"><summary>Where exactly is it?</summary><p>340 SE 3rd Street, in the southern end of Downtown Miami near the Brickell line.</p></details>
   </div>
@@ -281,9 +289,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#efe9ff">Availability Check</p>
-        <h2>See what's open at Muze.</h2>
-        <p class="prose">391 residences means steady turnover. Tell us what you're after and we'll come back with real availability.</p>
+        <p class="kicker" style="color:#efe9ff">Pricing &amp; Availability</p>
+        <h2>Find your apartment at Muze at Met.</h2>
+        <p class="prose">Tell us your bedroom count, budget and move-in date and we'll come back with what's open at Muze and what it costs today.</p>
         <div class="inv" data-inv hidden>
           <b data-inv-count></b>
           <span data-inv-detail></span>
@@ -302,7 +310,7 @@
         <select id="unit" name="unit_type"><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
         <label for="movein">Target move-in</label>
         <select id="movein" name="move_in"><option>As soon as possible</option><option>Next 30 days</option><option>Next 60 days</option><option>Flexible</option></select>
-        <button class="btn btn-aqua" type="submit">Get Current Pricing</button>
+        <button class="btn btn-aqua" type="submit">Check Pricing & Availability</button>
         <p class="fineprint">Looking more broadly? <a href="https://staycio.com?utm_source=muzemet&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
       </form>
     </div>

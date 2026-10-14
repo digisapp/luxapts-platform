@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.miamiworldtowerapartments.com"
+        }
+      ],
+      "destination": "https://miamiworldtowerapartments.com/:path*",
+      "permanent": true
+    }
+  ]
+}

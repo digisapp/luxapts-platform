@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -172,7 +173,7 @@
     header{padding:12px 0}
     header.scrolled{padding:8px 0}
     header .wrap{gap:12px}
-    header .wordmark{font-size:min(18px,4.66vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
+    header .wordmark{font-size:min(18px,4.21vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
     .nav-cta{flex:none;display:inline-block;line-height:44px;padding:0 16px;font-size:.75rem;letter-spacing:.05em;white-space:nowrap}
     .nav-cta .cta-x{display:none}
     .hero-inner{padding:88px 0 76px}
@@ -182,6 +183,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -195,7 +201,7 @@
 <header id="hdr">
   <div class="wrap">
     <a class="wordmark" href="#top">PANORAMA<span>TOWER</span></a>
-    <a class="nav-cta" href="#signup">Get <span class="cta-x">Current </span>Pricing</a>
+    <a class="nav-cta" href="#signup">Check Pricing<span class="cta-x"> &amp; Availability</span></a>
   </div>
 </header>
 
@@ -203,9 +209,9 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Open · Leasing Now</span>
-      <h1>821 apartments,<br>85 stories,<br>every one with<br><span class="aqua">a view.</span></h1>
-      <p class="sub">The tallest multifamily building on the eastern seaboard south of New York. 1100 Brickell Bay Drive, with 100,000+ sq ft of amenities and floor-to-ceiling glass in every residence.</p>
-      <a class="btn btn-aqua" href="#signup">Get Current Pricing</a>
+      <h1>Panorama Tower:<br>821 apartments,<br>a view from<br><span class="aqua">every one.</span></h1>
+      <p class="sub">One- to three-bedroom rentals of roughly 1,125 to 2,191 sq ft at 1100 Brickell Bay Drive, with floor-to-ceiling glass in every home and more than 100,000 sq ft of amenities. Tell us what you're looking for and we'll check what's open.</p>
+      <a class="btn btn-aqua" href="#signup">Check Pricing & Availability</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
   </div>
@@ -214,11 +220,12 @@
 
 <div class="stats">
   <div class="wrap">
+    <div class="stat reveal"><b>$4,625+</b><small>1 Beds From</small></div>
     <div class="stat reveal"><b>821</b><small>Residences</small></div>
     <div class="stat reveal"><b>85</b><small>Stories</small></div>
     <div class="stat reveal"><b>100k+</b><small>Sq Ft Amenities</small></div>
-    <div class="stat reveal"><b>1,125+</b><small>Sq Ft</small></div>
   </div>
+  <div class="wrap"><p class="stat-note">Rents as listed on Redfin, checked October 13, 2026. Prices and availability change daily.</p></div>
 </div>
 
 <section id="building">
@@ -237,8 +244,8 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes Panorama Tower worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What you get at Panorama Tower</h2>
     <div class="cards">
       <div class="card reveal"><span class="num">01</span><b>Apartments at condo scale</b><p>At 1,125–2,191 sq ft, Panorama's floor plans are larger than nearly anything else renting new in Brickell.</p></div>
       <div class="card reveal"><span class="num">02</span><b>Views from every unit</b><p>Floor-to-ceiling glass on all sides means bay, ocean or skyline from every residence — not a premium tier.</p></div>
@@ -249,15 +256,15 @@
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Tell us what you need and we'll come back with what's actually open at Panorama Tower.</p>
-    <a class="btn btn-aqua" href="#signup">Get Current Pricing</a>
+    <p>Tell us your bedroom count and move-in date, and we'll send today's prices and what's open at Panorama Tower.</p>
+    <a class="btn btn-aqua" href="#signup">Check Pricing & Availability</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Brickell, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at Panorama Tower</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="Panorama Tower — Pool Deck" loading="lazy"><figcaption>Pool Deck</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="Panorama Tower — Balcony Views" loading="lazy"><figcaption>Balcony Views</figcaption></figure>
@@ -269,9 +276,9 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>Is Panorama Tower currently available?</summary><p>Yes — it's an operating rental building with regular turnover across 821 residences. Send your bedroom count and timing and we'll check what's open.</p></details>
-    <details class="reveal"><summary>How much is rent?</summary><p>Pricing generally starts around $3,800 and climbs with floor and exposure. Larger and higher units run considerably more.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about Panorama Tower</h2>
+    <details class="reveal"><summary>Is Panorama Tower leasing now?</summary><p>Yes. It's an open rental building with 821 apartments, and homes come open regularly. Send your bedroom count and move-in date and we'll check what's available.</p></details>
+    <details class="reveal"><summary>How much is rent at Panorama Tower?</summary><p>When we checked Redfin on October 13, 2026, one-bedrooms were listed from about $4,625 a month, two-bedrooms from about $5,110 and three-bedrooms from about $10,365. Prices change daily with floor and view, so send your budget and we'll check today's.</p></details>
     <details class="reveal"><summary>How big are the apartments?</summary><p>Roughly 1,125 to 2,191 square feet — one, two and three bedrooms.</p></details>
     <details class="reveal"><summary>Where exactly is it?</summary><p>1100 Brickell Bay Drive, on the bay side of Brickell.</p></details>
   </div>
@@ -281,9 +288,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#e2f0ff">Availability Check</p>
-        <h2>Find what's open up there.</h2>
-        <p class="prose">821 residences across 85 floors. Tell us your bedroom count, budget and timing and we'll tell you what's genuinely available.</p>
+        <p class="kicker" style="color:#e2f0ff">Pricing &amp; Availability</p>
+        <h2>Find your apartment at Panorama Tower.</h2>
+        <p class="prose">821 apartments across 85 floors. Tell us your bedroom count, budget and move-in date and we'll come back with what's open and what it costs today.</p>
         <div class="inv" data-inv hidden>
           <b data-inv-count></b>
           <span data-inv-detail></span>
@@ -302,7 +309,7 @@
         <select id="unit" name="unit_type"><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
         <label for="movein">Target move-in</label>
         <select id="movein" name="move_in"><option>As soon as possible</option><option>Next 30 days</option><option>Next 60 days</option><option>Next 90 days</option><option>Flexible</option></select>
-        <button class="btn btn-aqua" type="submit">Get Current Pricing</button>
+        <button class="btn btn-aqua" type="submit">Check Pricing & Availability</button>
         <p class="fineprint">Looking more broadly? <a href="https://staycio.com?utm_source=panoramatowerbrickell&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
       </form>
     </div>

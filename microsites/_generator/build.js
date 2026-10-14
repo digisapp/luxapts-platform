@@ -183,21 +183,23 @@ function page(b) {
   // "pricing" names the thing they came for. The page still states the real
   // delivery date in the chip, ticker, stats and FAQ, so the promise is the
   // same honest one — you see the number first, when it exists.
-  // Operating buildings lead with the number as well. "Check Availability" is
-  // what every listing site's button says; "Get Current Pricing" names what
-  // the visitor actually searched for, and the form's promise (today's rents
-  // and what's open, usually within a day) covers it.
-  const ctaLabel = isWait ? "Get Pricing First" : "Get Current Pricing";
-  // The header button drops a word on phones so it stays on one line beside the
-  // wordmark. The hidden word stays in the DOM, so textContent (and with it the
+  // Operating buildings say "Check Pricing & Availability" everywhere (owner's
+  // call, 2026-10-13): a renter wants both the number and whether anything is
+  // open, and the form's promise (today's rents and what's open, usually within
+  // a day) covers both. It is never used on a pre-leasing page, where there is
+  // no price or availability to check yet.
+  const ctaLabel = isWait ? "Get Pricing First" : "Check Pricing & Availability";
+  // The header button drops words on phones so it stays on one line beside the
+  // wordmark. The hidden words stay in the DOM, so textContent (and with it the
   // cta_click label the analytics log) is still the full label.
-  const navLabel = isWait ? 'Get Pricing<span class="cta-x"> First</span>' : 'Get <span class="cta-x">Current </span>Pricing';
-  // Phone wordmark size, in vw so it tracks the screen: the name and the "Get
-  // Pricing" button must share one row on a 360px screen (and on a 320px one,
-  // with the <=359px tier's tighter gutters). That leaves ~0.515 of the width for
-  // the name, and Sora 800 caps average under 0.85em a character. Short names
-  // hit the 18px cap; "MOHAWKAT WYNWOOD" lands near 14px.
-  const wmVw = +(51.5 / ((b.short + b.accent).length * 0.85)).toFixed(2);
+  const navLabel = isWait ? 'Get Pricing<span class="cta-x"> First</span>' : 'Check Pricing<span class="cta-x"> &amp; Availability</span>';
+  // Phone wordmark size, in vw so it tracks the screen: the name and the header
+  // button must share one row on a 360px screen (and on a 320px one, with the
+  // <=359px tier's tighter gutters). "Get Pricing" leaves ~0.515 of the width
+  // for the name; "Check Pricing" is two characters wider and leaves ~0.465.
+  // Sora 800 caps average under 0.85em a character. Short names hit the 18px
+  // cap; "MOHAWKAT WYNWOOD" lands near 14px.
+  const wmVw = +((isWait ? 51.5 : 46.5) / ((b.short + b.accent).length * 0.85)).toFixed(2);
   const ticker = b.ticker.join(" &nbsp;·&nbsp; ");
 
   // Gallery captions and alt text. With stock imagery the captions are
@@ -278,6 +280,7 @@ ${JSON.stringify(ld, null, 2)}
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -378,6 +381,11 @@ ${hasInventory ? `  /* Live availability, filled from /api/microsite-inventory. 
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -412,7 +420,8 @@ ${hasInventory ? `  /* Live availability, filled from /api/microsite-inventory. 
   <div class="wrap">
 ${b.stats.map(([v, l]) => `    <div class="stat reveal"><b>${esc(v)}</b><small>${esc(l)}</small></div>`).join("\n")}
   </div>
-</div>
+${b.prices ? `  <div class="wrap"><p class="stat-note">${esc(priceNote(b))}</p></div>
+` : ""}</div>
 
 <section id="building">
   <div class="wrap">
@@ -429,8 +438,8 @@ ${b.body.map((t) => `        <p class="prose">${esc(t)}</p>`).join("\n")}
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes ${esc(b.name)} worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">${esc(isWait ? `What ${b.name} will offer` : `What you get at ${b.name}`)}</h2>
     <div class="cards">
 ${b.cards.map(([t, d], i) => `      <div class="card reveal"><span class="num">0${i + 1}</span><b>${esc(t)}</b><p>${esc(d)}</p></div>`).join("\n")}
     </div>
@@ -440,16 +449,16 @@ ${b.cards.map(([t, d], i) => `      <div class="card reveal"><span class="num">0
 <div class="midcta reveal">
   <div class="wrap">
     <p>${esc(isWait
-      ? `${b.name} pricing goes to this list before it reaches the listing sites.`
-      : `Tell us what you need and we'll come back with what's actually open at ${b.name}.`)}</p>
+      ? `Be first to see ${b.name} pricing and floor plans when they're released.`
+      : `Tell us your bedroom count and move-in date, and we'll send today's prices and what's open at ${b.name}.`)}</p>
     <a class="btn btn-aqua" href="#signup">${ctaLabel}</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">${esc(b.hood)}, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at ${esc(b.name)}</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="${esc(b.name)} — ${esc(cap[0])}" loading="lazy"><figcaption>${esc(cap[0])}</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="${esc(b.name)} — ${esc(cap[1])}" loading="lazy"><figcaption>${esc(cap[1])}</figcaption></figure>
@@ -461,7 +470,7 @@ ${b.cards.map(([t, d], i) => `      <div class="card reveal"><span class="num">0
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about ${esc(b.name)}</h2>
 ${b.faq.map(([q, a]) => `    <details class="reveal"><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
   </div>
 </section>
@@ -470,7 +479,7 @@ ${b.faq.map(([q, a]) => `    <details class="reveal"><summary>${esc(q)}</summary
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:${p.pale}">${isSoon ? "First Access" : isWait ? "The Waitlist" : "Availability Check"}</p>
+        <p class="kicker" style="color:${p.pale}">${isSoon ? "First Access" : isWait ? "Early Pricing" : "Pricing &amp; Availability"}</p>
         <h2>${esc(isSoon && b.soon ? b.soon.h2 : b.ctaH2)}</h2>
         <p class="prose">${esc(isSoon && b.soon ? b.soon.p : b.ctaP)}</p>
 ${hasInventory ? `        <div class="inv" data-inv hidden>
@@ -635,8 +644,36 @@ function stacyFacts(b) {
       : `Status: NOT leasing yet (${b.eta}). Don't promise a date beyond that.`,
     b.sub,
     ...b.faq.map(([q, a]) => `Q: ${q} A: ${a}`),
+    b.prices && `Rents on this page were seen on ${b.prices.source}${b.prices.basis ? ` (${b.prices.basis})` : ""} on ${b.prices.checked}; give them as recent listed prices, never as a quote or a promise that a unit is open.`,
     `(Page facts last checked ${b.verified || VERIFIED}; published rents are snapshots, not quotes.)`,
   ].filter(Boolean).join(" ");
+}
+
+// A rent on these pages is a claim about today. Every page that states one
+// carries `prices: { checked, source }` — when someone last saw that number on
+// a live listing, and where — and the page prints it under the stats. Past this
+// age the build fails, the same cutoff the live availability strip uses
+// (INVENTORY_MAX_AGE_DAYS in src/lib/microsite-inventory.ts). Urban 22 showed
+// "$2,700+ Recent Low" for three weeks after one-bedrooms were listing at
+// $2,275, and nothing on the page said when $2,700 had been true.
+const PRICE_MAX_AGE_DAYS = 45;
+// "$2,275", "$1,700–4,000": a monthly rent. Not "$6B", "$149M" or "$321M".
+const RENT = /\$\d{1,2},\d{3}/;
+
+function longDate(iso) {
+  return new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+}
+
+function priceNote(b) {
+  // `basis` says what the number is when it isn't bare rent, e.g. the total
+  // with required monthly fees that most leasing sites now quote first.
+  const basis = b.prices.basis ? ` (${b.prices.basis})` : "";
+  return `Rents as listed on ${b.prices.source}${basis}, checked ${longDate(b.prices.checked)}. Prices and availability change daily.`;
+}
+
+function rentText(b) {
+  return [...b.h1, b.sub, b.desc, ...b.ticker, ...b.stats.flat(), ...b.body, ...b.cards.flat(), ...b.faq.flat(), b.ctaP]
+    .filter(Boolean).join(" ");
 }
 
 // First candidate at or under `max` characters, after dropping the "null" hood
@@ -672,27 +709,46 @@ const crossing = [];
 // waitlist is someone noticing — print them on every run rather than letting
 // them be silently unguarded.
 const undated = [];
+const stalePrices = [];
+const undatedPrices = [];
 for (const b of BUILDINGS) {
   const t = tierOf(b);
   if (t === "opened") opened.push(b);
+  if (b.prices && (Date.now() - new Date(b.prices.checked).getTime()) / 86400000 > PRICE_MAX_AGE_DAYS) stalePrices.push(b);
+  if (!b.prices && RENT.test(rentText(b))) undatedPrices.push(b);
   if (t === "soon") crossing.push(b);
   if (b.mode === "waitlist" && !b.delivers) undated.push(b);
   const dir = path.join(ROOT, b.domain);
   fs.mkdirSync(path.join(dir, "img"), { recursive: true });
-  fs.writeFileSync(path.join(dir, "index.html"), page(b));
+  // The sitemap's lastmod used to be the build date, so every regeneration told
+  // Google all 19 pages had changed. It now moves only when the page does.
+  const html = page(b);
+  const htmlFile = path.join(dir, "index.html");
+  const unchanged = fs.existsSync(htmlFile) && fs.readFileSync(htmlFile, "utf8") === html;
+  const prevMod = unchanged && fs.existsSync(path.join(dir, "sitemap.xml"))
+    && (fs.readFileSync(path.join(dir, "sitemap.xml"), "utf8").match(/<lastmod>([\d-]+)<\/lastmod>/) || [])[1];
+  const lastmod = prevMod || TODAY;
+  fs.writeFileSync(htmlFile, html);
   fs.writeFileSync(path.join(dir, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: https://${b.domain}/sitemap.xml\n`);
   fs.writeFileSync(path.join(dir, "sitemap.xml"),
 `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://${b.domain}/</loc>
-    <lastmod>${TODAY}</lastmod>
+    <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 </urlset>
 `);
   fs.writeFileSync(path.join(dir, `${VERIFY}.txt`), VERIFY + "\n");
+  // www.<domain> served the same page with a 200, a second copy of every site
+  // for Google to choose between. The canonical tag points at the apex; this
+  // makes the server say so too.
+  fs.writeFileSync(path.join(dir, "vercel.json"), JSON.stringify({
+    redirects: [{ source: "/:path*", has: [{ type: "host", value: `www.${b.domain}` }],
+      destination: `https://${b.domain}/:path*`, permanent: true }],
+  }, null, 2) + "\n");
   fs.writeFileSync(path.join(dir, ".gitignore"), ".vercel\n");
   // Tab icon and Google's result-page icon. None of the 23 sites had one
   // until 2026-10-02: a generic globe next to every ranking result.
@@ -745,6 +801,18 @@ Promise.all(work).then(() => {
   if (crossing.length) {
     console.log(`\n  Within ${SOON_DAYS} days of delivery — running first-access copy:`);
     for (const b of crossing) console.log(`    · ${b.domain} (${b.name}, ${b.delivers})`);
+  }
+
+  if (undatedPrices.length) {
+    console.error(`\n  ✗ Rents with no check date — add prices:{checked,source} or remove the number:`);
+    for (const b of undatedPrices) console.error(`    · ${b.domain} (${rentText(b).match(RENT)[0]})`);
+    process.exitCode = 1;
+  }
+
+  if (stalePrices.length) {
+    console.error(`\n  ✗ Rents older than ${PRICE_MAX_AGE_DAYS} days — re-check them on a live listing or remove them:`);
+    for (const b of stalePrices) console.error(`    · ${b.domain} (checked ${b.prices.checked})`);
+    process.exitCode = 1;
   }
 
   if (opened.length) {

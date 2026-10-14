@@ -1,0 +1,255 @@
+{
+  "date": "2026-10-13",
+  "days": 30,
+  "rows": [
+    {
+      "domain": "downtown6miami.com",
+      "search": 116,
+      "engaged": 138,
+      "formStarts": 28,
+      "leads": 23,
+      "worked": 16,
+      "statuses": {
+        "new": 7,
+        "contacted": 16
+      }
+    },
+    {
+      "domain": "namdartowers.com",
+      "search": 29,
+      "engaged": 28,
+      "formStarts": 4,
+      "leads": 3,
+      "worked": 2,
+      "statuses": {
+        "new": 1,
+        "contacted": 2
+      }
+    },
+    {
+      "domain": "perrinbrickell.com",
+      "search": 19,
+      "engaged": 25,
+      "formStarts": 7,
+      "leads": 5,
+      "worked": 2,
+      "statuses": {
+        "new": 3,
+        "contacted": 2
+      }
+    },
+    {
+      "domain": "biscayne18.com",
+      "search": 14,
+      "engaged": 19,
+      "formStarts": 2,
+      "leads": 1,
+      "worked": 1,
+      "statuses": {
+        "contacted": 1
+      }
+    },
+    {
+      "domain": "remitheriver.com",
+      "search": 12,
+      "engaged": 17,
+      "formStarts": 2,
+      "leads": 2,
+      "worked": 1,
+      "statuses": {
+        "new": 1,
+        "contacted": 1
+      }
+    },
+    {
+      "domain": "3333biscaynemiami.com",
+      "search": 12,
+      "engaged": 17,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "downtown5miami.com",
+      "search": 9,
+      "engaged": 18,
+      "formStarts": 1,
+      "leads": 1,
+      "worked": 0,
+      "statuses": {
+        "new": 1
+      }
+    },
+    {
+      "domain": "neoedgewatermiami.com",
+      "search": 8,
+      "engaged": 12,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "2900terrace.com",
+      "search": 8,
+      "engaged": 9,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "sentralbrickell.com",
+      "search": 6,
+      "engaged": 6,
+      "formStarts": 1,
+      "leads": 1,
+      "worked": 0,
+      "statuses": {
+        "new": 1
+      }
+    },
+    {
+      "domain": "artplazaapartments.com",
+      "search": 5,
+      "engaged": 13,
+      "formStarts": 1,
+      "leads": 1,
+      "worked": 1,
+      "statuses": {
+        "contacted": 1
+      }
+    },
+    {
+      "domain": "urban22edgewater.com",
+      "search": 4,
+      "engaged": 12,
+      "formStarts": 1,
+      "leads": 1,
+      "worked": 1,
+      "statuses": {
+        "contacted": 1
+      }
+    },
+    {
+      "domain": "kenectmiamiapartments.com",
+      "search": 3,
+      "engaged": 7,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "midtown5apartments.com",
+      "search": 3,
+      "engaged": 6,
+      "formStarts": 1,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "2600biscaynemiami.com",
+      "search": 2,
+      "engaged": 10,
+      "formStarts": 1,
+      "leads": 1,
+      "worked": 0,
+      "statuses": {
+        "new": 1
+      }
+    },
+    {
+      "domain": "panoramatowerbrickell.com",
+      "search": 2,
+      "engaged": 8,
+      "formStarts": 1,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "mohawkmiami.com",
+      "search": 1,
+      "engaged": 8,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "miamiworldtowerapartments.com",
+      "search": 1,
+      "engaged": 6,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "jemmiamiapartments.com",
+      "search": 0,
+      "engaged": 6,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "maizonbrickell.com",
+      "search": 0,
+      "engaged": 6,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "mohawkwynwood.com",
+      "search": 0,
+      "engaged": 5,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "muzemet.com",
+      "search": 0,
+      "engaged": 5,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "jadebrickell.com",
+      "search": 0,
+      "engaged": 4,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "hamiltonhousemiami.com",
+      "search": 0,
+      "engaged": 3,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    },
+    {
+      "domain": "centraltowermiami.com",
+      "search": 0,
+      "engaged": 3,
+      "formStarts": 0,
+      "leads": 0,
+      "worked": 0,
+      "statuses": {}
+    }
+  ]
+}

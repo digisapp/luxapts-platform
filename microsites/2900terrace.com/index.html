@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -194,8 +200,8 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Topped Out · Delivering Q4 2027</span>
-      <h1>324 apartments<br>with wraparound<br>terraces and<br><span class="aqua">home offices.</span></h1>
-      <p class="sub">Oak Row Equities and LNDMRK Development have topped out a 32-story Arquitectonica tower at 401 NE 29th Street. One-, two- and three-bedroom rentals averaging over 1,000 sq ft — no studios, no micro-units.</p>
+      <h1>2900 Terrace:<br>324 Edgewater<br>apartments with<br><span class="aqua">home offices.</span></h1>
+      <p class="sub">A 32-story Arquitectonica tower at 401 NE 29th Street, now topped out. One- to three-bedroom rentals averaging about 1,069 sq ft, with 10-foot ceilings, wraparound terraces and a dedicated home office. Completion is expected in Q4 2027.</p>
       <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
@@ -217,7 +223,7 @@
     <div class="split">
       <div class="reveal">
         <p class="kicker">401 NE 29th Street</p>
-        <h2>Built bigger than the rest of Edgewater</h2>
+        <h2>Room to live and work, in Edgewater</h2>
         <p class="prose">2900 Terrace occupies about 1.5 acres on NE 29th Street, one of the last sizeable undeveloped parcels left in Edgewater. The Shops at Midtown Miami sit a few blocks north, the Design District about a mile up, and Margaret Pace Park and the bay a short walk east.</p>
         <p class="prose">Arquitectonica designed the 32-story, 362-foot tower around unusually large floor plans: 324 one- to three-bedroom residences averaging roughly 1,069 square feet, with 10-foot ceilings, floor-to-ceiling glazing, wraparound balconies and dedicated home offices. Coastal Construction topped it out ahead of a fourth-quarter 2027 completion.</p>
       </div>
@@ -228,27 +234,27 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes 2900 Terrace worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What 2900 Terrace will offer</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>No studios</b><p>The unit mix starts at one bedroom and averages over 1,000 square feet — the opposite of the compact-unit trend running through the rest of the neighborhood.</p></div>
-      <div class="card reveal"><span class="num">02</span><b>Terraces that wrap</b><p>Wraparound balconies and 10-foot ceilings on a 362-foot tower, in a market where a new-construction balcony is usually a ledge.</p></div>
-      <div class="card reveal"><span class="num">03</span><b>Home office, built in</b><p>Dedicated work space inside the floor plan rather than a corner of the bedroom, plus content-creation studios and co-working in the podium.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>No studios, no micro-units</b><p>Every home has at least one bedroom, and the average is over 1,000 square feet, larger than most new rentals in the neighborhood.</p></div>
+      <div class="card reveal"><span class="num">02</span><b>Terraces that wrap</b><p>Wraparound balconies and 10-foot ceilings, where most new Miami balconies are barely big enough for two chairs.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>Home office, built in</b><p>A dedicated workspace inside the floor plan instead of a desk in the bedroom, plus content studios and co-working downstairs.</p></div>
     </div>
   </div>
 </section>
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>2900 Terrace pricing goes to this list before it reaches the listing sites.</p>
+    <p>Be first to see 2900 Terrace pricing and floor plans when they're released.</p>
     <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Edgewater, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at 2900 Terrace</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="2900 Terrace — Rooftop Pool" loading="lazy"><figcaption>Rooftop Pool</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="2900 Terrace — Street Level" loading="lazy"><figcaption>Street Level</figcaption></figure>
@@ -260,9 +266,9 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>When does 2900 Terrace start leasing?</summary><p>The tower has topped out and is tracking to completion in the fourth quarter of 2027. Lease-up pricing is normally released a few months ahead of that — waitlist members are emailed first.</p></details>
-    <details class="reveal"><summary>How much will rent be?</summary><p>Nothing has been published. With an average residence over 1,000 square feet, expect pricing above Edgewater's compact new-construction stock — but the actual numbers go to this list first.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about 2900 Terrace</h2>
+    <details class="reveal"><summary>When does 2900 Terrace start leasing?</summary><p>The tower has topped out and is tracking to completion in the fourth quarter of 2027. Pricing is normally released a few months ahead of that, and you'll be emailed as soon as it is.</p></details>
+    <details class="reveal"><summary>How much will rent be?</summary><p>Nothing has been published. With homes averaging over 1,000 square feet, expect pricing above Edgewater's smaller new apartments. Leave your details and you'll get the actual numbers first.</p></details>
     <details class="reveal"><summary>How big are the apartments?</summary><p>324 residences averaging roughly 1,069 square feet, in one-, two- and three-bedroom layouts with 10-foot ceilings and wraparound terraces.</p></details>
     <details class="reveal"><summary>Where exactly is it?</summary><p>401 NE 29th Street, on a 1.5-acre site in Miami's Edgewater neighborhood, a few blocks south of Midtown.</p></details>
     <details class="reveal"><summary>Who is the developer?</summary><p>Oak Row Equities and LNDMRK Development, with architecture by Arquitectonica and construction by Coastal Construction.</p></details>
@@ -273,9 +279,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#e3eefb">The Waitlist</p>
+        <p class="kicker" style="color:#e3eefb">Early Pricing</p>
         <h2>Get 2900 Terrace pricing first.</h2>
-        <p class="prose">324 large apartments in Edgewater with no published rent and no leasing office to call. Floor plans and pricing — emailed the moment they're released.</p>
+        <p class="prose">324 large apartments in Edgewater with no published rent and no leasing office to call yet. We'll email you floor plans and pricing as soon as they're released.</p>
 
       </div>
       <form data-lead class="reveal">

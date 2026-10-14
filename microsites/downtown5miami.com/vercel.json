@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.downtown5miami.com"
+        }
+      ],
+      "destination": "https://downtown5miami.com/:path*",
+      "permanent": true
+    }
+  ]
+}

@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -163,7 +164,7 @@
     header{padding:12px 0}
     header.scrolled{padding:8px 0}
     header .wrap{gap:12px}
-    header .wordmark{font-size:min(18px,5.51vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
+    header .wordmark{font-size:min(18px,4.97vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
     .nav-cta{flex:none;display:inline-block;line-height:44px;padding:0 16px;font-size:.75rem;letter-spacing:.05em;white-space:nowrap}
     .nav-cta .cta-x{display:none}
     .hero-inner{padding:88px 0 76px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -186,7 +192,7 @@
 <header id="hdr">
   <div class="wrap">
     <a class="wordmark" href="#top">DOWNTOWN<span>5TH</span></a>
-    <a class="nav-cta" href="#signup">Get <span class="cta-x">Current </span>Pricing</a>
+    <a class="nav-cta" href="#signup">Check Pricing<span class="cta-x"> &amp; Availability</span></a>
   </div>
 </header>
 
@@ -194,9 +200,9 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Open · Leasing Now</span>
-      <h1>1,042 apartments<br>in the middle of<br><span class="aqua">Downtown Miami.</span></h1>
-      <p class="sub">Melo Group's twin 52-story towers at 25 and 55 NE 5th Street — the largest multifamily project ever built in Downtown Miami's CBD. Tell us what you need and we'll find what's actually open.</p>
-      <a class="btn btn-aqua" href="#signup">Get Current Pricing</a>
+      <h1>Downtown 5th:<br>1,042 apartments<br>in the heart of<br><span class="aqua">Downtown Miami.</span></h1>
+      <p class="sub">Melo Group's twin 52-story towers at 25 and 55 NE 5th Street, with the Metromover at the door. One- to three-bedroom homes from about 615 sq ft. Tell us what you need and we'll check what's open.</p>
+      <a class="btn btn-aqua" href="#signup">Check Pricing & Availability</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
   </div>
@@ -205,11 +211,12 @@
 
 <div class="stats">
   <div class="wrap">
+    <div class="stat reveal"><b>$2,050+</b><small>1 Beds From</small></div>
+    <div class="stat reveal"><b>$2,975+</b><small>2 Beds From</small></div>
     <div class="stat reveal"><b>1,042</b><small>Residences</small></div>
     <div class="stat reveal"><b>52</b><small>Stories ×2</small></div>
-    <div class="stat reveal"><b>615+</b><small>Sq Ft</small></div>
-    <div class="stat reveal"><b>$1,700+</b><small>Starting Rent</small></div>
   </div>
+  <div class="wrap"><p class="stat-note">Rents as listed on Zillow (base rent, before required fees), checked October 13, 2026. Prices and availability change daily.</p></div>
 </div>
 
 <section id="building">
@@ -219,7 +226,7 @@
         <p class="kicker">25 &amp; 55 NE 5th Street</p>
         <h2>The biggest rental address in the CBD</h2>
         <p class="prose">Downtown 5th is two 52-story towers holding 1,042 apartments and roughly 12,500 square feet of ground-floor retail, directly beside the Metromover's College North station. One-, two- and three-bedroom homes run from about 615 to 1,900 square feet.</p>
-        <p class="prose">It sits in the heart of Downtown's central business district — walking distance to Brickell, Bayside, the Kaseya Center and the Brightline concourse at MiamiCentral. Rents have historically run from roughly $1,700 to $4,000 depending on size and floor.</p>
+        <p class="prose">It sits in the heart of Downtown's central business district, walking distance to Brickell, Bayside, the Kaseya Center and the Brightline station at MiamiCentral. On October 13, 2026, Zillow listed one-bedrooms from about $2,050 a month, two-bedrooms from about $2,975 and three-bedrooms from about $3,600.</p>
       </div>
       <img class="reveal" src="img/split.jpg" alt="Downtown 5th — Downtown Miami, Miami" loading="lazy">
     </div>
@@ -228,27 +235,27 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes Downtown 5th worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What you get at Downtown 5th</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>Scale means availability</b><p>With 1,042 apartments across two towers, something is almost always opening up — the trick is knowing before it's listed.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>Plenty to choose from</b><p>With 1,042 apartments across two towers, something is almost always coming open.</p></div>
       <div class="card reveal"><span class="num">02</span><b>Transit at the door</b><p>The Metromover College North station is at the building; Brightline at MiamiCentral is a short walk.</p></div>
-      <div class="card reveal"><span class="num">03</span><b>Melo pricing</b><p>Melo has consistently leased below flashier downtown competition — one reason the towers filled quickly on opening.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>Walk to work and the game</b><p>Brickell, Bayside and the Kaseya Center are all within walking distance, so a lot of days don't need the car.</p></div>
     </div>
   </div>
 </section>
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Tell us what you need and we'll come back with what's actually open at Downtown 5th.</p>
-    <a class="btn btn-aqua" href="#signup">Get Current Pricing</a>
+    <p>Tell us your bedroom count and move-in date, and we'll send today's prices and what's open at Downtown 5th.</p>
+    <a class="btn btn-aqua" href="#signup">Check Pricing & Availability</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Downtown Miami, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at Downtown 5th</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="Downtown 5th — Resident Lounge" loading="lazy"><figcaption>Resident Lounge</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="Downtown 5th — Kitchens" loading="lazy"><figcaption>Kitchens</figcaption></figure>
@@ -260,9 +267,9 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>Is Downtown 5th currently available?</summary><p>Yes — it's an operating building and units turn over regularly. Tell us your bedroom count and timing and we'll check what's actually open.</p></details>
-    <details class="reveal"><summary>How much is rent?</summary><p>Historically about $1,700 to $4,000 per month depending on size, floor and term. Current pricing moves weekly.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about Downtown 5th</h2>
+    <details class="reveal"><summary>Is Downtown 5th leasing now?</summary><p>Yes. It's an open building and apartments come open regularly. Tell us your bedroom count and move-in date and we'll check what's available.</p></details>
+    <details class="reveal"><summary>How much is rent at Downtown 5th?</summary><p>When we checked Zillow on October 13, 2026, one-bedrooms were listed from about $2,050 a month, two-bedrooms from about $2,975 and three-bedrooms from about $3,600, before required fees. Prices change daily, so send your budget and we'll tell you what fits today.</p></details>
     <details class="reveal"><summary>How big are the apartments?</summary><p>One-, two- and three-bedroom layouts from roughly 615 to 1,900 square feet.</p></details>
     <details class="reveal"><summary>Where exactly is it?</summary><p>25 and 55 NE 5th Street, in Downtown Miami's central business district.</p></details>
   </div>
@@ -272,9 +279,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#d9f5f2">Availability Check</p>
-        <h2>Tell us what you need.</h2>
-        <p class="prose">1,042 apartments means real turnover. Send your bedroom count and move-in window and we'll come back with what's genuinely available.</p>
+        <p class="kicker" style="color:#d9f5f2">Pricing &amp; Availability</p>
+        <h2>Find your apartment at Downtown 5th.</h2>
+        <p class="prose">Tell us your bedroom count, budget and move-in date and we'll come back with what's open at Downtown 5th and what it costs today.</p>
 
       </div>
       <form data-lead class="reveal">
@@ -286,10 +293,10 @@
         <label for="phone">Phone / WhatsApp</label>
         <input id="phone" name="phone" type="tel" required placeholder="+1 305 555 0123" autocomplete="tel" inputmode="tel">
         <label for="unit">Interested in</label>
-        <select id="unit" name="unit_type"><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
+        <select id="unit" name="unit_type"><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
         <label for="movein">Target move-in</label>
         <select id="movein" name="move_in"><option>As soon as possible</option><option>Next 30 days</option><option>Next 60 days</option><option>Next 90 days</option><option>Flexible</option></select>
-        <button class="btn btn-aqua" type="submit">Get Current Pricing</button>
+        <button class="btn btn-aqua" type="submit">Check Pricing & Availability</button>
         <p class="fineprint">Looking more broadly? <a href="https://staycio.com?utm_source=downtown5miami&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
       </form>
     </div>

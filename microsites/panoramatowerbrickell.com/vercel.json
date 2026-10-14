@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.panoramatowerbrickell.com"
+        }
+      ],
+      "destination": "https://panoramatowerbrickell.com/:path*",
+      "permanent": true
+    }
+  ]
+}

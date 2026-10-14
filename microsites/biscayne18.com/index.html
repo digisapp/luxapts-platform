@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -194,13 +200,13 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Permits Filed · Nearing Groundbreaking</span>
-      <h1>1,178 apartments.<br>Twin 46-story<br>towers. One<br><span class="aqua">Edgewater block.</span></h1>
-      <p class="sub">Melo Group's largest project yet — two 46-story towers at 331 NE 18th Street, bringing 1,178 rental homes to Edgewater. Permits are filed. Pricing is years away. The list starts now.</p>
+      <h1>Biscayne 18:<br>1,178 new<br>apartments in<br><span class="aqua">Edgewater.</span></h1>
+      <p class="sub">Melo Group's twin 46-story towers at 331 NE 18th Street will add 1,178 rental homes two blocks from Margaret Pace Park and the bay. Permits are filed and delivery is expected around 2029–2030. Leave your details to get pricing when Melo releases it.</p>
       <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
   </div>
-  <div class="hero-ticker"><div>Twin 46-story towers &nbsp;·&nbsp; 1,178 rental residences &nbsp;·&nbsp; 589 per tower &nbsp;·&nbsp; $321M construction &nbsp;·&nbsp; Permits filed 2026 &nbsp;·&nbsp; Twin 46-story towers &nbsp;·&nbsp; 1,178 rental residences &nbsp;·&nbsp; 589 per tower &nbsp;·&nbsp; $321M construction &nbsp;·&nbsp; Permits filed 2026 &nbsp;·&nbsp; </div></div>
+  <div class="hero-ticker"><div>Twin 46-story towers &nbsp;·&nbsp; 1,178 rental residences &nbsp;·&nbsp; 589 per tower &nbsp;·&nbsp; Two blocks from the bay &nbsp;·&nbsp; Permits filed 2026 &nbsp;·&nbsp; Twin 46-story towers &nbsp;·&nbsp; 1,178 rental residences &nbsp;·&nbsp; 589 per tower &nbsp;·&nbsp; Two blocks from the bay &nbsp;·&nbsp; Permits filed 2026 &nbsp;·&nbsp; </div></div>
 </div>
 
 <div class="stats">
@@ -208,7 +214,7 @@
     <div class="stat reveal"><b>1,178</b><small>Rental Homes</small></div>
     <div class="stat reveal"><b>46</b><small>Stories Each</small></div>
     <div class="stat reveal"><b>2</b><small>Towers</small></div>
-    <div class="stat reveal"><b>$321M</b><small>Construction Cost</small></div>
+    <div class="stat reveal"><b>2 blocks</b><small>To the Bay</small></div>
   </div>
 </div>
 
@@ -217,9 +223,9 @@
     <div class="split">
       <div class="reveal">
         <p class="kicker">331 NE 18th Street</p>
-        <h2>Melo's biggest bet on Edgewater</h2>
-        <p class="prose">Biscayne 18 occupies a 1.57-acre block bounded by Biscayne Boulevard, NE 18th Street, NE 4th Avenue and NE 19th Street — land Melo Group assembled in 2019. Two 46-story towers rise 465 feet above an eight-level parking podium, wrapped in residential units to hide the garage.</p>
-        <p class="prose">The plan totals 1,178 rental apartments, 589 in each tower, alongside roughly 24,930 square feet of ground-floor retail and 1,472 parking spaces. Designed by G3AEC, with construction estimated at $321 million. Margaret Pace Park and the bay are two blocks east.</p>
+        <h2>Two towers, two blocks from the bay</h2>
+        <p class="prose">Biscayne 18 fills a 1.57-acre block bounded by Biscayne Boulevard, NE 18th Street, NE 4th Avenue and NE 19th Street. Two 46-story towers rise 465 feet above an eight-level parking podium, wrapped in apartments so the garage stays out of sight.</p>
+        <p class="prose">The plan has 1,178 rental apartments, 589 in each tower, with roughly 24,930 square feet of shops at street level and 1,472 parking spaces. G3AEC is the architect. Margaret Pace Park and the bay are two blocks east.</p>
       </div>
       <img class="reveal" src="img/split.jpg" alt="Biscayne 18 — Edgewater, Miami" loading="lazy">
     </div>
@@ -228,27 +234,27 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes Biscayne 18 worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What Biscayne 18 will offer</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>The Melo playbook</b><p>The same developer behind Downtown 1st, Downtown 5th, Downtown 6, Art Plaza, Square Station and Melody Towers — known for pricing below flashier competition and leasing up fast.</p></div>
-      <div class="card reveal"><span class="num">02</span><b>Bigger than Downtown 5th</b><p>At 1,178 units, Biscayne 18 would exceed Melo's 1,042-unit Downtown 5th as their largest single development.</p></div>
-      <div class="card reveal"><span class="num">03</span><b>Years ahead of the crowd</b><p>Permits were filed in 2026 and the project is nearing groundbreaking. Nobody is publishing rents yet — that is exactly why this list exists.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>From the developer of Downtown 5th</b><p>Melo Group also built Downtown 1st, Downtown 5th, Art Plaza, Square Station and Melody Towers, and runs its own rental buildings.</p></div>
+      <div class="card reveal"><span class="num">02</span><b>Shops and parking on site</b><p>About 24,930 sq ft of street-level retail and 1,472 parking spaces are part of the plan.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>Pricing as soon as it exists</b><p>No rents have been published, and won't be for some time. Leave your details and you'll get them when Melo releases them.</p></div>
     </div>
   </div>
 </section>
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Biscayne 18 pricing goes to this list before it reaches the listing sites.</p>
+    <p>Be first to see Biscayne 18 pricing and floor plans when they're released.</p>
     <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Edgewater, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at Biscayne 18</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="Biscayne 18 — The Towers" loading="lazy"><figcaption>The Towers</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="Biscayne 18 — Lobby" loading="lazy"><figcaption>Lobby</figcaption></figure>
@@ -260,12 +266,12 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>When will Biscayne 18 be ready?</summary><p>Construction permits were filed in 2026 and the project is nearing groundbreaking. A twin 46-story build typically runs about three years, putting delivery around 2029–2030.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about Biscayne 18</h2>
+    <details class="reveal"><summary>When will Biscayne 18 be ready?</summary><p>Construction permits were filed in 2026 and the project is nearing groundbreaking. Twin 46-story towers typically take about three years to build, which puts delivery around 2029–2030.</p></details>
     <details class="reveal"><summary>Is it rental or condo?</summary><p>Rental. Melo Group builds and holds rental towers, and the filings describe 1,178 rental units.</p></details>
-    <details class="reveal"><summary>How much will rent be?</summary><p>Far too early. For reference, Melo's completed Downtown 5th currently runs roughly $1,700–4,000 per month.</p></details>
+    <details class="reveal"><summary>How much will rent be?</summary><p>Melo hasn't published rents and won't for some time. Leave your details and you'll get them as soon as it does.</p></details>
     <details class="reveal"><summary>Where exactly is it?</summary><p>331 NE 18th Street, on the block bounded by Biscayne Boulevard, NE 18th Street, NE 4th Avenue and NE 19th Street in Edgewater.</p></details>
-    <details class="reveal"><summary>Why sign up this early?</summary><p>Melo lease-ups move quickly and pricing is released with little notice. Waitlist members hear before any listing site does.</p></details>
+    <details class="reveal"><summary>Why sign up this early?</summary><p>Melo releases pricing with little notice, and its lease-ups tend to move quickly. Signing up means you hear as soon as pricing is out.</p></details>
   </div>
 </section>
 
@@ -273,9 +279,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#f6f0de">The Waitlist</p>
-        <h2>Years early. That's the advantage.</h2>
-        <p class="prose">1,178 apartments, two towers, one Edgewater block. We'll email you when Melo releases the first real pricing — long before it reaches the listing sites.</p>
+        <p class="kicker" style="color:#f6f0de">Early Pricing</p>
+        <h2>Get Biscayne 18 pricing first.</h2>
+        <p class="prose">1,178 apartments in two towers on one Edgewater block. We'll email you when Melo releases the first real pricing.</p>
 
       </div>
       <form data-lead class="reveal">

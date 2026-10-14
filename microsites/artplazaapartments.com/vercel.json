@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.artplazaapartments.com"
+        }
+      ],
+      "destination": "https://artplazaapartments.com/:path*",
+      "permanent": true
+    }
+  ]
+}

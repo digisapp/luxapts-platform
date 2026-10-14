@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -194,7 +200,7 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Floor Plans Out · Delivering Feb 2027</span>
-      <h1>Life at the<br>center of<br>Miami<br><span class="aqua">Worldcenter.</span></h1>
+      <h1>Central Tower:<br>new apartments<br>in Miami<br><span class="aqua">Worldcenter.</span></h1>
       <p class="sub">Central Tower is Melo Group's 824-residence rental tower at 46 NE 6th Street, the building first announced as Downtown 6. The floor plans are out: one- to three-bedroom homes from 732 to 1,171 sq ft, every one with a balcony and a full-size washer and dryer.</p>
       <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
@@ -205,11 +211,12 @@
 
 <div class="stats">
   <div class="wrap">
+    <div class="stat reveal"><b>$2,400+</b><small>1 Beds From</small></div>
     <div class="stat reveal"><b>732+</b><small>Sq Ft</small></div>
     <div class="stat reveal"><b>824</b><small>Residences</small></div>
-    <div class="stat reveal"><b>58</b><small>Floors</small></div>
     <div class="stat reveal"><b>Feb '27</b><small>Completion</small></div>
   </div>
+  <div class="wrap"><p class="stat-note">Rents as listed on Apartments.com and Zillow (base rent, before required fees), checked October 13, 2026. Prices and availability change daily.</p></div>
 </div>
 
 <section id="building">
@@ -228,8 +235,8 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes Central Tower worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What Central Tower will offer</h2>
     <div class="cards">
       <div class="card reveal"><span class="num">01</span><b>Pool and jacuzzi</b><p>A large resort-style pool and a jacuzzi on site, so a Saturday in the sun doesn't start with a drive.</p></div>
       <div class="card reveal"><span class="num">02</span><b>A real gym, downstairs</b><p>More than 2,100 sq ft of fitness space, plus a social room, kids' room, business center and a café-market in the building.</p></div>
@@ -240,15 +247,15 @@
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Central Tower pricing goes to this list before it reaches the listing sites.</p>
+    <p>Be first to see Central Tower pricing and floor plans when they're released.</p>
     <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Miami Worldcenter, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at Central Tower</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="Central Tower — Pool Deck" loading="lazy"><figcaption>Pool Deck</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="Central Tower — Fitness Center" loading="lazy"><figcaption>Fitness Center</figcaption></figure>
@@ -260,11 +267,11 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about Central Tower</h2>
     <details class="reveal"><summary>Is Central Tower the same building as Downtown 6?</summary><p>Yes. Downtown 6 was the project's announced name; Melo Group now markets the tower as Central Tower. Same building, same address: 46 NE 6th Street.</p></details>
-    <details class="reveal"><summary>When does Central Tower open?</summary><p>Melo Group lists completion for February 2027. Applications at Melo towers typically open around completion, and this list hears first.</p></details>
+    <details class="reveal"><summary>When does Central Tower open?</summary><p>Melo Group lists completion for February 2027, though some listing sites now show move-in from November 1, 2026. Applications at Melo towers typically open around completion, and you'll hear as soon as they do.</p></details>
     <details class="reveal"><summary>What floor plans are there?</summary><p>One-bedrooms (732 sq ft), one-bedroom-plus-den (792 sq ft), two-bedroom, two-bath homes (878 to 951 sq ft) and three-bedroom, two-bath homes (1,171 sq ft). Melo's published plans don't include studios.</p></details>
-    <details class="reveal"><summary>How much will rent be?</summary><p>Melo hasn't published rents yet. When it does, the numbers and any opening specials go to this list before the listing sites.</p></details>
+    <details class="reveal"><summary>How much will rent be at Central Tower?</summary><p>When we checked on October 13, 2026, Apartments.com and Zillow listed base rents from about $2,400 for a one-bedroom, $2,750 for a one-bedroom plus den, $2,990 for a two-bedroom and $3,800 for a three-bedroom, before fees. Melo hasn't posted prices on its own site yet, so leave your details and we'll confirm today's numbers and any opening specials.</p></details>
     <details class="reveal"><summary>What amenities does it have?</summary><p>A large swimming pool and jacuzzi, a fitness center of more than 2,100 sq ft, a café-market, social room, kids' room, business center and private parking on site.</p></details>
   </div>
 </section>
@@ -274,8 +281,8 @@
     <div class="cta-grid">
       <div class="reveal">
         <p class="kicker" style="color:#fdf0e3">First Access</p>
-        <h2>Central Tower pricing is weeks away.</h2>
-        <p class="prose">Melo lists completion for February 2027, and applications usually open around then. Get the rents, opening specials and first pick of floor plans the day they're released.</p>
+        <h2>Central Tower rents are starting to show.</h2>
+        <p class="prose">Listing sites now show one-bedrooms from about $2,400, while Melo still lists completion for February 2027. Get confirmed pricing, any opening specials and first pick of floor plans as soon as applications open.</p>
 
       </div>
       <form data-lead class="reveal">

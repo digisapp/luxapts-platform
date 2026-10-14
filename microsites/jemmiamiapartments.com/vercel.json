@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.jemmiamiapartments.com"
+        }
+      ],
+      "destination": "https://jemmiamiapartments.com/:path*",
+      "permanent": true
+    }
+  ]
+}

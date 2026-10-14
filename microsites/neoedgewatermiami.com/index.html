@@ -9,11 +9,11 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#0f1724">
 <title>Neo Edgewater Apartments Miami — Rents, Specials &amp; Availability</title>
-<meta name="description" content="Neo Edgewater at 2600 Biscayne Blvd: 399 apartments preleasing from about $2,727, Equinox in the building, first residents October 2026. Check availability.">
+<meta name="description" content="Neo Edgewater at 2600 Biscayne Blvd: 399 apartments from about $2,817, an Equinox in the building and one month free on 14–18 month leases.">
 <link rel="canonical" href="https://neoedgewatermiami.com/">
 <link rel="preload" as="image" href="img/hero.jpg" fetchpriority="high">
-<meta property="og:title" content="Neo Edgewater — Now Preleasing, Edgewater Miami">
-<meta property="og:description" content="Neo Edgewater at 2600 Biscayne Blvd: 399 apartments preleasing from about $2,727, Equinox in the building, first residents October 2026. Check availability.">
+<meta property="og:title" content="Neo Edgewater — Now Leasing, Edgewater Miami">
+<meta property="og:description" content="Neo Edgewater at 2600 Biscayne Blvd: 399 apartments from about $2,817, an Equinox in the building and one month free on 14–18 month leases.">
 <meta property="og:image" content="https://neoedgewatermiami.com/img/hero.jpg">
 <meta property="og:url" content="https://neoedgewatermiami.com/">
 <meta property="og:type" content="website">
@@ -26,7 +26,7 @@
   "@context": "https://schema.org",
   "@type": "ApartmentComplex",
   "name": "Neo Edgewater",
-  "description": "Neo Edgewater at 2600 Biscayne Blvd: 399 apartments preleasing from about $2,727, Equinox in the building, first residents October 2026. Check availability.",
+  "description": "Neo Edgewater at 2600 Biscayne Blvd: 399 apartments from about $2,817, an Equinox in the building and one month free on 14–18 month leases.",
   "image": "https://neoedgewatermiami.com/img/hero.jpg",
   "address": {
     "@type": "PostalAddress",
@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -163,7 +164,7 @@
     header{padding:12px 0}
     header.scrolled{padding:8px 0}
     header .wrap{gap:12px}
-    header .wordmark{font-size:min(18px,5.05vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
+    header .wordmark{font-size:min(18px,4.56vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
     .nav-cta{flex:none;display:inline-block;line-height:44px;padding:0 16px;font-size:.75rem;letter-spacing:.05em;white-space:nowrap}
     .nav-cta .cta-x{display:none}
     .hero-inner{padding:88px 0 76px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -186,30 +192,31 @@
 <header id="hdr">
   <div class="wrap">
     <a class="wordmark" href="#top">NEO<span>EDGEWATER</span></a>
-    <a class="nav-cta" href="#signup">Get <span class="cta-x">Current </span>Pricing</a>
+    <a class="nav-cta" href="#signup">Check Pricing<span class="cta-x"> &amp; Availability</span></a>
   </div>
 </header>
 
 <div class="hero" id="top">
   <div class="wrap">
     <div class="hero-inner">
-      <span class="chip">Preleasing · First Residents October 2026</span>
-      <h1>Miami's newest<br>41-story rental<br>just opened its<br><span class="aqua">leasing office.</span></h1>
-      <p class="sub">Neo Edgewater started preleasing in September 2026 at 2600 Biscayne Boulevard — 399 residences of roughly 500 to 1,700 sq ft, an Equinox in the building, and the first move-ins in October.</p>
-      <a class="btn btn-aqua" href="#signup">Get Current Pricing</a>
+      <span class="chip">Open · Leasing Now</span>
+      <h1>Neo Edgewater:<br>a brand-new<br>41-story rental,<br><span class="aqua">leasing now.</span></h1>
+      <p class="sub">Neo Edgewater is leasing at 2600 Biscayne Boulevard: studios to three-bedrooms of roughly 500 to 1,700 sq ft, an Equinox in the building and pool decks on the 14th and 42nd floors.</p>
+      <a class="btn btn-aqua" href="#signup">Check Pricing & Availability</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
   </div>
-  <div class="hero-ticker"><div>399 residences &nbsp;·&nbsp; 41 stories &nbsp;·&nbsp; 500–1,700 sq ft &nbsp;·&nbsp; Equinox fitness club &nbsp;·&nbsp; Pool decks on 14 and 42 &nbsp;·&nbsp; First residents October 2026 &nbsp;·&nbsp; 399 residences &nbsp;·&nbsp; 41 stories &nbsp;·&nbsp; 500–1,700 sq ft &nbsp;·&nbsp; Equinox fitness club &nbsp;·&nbsp; Pool decks on 14 and 42 &nbsp;·&nbsp; First residents October 2026 &nbsp;·&nbsp; </div></div>
+  <div class="hero-ticker"><div>399 residences &nbsp;·&nbsp; 41 stories &nbsp;·&nbsp; 500–1,700 sq ft &nbsp;·&nbsp; Equinox fitness club &nbsp;·&nbsp; Pool decks on 14 and 42 &nbsp;·&nbsp; One month free on 14–18 month leases &nbsp;·&nbsp; 399 residences &nbsp;·&nbsp; 41 stories &nbsp;·&nbsp; 500–1,700 sq ft &nbsp;·&nbsp; Equinox fitness club &nbsp;·&nbsp; Pool decks on 14 and 42 &nbsp;·&nbsp; One month free on 14–18 month leases &nbsp;·&nbsp; </div></div>
 </div>
 
 <div class="stats">
   <div class="wrap">
-    <div class="stat reveal"><b>$2,727+</b><small>Studios From</small></div>
+    <div class="stat reveal"><b>$2,817+</b><small>Studios From</small></div>
     <div class="stat reveal"><b>$3,742+</b><small>1 Beds From</small></div>
-    <div class="stat reveal"><b>399</b><small>Residences</small></div>
+    <div class="stat reveal"><b>1 month</b><small>Free on 14–18 mo</small></div>
     <div class="stat reveal"><b>41</b><small>Stories</small></div>
   </div>
+  <div class="wrap"><p class="stat-note">Rents as listed on the leasing office's online availability (total monthly price including required fees), checked October 13, 2026. Prices and availability change daily.</p></div>
 </div>
 
 <section id="building">
@@ -217,9 +224,9 @@
     <div class="split">
       <div class="reveal">
         <p class="kicker">2600 Biscayne Boulevard</p>
-        <h2>A lease-up is the cheapest a new building ever is</h2>
+        <h2>Move in while the opening specials last</h2>
         <p class="prose">Neo Edgewater is the residential half of Oak Row Equities' 41-story Arquitectonica tower on Biscayne Boulevard, with Bozzuto running leasing and the first residents moving in from October 2026. Studios, one-, two- and three-bedroom residences run roughly 500 to 1,700 square feet, with interiors by Vida Design.</p>
-        <p class="prose">The amenity floors are stacked rather than clustered: a wrap-around pool deck on the 14th floor, a rooftop deck on the 42nd, a multi-level Equinox fitness club, co-working space and weekend access to a padel court. Published starting rents are about $2,727 for a studio, $3,742 for a one-bedroom and $5,792 for two bedrooms and up.</p>
+        <p class="prose">The amenity floors are stacked rather than clustered: a wrap-around pool deck on the 14th floor, a rooftop deck on the 42nd, a multi-level Equinox fitness club, co-working space and weekend access to a padel court. On October 13, 2026, studios were listed from about $2,817 a month, one-bedrooms from about $3,742 and two-bedrooms from about $5,852, including required fees.</p>
       </div>
       <img class="reveal" src="img/split.jpg" alt="Neo Edgewater — Edgewater, Miami" loading="lazy">
     </div>
@@ -228,10 +235,10 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes Neo Edgewater worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What you get at Neo Edgewater</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>Lease-up pricing</b><p>Opening concessions exist to fill 399 apartments quickly, and they shrink as the building fills. A month free on 14–18 month terms was advertised during preleasing.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>One month free</b><p>On October 13, 2026, the leasing office advertised one month free on 14–18 month leases, with restrictions. Lease-up specials usually shrink as the building fills.</p></div>
       <div class="card reveal"><span class="num">02</span><b>Equinox downstairs</b><p>A multi-level Equinox inside the building. Anywhere else in Edgewater that is a separate membership and a walk.</p></div>
       <div class="card reveal"><span class="num">03</span><b>Two pool decks</b><p>A wrap-around deck on the 14th floor and a roof deck on the 42nd — the difference between an afternoon in the sun and the view over the bay.</p></div>
     </div>
@@ -240,15 +247,15 @@
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Tell us what you need and we'll come back with what's actually open at Neo Edgewater.</p>
-    <a class="btn btn-aqua" href="#signup">Get Current Pricing</a>
+    <p>Tell us your bedroom count and move-in date, and we'll send today's prices and what's open at Neo Edgewater.</p>
+    <a class="btn btn-aqua" href="#signup">Check Pricing & Availability</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Edgewater, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at Neo Edgewater</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="Neo Edgewater — Pool Deck" loading="lazy"><figcaption>Pool Deck</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="Neo Edgewater — Residences" loading="lazy"><figcaption>Residences</figcaption></figure>
@@ -260,10 +267,10 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>Is Neo Edgewater leasing right now?</summary><p>Yes. Preleasing launched in September 2026 and the first residents move in from October 2026, so inventory releases in waves rather than all at once.</p></details>
-    <details class="reveal"><summary>How much is rent at Neo Edgewater?</summary><p>Published starting rents are around $2,727 for studios, $3,742 for one-bedrooms and $5,792 for two bedrooms and up. Lease-up numbers move with each release — send your bedroom count and we'll check today's.</p></details>
-    <details class="reveal"><summary>Are there move-in specials?</summary><p>A month free on 14–18 month leases was advertised during preleasing, with restrictions. Concessions on a lease-up change as the building fills, which is the reason to ask early rather than late.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about Neo Edgewater</h2>
+    <details class="reveal"><summary>Is Neo Edgewater leasing right now?</summary><p>Yes. Leasing opened in September 2026 and residents began moving in from October. On October 13, 2026, more than 130 apartments were listed as available.</p></details>
+    <details class="reveal"><summary>How much is rent at Neo Edgewater?</summary><p>When we checked on October 13, 2026, studios were listed from about $2,817 a month, one-bedrooms from about $3,742, two-bedrooms from about $5,852 and three-bedrooms from about $8,302, including required monthly fees. Lease-up prices move with each release, so send your bedroom count and we'll check today's.</p></details>
+    <details class="reveal"><summary>Are there move-in specials?</summary><p>On October 13, 2026, one month free on 14–18 month leases was advertised, with restrictions. Specials on a new building change as it fills, so ask and we'll check what's on today.</p></details>
     <details class="reveal"><summary>Where is Neo Edgewater?</summary><p>2600 Biscayne Boulevard, in Miami's Edgewater neighborhood — a short walk from Margaret Pace Park and the bay, with Midtown and Wynwood just west.</p></details>
     <details class="reveal"><summary>Who built it?</summary><p>Oak Row Equities, with architecture by Arquitectonica, interiors by Vida Design and residential leasing by Bozzuto.</p></details>
   </div>
@@ -273,8 +280,8 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#e6eaff">Availability Check</p>
-        <h2>See what's open, and what it actually costs.</h2>
+        <p class="kicker" style="color:#e6eaff">Pricing &amp; Availability</p>
+        <h2>Find your apartment at Neo Edgewater.</h2>
         <p class="prose">399 apartments releasing in waves, with concessions that change as floors fill. Tell us the bedroom count, budget and timing and we'll come back with what's available now.</p>
 
       </div>
@@ -290,7 +297,7 @@
         <select id="unit" name="unit_type"><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
         <label for="movein">Target move-in</label>
         <select id="movein" name="move_in"><option>As soon as possible</option><option>Next 30 days</option><option>Next 60 days</option><option>Flexible</option></select>
-        <button class="btn btn-aqua" type="submit">Get Current Pricing</button>
+        <button class="btn btn-aqua" type="submit">Check Pricing & Availability</button>
         <p class="fineprint">Looking more broadly? <a href="https://staycio.com?utm_source=neoedgewatermiami&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
       </form>
     </div>

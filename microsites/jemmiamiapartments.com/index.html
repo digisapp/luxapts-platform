@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -194,8 +200,8 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Under Construction · Rentals Delivering Q4 2027</span>
-      <h1>530 rental homes<br>inside Miami<br>Worldcenter's<br><span class="aqua">tallest tower.</span></h1>
-      <p class="sub">Naftali Group's 67-story JEM rises over the $6B Worldcenter district. Floors 10 through 42 are rentals — and nobody is marketing them yet.</p>
+      <h1>Rent at JEM,<br>the 67-story tower<br>in Miami<br><span class="aqua">Worldcenter.</span></h1>
+      <p class="sub">Floors 10 to 42 of Naftali Group's JEM are 530 rental apartments, a few blocks from Brightline, the Kaseya Center and Bayside. Rentals are scheduled for Q4 2027, and rents haven't been published yet.</p>
       <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
@@ -217,9 +223,9 @@
     <div class="split">
       <div class="reveal">
         <p class="kicker">1016 NE 2nd Avenue</p>
-        <h2>The rental half of Miami's next landmark</h2>
-        <p class="prose">JEM rises more than 700 feet over Miami Worldcenter, the 27-acre, $6 billion district that reshaped the north end of Downtown. Brightline at MiamiCentral, the Kaseya Center and Bayside are all within a few blocks.</p>
-        <p class="prose">The tower splits in two: 259 condominiums occupy the upper floors, while floors 10 through 42 hold 530 purpose-built rental apartments. Developer marketing so far has focused almost entirely on the condos — which is why rental pricing is so hard to find.</p>
+        <h2>Rentals in the middle of Miami Worldcenter</h2>
+        <p class="prose">JEM rises more than 700 feet over Miami Worldcenter, the district that reshaped the north end of Downtown. Brightline at MiamiCentral, the Kaseya Center and Bayside are all within a few blocks.</p>
+        <p class="prose">The tower is split in two: 259 condominiums for sale on the upper floors, and 530 rental apartments on floors 10 through 42. So far Naftali's marketing has covered only the condos, which is why rental pricing isn't public yet.</p>
       </div>
       <img class="reveal" src="img/split.jpg" alt="JEM Miami Worldcenter — Miami Worldcenter, Miami" loading="lazy">
     </div>
@@ -228,27 +234,27 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes JEM Miami Worldcenter worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What JEM Miami Worldcenter will offer</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>Rentals, not resale</b><p>Floors 10–42 are institutional rental stock leased by one operator — not individually owned condos sublet at owner discretion.</p></div>
-      <div class="card reveal"><span class="num">02</span><b>Worldcenter at the door</b><p>Retail, restaurants and the Brightline concourse are inside the district, not a drive away.</p></div>
-      <div class="card reveal"><span class="num">03</span><b>Ahead of the announcement</b><p>Rental pricing for JEM has not been published anywhere. The waitlist is how you see it first.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>One landlord, not 530 owners</b><p>The rental floors are run by one management company, so you're not renting a condo from an individual owner who can sell or move back in.</p></div>
+      <div class="card reveal"><span class="num">02</span><b>Worldcenter at your door</b><p>Restaurants, shops and the Brightline station are inside the district, a short walk from the lobby.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>See rents before they're advertised</b><p>JEM's rental pricing hasn't been published anywhere. Leave your details and you'll get it as soon as it is.</p></div>
     </div>
   </div>
 </section>
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>JEM Miami Worldcenter pricing goes to this list before it reaches the listing sites.</p>
+    <p>Be first to see JEM Miami Worldcenter pricing and floor plans when they're released.</p>
     <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Miami Worldcenter, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at JEM Miami Worldcenter</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="JEM Miami Worldcenter — Residences" loading="lazy"><figcaption>Residences</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="JEM Miami Worldcenter — Rooftop Pool" loading="lazy"><figcaption>Rooftop Pool</figcaption></figure>
@@ -260,8 +266,8 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>When do JEM rentals start leasing?</summary><p>Construction is tracking to Q4 2027. Rental lease-up typically begins as the building tops out and finishes — waitlist members are notified when pricing is released.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about JEM Miami Worldcenter</h2>
+    <details class="reveal"><summary>When do JEM rentals start leasing?</summary><p>Construction is tracking to Q4 2027. Rental leasing usually starts as a building nears completion, and you'll be notified as soon as pricing is released.</p></details>
     <details class="reveal"><summary>Is this the condo tower?</summary><p>Both. Floors 43 and above are JEM Private Residences condominiums for sale. Floors 10–42 are the 530 rental apartments this page covers.</p></details>
     <details class="reveal"><summary>How much will rent be?</summary><p>Not yet published. Naftali's marketing to date has covered the condos only.</p></details>
     <details class="reveal"><summary>Who is the developer?</summary><p>Naftali Group, a New York developer, building at 1016 NE 2nd Avenue within Miami Worldcenter.</p></details>
@@ -272,9 +278,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#f7f0dc">The Waitlist</p>
-        <h2>See rental pricing first.</h2>
-        <p class="prose">530 rental homes with no public pricing anywhere. Floor plans and rents — emailed the moment Naftali releases them.</p>
+        <p class="kicker" style="color:#f7f0dc">Early Pricing</p>
+        <h2>Get JEM rental pricing first.</h2>
+        <p class="prose">530 rental homes with no public pricing yet. We'll email you floor plans and rents as soon as Naftali releases them.</p>
 
       </div>
       <form data-lead class="reveal">

@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.mohawkmiami.com"
+        }
+      ],
+      "destination": "https://mohawkmiami.com/:path*",
+      "permanent": true
+    }
+  ]
+}

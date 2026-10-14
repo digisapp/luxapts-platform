@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -163,7 +164,7 @@
     header{padding:12px 0}
     header.scrolled{padding:8px 0}
     header .wrap{gap:12px}
-    header .wordmark{font-size:min(18px,8.66vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
+    header .wordmark{font-size:min(18px,7.82vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
     .nav-cta{flex:none;display:inline-block;line-height:44px;padding:0 16px;font-size:.75rem;letter-spacing:.05em;white-space:nowrap}
     .nav-cta .cta-x{display:none}
     .hero-inner{padding:88px 0 76px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -186,7 +192,7 @@
 <header id="hdr">
   <div class="wrap">
     <a class="wordmark" href="#top">URBAN<span>22</span></a>
-    <a class="nav-cta" href="#signup">Get <span class="cta-x">Current </span>Pricing</a>
+    <a class="nav-cta" href="#signup">Check Pricing<span class="cta-x"> &amp; Availability</span></a>
   </div>
 </header>
 
@@ -194,22 +200,23 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Open · Leasing Now</span>
-      <h1>441 apartments,<br>every one with<br>a private<br><span class="aqua">balcony.</span></h1>
-      <p class="sub">Melo Group's Urban 22 at 2222 NE 2nd Avenue opened in 2023 — one- to three-bedroom homes of roughly 640 to 1,370 sq ft, each with a glass-railed balcony, a few blocks from Margaret Pace Park. Tell us what you need and we'll find what's actually open.</p>
-      <a class="btn btn-aqua" href="#signup">Get Current Pricing</a>
+      <h1>Urban 22:<br>Edgewater apartments<br>with a balcony<br><span class="aqua">in every home.</span></h1>
+      <p class="sub">One- to three-bedroom apartments of roughly 640 to 1,370 sq ft at 2222 NE 2nd Avenue, a few blocks from Margaret Pace Park, with a pool, a 2,100 sq ft gym and a market café downstairs.</p>
+      <a class="btn btn-aqua" href="#signup">Check Pricing & Availability</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
   </div>
-  <div class="hero-ticker"><div>Opened 2023 &nbsp;·&nbsp; 441 residences &nbsp;·&nbsp; 640–1,370 sq ft &nbsp;·&nbsp; Private balcony in every home &nbsp;·&nbsp; Leasing now &nbsp;·&nbsp; Opened 2023 &nbsp;·&nbsp; 441 residences &nbsp;·&nbsp; 640–1,370 sq ft &nbsp;·&nbsp; Private balcony in every home &nbsp;·&nbsp; Leasing now &nbsp;·&nbsp; </div></div>
+  <div class="hero-ticker"><div>Opened 2023 &nbsp;·&nbsp; 441 residences &nbsp;·&nbsp; 1, 2 & 3 bedrooms &nbsp;·&nbsp; 640–1,370 sq ft &nbsp;·&nbsp; Pool, gym & market café &nbsp;·&nbsp; Leasing now &nbsp;·&nbsp; Opened 2023 &nbsp;·&nbsp; 441 residences &nbsp;·&nbsp; 1, 2 & 3 bedrooms &nbsp;·&nbsp; 640–1,370 sq ft &nbsp;·&nbsp; Pool, gym & market café &nbsp;·&nbsp; Leasing now &nbsp;·&nbsp; </div></div>
 </div>
 
 <div class="stats">
   <div class="wrap">
+    <div class="stat reveal"><b>$2,275+</b><small>1 Beds From</small></div>
+    <div class="stat reveal"><b>$2,950+</b><small>2 Beds From</small></div>
+    <div class="stat reveal"><b>$3,700+</b><small>3 Beds From</small></div>
     <div class="stat reveal"><b>441</b><small>Residences</small></div>
-    <div class="stat reveal"><b>$2,700+</b><small>Recent Low</small></div>
-    <div class="stat reveal"><b>100%</b><small>With Balconies</small></div>
-    <div class="stat reveal"><b>2023</b><small>Opened</small></div>
   </div>
+  <div class="wrap"><p class="stat-note">Rents as listed on Zillow and Redfin (base rent, before required fees), checked October 13, 2026. Prices and availability change daily.</p></div>
 </div>
 
 <section id="building">
@@ -217,9 +224,9 @@
     <div class="split">
       <div class="reveal">
         <p class="kicker">2222 NE 2nd Avenue</p>
-        <h2>Bigger floor plans than the tower next door</h2>
-        <p class="prose">Urban 22 holds 441 rental apartments across twin 15-story buildings: 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms, from roughly 640 to 1,370 square feet. Every home has a private balcony with glass railings.</p>
-        <p class="prose">The building sits on NE 2nd Avenue in Edgewater, a few blocks from Margaret Pace Park and the bay, with Midtown and Wynwood immediately west. Downstairs: about 7,000 square feet of retail, a 2,100 sq ft fitness center, a lounge with market café, and a pool and jacuzzi deck, with 529 parking spaces behind.</p>
+        <h2>Room to spread out in Edgewater</h2>
+        <p class="prose">Urban 22 is two 15-story buildings with 441 rental apartments: 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms, from roughly 640 to 1,370 square feet. Every apartment has its own glass-railed balcony.</p>
+        <p class="prose">Downstairs there's a pool and jacuzzi deck, a 2,100 sq ft fitness center, a lounge with a market café, about 7,000 sq ft of shops and 529 parking spaces. Margaret Pace Park and the bay are a few blocks east, with Midtown and Wynwood just to the west.</p>
       </div>
       <img class="reveal" src="img/split.jpg" alt="Urban 22 — Edgewater, Miami" loading="lazy">
     </div>
@@ -228,27 +235,27 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes Urban 22 worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What you get at Urban 22</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>Space you can't find new</b><p>At up to 1,370 sq ft, Urban 22's two- and three-bedrooms run larger than most new Miami construction, where studios under 500 sq ft are the norm.</p></div>
-      <div class="card reveal"><span class="num">02</span><b>Balcony in every home</b><p>Not a select-units amenity — all 441 residences have private outdoor space.</p></div>
-      <div class="card reveal"><span class="num">03</span><b>Melo pricing</b><p>The developer behind Downtown 5th and Art Plaza has a long record of leasing below comparable new construction; Urban 22 has listed from about $2,700.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>Bigger two- and three-bedrooms</b><p>At up to 1,370 sq ft, the larger layouts give you more room than most new Miami buildings, where studios under 500 sq ft are common.</p></div>
+      <div class="card reveal"><span class="num">02</span><b>Pool, gym and café downstairs</b><p>A pool and jacuzzi deck, a 2,100 sq ft fitness center and a lounge with a market café, without leaving the building.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>Edgewater rents</b><p>One-bedrooms were listed from about $2,275 a month on October 13, 2026. Tell us your budget and we'll tell you what fits.</p></div>
     </div>
   </div>
 </section>
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Tell us what you need and we'll come back with what's actually open at Urban 22.</p>
-    <a class="btn btn-aqua" href="#signup">Get Current Pricing</a>
+    <p>Tell us your bedroom count and move-in date, and we'll send today's prices and what's open at Urban 22.</p>
+    <a class="btn btn-aqua" href="#signup">Check Pricing & Availability</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Edgewater, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at Urban 22</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="Urban 22 — Pool Deck" loading="lazy"><figcaption>Pool Deck</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="Urban 22 — Residences" loading="lazy"><figcaption>Residences</figcaption></figure>
@@ -260,11 +267,12 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>Is Urban 22 currently available?</summary><p>Yes — it opened in 2023 and units turn over regularly. Tell us your bedroom count and timing and we'll check what's actually open.</p></details>
-    <details class="reveal"><summary>How much is rent?</summary><p>Recent public listings have started around $2,700 a month, rising with size and floor. Pricing moves weekly — send your budget and we'll tell you what fits today.</p></details>
-    <details class="reveal"><summary>How big are the apartments?</summary><p>Roughly 640 to 1,370 square feet — 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms.</p></details>
-    <details class="reveal"><summary>Where exactly is it?</summary><p>2222 NE 2nd Avenue in Miami's Edgewater neighborhood, between Midtown and Margaret Pace Park.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about Urban 22</h2>
+    <details class="reveal"><summary>Is Urban 22 leasing now?</summary><p>Yes. It opened in 2023 and apartments come open regularly. Tell us your bedroom count and move-in date and we'll check what's available.</p></details>
+    <details class="reveal"><summary>How much is rent at Urban 22?</summary><p>When we checked Zillow and Redfin on October 13, 2026, one-bedrooms were listed from about $2,275 a month, one-bedrooms with a den from about $2,450, two-bedrooms from about $2,950 and three-bedrooms from about $3,700, before required fees. Prices change daily with size and floor, so send your budget and we'll tell you what fits today.</p></details>
+    <details class="reveal"><summary>How big are the apartments?</summary><p>Roughly 640 to 1,370 square feet: 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms.</p></details>
+    <details class="reveal"><summary>What amenities are there?</summary><p>A pool and jacuzzi deck, a 2,100 sq ft fitness center, a lounge with a market café, ground-floor shops and on-site parking.</p></details>
+    <details class="reveal"><summary>Where is Urban 22?</summary><p>2222 NE 2nd Avenue in Miami's Edgewater neighborhood, between Midtown and Margaret Pace Park.</p></details>
   </div>
 </section>
 
@@ -272,9 +280,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#e6ebff">Availability Check</p>
-        <h2>Tell us what you need.</h2>
-        <p class="prose">441 balconied apartments means real turnover. Send your bedroom count and move-in window and we'll come back with what's genuinely available at Urban 22.</p>
+        <p class="kicker" style="color:#e6ebff">Pricing &amp; Availability</p>
+        <h2>Find your apartment at Urban 22.</h2>
+        <p class="prose">Tell us your bedroom count, budget and move-in date. We'll come back with what's open at Urban 22 and what it costs today.</p>
 
       </div>
       <form data-lead class="reveal">
@@ -289,7 +297,7 @@
         <select id="unit" name="unit_type"><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>Not sure yet</option></select>
         <label for="movein">Target move-in</label>
         <select id="movein" name="move_in"><option>As soon as possible</option><option>Next 30 days</option><option>Next 60 days</option><option>Next 90 days</option><option>Flexible</option></select>
-        <button class="btn btn-aqua" type="submit">Get Current Pricing</button>
+        <button class="btn btn-aqua" type="submit">Check Pricing & Availability</button>
         <p class="fineprint">Looking more broadly? <a href="https://staycio.com?utm_source=urban22edgewater&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
       </form>
     </div>

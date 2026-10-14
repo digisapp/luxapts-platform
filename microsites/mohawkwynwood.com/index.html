@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -194,8 +200,8 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Under Construction · Delivering 2028</span>
-      <h1>300 loft-style<br>apartments on the<br>north edge of<br><span class="aqua">Wynwood.</span></h1>
-      <p class="sub">Rilea Group's Mohawk at Wynwood brings Chicago brick, industrial steel and 30,000 sq ft of retail to NE 29th Street. Nothing is leasing yet, and nobody has published a rent.</p>
+      <h1>Mohawk at Wynwood:<br>300 loft-style<br>rentals on the<br><span class="aqua">edge of Wynwood.</span></h1>
+      <p class="sub">300 brick-and-steel rentals by Rilea Group at 56 NE 29th Street, where Wynwood meets Edgewater, with shops and restaurants at street level. Completion is set for 2028.</p>
       <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
@@ -228,27 +234,27 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes Mohawk at Wynwood worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What Mohawk at Wynwood will offer</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>Lanai homes</b><p>Ground-connected residences with private outdoor yards — rare in a Miami rental building, and usually the first thing claimed.</p></div>
-      <div class="card reveal"><span class="num">02</span><b>Wynwood without the sublet</b><p>300 institutionally managed rentals under one operator. Most of what is advertised in Wynwood today is an individual condo owner's unit on a one-year gamble.</p></div>
-      <div class="card reveal"><span class="num">03</span><b>Retail that opens with it</b><p>Rilea is selling the 30,000 sq ft of ground-floor retail rather than leasing it, and about a third was spoken for during construction — so the street level should arrive with the building, not years after.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>Lanai homes</b><p>Ground-floor homes with their own private outdoor yards: rare in a Miami rental building, and usually the first to go.</p></div>
+      <div class="card reveal"><span class="num">02</span><b>One landlord, not a condo owner</b><p>All 300 homes are rentals run by one management company. Much of what's advertised in Wynwood today is an individual owner's condo on a one-year lease.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>Shops that open with it</b><p>About a third of the 30,000 sq ft of street-level retail was already spoken for during construction, so the shops and restaurants should arrive with the building, not years later.</p></div>
     </div>
   </div>
 </section>
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Mohawk at Wynwood pricing goes to this list before it reaches the listing sites.</p>
+    <p>Be first to see Mohawk at Wynwood pricing and floor plans when they're released.</p>
     <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Wynwood, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at Mohawk at Wynwood</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="Mohawk at Wynwood — Street Elevation" loading="lazy"><figcaption>Street Elevation</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="Mohawk at Wynwood — The Paseo" loading="lazy"><figcaption>The Paseo</figcaption></figure>
@@ -260,9 +266,9 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>When does Mohawk at Wynwood start leasing?</summary><p>Construction is financed and underway, with completion set for 2028. Lease-up usually opens as a building tops out — waitlist members are emailed the day pricing is published.</p></details>
-    <details class="reveal"><summary>How much will rent be?</summary><p>Nothing has been published. Rilea has released no rents, floor plans or leasing site for Mohawk, which is exactly why this list exists.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about Mohawk at Wynwood</h2>
+    <details class="reveal"><summary>When does Mohawk at Wynwood start leasing?</summary><p>Construction is financed and underway, with completion set for 2028. Leasing usually opens as a building nears completion, and you'll get an email the day pricing is published.</p></details>
+    <details class="reveal"><summary>How much will rent be?</summary><p>Nothing has been published. Rilea hasn't released rents, floor plans or a leasing site for Mohawk yet. Leave your details and you'll get them first.</p></details>
     <details class="reveal"><summary>What is a lanai unit?</summary><p>A ground-connected residence with its own private outdoor space — a small yard rather than a balcony. Mohawk includes a set of them at the base of the building.</p></details>
     <details class="reveal"><summary>Where exactly is it?</summary><p>A 1.5-acre site at 56 NE 29th Street, on the northern edge of the Wynwood Arts District at the Edgewater line.</p></details>
     <details class="reveal"><summary>Who is the developer?</summary><p>Rilea Group, a Miami developer led by Alan and Diego Ojeda, with architecture by Deforma Studio and RADYCA and construction by Coastal Construction.</p></details>
@@ -273,9 +279,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#fde9de">The Waitlist</p>
-        <h2>Be on the list before the rents exist.</h2>
-        <p class="prose">300 apartments with no published pricing anywhere and no leasing office to call. Floor plans and rents — emailed the day Rilea releases them.</p>
+        <p class="kicker" style="color:#fde9de">Early Pricing</p>
+        <h2>Get Mohawk at Wynwood pricing first.</h2>
+        <p class="prose">300 apartments with no published pricing and no leasing office to call yet. We'll email you floor plans and rents the day Rilea releases them.</p>
 
       </div>
       <form data-lead class="reveal">

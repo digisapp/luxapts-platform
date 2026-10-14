@@ -31,6 +31,7 @@ const BUILDINGS = [
     hood: "Edgewater", address: "2600 Biscayne Blvd", zip: "33137", units: 399, stories: 41,
     developer: "Oak Row Equities", eta: "Leasing now", etaShort: "Now", year: 2026,
     verified: "2026-09-21",
+    prices: { checked: "2026-10-13", source: "the leasing office's online availability", basis: "total monthly price including required fees" },
     // Overridden because neoedgewatermiami.com is the same building; these
     // target the address search, that page the brand search.
     title: "2600 Biscayne Miami — Now Leasing as Neo Edgewater | Rents",
@@ -40,7 +41,7 @@ const BUILDINGS = [
     h1: ["The tower at", "2600 Biscayne", "is leasing.", "It's called Neo."],
     sub: "Oak Row Equities' 41-story Arquitectonica tower opened preleasing in September 2026 as Neo Edgewater — 399 rentals over roughly 205,000 sq ft of Class A office and retail, with the first residents moving in from October.",
     ticker: ["399 residences","41 stories","205k sq ft office & retail","Equinox in the building","First residents October 2026"],
-    stats: [["399","Residences"],["41","Stories"],["$2,727+","Studios From"],["205k","Sq Ft Office"]],
+    stats: [["$2,817+","Studios From"],["399","Residences"],["41","Stories"],["205k","Sq Ft Office & Retail"]],
     kicker: "2600 Biscayne Boulevard",
     h2: "Live above the office you'd otherwise commute to",
     body: [
@@ -50,18 +51,18 @@ const BUILDINGS = [
     cards: [
       ["Rental, not resale","Most new Edgewater towers are condos. This one is purpose-built rental run by a single operator, so you sign with a management company instead of chasing individual owners."],
       ["Office downstairs","About 205,000 sq ft of Class A office and retail in the same building — the shortest commute in Miami for anyone whose employer takes space here."],
-      ["Lease-up pricing","Opening rents and concessions are live right now, and both move as floors release. That is the entire argument for asking early rather than in February."]
+      ["Opening specials","On October 13, 2026, the leasing office advertised one month free on 14–18 month leases. Lease-up specials usually shrink as the building fills."]
     ],
     faq: [
       ["Is 2600 Biscayne leasing now?","Yes. Preleasing launched in September 2026 under the name Neo Edgewater, and the first residents move in from October 2026."],
       ["What is the difference between 2600 Biscayne and Neo Edgewater?","None — same building. 2600 Biscayne Boulevard is the address; Neo Edgewater is the name it leases under."],
-      ["How much is rent?","Published starting rents run about $2,727 for studios, $3,742 for one-bedrooms and $5,792 for two bedrooms and up. Lease-up pricing changes with each release — send your bedroom count and we will check what it is today."],
+      ["How much is rent at 2600 Biscayne?","When we checked on October 13, 2026, the leasing office listed studios from about $2,817 a month, one-bedrooms from about $3,742, two-bedrooms from about $5,852 and three-bedrooms from about $8,302, including required monthly fees. Lease-up pricing changes with each release, so send your bedroom count and we'll check today's."],
       ["Where exactly is it?","2600 Biscayne Boulevard, also addressed at 246 NE 26th Terrace, in Miami's Edgewater neighborhood."],
       ["Who is the developer?","Oak Row Equities, with architecture by Arquitectonica and residential leasing by Bozzuto."]
     ],
     moveIn: ["As soon as possible","Next 30 days","Next 60 days","Flexible"],
-    ctaH2: "Check what's actually open.",
-    ctaP: "399 apartments releasing in waves, with opening concessions that shrink as the building fills. Tell us your bedroom count, budget and timing and we'll come back with what's open and what it costs today."
+    ctaH2: "Find your apartment at 2600 Biscayne.",
+    ctaP: "399 apartments releasing in waves, with opening specials that shrink as the building fills. Tell us your bedroom count, budget and move-in date and we'll come back with what's open and what it costs today."
   },
   {
     domain: "jemmiamiapartments.com", name: "JEM Miami Worldcenter", short: "JEM", accent: "MIAMI",
@@ -72,30 +73,30 @@ const BUILDINGS = [
     hood: "Miami Worldcenter", address: "1016 NE 2nd Ave", zip: "33132", units: 530, stories: 67,
     developer: "Naftali Group", eta: "Q4 2027", etaShort: "Q4 '27", delivers: "2027-10-01",
     chip: "Under Construction · Rentals Delivering Q4 2027",
-    h1: ["530 rental homes", "inside Miami", "Worldcenter's", "tallest tower."],
-    sub: "Naftali Group's 67-story JEM rises over the $6B Worldcenter district. Floors 10 through 42 are rentals — and nobody is marketing them yet.",
+    h1: ["Rent at JEM,", "the 67-story tower", "in Miami", "Worldcenter."],
+    sub: "Floors 10 to 42 of Naftali Group's JEM are 530 rental apartments, a few blocks from Brightline, the Kaseya Center and Bayside. Rentals are scheduled for Q4 2027, and rents haven't been published yet.",
     ticker: ["67 stories","530 rental residences","Floors 10–42","Miami Worldcenter","Delivering Q4 2027"],
     stats: [["530","Rental Homes"],["67","Stories"],["Q4 '27","Completion"],["10–42","Rental Floors"]],
     kicker: "1016 NE 2nd Avenue",
-    h2: "The rental half of Miami's next landmark",
+    h2: "Rentals in the middle of Miami Worldcenter",
     body: [
-      "JEM rises more than 700 feet over Miami Worldcenter, the 27-acre, $6 billion district that reshaped the north end of Downtown. Brightline at MiamiCentral, the Kaseya Center and Bayside are all within a few blocks.",
-      "The tower splits in two: 259 condominiums occupy the upper floors, while floors 10 through 42 hold 530 purpose-built rental apartments. Developer marketing so far has focused almost entirely on the condos — which is why rental pricing is so hard to find."
+      "JEM rises more than 700 feet over Miami Worldcenter, the district that reshaped the north end of Downtown. Brightline at MiamiCentral, the Kaseya Center and Bayside are all within a few blocks.",
+      "The tower is split in two: 259 condominiums for sale on the upper floors, and 530 rental apartments on floors 10 through 42. So far Naftali's marketing has covered only the condos, which is why rental pricing isn't public yet."
     ],
     cards: [
-      ["Rentals, not resale","Floors 10–42 are institutional rental stock leased by one operator — not individually owned condos sublet at owner discretion."],
-      ["Worldcenter at the door","Retail, restaurants and the Brightline concourse are inside the district, not a drive away."],
-      ["Ahead of the announcement","Rental pricing for JEM has not been published anywhere. The waitlist is how you see it first."]
+      ["One landlord, not 530 owners","The rental floors are run by one management company, so you're not renting a condo from an individual owner who can sell or move back in."],
+      ["Worldcenter at your door","Restaurants, shops and the Brightline station are inside the district, a short walk from the lobby."],
+      ["See rents before they're advertised","JEM's rental pricing hasn't been published anywhere. Leave your details and you'll get it as soon as it is."]
     ],
     faq: [
-      ["When do JEM rentals start leasing?","Construction is tracking to Q4 2027. Rental lease-up typically begins as the building tops out and finishes — waitlist members are notified when pricing is released."],
+      ["When do JEM rentals start leasing?","Construction is tracking to Q4 2027. Rental leasing usually starts as a building nears completion, and you'll be notified as soon as pricing is released."],
       ["Is this the condo tower?","Both. Floors 43 and above are JEM Private Residences condominiums for sale. Floors 10–42 are the 530 rental apartments this page covers."],
       ["How much will rent be?","Not yet published. Naftali's marketing to date has covered the condos only."],
       ["Who is the developer?","Naftali Group, a New York developer, building at 1016 NE 2nd Avenue within Miami Worldcenter."]
     ],
     moveIn: ["2027","2028","Flexible"],
-    ctaH2: "See rental pricing first.",
-    ctaP: "530 rental homes with no public pricing anywhere. Floor plans and rents — emailed the moment Naftali releases them."
+    ctaH2: "Get JEM rental pricing first.",
+    ctaP: "530 rental homes with no public pricing yet. We'll email you floor plans and rents as soon as Naftali releases them."
   },
   {
     domain: "kenectmiamiapartments.com", name: "Kenect Miami", short: "KENECT", accent: "MIAMI",
@@ -104,30 +105,30 @@ const BUILDINGS = [
     hood: "Miami Worldcenter", address: "Miami Worldcenter", zip: "33132", units: 450, stories: 39,
     developer: "Akara Partners", eta: "Under construction", etaShort: "TBA", delivers: null,
     chip: "Under Construction · Miami Worldcenter",
-    h1: ["450 homes built", "for people who", "work where they", "live."],
-    sub: "Akara Partners' 39-story Kenect tower brings 20,000 sq ft of coworking, furnished residences and micro-unit pricing to Miami Worldcenter.",
+    h1: ["Kenect Miami:", "450 apartments", "with coworking", "downstairs."],
+    sub: "Akara Partners' 39-story Kenect tower at Miami Worldcenter pairs compact apartments, with furnished options, with 20,000 sq ft of coworking in the same building. It's under construction and leasing dates haven't been announced.",
     ticker: ["39 stories","450 residences","20,000 sq ft coworking","Furnished options","Miami Worldcenter"],
     stats: [["450","Residences"],["39","Stories"],["20k","Sq Ft Coworking"],["10k","Sq Ft Retail"]],
     kicker: "Miami Worldcenter",
-    h2: "Co-living, but built by an institution",
+    h2: "Your apartment, office and gym in one building",
     body: [
-      "Kenect is Akara Partners' national live-work brand — compact, efficiently designed residences with signature furnishings, hospitality-style service and social programming, already running in Chicago, Nashville and Phoenix.",
-      "The Miami tower rises 39 stories inside Miami Worldcenter with 450 residences, 20,000 square feet of coworking and 10,000 square feet of retail. Perkins&Will designed it around the idea that your office, gym and apartment share an elevator bank."
+      "Kenect is Akara Partners' live-work brand: compact, well-designed private apartments with optional furnishing, hospitality-style service and resident events. It already runs buildings in Chicago, Nashville and Phoenix.",
+      "The Miami tower rises 39 stories inside Miami Worldcenter, with 450 residences, 20,000 square feet of coworking and 10,000 square feet of shops and restaurants. Perkins&Will designed it so your office, gym and apartment share an elevator bank."
     ],
     cards: [
-      ["Efficient by design","Compact floor plans priced well below conventional new-construction one-bedrooms in the same district."],
-      ["Coworking included","20,000 sq ft of dedicated workspace in the building — not a converted lounge with a printer."],
-      ["Furnished options","Kenect's signature furniture packages mean you can move in with a suitcase."]
+      ["Compact by design","Smaller, efficient floor plans are the Kenect model. In its other cities that has meant lower rents than a conventional new one-bedroom nearby."],
+      ["Coworking included","20,000 sq ft of real workspace in the building, not a lounge with a printer in the corner."],
+      ["Move in with a suitcase","Furnished options mean you don't have to buy or ship a sofa to start your lease."]
     ],
     faq: [
-      ["When does Kenect Miami start leasing?","The tower is under construction at Miami Worldcenter. Lease-up dates have not been announced publicly — waitlist members are notified first."],
+      ["When does Kenect Miami start leasing?","The tower is under construction at Miami Worldcenter. Leasing dates haven't been announced, and you'll be told as soon as they are."],
       ["What is co-living, exactly?","At Kenect it means compact, well-designed private apartments with optional furnishing, shared amenity space and hospitality-style service. You get your own apartment, not a shared bedroom."],
       ["How much will rent be?","Miami pricing has not been released. Kenect's other markets start well under conventional new-construction rents for comparable locations."],
       ["Who is the developer?","Akara Partners, with architecture by Perkins&Will."]
     ],
     moveIn: ["As soon as possible","2027","Flexible"],
-    ctaH2: "First look at Kenect pricing.",
-    ctaP: "450 residences with coworking downstairs, in the middle of Miami Worldcenter. Rents and floor plans — the moment they're published."
+    ctaH2: "Get Kenect Miami pricing first.",
+    ctaP: "450 residences with coworking downstairs, in the middle of Miami Worldcenter. We'll send rents and floor plans as soon as they're published."
   },
   {
     domain: "3333biscaynemiami.com", name: "3333 Biscayne", short: "3333", accent: "BISCAYNE",
@@ -136,20 +137,20 @@ const BUILDINGS = [
     hood: "Edgewater", address: "3333 Biscayne Blvd", zip: "33137", units: 667, stories: 45,
     developer: "Beitel Group", eta: "2028", etaShort: "2028", delivers: "2028-01-01",
     chip: "In Permitting · First of Three Towers",
-    h1: ["667 apartments.", "An entire", "Edgewater", "city block."],
-    sub: "Beitel Group's three-tower redevelopment of 3333 Biscayne begins with a 45-story, 667-unit building — the largest rental project in the Edgewater pipeline.",
+    h1: ["3333 Biscayne:", "667 new", "Edgewater", "apartments."],
+    sub: "The first tower at 3333 Biscayne Boulevard is a 45-story rental building with 667 apartments in upper Edgewater, minutes from Midtown, Wynwood and the Design District. Beitel Group expects to deliver it in 2028.",
     ticker: ["45 stories","667 residences","Three-tower masterplan","Full city block","Delivering 2028"],
     stats: [["667","Residences"],["45","Stories"],["3","Tower Masterplan"],["2028","Target Delivery"]],
     kicker: "3333 Biscayne Boulevard",
-    h2: "A whole block of Biscayne, rebuilt",
+    h2: "New apartments on a whole Edgewater block",
     body: [
-      "Beitel Group is redeveloping the entire city block at 3333 Biscayne Boulevard into three towers. The first is a 45-story building with 667 residences, structured parking and roughly 7,400 square feet of ground-floor retail.",
-      "Site preparation and demolition are already underway under approved permits, with the construction crane scheduled from December 2026 through July 2028. John Moriarty & Associates is the general contractor."
+      "Beitel Group is rebuilding the entire city block at 3333 Biscayne Boulevard as three towers. The first is a 45-story building with 667 apartments, garage parking and roughly 7,400 square feet of shops at street level.",
+      "Site work and demolition are underway on approved permits, with the construction crane scheduled from December 2026 through July 2028. John Moriarty & Associates is the general contractor."
     ],
     cards: [
-      ["The biggest in the pipeline","667 units in tower one alone — more than any other Edgewater rental project currently moving toward construction."],
-      ["Upper Edgewater","North of the Arts & Entertainment District, minutes from Midtown, Wynwood and the Design District."],
-      ["Early is the point","Permits are filed and demolition has started. Getting on the list now means hearing about pricing years before it is advertised."]
+      ["667 apartments to choose from","The first tower alone has 667 homes, so there should be plenty of floors and layouts to pick from when leasing opens."],
+      ["Upper Edgewater","North of the Arts & Entertainment District and minutes from Midtown, Wynwood and the Design District."],
+      ["Hear about pricing early","Nothing is advertised yet. Leave your details and you'll get pricing as soon as pre-leasing opens."]
     ],
     faq: [
       ["When will 3333 Biscayne be finished?","The crane schedule runs December 2026 through July 2028, so delivery is expected in 2028. Pre-leasing typically opens several months ahead of completion."],
@@ -158,8 +159,8 @@ const BUILDINGS = [
       ["Where exactly is it?","3333 Biscayne Boulevard, occupying the full block in Miami's Edgewater neighborhood."]
     ],
     moveIn: ["2028","2029","Flexible"],
-    ctaH2: "Be first on the biggest one.",
-    ctaP: "667 residences, three towers, one Edgewater block. We'll email you the moment pre-leasing and pricing open."
+    ctaH2: "Get 3333 Biscayne pricing first.",
+    ctaP: "667 apartments in the first of three towers on one Edgewater block. We'll email you as soon as pre-leasing and pricing open."
   },
   {
     domain: "biscayne18.com", name: "Biscayne 18", short: "BISCAYNE", accent: "18",
@@ -168,31 +169,31 @@ const BUILDINGS = [
     hood: "Edgewater", address: "331 NE 18th St", zip: "33132", units: 1178, stories: 46,
     developer: "Melo Group", eta: "2029–2030", etaShort: "2029+", delivers: "2029-01-01",
     chip: "Permits Filed · Nearing Groundbreaking",
-    h1: ["1,178 apartments.", "Twin 46-story", "towers. One", "Edgewater block."],
-    sub: "Melo Group's largest project yet — two 46-story towers at 331 NE 18th Street, bringing 1,178 rental homes to Edgewater. Permits are filed. Pricing is years away. The list starts now.",
-    ticker: ["Twin 46-story towers","1,178 rental residences","589 per tower","$321M construction","Permits filed 2026"],
-    stats: [["1,178","Rental Homes"],["46","Stories Each"],["2","Towers"],["$321M","Construction Cost"]],
+    h1: ["Biscayne 18:", "1,178 new", "apartments in", "Edgewater."],
+    sub: "Melo Group's twin 46-story towers at 331 NE 18th Street will add 1,178 rental homes two blocks from Margaret Pace Park and the bay. Permits are filed and delivery is expected around 2029–2030. Leave your details to get pricing when Melo releases it.",
+    ticker: ["Twin 46-story towers","1,178 rental residences","589 per tower","Two blocks from the bay","Permits filed 2026"],
+    stats: [["1,178","Rental Homes"],["46","Stories Each"],["2","Towers"],["2 blocks","To the Bay"]],
     kicker: "331 NE 18th Street",
-    h2: "Melo's biggest bet on Edgewater",
+    h2: "Two towers, two blocks from the bay",
     body: [
-      "Biscayne 18 occupies a 1.57-acre block bounded by Biscayne Boulevard, NE 18th Street, NE 4th Avenue and NE 19th Street — land Melo Group assembled in 2019. Two 46-story towers rise 465 feet above an eight-level parking podium, wrapped in residential units to hide the garage.",
-      "The plan totals 1,178 rental apartments, 589 in each tower, alongside roughly 24,930 square feet of ground-floor retail and 1,472 parking spaces. Designed by G3AEC, with construction estimated at $321 million. Margaret Pace Park and the bay are two blocks east."
+      "Biscayne 18 fills a 1.57-acre block bounded by Biscayne Boulevard, NE 18th Street, NE 4th Avenue and NE 19th Street. Two 46-story towers rise 465 feet above an eight-level parking podium, wrapped in apartments so the garage stays out of sight.",
+      "The plan has 1,178 rental apartments, 589 in each tower, with roughly 24,930 square feet of shops at street level and 1,472 parking spaces. G3AEC is the architect. Margaret Pace Park and the bay are two blocks east."
     ],
     cards: [
-      ["The Melo playbook","The same developer behind Downtown 1st, Downtown 5th, Downtown 6, Art Plaza, Square Station and Melody Towers — known for pricing below flashier competition and leasing up fast."],
-      ["Bigger than Downtown 5th","At 1,178 units, Biscayne 18 would exceed Melo's 1,042-unit Downtown 5th as their largest single development."],
-      ["Years ahead of the crowd","Permits were filed in 2026 and the project is nearing groundbreaking. Nobody is publishing rents yet — that is exactly why this list exists."]
+      ["From the developer of Downtown 5th","Melo Group also built Downtown 1st, Downtown 5th, Art Plaza, Square Station and Melody Towers, and runs its own rental buildings."],
+      ["Shops and parking on site","About 24,930 sq ft of street-level retail and 1,472 parking spaces are part of the plan."],
+      ["Pricing as soon as it exists","No rents have been published, and won't be for some time. Leave your details and you'll get them when Melo releases them."]
     ],
     faq: [
-      ["When will Biscayne 18 be ready?","Construction permits were filed in 2026 and the project is nearing groundbreaking. A twin 46-story build typically runs about three years, putting delivery around 2029–2030."],
+      ["When will Biscayne 18 be ready?","Construction permits were filed in 2026 and the project is nearing groundbreaking. Twin 46-story towers typically take about three years to build, which puts delivery around 2029–2030."],
       ["Is it rental or condo?","Rental. Melo Group builds and holds rental towers, and the filings describe 1,178 rental units."],
-      ["How much will rent be?","Far too early. For reference, Melo's completed Downtown 5th currently runs roughly $1,700–4,000 per month."],
+      ["How much will rent be?","Melo hasn't published rents and won't for some time. Leave your details and you'll get them as soon as it does."],
       ["Where exactly is it?","331 NE 18th Street, on the block bounded by Biscayne Boulevard, NE 18th Street, NE 4th Avenue and NE 19th Street in Edgewater."],
-      ["Why sign up this early?","Melo lease-ups move quickly and pricing is released with little notice. Waitlist members hear before any listing site does."]
+      ["Why sign up this early?","Melo releases pricing with little notice, and its lease-ups tend to move quickly. Signing up means you hear as soon as pricing is out."]
     ],
     moveIn: ["2029","2030","Flexible"],
-    ctaH2: "Years early. That's the advantage.",
-    ctaP: "1,178 apartments, two towers, one Edgewater block. We'll email you when Melo releases the first real pricing — long before it reaches the listing sites."
+    ctaH2: "Get Biscayne 18 pricing first.",
+    ctaP: "1,178 apartments in two towers on one Edgewater block. We'll email you when Melo releases the first real pricing."
   },
   {
     domain: "urban22edgewater.com", name: "Urban 22", short: "URBAN", accent: "22",
@@ -208,31 +209,33 @@ const BUILDINGS = [
     hood: "Edgewater", address: "2222 NE 2nd Ave", zip: "33137", units: 441, stories: 15,
     developer: "Melo Group", eta: "Leasing now", etaShort: "Now", year: 2023,
     verified: "2026-09-21",
+    prices: { checked: "2026-10-13", source: "Zillow and Redfin", basis: "base rent, before required fees" },
     chip: "Open · Leasing Now",
-    h1: ["441 apartments,", "every one with", "a private", "balcony."],
-    sub: "Melo Group's Urban 22 at 2222 NE 2nd Avenue opened in 2023 — one- to three-bedroom homes of roughly 640 to 1,370 sq ft, each with a glass-railed balcony, a few blocks from Margaret Pace Park. Tell us what you need and we'll find what's actually open.",
-    ticker: ["Opened 2023","441 residences","640–1,370 sq ft","Private balcony in every home","Leasing now"],
-    stats: [["441","Residences"],["$2,700+","Recent Low"],["100%","With Balconies"],["2023","Opened"]],
+    h1: ["Urban 22:", "Edgewater apartments", "with a balcony", "in every home."],
+    sub: "One- to three-bedroom apartments of roughly 640 to 1,370 sq ft at 2222 NE 2nd Avenue, a few blocks from Margaret Pace Park, with a pool, a 2,100 sq ft gym and a market café downstairs.",
+    ticker: ["Opened 2023","441 residences","1, 2 & 3 bedrooms","640–1,370 sq ft","Pool, gym & market café","Leasing now"],
+    stats: [["$2,275+","1 Beds From"],["$2,950+","2 Beds From"],["$3,700+","3 Beds From"],["441","Residences"]],
     kicker: "2222 NE 2nd Avenue",
-    h2: "Bigger floor plans than the tower next door",
+    h2: "Room to spread out in Edgewater",
     body: [
-      "Urban 22 holds 441 rental apartments across twin 15-story buildings: 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms, from roughly 640 to 1,370 square feet. Every home has a private balcony with glass railings.",
-      "The building sits on NE 2nd Avenue in Edgewater, a few blocks from Margaret Pace Park and the bay, with Midtown and Wynwood immediately west. Downstairs: about 7,000 square feet of retail, a 2,100 sq ft fitness center, a lounge with market café, and a pool and jacuzzi deck, with 529 parking spaces behind."
+      "Urban 22 is two 15-story buildings with 441 rental apartments: 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms, from roughly 640 to 1,370 square feet. Every apartment has its own glass-railed balcony.",
+      "Downstairs there's a pool and jacuzzi deck, a 2,100 sq ft fitness center, a lounge with a market café, about 7,000 sq ft of shops and 529 parking spaces. Margaret Pace Park and the bay are a few blocks east, with Midtown and Wynwood just to the west."
     ],
     cards: [
-      ["Space you can't find new","At up to 1,370 sq ft, Urban 22's two- and three-bedrooms run larger than most new Miami construction, where studios under 500 sq ft are the norm."],
-      ["Balcony in every home","Not a select-units amenity — all 441 residences have private outdoor space."],
-      ["Melo pricing","The developer behind Downtown 5th and Art Plaza has a long record of leasing below comparable new construction; Urban 22 has listed from about $2,700."]
+      ["Bigger two- and three-bedrooms","At up to 1,370 sq ft, the larger layouts give you more room than most new Miami buildings, where studios under 500 sq ft are common."],
+      ["Pool, gym and café downstairs","A pool and jacuzzi deck, a 2,100 sq ft fitness center and a lounge with a market café, without leaving the building."],
+      ["Edgewater rents","One-bedrooms were listed from about $2,275 a month on October 13, 2026. Tell us your budget and we'll tell you what fits."]
     ],
     faq: [
-      ["Is Urban 22 currently available?","Yes — it opened in 2023 and units turn over regularly. Tell us your bedroom count and timing and we'll check what's actually open."],
-      ["How much is rent?","Recent public listings have started around $2,700 a month, rising with size and floor. Pricing moves weekly — send your budget and we'll tell you what fits today."],
-      ["How big are the apartments?","Roughly 640 to 1,370 square feet — 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms."],
-      ["Where exactly is it?","2222 NE 2nd Avenue in Miami's Edgewater neighborhood, between Midtown and Margaret Pace Park."]
+      ["Is Urban 22 leasing now?","Yes. It opened in 2023 and apartments come open regularly. Tell us your bedroom count and move-in date and we'll check what's available."],
+      ["How much is rent at Urban 22?","When we checked Zillow and Redfin on October 13, 2026, one-bedrooms were listed from about $2,275 a month, one-bedrooms with a den from about $2,450, two-bedrooms from about $2,950 and three-bedrooms from about $3,700, before required fees. Prices change daily with size and floor, so send your budget and we'll tell you what fits today."],
+      ["How big are the apartments?","Roughly 640 to 1,370 square feet: 4 studios, 243 one-bedrooms, 152 two-bedrooms and 42 three-bedrooms."],
+      ["What amenities are there?","A pool and jacuzzi deck, a 2,100 sq ft fitness center, a lounge with a market café, ground-floor shops and on-site parking."],
+      ["Where is Urban 22?","2222 NE 2nd Avenue in Miami's Edgewater neighborhood, between Midtown and Margaret Pace Park."]
     ],
     moveIn: ["As soon as possible","Next 30 days","Next 60 days","Next 90 days","Flexible"],
-    ctaH2: "Tell us what you need.",
-    ctaP: "441 balconied apartments means real turnover. Send your bedroom count and move-in window and we'll come back with what's genuinely available at Urban 22."
+    ctaH2: "Find your apartment at Urban 22.",
+    ctaP: "Tell us your bedroom count, budget and move-in date. We'll come back with what's open at Urban 22 and what it costs today."
   },
   {
     domain: "downtown5miami.com", name: "Downtown 5th", short: "DOWNTOWN", accent: "5TH",
@@ -240,31 +243,33 @@ const BUILDINGS = [
     mode: "availability", palette: { ink:"#0c1c26", a:"#00b3a4", deep:"#00776d", pale:"#d9f5f2" },
     hood: "Downtown Miami", address: "55 NE 5th St", zip: "33132", units: 1042, stories: 52,
     developer: "Melo Group", eta: "Leasing now", etaShort: "Now",
+    prices: { checked: "2026-10-13", source: "Zillow", basis: "base rent, before required fees" },
     chip: "Open · Leasing Now",
-    h1: ["1,042 apartments", "in the middle of", "Downtown Miami."],
-    sub: "Melo Group's twin 52-story towers at 25 and 55 NE 5th Street — the largest multifamily project ever built in Downtown Miami's CBD. Tell us what you need and we'll find what's actually open.",
+    h1: ["Downtown 5th:", "1,042 apartments", "in the heart of", "Downtown Miami."],
+    sub: "Melo Group's twin 52-story towers at 25 and 55 NE 5th Street, with the Metromover at the door. One- to three-bedroom homes from about 615 sq ft. Tell us what you need and we'll check what's open.",
     ticker: ["Twin 52-story towers","1,042 residences","615–1,900 sq ft","Metromover at the door","Leasing now"],
-    stats: [["1,042","Residences"],["52","Stories ×2"],["615+","Sq Ft"],["$1,700+","Starting Rent"]],
+    stats: [["$2,050+","1 Beds From"],["$2,975+","2 Beds From"],["1,042","Residences"],["52","Stories ×2"]],
     kicker: "25 & 55 NE 5th Street",
     h2: "The biggest rental address in the CBD",
     body: [
       "Downtown 5th is two 52-story towers holding 1,042 apartments and roughly 12,500 square feet of ground-floor retail, directly beside the Metromover's College North station. One-, two- and three-bedroom homes run from about 615 to 1,900 square feet.",
-      "It sits in the heart of Downtown's central business district — walking distance to Brickell, Bayside, the Kaseya Center and the Brightline concourse at MiamiCentral. Rents have historically run from roughly $1,700 to $4,000 depending on size and floor."
+      "It sits in the heart of Downtown's central business district, walking distance to Brickell, Bayside, the Kaseya Center and the Brightline station at MiamiCentral. On October 13, 2026, Zillow listed one-bedrooms from about $2,050 a month, two-bedrooms from about $2,975 and three-bedrooms from about $3,600."
     ],
     cards: [
-      ["Scale means availability","With 1,042 apartments across two towers, something is almost always opening up — the trick is knowing before it's listed."],
+      ["Plenty to choose from","With 1,042 apartments across two towers, something is almost always coming open."],
       ["Transit at the door","The Metromover College North station is at the building; Brightline at MiamiCentral is a short walk."],
-      ["Melo pricing","Melo has consistently leased below flashier downtown competition — one reason the towers filled quickly on opening."]
+      ["Walk to work and the game","Brickell, Bayside and the Kaseya Center are all within walking distance, so a lot of days don't need the car."]
     ],
     faq: [
-      ["Is Downtown 5th currently available?","Yes — it's an operating building and units turn over regularly. Tell us your bedroom count and timing and we'll check what's actually open."],
-      ["How much is rent?","Historically about $1,700 to $4,000 per month depending on size, floor and term. Current pricing moves weekly."],
+      ["Is Downtown 5th leasing now?","Yes. It's an open building and apartments come open regularly. Tell us your bedroom count and move-in date and we'll check what's available."],
+      ["How much is rent at Downtown 5th?","When we checked Zillow on October 13, 2026, one-bedrooms were listed from about $2,050 a month, two-bedrooms from about $2,975 and three-bedrooms from about $3,600, before required fees. Prices change daily, so send your budget and we'll tell you what fits today."],
       ["How big are the apartments?","One-, two- and three-bedroom layouts from roughly 615 to 1,900 square feet."],
       ["Where exactly is it?","25 and 55 NE 5th Street, in Downtown Miami's central business district."]
     ],
     moveIn: ["As soon as possible","Next 30 days","Next 60 days","Next 90 days","Flexible"],
-    ctaH2: "Tell us what you need.",
-    ctaP: "1,042 apartments means real turnover. Send your bedroom count and move-in window and we'll come back with what's genuinely available."
+    unitTypes: ["1 Bedroom","2 Bedroom","3 Bedroom","Not sure yet"],
+    ctaH2: "Find your apartment at Downtown 5th.",
+    ctaP: "Tell us your bedroom count, budget and move-in date and we'll come back with what's open at Downtown 5th and what it costs today."
   },
   {
     domain: "panoramatowerbrickell.com", name: "Panorama Tower", short: "PANORAMA", accent: "TOWER",
@@ -272,11 +277,12 @@ const BUILDINGS = [
     mode: "availability", palette: { ink:"#0b1626", a:"#7ab8ff", deep:"#2a6fb5", pale:"#e2f0ff" },
     hood: "Brickell", address: "1100 Brickell Bay Dr", zip: "33131", units: 821, stories: 85,
     developer: "Florida East Coast Realty", eta: "Leasing now", etaShort: "Now",
+    prices: { checked: "2026-10-13", source: "Redfin" },
     chip: "Open · Leasing Now",
-    h1: ["821 apartments,", "85 stories,", "every one with", "a view."],
-    sub: "The tallest multifamily building on the eastern seaboard south of New York. 1100 Brickell Bay Drive, with 100,000+ sq ft of amenities and floor-to-ceiling glass in every residence.",
+    h1: ["Panorama Tower:", "821 apartments,", "a view from", "every one."],
+    sub: "One- to three-bedroom rentals of roughly 1,125 to 2,191 sq ft at 1100 Brickell Bay Drive, with floor-to-ceiling glass in every home and more than 100,000 sq ft of amenities. Tell us what you're looking for and we'll check what's open.",
     ticker: ["85 stories","821 residences","100,000+ sq ft amenities","1,125–2,191 sq ft","Brickell Bay Drive"],
-    stats: [["821","Residences"],["85","Stories"],["100k+","Sq Ft Amenities"],["1,125+","Sq Ft"],],
+    stats: [["$4,625+","1 Beds From"],["821","Residences"],["85","Stories"],["100k+","Sq Ft Amenities"]],
     kicker: "1100 Brickell Bay Drive",
     h2: "Miami's tallest rental address",
     body: [
@@ -289,14 +295,14 @@ const BUILDINGS = [
       ["Amenity floor, not a room","Over 100,000 sq ft, including multiple pools and a dedicated wellness level."]
     ],
     faq: [
-      ["Is Panorama Tower currently available?","Yes — it's an operating rental building with regular turnover across 821 residences. Send your bedroom count and timing and we'll check what's open."],
-      ["How much is rent?","Pricing generally starts around $3,800 and climbs with floor and exposure. Larger and higher units run considerably more."],
+      ["Is Panorama Tower leasing now?","Yes. It's an open rental building with 821 apartments, and homes come open regularly. Send your bedroom count and move-in date and we'll check what's available."],
+      ["How much is rent at Panorama Tower?","When we checked Redfin on October 13, 2026, one-bedrooms were listed from about $4,625 a month, two-bedrooms from about $5,110 and three-bedrooms from about $10,365. Prices change daily with floor and view, so send your budget and we'll check today's."],
       ["How big are the apartments?","Roughly 1,125 to 2,191 square feet — one, two and three bedrooms."],
       ["Where exactly is it?","1100 Brickell Bay Drive, on the bay side of Brickell."]
     ],
     moveIn: ["As soon as possible","Next 30 days","Next 60 days","Next 90 days","Flexible"],
-    ctaH2: "Find what's open up there.",
-    ctaP: "821 residences across 85 floors. Tell us your bedroom count, budget and timing and we'll tell you what's genuinely available."
+    ctaH2: "Find your apartment at Panorama Tower.",
+    ctaP: "821 apartments across 85 floors. Tell us your bedroom count, budget and move-in date and we'll come back with what's open and what it costs today."
   },
   {
     domain: "maizonbrickell.com", name: "Maizon Brickell", short: "MAIZON", accent: "BRICKELL",
@@ -304,31 +310,33 @@ const BUILDINGS = [
     mode: "availability", palette: { ink:"#1c1620", a:"#d4885f", deep:"#a35a32", pale:"#fbeee6" },
     hood: "Brickell", address: "221 SW 12th St", zip: "33130", units: 0, stories: 19,
     developer: "", eta: "Leasing now", etaShort: "Now", year: 2019,
+    prices: { checked: "2026-10-13", source: "the leasing office's online floor plans", basis: "total monthly price including required fees" },
     chip: "Open · Leasing Now",
-    h1: ["Brickell living", "without the", "tower tax."],
-    sub: "A 19-story boutique rental at 221 SW 12th Street, built in 2019 — walkable to Mary Brickell Village and Brickell City Centre, priced well under the glass giants around it.",
-    ticker: ["Built 2019","19 stories","Boutique scale","Walk to Brickell City Centre","Leasing now"],
-    stats: [["19","Stories"],["2019","Built"],["$2,150+","Recent Low"],["Brickell","Neighborhood"]],
+    h1: ["Maizon Brickell:", "boutique living", "on Brickell's", "quieter side."],
+    sub: "A 19-story rental built in 2019 at 221 SW 12th Street, walkable to Mary Brickell Village, Brickell City Centre and the Metromover. Junior one-bedrooms to three-bedroom penthouses. Tell us what you need and we'll check what's open.",
+    ticker: ["Built 2019","19 stories","Junior 1 to 3-bedroom penthouses","Walk to Brickell City Centre","Leasing now"],
+    stats: [["$2,829+","1 Beds From"],["19","Stories"],["2019","Built"],["531–1,952","Sq Ft"]],
     kicker: "221 SW 12th Street",
-    h2: "The Brickell building people miss",
+    h2: "Brickell, without the megatower",
     body: [
-      "Maizon Brickell is a 19-story rental building completed in 2019 on SW 12th Street, in the quieter western pocket of Brickell — a few minutes' walk from Mary Brickell Village, Brickell City Centre and the Metromover.",
-      "Recent listings across the building have ranged roughly $2,150 to $6,200 depending on layout and floor, which puts its smaller homes meaningfully below the 2023-and-newer towers a few blocks east."
+      "Maizon Brickell is a 19-story rental building completed in 2019 on SW 12th Street, in the quieter western pocket of Brickell, a few minutes' walk from Mary Brickell Village, Brickell City Centre and the Metromover.",
+      "Homes run from 531 sq ft junior one-bedrooms to 1,952 sq ft three-bedroom penthouses. When we checked on October 13, 2026, the leasing office listed one-bedrooms from about $2,829 a month and two-bedrooms from about $3,767, including required fees."
     ],
     cards: [
-      ["Below the new-build premium","Recent pricing has started near $2,150 — hard to match in Brickell for a building finished in 2019."],
+      ["Junior 1s to penthouses","Layouts from 531 sq ft junior one-bedrooms and 664 sq ft one-bedrooms up to 1,952 sq ft three-bedroom penthouses."],
       ["Boutique, not a megatower","19 floors means fewer neighbors, shorter elevator waits and a quieter building."],
       ["Walk to everything","Mary Brickell Village, Brickell City Centre, the Metromover and the Miami River are all within a short walk."]
     ],
     faq: [
-      ["Is Maizon Brickell currently available?","Yes — it's an operating rental building with regular turnover. Send your bedroom count and timing and we'll check current openings."],
-      ["How much is rent?","Recent listings have ranged roughly $2,150 to $6,200 depending on size, floor and term. Pricing moves weekly."],
+      ["Is Maizon Brickell leasing now?","Yes. It's an open rental building and homes come open regularly. Send your bedroom count and move-in date and we'll check what's available."],
+      ["How much is rent at Maizon Brickell?","When we checked on October 13, 2026, the leasing office listed one-bedrooms from about $2,829 a month and two-bedrooms from about $3,767, including required monthly fees. Prices change daily, so send your budget and we'll check today's."],
+      ["Are there move-in specials?","On October 13, 2026, ApartmentList showed one month free on select junior one-bedroom and one-bedroom homes, with restrictions. Specials change often; ask and we'll check what's on today."],
       ["When was it built?","2019 — 19 stories at 221 SW 12th Street."],
       ["Where exactly is it?","221 SW 12th Street, in the western part of Brickell."]
     ],
     moveIn: ["As soon as possible","Next 30 days","Next 60 days","Flexible"],
-    ctaH2: "Check what's open.",
-    ctaP: "Tell us your bedroom count, budget and move-in window and we'll come back with what's actually available at Maizon."
+    ctaH2: "Find your apartment at Maizon Brickell.",
+    ctaP: "Tell us your bedroom count, budget and move-in date and we'll come back with what's open at Maizon and what it costs today."
   },
   {
     domain: "muzemet.com", name: "Muze at Met", short: "MUZE", accent: "AT MET",
@@ -336,11 +344,12 @@ const BUILDINGS = [
     mode: "availability", palette: { ink:"#171425", a:"#a98bff", deep:"#6a4bc4", pale:"#efe9ff" },
     hood: "Downtown Miami", address: "340 SE 3rd St", zip: "33131", units: 391, stories: 0,
     developer: "", eta: "Leasing now", etaShort: "Now",
+    prices: { checked: "2026-10-13", source: "the leasing office's online floor plans", basis: "total monthly price including required fees" },
     chip: "Open · Leasing Now",
-    h1: ["391 apartments", "above a cinema,", "four restaurants", "and a plaza."],
-    sub: "Muze at Met sits inside Metropolitan Miami — a 714,000 sq ft downtown complex with an 18-screen Silverspot cinema, restaurants and retail beneath the residences.",
-    ticker: ["391 residences","Metropolitan Miami","18-screen Silverspot cinema","Four restaurants","Leasing now"],
-    stats: [["391","Residences"],["714k","Sq Ft Complex"],["18","Cinema Screens"],["$2,500+","Recent Low"]],
+    h1: ["Muze at Met:", "391 apartments", "above a cinema", "and restaurants."],
+    sub: "Muze at Met sits inside Metropolitan Miami, a downtown complex with an 18-screen Silverspot cinema, restaurants and shops beneath the apartments. Studios to three-bedrooms, between Downtown and Brickell.",
+    ticker: ["391 residences","Studios to 3 bedrooms","18-screen Silverspot cinema","Four restaurants","Leasing now"],
+    stats: [["$2,735+","Studios From"],["391","Residences"],["519–1,410","Sq Ft"],["18","Cinema Screens"]],
     kicker: "340 SE 3rd Street",
     h2: "A building with a neighborhood built into it",
     body: [
@@ -348,19 +357,20 @@ const BUILDINGS = [
       "The location bridges Downtown and Brickell — Brickell City Centre is a short walk south, Bayfront Park and the Kaseya Center a few blocks north, with Metromover stations either direction."
     ],
     cards: [
-      ["Downstairs is the point","Cinema, restaurants and retail inside the complex — the amenity is the neighborhood, not a rooftop deck."],
+      ["Dinner and a movie downstairs","An 18-screen cinema, four restaurants and shops are inside the complex, right below the apartments."],
       ["Between Downtown and Brickell","Walkable to both, which almost nothing else manages without a long bridge crossing."],
-      ["Real turnover","At 391 residences, units open regularly — usually before they hit the listing sites."]
+      ["Studios to three-bedrooms","Layouts from 519 sq ft studios and 681 sq ft one-bedrooms up to 1,410 sq ft three-bedrooms."]
     ],
     faq: [
-      ["Is Muze at Met currently available?","Yes — it's an operating rental building with frequent turnover. Send your bedroom count and timing and we'll check what's open."],
-      ["How much is rent?","Recent listings have ranged roughly $2,500 to $4,250 depending on size, floor and term."],
+      ["Is Muze at Met leasing now?","Yes. It's an open rental building and homes come open regularly. Send your bedroom count and move-in date and we'll check what's available."],
+      ["How much is rent at Muze at Met?","When we checked on October 13, 2026, studios were listed from about $2,735 a month, one-bedrooms from about $2,834, two-bedrooms from about $3,934 and three-bedrooms from about $5,279, including required monthly fees. Prices change daily, so send your budget and we'll check today's."],
+      ["Are there move-in specials?","On October 13, 2026, ApartmentList and Zumper showed up to two months free. Specials change often; ask and we'll check what's on today."],
       ["What is Metropolitan Miami?","A 714,000 sq ft mixed-use complex containing Muze, an 18-screen Silverspot cinema, four restaurants and retail."],
       ["Where exactly is it?","340 SE 3rd Street, in the southern end of Downtown Miami near the Brickell line."]
     ],
     moveIn: ["As soon as possible","Next 30 days","Next 60 days","Flexible"],
-    ctaH2: "See what's open at Muze.",
-    ctaP: "391 residences means steady turnover. Tell us what you're after and we'll come back with real availability."
+    ctaH2: "Find your apartment at Muze at Met.",
+    ctaP: "Tell us your bedroom count, budget and move-in date and we'll come back with what's open at Muze and what it costs today."
   },
   {
     domain: "remitheriver.com", name: "Remi on the River", short: "REMI", accent: "ON THE RIVER",
@@ -368,31 +378,32 @@ const BUILDINGS = [
     mode: "availability", palette: { ink:"#0e1f22", a:"#58c6a8", deep:"#22806a", pale:"#ddf6ef" },
     hood: "Miami River District", address: "999 NW 7th St", zip: "33136", units: 342, stories: 0,
     developer: "Greystar", eta: "Leasing now", etaShort: "Now",
+    prices: { checked: "2026-10-13", source: "the leasing office's online floor plans", basis: "total monthly price including required fees" },
     chip: "Open · Leasing Now",
-    h1: ["342 apartments", "on the quiet", "side of the", "river."],
-    sub: "Greystar's Remi on the River sits in Miami's River District — minutes from Downtown and the Health District, at rents the waterfront towers can't touch.",
-    ticker: ["342 residences","Greystar-managed","Miami River District","Minutes to Downtown","Leasing now"],
-    stats: [["342","Residences"],["$2,470+","Recent Low"],["Greystar","Management"],["River","District"]],
+    h1: ["Remi on the River:", "342 apartments", "minutes from", "Downtown."],
+    sub: "Greystar's Remi on the River sits in Miami's River District, minutes from Downtown, the Health District and Little Havana, with studios to three-bedrooms. Tell us what you need and we'll check what's open.",
+    ticker: ["342 residences","Studios to 3 bedrooms","Greystar-managed","Miami River District","Leasing now"],
+    stats: [["$2,224+","Studios From"],["$2,608+","1 Beds From"],["342","Residences"],["Greystar","Management"]],
     kicker: "999 NW 7th Street",
-    h2: "The River District's best-kept rate",
+    h2: "Close to Downtown, on the quieter side of the river",
     body: [
-      "Remi on the River holds 342 rental residences in the Miami River District, the stretch west of Downtown that has quietly become one of the city's better value pockets — minutes from the central business district, the Health District and Little Havana.",
-      "Managed by Greystar, the largest apartment operator in the country. Recent listings have ranged roughly $2,470 to $3,910, which for new-construction quality this close to Downtown is unusual."
+      "Remi on the River has 342 rental apartments in the Miami River District, the stretch just west of Downtown, minutes from the central business district, the Health District and Little Havana.",
+      "It's managed by Greystar, the largest apartment operator in the country. When we checked on October 13, 2026, the leasing office listed studios from about $2,224 a month and one-bedrooms from about $2,608, including required fees."
     ],
     cards: [
-      ["Downtown adjacent, not downtown priced","Recent pricing has started near $2,470 — well under comparable buildings a mile east."],
+      ["Studios to three-bedrooms","Layouts from 465 sq ft studios and 659 sq ft one-bedrooms up to 1,334 sq ft three-bedrooms."],
       ["Professional management","Greystar operates more apartments than any other company in the US; leasing and maintenance run to a national standard."],
       ["The river side","Quieter streets, quick access to I-95 and the Dolphin, and the Health District a few minutes north."]
     ],
     faq: [
-      ["Is Remi on the River currently available?","Yes — it's an operating rental building with regular turnover across 342 residences. Send your bedroom count and timing and we'll check."],
-      ["How much is rent?","Recent listings have ranged roughly $2,470 to $3,910 depending on layout, floor and lease term."],
+      ["Is Remi on the River leasing now?","Yes. It's an open rental building with 342 apartments, and homes come open regularly. Send your bedroom count and move-in date and we'll check."],
+      ["How much is rent at Remi on the River?","When we checked on October 13, 2026, the leasing office listed studios from about $2,224 a month, one-bedrooms from about $2,608, two-bedrooms from about $3,188 and three-bedrooms from about $4,549, including required monthly fees. Prices change daily, so send your budget and we'll check today's."],
       ["Who manages it?","Greystar, the largest apartment manager in the United States."],
       ["Where exactly is it?","999 NW 7th Street, in Miami's River District just west of Downtown."]
     ],
     moveIn: ["As soon as possible","Next 30 days","Next 60 days","Flexible"],
-    ctaH2: "Check current openings.",
-    ctaP: "Tell us your bedroom count, budget and timing and we'll come back with what's genuinely available at Remi."
+    ctaH2: "Find your apartment at Remi.",
+    ctaP: "Tell us your bedroom count, budget and move-in date and we'll come back with what's open at Remi and what it costs today."
   },
   {
     domain: "artplazaapartments.com", name: "Art Plaza", short: "ART", accent: "PLAZA",
@@ -401,30 +412,31 @@ const BUILDINGS = [
     hood: "Arts & Entertainment District", address: "58 NE 14th St", zip: "33132", units: 667, stories: 36,
     developer: "Melo Group", eta: "Leasing now", etaShort: "Now", year: 2019,
     chip: "Open · Leasing Now",
-    h1: ["667 apartments", "in the Arts &", "Entertainment", "District."],
-    sub: "Melo Group's Art Plaza opened in 2019 with 667 residences on NE 14th Street — walking distance to the Adrienne Arsht Center, Museum Park and the bay.",
+    h1: ["Art Plaza:", "667 apartments", "steps from the", "Arsht Center."],
+    sub: "Melo Group's Art Plaza opened in 2019 on NE 14th Street in the Arts & Entertainment District, walking distance to the Adrienne Arsht Center, Museum Park and the bay. Tell us what you're looking for and we'll check what's open.",
     ticker: ["667 residences","Opened 2019","Arts & Entertainment District","Walk to Arsht Center","Leasing now"],
     stats: [["667","Residences"],["2019","Opened"],["A&E","District"],["Melo","Developer"]],
     kicker: "NE 14th Street",
     h2: "Between the Arsht Center and the bay",
     body: [
-      "Art Plaza brought 667 rental residences to the Arts & Entertainment District when it opened in 2019 — one of Melo Group's largest downtown buildings, on NE 14th Street between Biscayne Boulevard and the Metromover.",
+      "Art Plaza has 667 rental apartments in the Arts & Entertainment District. It opened in 2019 as one of Melo Group's largest downtown buildings, on NE 14th Street between Biscayne Boulevard and the Metromover.",
       "The Adrienne Arsht Center for the Performing Arts is a few minutes on foot, with Museum Park, the Frost Science Museum and PAMM just south along the bay. Edgewater, Wynwood and the Design District are all a short ride north."
     ],
     cards: [
-      ["Scale means options","667 residences turn over steadily — there is usually something opening across the bedroom counts."],
-      ["Culture on foot","The Arsht Center, PAMM and Frost Science are all walkable, which is rare for a rental at this price."],
-      ["Melo pricing","Melo's downtown buildings have consistently leased below comparable new construction nearby."]
+      ["Plenty to choose from","With 667 apartments, something usually comes open across the bedroom counts."],
+      ["Culture on foot","The Arsht Center, PAMM and Frost Science are all within walking distance, so a show or a museum doesn't need a car."],
+      ["On the Metromover line","The free Metromover is a short walk away and connects you to Downtown and Brickell."]
     ],
     faq: [
-      ["Is Art Plaza currently available?","Yes — it's an operating building with 667 residences and regular turnover. Tell us what you need and we'll check."],
-      ["How much is rent?","Pricing moves weekly. Melo's downtown buildings generally run below comparable new construction — send your budget and we'll tell you what fits."],
+      ["Is Art Plaza leasing now?","Yes. It's an open building with 667 apartments, and homes come open regularly. Tell us your bedroom count and move-in date and we'll check."],
+      ["How much is rent at Art Plaza?","Prices change week to week with size, floor and lease term. Send your budget and we'll tell you what fits today."],
       ["When did it open?","June 2019, developed by Melo Group."],
       ["Where exactly is it?","NE 14th Street in Miami's Arts & Entertainment District, just north of Downtown."]
     ],
     moveIn: ["As soon as possible","Next 30 days","Next 60 days","Flexible"],
-    ctaH2: "See what's open.",
-    ctaP: "667 residences in the A&E District. Tell us your bedroom count and timing and we'll come back with real availability."
+    unitTypes: ["1 Bedroom","2 Bedroom","Not sure yet"],
+    ctaH2: "Find your apartment at Art Plaza.",
+    ctaP: "667 apartments in the Arts & Entertainment District. Tell us your bedroom count, budget and move-in date and we'll come back with what's open and what it costs today."
   },
   {
     domain: "miamiworldtowerapartments.com", name: "Miami World Tower", short: "MIAMI WORLD", accent: "TOWER",
@@ -432,31 +444,33 @@ const BUILDINGS = [
     mode: "availability", palette: { ink:"#101a2c", a:"#f2b544", deep:"#b07d12", pale:"#fdf2d9" },
     hood: "Miami Worldcenter", address: "710 NE 1st Ave", zip: "33132", units: 560, stories: 0,
     developer: "Lalezarian Properties", eta: "Leasing now", etaShort: "Now",
+    prices: { checked: "2026-10-13", source: "the leasing office's online floor plans", basis: "total monthly price including required fees" },
     chip: "Open · Leasing Now",
-    h1: ["560 apartments", "inside the $6B", "Worldcenter", "district."],
-    sub: "Lalezarian Properties' Miami World Tower at 710 NE 1st Avenue — 560 residences with Brightline, the Kaseya Center and Worldcenter's retail all within a few blocks.",
+    h1: ["Miami World Tower:", "560 apartments", "in Miami", "Worldcenter."],
+    sub: "Lalezarian Properties' rental tower at 710 NE 1st Avenue, with Brightline, the Kaseya Center and Worldcenter's shops and restaurants all within a few blocks.",
     ticker: ["560 residences","Miami Worldcenter","Walk to Brightline","Kaseya Center nearby","Leasing now"],
-    stats: [["560","Residences"],["$6B","Worldcenter District"],["27","District Acres"],["Now","Leasing"]],
+    stats: [["$2,750+","Studios From"],["$3,330+","1 Beds From"],["560","Residences"],["Now","Leasing"]],
     kicker: "710 NE 1st Avenue",
     h2: "Inside the district, not near it",
     body: [
-      "Miami World Tower holds 560 rental residences and roughly 3,100 square feet of retail inside Miami Worldcenter — the 27-acre, $6 billion redevelopment that reshaped the northern end of Downtown Miami.",
+      "Miami World Tower has 560 rental apartments and roughly 3,100 square feet of street-level retail inside Miami Worldcenter, the 27-acre district that reshaped the northern end of Downtown Miami.",
       "Brightline at MiamiCentral runs to Fort Lauderdale, Boca, West Palm Beach and Orlando from a few blocks away. The Kaseya Center, Bayside and the Arts & Entertainment District are all within walking distance."
     ],
     cards: [
       ["Brightline on foot","MiamiCentral is a short walk — Fort Lauderdale in 30 minutes, Orlando without driving."],
       ["Worldcenter retail","The district's restaurants and shops are part of the neighborhood, not a drive away."],
-      ["560 residences","Enough scale that something is usually opening across bedroom counts."]
+      ["Up to 1.5 months free","On October 13, 2026, the leasing office was advertising up to one and a half months free. Specials change often, so ask what's on today."]
     ],
     faq: [
-      ["Is Miami World Tower currently available?","Yes — it's an operating rental building. Send your bedroom count and timing and we'll check what's open."],
-      ["How much is rent?","Pricing moves weekly across the 560 residences. Send your budget and we'll tell you what fits."],
+      ["Is Miami World Tower leasing now?","Yes. It's an open rental building. Send your bedroom count and move-in date and we'll check what's available."],
+      ["How much is rent at Miami World Tower?","When we checked on October 13, 2026, the leasing office listed studios from about $2,750 a month, one-bedrooms from about $3,330 and two-bedrooms from about $5,450, including required monthly fees, with up to 1.5 months free advertised. Prices change daily, so send your budget and we'll tell you what fits today."],
       ["Who is the developer?","Lalezarian Properties, at 710 NE 1st Avenue within Miami Worldcenter."],
       ["What is Miami Worldcenter?","A 27-acre, $6 billion mixed-use district in Downtown Miami with residential towers, retail, restaurants and hotels."]
     ],
     moveIn: ["As soon as possible","Next 30 days","Next 60 days","Flexible"],
-    ctaH2: "Check availability.",
-    ctaP: "560 residences inside Miami Worldcenter. Tell us what you need and we'll come back with what's actually open."
+    unitTypes: ["Studio","1 Bedroom","2 Bedroom","Not sure yet"],
+    ctaH2: "Find your apartment at Miami World Tower.",
+    ctaP: "560 apartments inside Miami Worldcenter. Tell us your bedroom count, budget and move-in date and we'll come back with what's open and what it costs today."
   },
   // --- Wave 3, added 2026-09-21 -------------------------------------------
   // Two buildings, four domains. mohawkwynwood.com / mohawkmiami.com are both
@@ -477,8 +491,8 @@ const BUILDINGS = [
     developer: "Rilea Group", eta: "2028", etaShort: "'28", delivers: "2028-01-01",
     verified: "2026-09-21",
     chip: "Under Construction · Delivering 2028",
-    h1: ["300 loft-style", "apartments on the", "north edge of", "Wynwood."],
-    sub: "Rilea Group's Mohawk at Wynwood brings Chicago brick, industrial steel and 30,000 sq ft of retail to NE 29th Street. Nothing is leasing yet, and nobody has published a rent.",
+    h1: ["Mohawk at Wynwood:", "300 loft-style", "rentals on the", "edge of Wynwood."],
+    sub: "300 brick-and-steel rentals by Rilea Group at 56 NE 29th Street, where Wynwood meets Edgewater, with shops and restaurants at street level. Completion is set for 2028.",
     ticker: ["300 residences","Studios to three bedrooms","Lanai homes with private yards","30,000 sq ft retail","Delivering 2028"],
     stats: [["300","Residences"],["2028","Completion"],["30k","Sq Ft Retail"],["1.5","Acre Site"]],
     kicker: "56 NE 29th Street",
@@ -488,20 +502,20 @@ const BUILDINGS = [
       "Deforma Studio and RADYCA designed it in Chicago brick, exposed steel detailing and floor-to-ceiling glazing rather than the white stucco-and-glass template most of the corridor is built from. The 300 residences run studio to three-bedroom, including lanai homes with private outdoor space at the base of the building."
     ],
     cards: [
-      ["Lanai homes","Ground-connected residences with private outdoor yards — rare in a Miami rental building, and usually the first thing claimed."],
-      ["Wynwood without the sublet","300 institutionally managed rentals under one operator. Most of what is advertised in Wynwood today is an individual condo owner's unit on a one-year gamble."],
-      ["Retail that opens with it","Rilea is selling the 30,000 sq ft of ground-floor retail rather than leasing it, and about a third was spoken for during construction — so the street level should arrive with the building, not years after."]
+      ["Lanai homes","Ground-floor homes with their own private outdoor yards: rare in a Miami rental building, and usually the first to go."],
+      ["One landlord, not a condo owner","All 300 homes are rentals run by one management company. Much of what's advertised in Wynwood today is an individual owner's condo on a one-year lease."],
+      ["Shops that open with it","About a third of the 30,000 sq ft of street-level retail was already spoken for during construction, so the shops and restaurants should arrive with the building, not years later."]
     ],
     faq: [
-      ["When does Mohawk at Wynwood start leasing?","Construction is financed and underway, with completion set for 2028. Lease-up usually opens as a building tops out — waitlist members are emailed the day pricing is published."],
-      ["How much will rent be?","Nothing has been published. Rilea has released no rents, floor plans or leasing site for Mohawk, which is exactly why this list exists."],
+      ["When does Mohawk at Wynwood start leasing?","Construction is financed and underway, with completion set for 2028. Leasing usually opens as a building nears completion, and you'll get an email the day pricing is published."],
+      ["How much will rent be?","Nothing has been published. Rilea hasn't released rents, floor plans or a leasing site for Mohawk yet. Leave your details and you'll get them first."],
       ["What is a lanai unit?","A ground-connected residence with its own private outdoor space — a small yard rather than a balcony. Mohawk includes a set of them at the base of the building."],
       ["Where exactly is it?","A 1.5-acre site at 56 NE 29th Street, on the northern edge of the Wynwood Arts District at the Edgewater line."],
       ["Who is the developer?","Rilea Group, a Miami developer led by Alan and Diego Ojeda, with architecture by Deforma Studio and RADYCA and construction by Coastal Construction."]
     ],
     moveIn: ["2028","2029","Flexible"],
-    ctaH2: "Be on the list before the rents exist.",
-    ctaP: "300 apartments with no published pricing anywhere and no leasing office to call. Floor plans and rents — emailed the day Rilea releases them."
+    ctaH2: "Get Mohawk at Wynwood pricing first.",
+    ctaP: "300 apartments with no published pricing and no leasing office to call yet. We'll email you floor plans and rents the day Rilea releases them."
   },
   {
     domain: "mohawkmiami.com", name: "Mohawk at Wynwood", short: "MOHAWK", accent: "MIAMI",
@@ -520,31 +534,31 @@ const BUILDINGS = [
     developer: "Rilea Group", eta: "2028", etaShort: "'28", delivers: "2028-01-01",
     verified: "2026-09-21",
     chip: "Under Construction · Rentals Delivering 2028",
-    h1: ["A hammam, a padel", "court and a rooftop", "dog park. Also,", "an apartment."],
-    sub: "Mohawk is Rilea Group's 300-unit rental on NE 29th Street, and its amenity deck reads like a members' club. Rents have not been published — this is the list that gets them first.",
+    h1: ["Mohawk Miami:", "a hammam, padel", "and a rooftop", "dog park at home."],
+    sub: "Mohawk is Rilea Group's 300-apartment rental on NE 29th Street in Wynwood, with an amenity deck that reads like a members' club. Rents haven't been published yet. Leave your details and you'll get them first.",
     ticker: ["Turkish hammam spa","Cold plunge & infrared sauna","Padel court","Rooftop pools & lounges","Rooftop dog park","Co-working"],
-    stats: [["300","Residences"],["2028","Completion"],["$149M","Construction Loan"],["Studio–3BR","Unit Mix"]],
+    stats: [["300","Residences"],["Studio–3BR","Unit Mix"],["Padel","Court On Site"],["2028","Completion"]],
     kicker: "Amenities at Mohawk",
-    h2: "The amenity deck is the pitch",
+    h2: "Amenities you'd usually pay a club for",
     body: [
-      "Miami rental towers compete on amenity decks, and most settle on the same three: a pool, a gym, a lounge. Mohawk's program is unusual enough to be worth naming in full — rooftop pools and lounges, a padel court, a Turkish hammam spa with cold plunges and infrared saunas, co-working space, children's play areas and a rooftop dog park.",
-      "That program is also the clearest signal of the rent tier the building is aiming at, and it is the one piece of information available before pricing is. Rilea Group is building it on 1.5 acres at 56 NE 29th Street with $149 million of construction financing behind it, for delivery in 2028."
+      "Most Miami rental buildings stop at a pool, a gym and a lounge. Mohawk's list is longer: rooftop pools and lounges, a padel court, a Turkish hammam spa with cold plunges and infrared saunas, co-working space, children's play areas and a rooftop dog park.",
+      "Rilea Group is building it on 1.5 acres at 56 NE 29th Street, on the line between Wynwood and Edgewater, for completion in 2028. Homes run from studios to three bedrooms, including lanai homes with their own outdoor space."
     ],
     cards: [
-      ["A spa, not a sauna closet","A Turkish hammam with cold plunges and infrared saunas is a hotel amenity. Almost nothing in the Miami rental market carries one."],
-      ["Padel, on site","Court time in Miami is booked out and priced accordingly. One in the building is a standing reservation."],
-      ["Built to be lived in","Children's play areas and a rooftop dog park in the same program as the spa — an amenity deck aimed at people staying, not touring."]
+      ["A spa, not a sauna closet","A Turkish hammam with cold plunges and infrared saunas is a hotel amenity. Almost no Miami rental building has one."],
+      ["Padel, downstairs","Court time in Miami books up fast. Here the court is in your building."],
+      ["Built for living, not touring","Children's play areas and a rooftop dog park sit alongside the spa: amenities for people who plan to stay."]
     ],
     faq: [
       ["What amenities will Mohawk at Wynwood have?","Rooftop pools and lounges, a padel court, a Turkish hammam spa with cold plunges and infrared saunas, co-working space, children's play areas and a rooftop dog park, plus 30,000 square feet of ground-floor retail."],
-      ["When can I rent at Mohawk?","Construction is underway with completion set for 2028. Leasing normally opens as a building tops out; this list is emailed the day pricing is released."],
-      ["How much will it cost?","No rents have been published. The amenity program points at the top of the Wynwood rental market, but the actual numbers go to this list first."],
+      ["When can I rent at Mohawk?","Construction is underway with completion set for 2028. Leasing normally opens as a building nears completion, and you'll get an email the day pricing is released."],
+      ["How much will it cost?","No rents have been published. With this amenity list, expect pricing near the top of the Wynwood rental market. Leave your details and you'll get the actual numbers first."],
       ["How many apartments are there?","300 residences, studio through three-bedroom, including lanai homes with private outdoor space."],
       ["Who is building it?","Rilea Group, with architecture by Deforma Studio and RADYCA and construction by Coastal Construction, at 56 NE 29th Street in Miami."]
     ],
     moveIn: ["2028","2029","Flexible"],
-    ctaH2: "First look at Mohawk's rents.",
-    ctaP: "A hammam, a padel court and 300 apartments with no published price. One email the day Rilea puts a number on it."
+    ctaH2: "Get Mohawk pricing first.",
+    ctaP: "A hammam, a padel court and 300 apartments with no published price yet. We'll email you the day Rilea releases rents."
   },
   {
     domain: "2900terrace.com", name: "2900 Terrace", short: "2900", accent: "TERRACE",
@@ -557,31 +571,31 @@ const BUILDINGS = [
     developer: "Oak Row Equities and LNDMRK Development", eta: "Q4 2027", etaShort: "Q4 '27", delivers: "2027-10-01",
     verified: "2026-09-21",
     chip: "Topped Out · Delivering Q4 2027",
-    h1: ["324 apartments", "with wraparound", "terraces and", "home offices."],
-    sub: "Oak Row Equities and LNDMRK Development have topped out a 32-story Arquitectonica tower at 401 NE 29th Street. One-, two- and three-bedroom rentals averaging over 1,000 sq ft — no studios, no micro-units.",
+    h1: ["2900 Terrace:", "324 Edgewater", "apartments with", "home offices."],
+    sub: "A 32-story Arquitectonica tower at 401 NE 29th Street, now topped out. One- to three-bedroom rentals averaging about 1,069 sq ft, with 10-foot ceilings, wraparound terraces and a dedicated home office. Completion is expected in Q4 2027.",
     ticker: ["324 residences","32 stories","Topped out","10-ft ceilings","Wraparound terraces","Delivering Q4 2027"],
     stats: [["324","Residences"],["32","Stories"],["1,069","Avg Sq Ft"],["Q4 '27","Completion"]],
     kicker: "401 NE 29th Street",
-    h2: "Built bigger than the rest of Edgewater",
+    h2: "Room to live and work, in Edgewater",
     body: [
       "2900 Terrace occupies about 1.5 acres on NE 29th Street, one of the last sizeable undeveloped parcels left in Edgewater. The Shops at Midtown Miami sit a few blocks north, the Design District about a mile up, and Margaret Pace Park and the bay a short walk east.",
       "Arquitectonica designed the 32-story, 362-foot tower around unusually large floor plans: 324 one- to three-bedroom residences averaging roughly 1,069 square feet, with 10-foot ceilings, floor-to-ceiling glazing, wraparound balconies and dedicated home offices. Coastal Construction topped it out ahead of a fourth-quarter 2027 completion."
     ],
     cards: [
-      ["No studios","The unit mix starts at one bedroom and averages over 1,000 square feet — the opposite of the compact-unit trend running through the rest of the neighborhood."],
-      ["Terraces that wrap","Wraparound balconies and 10-foot ceilings on a 362-foot tower, in a market where a new-construction balcony is usually a ledge."],
-      ["Home office, built in","Dedicated work space inside the floor plan rather than a corner of the bedroom, plus content-creation studios and co-working in the podium."]
+      ["No studios, no micro-units","Every home has at least one bedroom, and the average is over 1,000 square feet, larger than most new rentals in the neighborhood."],
+      ["Terraces that wrap","Wraparound balconies and 10-foot ceilings, where most new Miami balconies are barely big enough for two chairs."],
+      ["Home office, built in","A dedicated workspace inside the floor plan instead of a desk in the bedroom, plus content studios and co-working downstairs."]
     ],
     faq: [
-      ["When does 2900 Terrace start leasing?","The tower has topped out and is tracking to completion in the fourth quarter of 2027. Lease-up pricing is normally released a few months ahead of that — waitlist members are emailed first."],
-      ["How much will rent be?","Nothing has been published. With an average residence over 1,000 square feet, expect pricing above Edgewater's compact new-construction stock — but the actual numbers go to this list first."],
+      ["When does 2900 Terrace start leasing?","The tower has topped out and is tracking to completion in the fourth quarter of 2027. Pricing is normally released a few months ahead of that, and you'll be emailed as soon as it is."],
+      ["How much will rent be?","Nothing has been published. With homes averaging over 1,000 square feet, expect pricing above Edgewater's smaller new apartments. Leave your details and you'll get the actual numbers first."],
       ["How big are the apartments?","324 residences averaging roughly 1,069 square feet, in one-, two- and three-bedroom layouts with 10-foot ceilings and wraparound terraces."],
       ["Where exactly is it?","401 NE 29th Street, on a 1.5-acre site in Miami's Edgewater neighborhood, a few blocks south of Midtown."],
       ["Who is the developer?","Oak Row Equities and LNDMRK Development, with architecture by Arquitectonica and construction by Coastal Construction."]
     ],
     moveIn: ["Late 2027","2028","Flexible"],
     ctaH2: "Get 2900 Terrace pricing first.",
-    ctaP: "324 large apartments in Edgewater with no published rent and no leasing office to call. Floor plans and pricing — emailed the moment they're released."
+    ctaP: "324 large apartments in Edgewater with no published rent and no leasing office to call yet. We'll email you floor plans and pricing as soon as they're released."
   },
   {
     domain: "neoedgewatermiami.com", name: "Neo Edgewater", short: "NEO", accent: "EDGEWATER",
@@ -593,36 +607,37 @@ const BUILDINGS = [
     // wave — an availability page competing with an operator, not a vacuum.
     mode: "availability", palette: { ink:"#0f1724", a:"#8ea2ff", deep:"#41539e", pale:"#e6eaff" },
     hood: "Edgewater", address: "2600 Biscayne Blvd", zip: "33137", units: 399, stories: 41,
-    developer: "Oak Row Equities", eta: "Preleasing now", etaShort: "Now", year: 2026,
+    developer: "Oak Row Equities", eta: "Leasing now", etaShort: "Now", year: 2026,
     verified: "2026-09-21",
+    prices: { checked: "2026-10-13", source: "the leasing office's online availability", basis: "total monthly price including required fees" },
     title: "Neo Edgewater Apartments Miami — Rents, Specials & Availability",
-    ogTitle: "Neo Edgewater — Now Preleasing, Edgewater Miami",
-    desc: "Neo Edgewater at 2600 Biscayne Blvd: 399 apartments preleasing from about $2,727, Equinox in the building, first residents October 2026. Check availability.",
-    chip: "Preleasing · First Residents October 2026",
-    h1: ["Miami's newest", "41-story rental", "just opened its", "leasing office."],
-    sub: "Neo Edgewater started preleasing in September 2026 at 2600 Biscayne Boulevard — 399 residences of roughly 500 to 1,700 sq ft, an Equinox in the building, and the first move-ins in October.",
-    ticker: ["399 residences","41 stories","500–1,700 sq ft","Equinox fitness club","Pool decks on 14 and 42","First residents October 2026"],
-    stats: [["$2,727+","Studios From"],["$3,742+","1 Beds From"],["399","Residences"],["41","Stories"]],
+    ogTitle: "Neo Edgewater — Now Leasing, Edgewater Miami",
+    desc: "Neo Edgewater at 2600 Biscayne Blvd: 399 apartments from about $2,817, an Equinox in the building and one month free on 14–18 month leases.",
+    chip: "Open · Leasing Now",
+    h1: ["Neo Edgewater:", "a brand-new", "41-story rental,", "leasing now."],
+    sub: "Neo Edgewater is leasing at 2600 Biscayne Boulevard: studios to three-bedrooms of roughly 500 to 1,700 sq ft, an Equinox in the building and pool decks on the 14th and 42nd floors.",
+    ticker: ["399 residences","41 stories","500–1,700 sq ft","Equinox fitness club","Pool decks on 14 and 42","One month free on 14–18 month leases"],
+    stats: [["$2,817+","Studios From"],["$3,742+","1 Beds From"],["1 month","Free on 14–18 mo"],["41","Stories"]],
     kicker: "2600 Biscayne Boulevard",
-    h2: "A lease-up is the cheapest a new building ever is",
+    h2: "Move in while the opening specials last",
     body: [
       "Neo Edgewater is the residential half of Oak Row Equities' 41-story Arquitectonica tower on Biscayne Boulevard, with Bozzuto running leasing and the first residents moving in from October 2026. Studios, one-, two- and three-bedroom residences run roughly 500 to 1,700 square feet, with interiors by Vida Design.",
-      "The amenity floors are stacked rather than clustered: a wrap-around pool deck on the 14th floor, a rooftop deck on the 42nd, a multi-level Equinox fitness club, co-working space and weekend access to a padel court. Published starting rents are about $2,727 for a studio, $3,742 for a one-bedroom and $5,792 for two bedrooms and up."
+      "The amenity floors are stacked rather than clustered: a wrap-around pool deck on the 14th floor, a rooftop deck on the 42nd, a multi-level Equinox fitness club, co-working space and weekend access to a padel court. On October 13, 2026, studios were listed from about $2,817 a month, one-bedrooms from about $3,742 and two-bedrooms from about $5,852, including required fees."
     ],
     cards: [
-      ["Lease-up pricing","Opening concessions exist to fill 399 apartments quickly, and they shrink as the building fills. A month free on 14–18 month terms was advertised during preleasing."],
+      ["One month free","On October 13, 2026, the leasing office advertised one month free on 14–18 month leases, with restrictions. Lease-up specials usually shrink as the building fills."],
       ["Equinox downstairs","A multi-level Equinox inside the building. Anywhere else in Edgewater that is a separate membership and a walk."],
       ["Two pool decks","A wrap-around deck on the 14th floor and a roof deck on the 42nd — the difference between an afternoon in the sun and the view over the bay."]
     ],
     faq: [
-      ["Is Neo Edgewater leasing right now?","Yes. Preleasing launched in September 2026 and the first residents move in from October 2026, so inventory releases in waves rather than all at once."],
-      ["How much is rent at Neo Edgewater?","Published starting rents are around $2,727 for studios, $3,742 for one-bedrooms and $5,792 for two bedrooms and up. Lease-up numbers move with each release — send your bedroom count and we'll check today's."],
-      ["Are there move-in specials?","A month free on 14–18 month leases was advertised during preleasing, with restrictions. Concessions on a lease-up change as the building fills, which is the reason to ask early rather than late."],
+      ["Is Neo Edgewater leasing right now?","Yes. Leasing opened in September 2026 and residents began moving in from October. On October 13, 2026, more than 130 apartments were listed as available."],
+      ["How much is rent at Neo Edgewater?","When we checked on October 13, 2026, studios were listed from about $2,817 a month, one-bedrooms from about $3,742, two-bedrooms from about $5,852 and three-bedrooms from about $8,302, including required monthly fees. Lease-up prices move with each release, so send your bedroom count and we'll check today's."],
+      ["Are there move-in specials?","On October 13, 2026, one month free on 14–18 month leases was advertised, with restrictions. Specials on a new building change as it fills, so ask and we'll check what's on today."],
       ["Where is Neo Edgewater?","2600 Biscayne Boulevard, in Miami's Edgewater neighborhood — a short walk from Margaret Pace Park and the bay, with Midtown and Wynwood just west."],
       ["Who built it?","Oak Row Equities, with architecture by Arquitectonica, interiors by Vida Design and residential leasing by Bozzuto."]
     ],
     moveIn: ["As soon as possible","Next 30 days","Next 60 days","Flexible"],
-    ctaH2: "See what's open, and what it actually costs.",
+    ctaH2: "Find your apartment at Neo Edgewater.",
     ctaP: "399 apartments releasing in waves, with concessions that change as floors fill. Tell us the bedroom count, budget and timing and we'll come back with what's available now."
   },
   {
@@ -642,7 +657,7 @@ const BUILDINGS = [
     developer: "Aimco", eta: "Q3 2027", etaShort: "Q3 '27", delivers: "2027-07-01",
     verified: "2026-10-10",
     chip: "Topped Out · Delivering Q3 2027",
-    h1: ["114 bayfront", "rentals averaging", "2,500 square", "feet each."],
+    h1: ["Hamilton House:", "114 bayfront", "rentals, 2,500", "sq ft on average."],
     sub: "Aimco has topped out a 38-story tower at 640 NE 34th Street, directly on Biscayne Bay. Just 114 residences, averaging more than 2,500 sq ft with 9- to 10-foot ceilings and oversized terraces: condo-sized homes, for lease.",
     ticker: ["114 residences","38 stories","Directly on Biscayne Bay","2,500+ sq ft average","9–10 ft ceilings","Delivering Q3 2027"],
     stats: [["114","Residences"],["38","Stories"],["2,500+","Avg Sq Ft"],["Q3 '27","Completion"]],
@@ -658,8 +673,8 @@ const BUILDINGS = [
       ["A waterfront restaurant downstairs","The family behind Daniel's, A Florida Steakhouse, has leased about 11,500 sq ft on the ground floor for a Rockwell Group-designed steak and seafood restaurant with an outdoor bar on the water."]
     ],
     faq: [
-      ["When does Hamilton House start leasing?","Aimco schedules first move-ins for the third quarter of 2027. Lease-up pricing is normally released a few months ahead of that, and this list is emailed first."],
-      ["How much will rent be?","Nothing has been published. With residences averaging more than 2,500 square feet on the bay, expect pricing well above Edgewater's typical new rentals. The actual numbers go to this list first."],
+      ["When does Hamilton House start leasing?","Aimco schedules first move-ins for the third quarter of 2027. Pricing is normally released a few months ahead of that, and you'll be emailed as soon as it is."],
+      ["How much will rent be?","Nothing has been published. With residences averaging more than 2,500 square feet on the bay, expect pricing well above Edgewater's typical new rentals. Leave your details and you'll get the actual numbers first."],
       ["Is it a rental or a condo?","A rental. Aimco is building Hamilton House as a multifamily rental tower: the homes are leased, not sold. In its filings Aimco refers to the project as 34th Street."],
       ["Is this The Hamilton?","No. The Hamilton is the existing 276-unit rental building at 555 NE 34th Street, across the street. Hamilton House is the new 38-story tower at 640 NE 34th Street."],
       ["Who is the developer?","Aimco, with architecture by Stantec and construction by Americaribe-Grycon."]
@@ -668,7 +683,7 @@ const BUILDINGS = [
     unitTypes: ["1 Bedroom","2 Bedroom","3 Bedroom","Not sure yet"],
     moveIn: ["Q3 2027","Late 2027","Flexible"],
     ctaH2: "Get Hamilton House pricing first.",
-    ctaP: "114 bayfront residences averaging over 2,500 sq ft, with no published rent and no leasing office yet. Floor plans and pricing, emailed the moment they're released."
+    ctaP: "114 bayfront residences averaging over 2,500 sq ft, with no published rent and no leasing office yet. We'll email you floor plans and pricing as soon as they're released."
   },
   {
     domain: "centraltowermiami.com", name: "Central Tower", short: "CENTRAL", accent: "TOWER",
@@ -688,14 +703,19 @@ const BUILDINGS = [
     hood: "Miami Worldcenter", address: "46 NE 6th St", zip: "33132", units: 824, stories: 58,
     developer: "Melo Group", eta: "Feb 2027", etaShort: "Feb '27", delivers: "2027-02-01",
     verified: "2026-10-10",
+    // Listing sites (Apartments.com, ForRent, Zillow) started showing per-plan
+    // base rents by 2026-10-13, with Apartments.com giving move-in from Nov 1,
+    // 2026. Melo's own sites still show no rents and "Coming Feb 2027", and no
+    // online application is open, so `delivers` stays on Melo's date.
+    prices: { checked: "2026-10-13", source: "Apartments.com and Zillow", basis: "base rent, before required fees" },
     title: "Central Tower Miami — Worldcenter Rental Apartments",
     desc: "Central Tower, 46 NE 6th St: Melo Group's 824 rentals in Miami Worldcenter. 1–3 bedrooms from 732 sq ft, with balconies. Get pricing and floor plans first.",
     ogTitle: "Central Tower — Melo Group Rentals at Miami Worldcenter",
     chip: "Floor Plans Out · Delivering Feb 2027",
-    h1: ["Life at the", "center of", "Miami", "Worldcenter."],
+    h1: ["Central Tower:", "new apartments", "in Miami", "Worldcenter."],
     sub: "Central Tower is Melo Group's 824-residence rental tower at 46 NE 6th Street, the building first announced as Downtown 6. The floor plans are out: one- to three-bedroom homes from 732 to 1,171 sq ft, every one with a balcony and a full-size washer and dryer.",
     ticker: ["824 residences","58 floors","A balcony on every home","Full-size washer & dryer","2,100+ sq ft fitness center","Delivering Feb 2027"],
-    stats: [["732+","Sq Ft"],["824","Residences"],["58","Floors"],["Feb '27","Completion"]],
+    stats: [["$2,400+","1 Beds From"],["732+","Sq Ft"],["824","Residences"],["Feb '27","Completion"]],
     kicker: "46 NE 6th Street",
     h2: "The floor plans are out",
     body: [
@@ -709,19 +729,19 @@ const BUILDINGS = [
     ],
     faq: [
       ["Is Central Tower the same building as Downtown 6?","Yes. Downtown 6 was the project's announced name; Melo Group now markets the tower as Central Tower. Same building, same address: 46 NE 6th Street."],
-      ["When does Central Tower open?","Melo Group lists completion for February 2027. Applications at Melo towers typically open around completion, and this list hears first."],
+      ["When does Central Tower open?","Melo Group lists completion for February 2027, though some listing sites now show move-in from November 1, 2026. Applications at Melo towers typically open around completion, and you'll hear as soon as they do."],
       ["What floor plans are there?","One-bedrooms (732 sq ft), one-bedroom-plus-den (792 sq ft), two-bedroom, two-bath homes (878 to 951 sq ft) and three-bedroom, two-bath homes (1,171 sq ft). Melo's published plans don't include studios."],
-      ["How much will rent be?","Melo hasn't published rents yet. When it does, the numbers and any opening specials go to this list before the listing sites."],
+      ["How much will rent be at Central Tower?","When we checked on October 13, 2026, Apartments.com and Zillow listed base rents from about $2,400 for a one-bedroom, $2,750 for a one-bedroom plus den, $2,990 for a two-bedroom and $3,800 for a three-bedroom, before fees. Melo hasn't posted prices on its own site yet, so leave your details and we'll confirm today's numbers and any opening specials."],
       ["What amenities does it have?","A large swimming pool and jacuzzi, a fitness center of more than 2,100 sq ft, a café-market, social room, kids' room, business center and private parking on site."]
     ],
     unitTypes: ["1 Bedroom","1 Bedroom + Den","2 Bedroom","3 Bedroom","Not sure yet"],
     moveIn: ["Early 2027","Mid 2027","Flexible"],
     soon: {
-      h2: "Central Tower pricing is weeks away.",
-      p: "Melo lists completion for February 2027, and applications usually open around then. Get the rents, opening specials and first pick of floor plans the day they're released."
+      h2: "Central Tower rents are starting to show.",
+      p: "Listing sites now show one-bedrooms from about $2,400, while Melo still lists completion for February 2027. Get confirmed pricing, any opening specials and first pick of floor plans as soon as applications open."
     },
     ctaH2: "Get Central Tower pricing first.",
-    ctaP: "824 homes with the floor plans published and the rents not yet. Leave your details and the numbers come to you the moment Melo releases them."
+    ctaP: "824 homes with floor plans out and the first rents appearing on listing sites. Leave your details and we'll send confirmed pricing as soon as Melo opens applications."
   }
 ];
 

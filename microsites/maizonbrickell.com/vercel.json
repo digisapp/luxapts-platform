@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.maizonbrickell.com"
+        }
+      ],
+      "destination": "https://maizonbrickell.com/:path*",
+      "permanent": true
+    }
+  ]
+}

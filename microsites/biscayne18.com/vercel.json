@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.biscayne18.com"
+        }
+      ],
+      "destination": "https://biscayne18.com/:path*",
+      "permanent": true
+    }
+  ]
+}

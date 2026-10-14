@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -194,8 +200,8 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Under Construction · Miami Worldcenter</span>
-      <h1>450 homes built<br>for people who<br>work where they<br><span class="aqua">live.</span></h1>
-      <p class="sub">Akara Partners' 39-story Kenect tower brings 20,000 sq ft of coworking, furnished residences and micro-unit pricing to Miami Worldcenter.</p>
+      <h1>Kenect Miami:<br>450 apartments<br>with coworking<br><span class="aqua">downstairs.</span></h1>
+      <p class="sub">Akara Partners' 39-story Kenect tower at Miami Worldcenter pairs compact apartments, with furnished options, with 20,000 sq ft of coworking in the same building. It's under construction and leasing dates haven't been announced.</p>
       <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
     </div>
@@ -217,9 +223,9 @@
     <div class="split">
       <div class="reveal">
         <p class="kicker">Miami Worldcenter</p>
-        <h2>Co-living, but built by an institution</h2>
-        <p class="prose">Kenect is Akara Partners' national live-work brand — compact, efficiently designed residences with signature furnishings, hospitality-style service and social programming, already running in Chicago, Nashville and Phoenix.</p>
-        <p class="prose">The Miami tower rises 39 stories inside Miami Worldcenter with 450 residences, 20,000 square feet of coworking and 10,000 square feet of retail. Perkins&amp;Will designed it around the idea that your office, gym and apartment share an elevator bank.</p>
+        <h2>Your apartment, office and gym in one building</h2>
+        <p class="prose">Kenect is Akara Partners' live-work brand: compact, well-designed private apartments with optional furnishing, hospitality-style service and resident events. It already runs buildings in Chicago, Nashville and Phoenix.</p>
+        <p class="prose">The Miami tower rises 39 stories inside Miami Worldcenter, with 450 residences, 20,000 square feet of coworking and 10,000 square feet of shops and restaurants. Perkins&amp;Will designed it so your office, gym and apartment share an elevator bank.</p>
       </div>
       <img class="reveal" src="img/split.jpg" alt="Kenect Miami — Miami Worldcenter, Miami" loading="lazy">
     </div>
@@ -228,27 +234,27 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes Kenect Miami worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What Kenect Miami will offer</h2>
     <div class="cards">
-      <div class="card reveal"><span class="num">01</span><b>Efficient by design</b><p>Compact floor plans priced well below conventional new-construction one-bedrooms in the same district.</p></div>
-      <div class="card reveal"><span class="num">02</span><b>Coworking included</b><p>20,000 sq ft of dedicated workspace in the building — not a converted lounge with a printer.</p></div>
-      <div class="card reveal"><span class="num">03</span><b>Furnished options</b><p>Kenect's signature furniture packages mean you can move in with a suitcase.</p></div>
+      <div class="card reveal"><span class="num">01</span><b>Compact by design</b><p>Smaller, efficient floor plans are the Kenect model. In its other cities that has meant lower rents than a conventional new one-bedroom nearby.</p></div>
+      <div class="card reveal"><span class="num">02</span><b>Coworking included</b><p>20,000 sq ft of real workspace in the building, not a lounge with a printer in the corner.</p></div>
+      <div class="card reveal"><span class="num">03</span><b>Move in with a suitcase</b><p>Furnished options mean you don't have to buy or ship a sofa to start your lease.</p></div>
     </div>
   </div>
 </section>
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Kenect Miami pricing goes to this list before it reaches the listing sites.</p>
+    <p>Be first to see Kenect Miami pricing and floor plans when they're released.</p>
     <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Miami Worldcenter, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at Kenect Miami</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="Kenect Miami — The Tower" loading="lazy"><figcaption>The Tower</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="Kenect Miami — Miami Worldcenter" loading="lazy"><figcaption>Miami Worldcenter</figcaption></figure>
@@ -260,8 +266,8 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>When does Kenect Miami start leasing?</summary><p>The tower is under construction at Miami Worldcenter. Lease-up dates have not been announced publicly — waitlist members are notified first.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about Kenect Miami</h2>
+    <details class="reveal"><summary>When does Kenect Miami start leasing?</summary><p>The tower is under construction at Miami Worldcenter. Leasing dates haven't been announced, and you'll be told as soon as they are.</p></details>
     <details class="reveal"><summary>What is co-living, exactly?</summary><p>At Kenect it means compact, well-designed private apartments with optional furnishing, shared amenity space and hospitality-style service. You get your own apartment, not a shared bedroom.</p></details>
     <details class="reveal"><summary>How much will rent be?</summary><p>Miami pricing has not been released. Kenect's other markets start well under conventional new-construction rents for comparable locations.</p></details>
     <details class="reveal"><summary>Who is the developer?</summary><p>Akara Partners, with architecture by Perkins&amp;Will.</p></details>
@@ -272,9 +278,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#ffe9e3">The Waitlist</p>
-        <h2>First look at Kenect pricing.</h2>
-        <p class="prose">450 residences with coworking downstairs, in the middle of Miami Worldcenter. Rents and floor plans — the moment they're published.</p>
+        <p class="kicker" style="color:#ffe9e3">Early Pricing</p>
+        <h2>Get Kenect Miami pricing first.</h2>
+        <p class="prose">450 residences with coworking downstairs, in the middle of Miami Worldcenter. We'll send rents and floor plans as soon as they're published.</p>
 
       </div>
       <form data-lead class="reveal">

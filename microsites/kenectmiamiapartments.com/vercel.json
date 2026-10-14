@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.kenectmiamiapartments.com"
+        }
+      ],
+      "destination": "https://kenectmiamiapartments.com/:path*",
+      "permanent": true
+    }
+  ]
+}

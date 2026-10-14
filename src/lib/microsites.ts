@@ -99,7 +99,7 @@ export const MICROSITE_GUIDES: MicrositeGuide[] = [
   { domain: "kenectmiamiapartments.com", name: "Kenect Miami", neighborhood: "downtown", blurb: "Pre-leasing waitlist" },
   { domain: "miamiworldtowerapartments.com", name: "Miami World Tower", neighborhood: "downtown", blurb: "Availability & rents" },
   // Edgewater
-  { domain: "neoedgewatermiami.com", name: "Neo Edgewater", neighborhood: "edgewater", blurb: "Now preleasing" },
+  { domain: "neoedgewatermiami.com", name: "Neo Edgewater", neighborhood: "edgewater", blurb: "Availability & rents" },
   { domain: "2600biscaynemiami.com", name: "2600 Biscayne", neighborhood: "edgewater", blurb: "Now leasing as Neo Edgewater" },
   { domain: "urban22edgewater.com", name: "Urban 22", neighborhood: "edgewater", blurb: "Availability & rents" },
   { domain: "2900terrace.com", name: "2900 Terrace", neighborhood: "edgewater", blurb: "Pre-leasing waitlist" },
@@ -108,7 +108,11 @@ export const MICROSITE_GUIDES: MicrositeGuide[] = [
   { domain: "hamiltonhousemiami.com", name: "Hamilton House", neighborhood: "edgewater", blurb: "Pre-leasing waitlist" },
   // Wynwood, Midtown, A&E, River
   { domain: "mohawkwynwood.com", name: "Mohawk at Wynwood", neighborhood: "wynwood", blurb: "Pre-leasing waitlist" },
-  { domain: "midtown5apartments.com", name: "Midtown 5", neighborhood: "midtown-miami", blurb: "Availability & rents" },
+  // Same building as mohawkwynwood.com, written for the amenities search.
+  { domain: "mohawkmiami.com", name: "Mohawk Miami", neighborhood: "wynwood", blurb: "Amenities & early pricing" },
+  // "midtown", not "midtown-miami": the latter has no active buildings, so its
+  // page is noindex and this was Midtown 5's only link from staycio.com.
+  { domain: "midtown5apartments.com", name: "Midtown 5", neighborhood: "midtown", blurb: "Availability & rents" },
   { domain: "artplazaapartments.com", name: "Art Plaza", neighborhood: "arts-district", blurb: "Availability & rents" },
   { domain: "remitheriver.com", name: "Remi on the River", neighborhood: "river-district", blurb: "Availability & rents" },
 ];

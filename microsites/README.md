@@ -69,8 +69,9 @@ Unlike the six hand-built pages above, these are produced from a template by
 node microsites/_generator/build.js
 ```
 
-It writes `index.html`, `robots.txt`, `sitemap.xml` and the Search Console
-verification file per domain, and resizes each image to its display width
+It writes `index.html`, `robots.txt`, `sitemap.xml` and the IndexNow key file
+(`b3cf…033.txt`, for Bing; Google doesn't use it, so Search Console has to be
+verified separately) per domain, and resizes each image to its display width
 (heroes land ~360KB instead of ~1MB — these pages live or die on search
 ranking, so Largest Contentful Paint matters).
 

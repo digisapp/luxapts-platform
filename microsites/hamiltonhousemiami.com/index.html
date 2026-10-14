@@ -82,6 +82,7 @@
   .stat{border-left:2px solid var(--aqua);padding-left:22px}
   .stat b{display:block;font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.02em;line-height:1.15}
   .stat small{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .stat-note{margin-top:34px;font-size:.84rem;color:var(--muted)}
 
   section{padding:104px 0}
   .kicker{font-family:var(--display);font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--aqua-deep);margin-bottom:16px}
@@ -173,6 +174,11 @@
     .btn{padding:16px 28px}
     .kicker,.stat small,.gallery-grid figcaption,label{font-size:.75rem}
     summary{min-height:44px}
+    /* "Check Pricing & Availability" is wider than a 360px screen at desktop
+       letter-spacing, and the mid-page button is flex:none, so it pushed the
+       page sideways. Full-width, centred and allowed to wrap on phones. */
+    .hero-inner .btn,.midcta .btn{display:block;text-align:center;letter-spacing:.05em;padding:16px 20px}
+    .midcta .btn{flex:initial;width:100%}
   }
   @media(max-width:359px){
     .wrap{padding:0 16px}
@@ -194,7 +200,7 @@
   <div class="wrap">
     <div class="hero-inner">
       <span class="chip">Topped Out · Delivering Q3 2027</span>
-      <h1>114 bayfront<br>rentals averaging<br>2,500 square<br><span class="aqua">feet each.</span></h1>
+      <h1>Hamilton House:<br>114 bayfront<br>rentals, 2,500<br><span class="aqua">sq ft on average.</span></h1>
       <p class="sub">Aimco has topped out a 38-story tower at 640 NE 34th Street, directly on Biscayne Bay. Just 114 residences, averaging more than 2,500 sq ft with 9- to 10-foot ceilings and oversized terraces: condo-sized homes, for lease.</p>
       <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
       <a class="btn btn-ghost" href="#building">See the Building</a>
@@ -228,8 +234,8 @@
 
 <section class="alt" style="padding-top:90px">
   <div class="wrap">
-    <p class="kicker reveal">Why this building</p>
-    <h2 class="reveal">What makes Hamilton House worth tracking</h2>
+    <p class="kicker reveal">Highlights</p>
+    <h2 class="reveal">What Hamilton House will offer</h2>
     <div class="cards">
       <div class="card reveal"><span class="num">01</span><b>2,500 square feet, average</b><p>The kind of space Miami renters usually have to buy a condo to get. Most new rental towers build far smaller homes; this one went the other way.</p></div>
       <div class="card reveal"><span class="num">02</span><b>Directly on the bay</b><p>A waterfront site on Biscayne Bay, with oversized private terraces so the view comes with outdoor space to use it.</p></div>
@@ -240,15 +246,15 @@
 
 <div class="midcta reveal">
   <div class="wrap">
-    <p>Hamilton House pricing goes to this list before it reaches the listing sites.</p>
+    <p>Be first to see Hamilton House pricing and floor plans when they're released.</p>
     <a class="btn btn-aqua" href="#signup">Get Pricing First</a>
   </div>
 </div>
 
 <section>
   <div class="wrap">
-    <p class="kicker reveal">The Neighborhood</p>
-    <h2 class="reveal" style="margin-bottom:44px">Edgewater, on foot</h2>
+    <p class="kicker reveal">Gallery</p>
+    <h2 class="reveal" style="margin-bottom:44px">A look at Hamilton House</h2>
     <div class="gallery-grid">
       <figure class="reveal"><img src="img/g1.jpg" alt="Hamilton House — Topped Out Over the Bay" loading="lazy"><figcaption>Topped Out Over the Bay</figcaption></figure>
       <figure class="reveal"><img src="img/g2.jpg" alt="Hamilton House — On Biscayne Bay" loading="lazy"><figcaption>On Biscayne Bay</figcaption></figure>
@@ -260,9 +266,9 @@
 <section style="padding-top:0">
   <div class="wrap">
     <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal" style="margin-bottom:36px">Quick answers</h2>
-    <details class="reveal"><summary>When does Hamilton House start leasing?</summary><p>Aimco schedules first move-ins for the third quarter of 2027. Lease-up pricing is normally released a few months ahead of that, and this list is emailed first.</p></details>
-    <details class="reveal"><summary>How much will rent be?</summary><p>Nothing has been published. With residences averaging more than 2,500 square feet on the bay, expect pricing well above Edgewater's typical new rentals. The actual numbers go to this list first.</p></details>
+    <h2 class="reveal" style="margin-bottom:36px">Questions about Hamilton House</h2>
+    <details class="reveal"><summary>When does Hamilton House start leasing?</summary><p>Aimco schedules first move-ins for the third quarter of 2027. Pricing is normally released a few months ahead of that, and you'll be emailed as soon as it is.</p></details>
+    <details class="reveal"><summary>How much will rent be?</summary><p>Nothing has been published. With residences averaging more than 2,500 square feet on the bay, expect pricing well above Edgewater's typical new rentals. Leave your details and you'll get the actual numbers first.</p></details>
     <details class="reveal"><summary>Is it a rental or a condo?</summary><p>A rental. Aimco is building Hamilton House as a multifamily rental tower: the homes are leased, not sold. In its filings Aimco refers to the project as 34th Street.</p></details>
     <details class="reveal"><summary>Is this The Hamilton?</summary><p>No. The Hamilton is the existing 276-unit rental building at 555 NE 34th Street, across the street. Hamilton House is the new 38-story tower at 640 NE 34th Street.</p></details>
     <details class="reveal"><summary>Who is the developer?</summary><p>Aimco, with architecture by Stantec and construction by Americaribe-Grycon.</p></details>
@@ -273,9 +279,9 @@
   <div class="wrap">
     <div class="cta-grid">
       <div class="reveal">
-        <p class="kicker" style="color:#f6efe3">The Waitlist</p>
+        <p class="kicker" style="color:#f6efe3">Early Pricing</p>
         <h2>Get Hamilton House pricing first.</h2>
-        <p class="prose">114 bayfront residences averaging over 2,500 sq ft, with no published rent and no leasing office yet. Floor plans and pricing, emailed the moment they're released.</p>
+        <p class="prose">114 bayfront residences averaging over 2,500 sq ft, with no published rent and no leasing office yet. We'll email you floor plans and pricing as soon as they're released.</p>
 
       </div>
       <form data-lead class="reveal">
