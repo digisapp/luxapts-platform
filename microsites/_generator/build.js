@@ -261,9 +261,23 @@ ${JSON.stringify(ld, null, 2)}
   .hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;color:#fff;
     background:linear-gradient(165deg,${hexA(p.ink, 0.84)} 0%,${hexA(p.deep, 0.5)} 60%,${hexA(p.ink, 0.76)} 100%),
     url('img/hero.jpg') center/cover}
-  .hero-inner{max-width:840px;padding:150px 0 110px}
+  /* The lead form sits in the hero (2026-10-13). It used to be the last thing
+     on the page, 4,000–6,600px down: on all 19 sites, at every screen size
+     tested, nobody saw it without scrolling past the whole building tour.
+     Desktop puts it beside the headline; below 1000px it follows the hero
+     copy. It is still the page's only form. */
+  .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:60px;align-items:center;padding:128px 0 100px}
+  .hero-inner{max-width:720px}
+  .hero-form{scroll-margin-top:84px}
+  .hero-form form{padding:30px 32px 26px}
+  .hero-form label{margin:14px 0 6px}
+  .hero-form input,.hero-form select{padding:12px 14px}
+  .hero-form form .btn{margin-top:22px}
+  .hero-form .fineprint{margin-top:12px}
+  .form-title{font-family:var(--display);font-weight:700;font-size:1.25rem;letter-spacing:-.01em;line-height:1.25}
+  .form-lede{color:var(--muted-dark);font-size:.92rem;line-height:1.5;margin:6px 0 4px}
   .chip{display:inline-block;font-family:var(--display);font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;background:${hexA(p.a, 0.18)};border:1px solid ${hexA(p.a, 0.5)};color:${p.pale};padding:8px 18px;border-radius:999px;margin-bottom:28px}
-  .hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,6.2vw,4.6rem);line-height:1.05;letter-spacing:-.03em}
+  .hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,4.4vw,4rem);line-height:1.05;letter-spacing:-.03em}
   .hero h1 .aqua{color:var(--aqua)}
   .hero p.sub{margin:26px 0 38px;font-size:1.15rem;color:rgba(255,255,255,.85);max-width:580px}
   .btn{display:inline-block;font-family:var(--display);font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;padding:17px 36px;border-radius:999px;transition:all .3s;cursor:pointer;border:none}
@@ -311,8 +325,8 @@ ${JSON.stringify(ld, null, 2)}
   details[open] summary::after{transform:rotate(45deg)}
   details p{margin-top:12px;color:var(--muted-dark)}
 
-  /* Mid-page CTA. The form lives at the very bottom; on a long page that is a
-     lot of scroll between "I'm interested" and anywhere to say so. */
+  /* Mid-page CTA: a way back up to the form for someone who has read the
+     building tour and decided. An anchor, never a second form. */
   .midcta{background:var(--off);border-top:1px solid #e6eef0;border-bottom:1px solid #e6eef0;padding:38px 0}
   .midcta .wrap{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
   .midcta p{font-family:var(--display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;margin:0;max-width:62ch}
@@ -331,7 +345,8 @@ ${hasInventory ? `  /* Live availability, filled from /api/microsite-inventory. 
   .cta-band{position:relative;color:#fff;padding:120px 0;
     background:linear-gradient(160deg,${hexA(p.ink, 0.94)},${hexA(p.deep, 0.84)}),
     url('img/cta.jpg') center/cover}
-  .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:76px;align-items:start}
+  .cta-end{max-width:720px}
+  .cta-end .btn{margin-top:30px}
   .cta-band h2{color:#fff}
   .cta-band .prose{color:rgba(255,255,255,.8)}
   form{background:rgba(255,255,255,.99);border-radius:24px;padding:44px;color:var(--ink);position:relative;box-shadow:0 30px 80px rgba(0,0,0,.3)}
@@ -352,8 +367,13 @@ ${hasInventory ? `  /* Live availability, filled from /api/microsite-inventory. 
   .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s ease}
   .reveal.in{opacity:1;transform:none}
 
+  @media(max-width:1000px){
+    .hero-grid{grid-template-columns:1fr;gap:44px}
+    .hero h1{font-size:clamp(2.4rem,6.2vw,4.6rem)}
+    .hero-form{max-width:560px}
+  }
   @media(max-width:900px){
-    .split,.cta-grid{grid-template-columns:1fr;gap:42px}
+    .split{grid-template-columns:1fr;gap:42px}
     .split img{height:360px}
     .gallery-grid{grid-template-columns:1fr}
     .gallery-grid img{height:280px}
@@ -374,7 +394,8 @@ ${hasInventory ? `  /* Live availability, filled from /api/microsite-inventory. 
     header .wordmark{font-size:min(18px,${wmVw}vw);white-space:nowrap;padding:10px 0;margin:-10px 0}
     .nav-cta{flex:none;display:inline-block;line-height:44px;padding:0 16px;font-size:.75rem;letter-spacing:.05em;white-space:nowrap}
     .nav-cta .cta-x{display:none}
-    .hero-inner{padding:88px 0 76px}
+    .hero-grid{padding:88px 0 76px;gap:30px}
+    .hero-form form{padding:26px 22px 22px}
     .chip{font-size:.75rem;letter-spacing:.08em;padding:7px 14px;margin-bottom:16px}
     .hero h1{font-size:clamp(2rem,9.2vw,2.5rem);line-height:1.06}
     .hero p.sub{margin:16px 0 24px;font-size:1rem;line-height:1.55}
@@ -405,12 +426,35 @@ ${hasInventory ? `  /* Live availability, filled from /api/microsite-inventory. 
 
 <div class="hero" id="top">
   <div class="wrap">
-    <div class="hero-inner">
-      <span class="chip">${esc(b.chip)}</span>
-      <h1>${b.h1.map((l, i) => (i === b.h1.length - 1 ? `<span class="aqua">${esc(l)}</span>` : esc(l))).join("<br>")}</h1>
-      <p class="sub">${esc(b.sub)}</p>
-      <a class="btn btn-aqua" href="#signup">${ctaLabel}</a>
-      <a class="btn btn-ghost" href="#building">See the Building</a>
+    <div class="hero-grid">
+      <div class="hero-inner">
+        <span class="chip">${esc(b.chip)}</span>
+        <h1>${b.h1.map((l, i) => (i === b.h1.length - 1 ? `<span class="aqua">${esc(l)}</span>` : esc(l))).join("<br>")}</h1>
+        <p class="sub">${esc(b.sub)}</p>
+        <a class="btn btn-aqua" href="#signup">${ctaLabel}</a>
+        <a class="btn btn-ghost" href="#building">See the Building</a>
+      </div>
+      <div class="hero-form" id="signup">
+        <form data-lead>
+          <p class="form-title">${esc(isWait ? "Be first to see pricing" : "Tell us what you need")}</p>
+          <p class="form-lede">${esc(isWait
+            ? `Floor plans and rents for ${b.name}, emailed as soon as they're released.`
+            : `Today's prices and open apartments at ${b.name}, usually within a day.`)}</p>
+          <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" required placeholder="Your name" autocomplete="name">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required placeholder="you@email.com" autocomplete="email">
+          <label for="phone">Phone / WhatsApp</label>
+          <input id="phone" name="phone" type="tel" required placeholder="+1 305 555 0123" autocomplete="tel" inputmode="tel">
+          <label for="unit">Interested in</label>
+          <select id="unit" name="unit_type">${(b.unitTypes || ["Studio", "1 Bedroom", "2 Bedroom", "3 Bedroom", "Not sure yet"]).map((u) => `<option>${esc(u)}</option>`).join("")}</select>
+          <label for="movein">Target move-in</label>
+          <select id="movein" name="move_in">${b.moveIn.map((m) => `<option>${esc(m)}</option>`).join("")}</select>
+          <button class="btn btn-aqua" type="submit">${ctaLabel}</button>
+          <p class="fineprint">Looking more broadly? <a href="https://staycio.com?utm_source=${utm}&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
+        </form>
+      </div>
     </div>
   </div>
   <div class="hero-ticker"><div>${ticker} &nbsp;·&nbsp; ${ticker} &nbsp;·&nbsp; </div></div>
@@ -475,10 +519,9 @@ ${b.faq.map(([q, a]) => `    <details class="reveal"><summary>${esc(q)}</summary
   </div>
 </section>
 
-<div class="cta-band" id="signup">
+<div class="cta-band">
   <div class="wrap">
-    <div class="cta-grid">
-      <div class="reveal">
+    <div class="cta-end reveal">
         <p class="kicker" style="color:${p.pale}">${isSoon ? "First Access" : isWait ? "Early Pricing" : "Pricing &amp; Availability"}</p>
         <h2>${esc(isSoon && b.soon ? b.soon.h2 : b.ctaH2)}</h2>
         <p class="prose">${esc(isSoon && b.soon ? b.soon.p : b.ctaP)}</p>
@@ -487,22 +530,7 @@ ${hasInventory ? `        <div class="inv" data-inv hidden>
           <span data-inv-detail></span>
           <em data-inv-asof></em>
         </div>` : ""}
-      </div>
-      <form data-lead class="reveal">
-        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
-        <label for="name">Name</label>
-        <input id="name" name="name" type="text" required placeholder="Your name" autocomplete="name">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" required placeholder="you@email.com" autocomplete="email">
-        <label for="phone">Phone / WhatsApp</label>
-        <input id="phone" name="phone" type="tel" required placeholder="+1 305 555 0123" autocomplete="tel" inputmode="tel">
-        <label for="unit">Interested in</label>
-        <select id="unit" name="unit_type">${(b.unitTypes || ["Studio", "1 Bedroom", "2 Bedroom", "3 Bedroom", "Not sure yet"]).map((u) => `<option>${esc(u)}</option>`).join("")}</select>
-        <label for="movein">Target move-in</label>
-        <select id="movein" name="move_in">${b.moveIn.map((m) => `<option>${esc(m)}</option>`).join("")}</select>
-        <button class="btn btn-aqua" type="submit">${ctaLabel}</button>
-        <p class="fineprint">Looking more broadly? <a href="https://staycio.com?utm_source=${utm}&utm_medium=microsite">Browse Miami apartments on Staycio →</a></p>
-      </form>
+      <a class="btn btn-aqua" href="#signup">${ctaLabel}</a>
     </div>
   </div>
 </div>
