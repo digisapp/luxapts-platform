@@ -1,0 +1,26 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.jadebrickell.com"
+        }
+      ],
+      "destination": "https://jadebrickell.com/",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.jadebrickell.com"
+        }
+      ],
+      "destination": "https://jadebrickell.com/:path*",
+      "permanent": true
+    }
+  ]
+}

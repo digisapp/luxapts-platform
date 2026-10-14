@@ -1,0 +1,26 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.perrinbrickell.com"
+        }
+      ],
+      "destination": "https://perrinbrickell.com/",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.perrinbrickell.com"
+        }
+      ],
+      "destination": "https://perrinbrickell.com/:path*",
+      "permanent": true
+    }
+  ]
+}
