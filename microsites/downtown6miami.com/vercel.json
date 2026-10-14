@@ -1,0 +1,26 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.downtown6miami.com"
+        }
+      ],
+      "destination": "https://downtown6miami.com/",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.downtown6miami.com"
+        }
+      ],
+      "destination": "https://downtown6miami.com/:path*",
+      "permanent": true
+    }
+  ]
+}
