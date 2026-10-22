@@ -216,17 +216,19 @@ describe("buildSummary", () => {
       units: [],
       preLeasing: {
         expectedOpening: "Leasing begins winter 2026",
-        checkedAt: "2026-10-22T15:00:00Z",
+        checkedAt: "2026-10-22",
         developer: "Vanbarton Group",
         unitsTotal: 648,
       },
       timeZone: "America/New_York",
+      pageUrl: "https://staycio.com/buildings/one-gouverneur-lane",
     });
     const text = s.overview.join(" ");
     expect(text).toContain("new rental building from Vanbarton Group with 648 apartments");
     expect(text).toContain('"Leasing begins winter 2026" (as of October 22, 2026)');
     expect(text).not.toContain("no units listed");
     expect(s.faqs.find((f) => f.question.includes("start leasing"))?.answer).toContain("as of October 22, 2026");
+    expect(s.faqs.some((f) => f.question.startsWith("How do I schedule a tour"))).toBe(false);
   });
 
   it("gives two buildings with different inventory different copy", () => {

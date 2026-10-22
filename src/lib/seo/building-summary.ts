@@ -98,6 +98,20 @@ function layoutWord(key: string, count: number): string {
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
+/**
+ * "October 22, 2026". A bare date ("2026-06-14") is a calendar day, not an
+ * instant: parsed as UTC midnight it printed as June 13 in New York.
+ */
+function asOfDate(value: string, timeZone?: string): string {
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  return new Date(dateOnly ? `${value}T12:00:00Z` : value).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: dateOnly ? "UTC" : timeZone,
+  });
+}
+
 function range(min: number | null, max: number | null, fmt: (n: number) => string): string | null {
   if (min == null) return null;
   if (max == null || max === min) return fmt(min);
@@ -226,7 +240,7 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
       }`
     );
   } else if (preLeasing) {
-    const checked = preLeasing.checkedAt ? ` (as of ${new Date(preLeasing.checkedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone })})` : "";
+    const checked = preLeasing.checkedAt ? ` (as of ${asOfDate(preLeasing.checkedAt, timeZone)})` : "";
     overview.push(
       `${name} is a new rental building${preLeasing.developer ? ` from ${preLeasing.developer}` : ""}${
         preLeasing.unitsTotal ? ` with ${preLeasing.unitsTotal.toLocaleString()} apartments` : ""
@@ -299,7 +313,7 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
     faqs.push({
       question: `When does ${name} start leasing?`,
       answer: `Leasing hasn't opened yet. The stated timing is "${preLeasing.expectedOpening.replace(/[."]+$/, "")}"${
-        preLeasing.checkedAt ? ` as of ${new Date(preLeasing.checkedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone })}` : ""
+        preLeasing.checkedAt ? ` as of ${asOfDate(preLeasing.checkedAt, timeZone)}` : ""
       }. Opening dates for new buildings often move; Staycio's first-access list gets pricing and floor plans as soon as they're released.`,
     });
   }
@@ -307,7 +321,8 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
   // The question people ask an assistant right before they'd contact us.
   // Only states what the form does: the renter gets an email confirming the
   // request (tourConfirmationEmail in /api/leads).
-  if (pageUrl) {
+  // Nothing to tour before leasing opens; the pre-leasing FAQ covers it.
+  if (pageUrl && !(preLeasing && mix.length === 0)) {
     faqs.push({
       question: `How do I schedule a tour at ${name}?`,
       answer: `Request a tour on Staycio at ${pageUrl.replace(/^https?:\/\//, "")}: pick a preferred date and time, and you'll get an email confirming the request.${
