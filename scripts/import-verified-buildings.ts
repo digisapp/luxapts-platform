@@ -193,6 +193,15 @@ async function main() {
 
     // Units and prices: the real scraper, nothing from the proposal
     const scraped = await scrapeUnitsOnly(p.url);
+
+    // The scraper shares its xAI account with Stacy. Out of credit, every
+    // further building would fail anyway and Stacy is about to stop
+    // answering: stop the batch here so nothing else draws on the account.
+    if (/credits|spending limit/i.test(scraped.error ?? "")) {
+      console.error(`STOP   xAI credit/spending limit reached at ${label}: ${scraped.error}`);
+      console.log(JSON.stringify({ ...summary, stopped_at: p.key }));
+      process.exit(2);
+    }
     let priced = 0;
     if (scraped.success && scraped.data && scraped.data.units.length > 0) {
       await saveScrapedUnits(supabase, building.id, scraped.data.units);
