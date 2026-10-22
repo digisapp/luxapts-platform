@@ -1,8 +1,9 @@
 "use client";
 
-import { Calendar, MessageCircle } from "lucide-react";
+import { BellRing, Calendar, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScheduleTourModal } from "@/components/forms/ScheduleTourModal";
+import { ContactLeasingModal } from "@/components/forms/ContactLeasingModal";
 import { openChat } from "@/lib/chat/open-chat";
 import { formatPrice } from "@/lib/utils";
 
@@ -11,6 +12,8 @@ interface StickyMobileCTAProps {
   buildingName: string;
   citySlug: string;
   price?: number;
+  /** Leasing hasn't opened: "Get first access" instead of a tour. */
+  preLeasing?: boolean;
 }
 
 export function StickyMobileCTA({
@@ -18,6 +21,7 @@ export function StickyMobileCTA({
   buildingName,
   citySlug,
   price,
+  preLeasing = false,
 }: StickyMobileCTAProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 lg:hidden">
@@ -42,6 +46,22 @@ export function StickyMobileCTA({
           >
             <MessageCircle className="h-5 w-5" />
           </Button>
+          {preLeasing ? (
+            <ContactLeasingModal
+              buildingId={buildingId}
+              buildingName={buildingName}
+              citySlug={citySlug}
+              variant="first_access"
+              trigger={
+                <Button size="lg" className="h-11 min-w-0 flex-1 gap-2 px-4">
+                  <BellRing className="h-4 w-4" />
+                  <span>
+                    <span className="max-[369px]:hidden">Get </span>first access
+                  </span>
+                </Button>
+              }
+            />
+          ) : (
           <ScheduleTourModal
             buildingId={buildingId}
             buildingName={buildingName}
@@ -59,6 +79,7 @@ export function StickyMobileCTA({
               </Button>
             }
           />
+          )}
         </div>
       </div>
     </div>

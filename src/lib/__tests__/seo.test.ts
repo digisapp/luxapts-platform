@@ -210,6 +210,25 @@ describe("buildSummary", () => {
     expect(tour?.answer).toContain("214-555-0100");
   });
 
+  it("describes a pre-leasing building with its quoted, dated opening", () => {
+    const s = buildSummary({
+      ...base,
+      units: [],
+      preLeasing: {
+        expectedOpening: "Leasing begins winter 2026",
+        checkedAt: "2026-10-22T15:00:00Z",
+        developer: "Vanbarton Group",
+        unitsTotal: 648,
+      },
+      timeZone: "America/New_York",
+    });
+    const text = s.overview.join(" ");
+    expect(text).toContain("new rental building from Vanbarton Group with 648 apartments");
+    expect(text).toContain('"Leasing begins winter 2026" (as of October 22, 2026)');
+    expect(text).not.toContain("no units listed");
+    expect(s.faqs.find((f) => f.question.includes("start leasing"))?.answer).toContain("as of October 22, 2026");
+  });
+
   it("gives two buildings with different inventory different copy", () => {
     const a = buildSummary(base).overview.join(" ");
     const b = buildSummary({

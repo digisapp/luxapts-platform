@@ -41,6 +41,17 @@ export interface SummaryInput {
   pageUrl?: string | null;
   /** The building's IANA zone, so the verified date is its calendar day, not the server's. */
   timeZone?: string;
+  /**
+   * Leasing hasn't opened. `expectedOpening` is the developer's or press's
+   * own words ("Leasing begins winter 2026"), shown quoted and dated because
+   * opening dates slip.
+   */
+  preLeasing?: {
+    expectedOpening: string;
+    checkedAt?: string | null;
+    developer?: string | null;
+    unitsTotal?: number | null;
+  } | null;
 }
 
 export interface UnitMixRow {
@@ -154,6 +165,7 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
     timeZone,
     leasingPhone,
     pageUrl,
+    preLeasing,
   } = input;
 
   const place = neighborhoodName && cityName
@@ -212,6 +224,13 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
             })}.`
           : ""
       }`
+    );
+  } else if (preLeasing) {
+    const checked = preLeasing.checkedAt ? ` (as of ${new Date(preLeasing.checkedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone })})` : "";
+    overview.push(
+      `${name} is a new rental building${preLeasing.developer ? ` from ${preLeasing.developer}` : ""}${
+        preLeasing.unitsTotal ? ` with ${preLeasing.unitsTotal.toLocaleString()} apartments` : ""
+      }. Leasing hasn't opened yet. The stated timing is "${preLeasing.expectedOpening.replace(/[."]+$/, "")}"${checked}. Pricing and floor plans aren't public; join the first-access list to get them when they're released.`
     );
   } else {
     overview.push(
@@ -273,6 +292,15 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
     faqs.push({
       question: `Does ${name} have parking?`,
       answer: parkingPolicy.trim(),
+    });
+  }
+
+  if (preLeasing && mix.length === 0) {
+    faqs.push({
+      question: `When does ${name} start leasing?`,
+      answer: `Leasing hasn't opened yet. The stated timing is "${preLeasing.expectedOpening.replace(/[."]+$/, "")}"${
+        preLeasing.checkedAt ? ` as of ${new Date(preLeasing.checkedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone })}` : ""
+      }. Opening dates for new buildings often move; Staycio's first-access list gets pricing and floor plans as soon as they're released.`,
     });
   }
 

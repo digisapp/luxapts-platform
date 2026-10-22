@@ -82,9 +82,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  // Only buildings with something listed; the rest are noindex (see the
+  // Only buildings with something listed, or a new building in pre-leasing
+  // (dated opening + first-access form); the rest are noindex (see the
   // building page's generateMetadata) until inventory returns.
   const buildingsWithUnits = new Set(availableUnits.map((u) => u.building_id));
+  const { data: preLeasingFacts } = await supabase
+    .from("building_facts")
+    .select("building_id, value")
+    .eq("key", "leasing_status");
+  for (const f of preLeasingFacts ?? []) {
+    if (f.value === "pre_leasing") buildingsWithUnits.add(f.building_id);
+  }
   const buildingRoutes: MetadataRoute.Sitemap = buildings.filter((b) => buildingsWithUnits.has(b.id)).map((b) => ({
     // Slug URL only. Emitting the UUID here submitted a URL that now 301s,
     // which wastes crawl budget and splits signals across two paths.

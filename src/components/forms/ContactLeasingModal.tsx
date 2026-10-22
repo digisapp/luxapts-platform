@@ -22,6 +22,8 @@ interface ContactLeasingModalProps {
   citySlug: string;
   leasingEmail?: string | null;
   trigger?: React.ReactNode;
+  /** A building that hasn't opened leasing: the form joins its first-access list. */
+  variant?: "contact" | "first_access";
 }
 
 export function ContactLeasingModal({
@@ -30,7 +32,9 @@ export function ContactLeasingModal({
   citySlug,
   leasingEmail,
   trigger,
+  variant = "contact",
 }: ContactLeasingModalProps) {
+  const firstAccess = variant === "first_access";
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -64,7 +68,7 @@ export function ContactLeasingModal({
           move_in_date: formData.moveInDate || undefined,
           budget_max: formData.budget ? parseInt(formData.budget, 10) : undefined,
           beds: formData.beds ? parseInt(formData.beds, 10) : undefined,
-          notes: `Inquiry for ${buildingName}\n${formData.message}`,
+          notes: `${firstAccess ? "First access request for" : "Inquiry for"} ${buildingName}\n${formData.message}`,
           targets: [{ building_id: buildingId, rank: 1 }],
           session_id: analyticsSessionId(),
         }),
@@ -118,19 +122,23 @@ export function ContactLeasingModal({
         {success ? (
           <div className="py-8 text-center">
             <CheckCircle2 className="mx-auto h-12 w-12 text-green-500 mb-4" />
-            <DialogTitle className="text-xl mb-2">Message Sent!</DialogTitle>
+            <DialogTitle className="text-xl mb-2">{firstAccess ? "You're on the list" : "Message Sent!"}</DialogTitle>
             <DialogDescription className="mb-6">
-              The leasing team at {buildingName} will respond to your inquiry soon.
+              {firstAccess
+                ? `We'll send you pricing and floor plans for ${buildingName} as soon as leasing opens.`
+                : `The leasing team at ${buildingName} will respond to your inquiry soon.`}
             </DialogDescription>
             <Button onClick={handleClose}>Close</Button>
           </div>
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Contact Leasing</DialogTitle>
+              <DialogTitle>{firstAccess ? "Get first access" : "Contact Leasing"}</DialogTitle>
               <DialogDescription>
-                Send a message to the leasing team at {buildingName}.
-                {leasingEmail && (
+                {firstAccess
+                  ? `Leasing at ${buildingName} hasn't opened yet. Leave your details and we'll send pricing and floor plans the moment they're released.`
+                  : `Send a message to the leasing team at ${buildingName}.`}
+                {!firstAccess && leasingEmail && (
                   <span className="block mt-1 text-xs">
                     Or email directly: {leasingEmail}
                   </span>

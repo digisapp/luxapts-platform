@@ -76,6 +76,25 @@ const getUnitPrices = cache(async (id: string) =>
   fetchAvailableUnitPrices<UnitPriceRow>(createAdminClient(), [id], ["price_captured_at"])
 );
 
+// Pre-leasing facts (a new building whose leasing hasn't opened), shared by
+// generateMetadata and the page.
+const getPreLeasingFacts = cache(async (id: string) => {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("building_facts")
+    .select("key, value")
+    .eq("building_id", id)
+    .in("key", ["leasing_status", "expected_opening", "opening_checked_at", "developer", "total_units"]);
+  const facts = Object.fromEntries((data ?? []).map((f) => [f.key, f.value])) as Record<string, unknown>;
+  if (facts.leasing_status !== "pre_leasing" || typeof facts.expected_opening !== "string") return null;
+  return {
+    expectedOpening: facts.expected_opening,
+    checkedAt: typeof facts.opening_checked_at === "string" ? facts.opening_checked_at : null,
+    developer: typeof facts.developer === "string" ? facts.developer : null,
+    unitsTotal: Number(facts.total_units) > 0 ? Number(facts.total_units) : null,
+  };
+});
+
 // Primary building image for social shares (deduplicated across renders)
 const getPrimaryBuildingImage = cache(async (id: string) => {
   const supabase = createAdminClient();
@@ -98,11 +117,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return { title: "Building Not Found - Staycio", robots: { index: false, follow: false } };
   }
 
-  const [ogImage, availableUnits, unitPrices] = await Promise.all([
+  const [ogImage, availableUnits, unitPrices, preLeasingFacts] = await Promise.all([
     getPrimaryBuildingImage(building.id),
     getAvailableUnitCount(building.id),
     getUnitPrices(building.id),
+    getPreLeasingFacts(building.id),
   ]);
+  // Pre-leasing applies only until units are listed; then it's a normal page.
+  const preLeasing = availableUnits === 0 ? preLeasingFacts : null;
   const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
   const neighborhood = Array.isArray(building.neighborhoods)
     ? building.neighborhoods[0]
@@ -127,8 +149,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     null
   );
   const tz = timeZoneForState(city?.state);
-  const description =
-    fromRent && checkedAt && availableUnits > 0
+  // Pre-leasing: no opening year in the snippet (dates slip; see the
+  // microsite-title rule), the dated quote lives on the page.
+  const description = preLeasing
+    ? `${building.name} in ${place || "the city"}: new rental building${
+        preLeasing.developer ? ` from ${preLeasing.developer}` : ""
+      }${preLeasing.unitsTotal ? `, ${preLeasing.unitsTotal.toLocaleString()} apartments` : ""}. Leasing hasn't opened yet: get first access to pricing and floor plans on Staycio.`
+    : fromRent && checkedAt && availableUnits > 0
       ? `${building.name} in ${place || "the city"}: ${availableUnits} apartment${
           availableUnits === 1 ? "" : "s"
         } listed from ${formatPrice(fromRent)}/month, prices verified ${formatDate(checkedAt, tz)}. Floor plans, amenities, pet and parking policies${
@@ -146,7 +173,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     // Same rule as city and neighborhood pages: a building with nothing listed
     // is a thin "No units currently available" page. Keep it reachable but out
     // of the index (and the sitemap) until it has inventory again.
-    robots: availableUnits > 0 ? undefined : { index: false, follow: true },
+    // A pre-leasing building is indexable too: it has real, dated facts and a
+    // first-access form, and new buildings are searched by name.
+    robots: availableUnits > 0 || preLeasing ? undefined : { index: false, follow: true },
     alternates: { canonical },
     openGraph: {
       title,
@@ -486,6 +515,9 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
   const parkingPolicy = policyText(building.parking_policy);
   const depositPolicy = policyText(building.deposit_policy);
 
+  // A new building whose leasing hasn't opened, until units are listed
+  const preLeasing = (units?.length ?? 0) === 0 ? await getPreLeasingFacts(id) : null;
+
   const summary = buildSummary({
     name: building.name,
     address: building.address_1,
@@ -508,6 +540,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     timeZone: buildingTimeZone,
     leasingPhone: building.leasing_phone,
     pageUrl: buildingUrl(building),
+    preLeasing,
   });
 
   // Unit rows, resolved here so the client list only filters and collapses.
@@ -616,6 +649,11 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 <div>
                   <div className="mb-2 flex flex-wrap gap-2">
                     {building.neighborhoods && <Badge>{building.neighborhoods.name}</Badge>}
+                    {preLeasing && (
+                      <Badge className="bg-stacy/10 text-link border-stacy/40 dark:bg-cyan-400/15 dark:border-cyan-400/30">
+                        Pre-leasing
+                      </Badge>
+                    )}
                     {moveInSpecial && (
                       <Badge className="bg-stacy/10 text-link border-stacy/40 dark:bg-cyan-400/15 dark:border-cyan-400/30">
                         Special offer
@@ -676,7 +714,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {priceRange ? "Starting from" : "Pricing"}
+                      {priceRange ? "Starting from" : preLeasing ? "Pre-leasing" : "Pricing"}
                     </p>
                     {priceRange ? (
                       <p className="whitespace-nowrap text-2xl font-bold tabular-nums">
@@ -689,7 +727,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                         <span className="text-lg font-normal text-muted-foreground">/mo</span>
                       </p>
                     ) : (
-                      <p className="text-lg font-semibold">Contact for pricing</p>
+                      <p className="text-lg font-semibold">{preLeasing ? "Pricing not released yet" : "Contact for pricing"}</p>
                     )}
                   </div>
                   {unitCount > 0 && (
@@ -708,6 +746,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   buildingName={building.name}
                   citySlug={building.cities?.slug || ""}
                   leasingEmail={building.leasing_email}
+                  preLeasing={!!preLeasing}
                 />
 
                 {/* Contact Info — one wrapping row; each link keeps a 44px tap height */}
@@ -865,7 +904,9 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                     <UnitList units={unitRows} />
                   ) : (
                     <p className="text-muted-foreground">
-                      No units currently available. Contact leasing for upcoming availability.
+                      {preLeasing
+                        ? "Floor plans and pricing haven't been released. Get first access and we'll send them when leasing opens."
+                        : "No units currently available. Contact leasing for upcoming availability."}
                     </p>
                   )}
                 </CardContent>
@@ -1034,12 +1075,14 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                         <span className="text-base font-normal text-muted-foreground">/mo and up</span>
                       </p>
                     ) : (
-                      <p className="mt-0.5 text-lg font-semibold">Contact for pricing</p>
+                      <p className="mt-0.5 text-lg font-semibold">{preLeasing ? "Pricing not released yet" : "Contact for pricing"}</p>
                     )}
                     <p className="mt-1 text-sm text-muted-foreground">
                       {unitCount
                         ? `${unitCount} unit${unitCount === 1 ? "" : "s"} available`
-                        : "No units listed right now"}
+                        : preLeasing
+                          ? "Leasing hasn't opened yet"
+                          : "No units listed right now"}
                       {pricingVerified && latestPriceDate && (
                         <span className="text-positive"> · verified {formatDate(latestPriceDate, buildingTimeZone)}</span>
                       )}
@@ -1051,6 +1094,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                     citySlug={building.cities?.slug || ""}
                     leasingEmail={building.leasing_email}
                     showShare={false}
+                    preLeasing={!!preLeasing}
                   />
                   {building.leasing_phone && (
                     <a
@@ -1073,6 +1117,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
         buildingName={building.name}
         citySlug={building.cities?.slug || ""}
         price={priceRange?.min}
+        preLeasing={!!preLeasing}
       />
 
       <Footer />

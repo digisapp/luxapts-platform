@@ -11,7 +11,12 @@
 // Input: a JSON array of {key, name, address, zip, neighborhood,
 // new_neighborhood?, year_built?, url} (research proposals).
 //
-// Run with: npx tsx scripts/import-verified-buildings.ts <proposals.json> --city <slug>
+// --pre-leasing: new buildings whose leasing hasn't opened. No price is
+// required; each needs a quoted, dated expected_opening and is activated with
+// building_facts leasing_status=pre_leasing (the page shows "Pre-leasing" and a
+// first-access form until the scraper finds units on its leasing site).
+//
+// Run with: npx tsx scripts/import-verified-buildings.ts <proposals.json> --city <slug> [--pre-leasing]
 //   [--also-dedupe new-york,brooklyn] [--only k1,k2] [--apply]
 // --also-dedupe: cities whose buildings also count as duplicates (Brooklyn
 // buildings are filed under both "new-york" and "brooklyn").
@@ -33,7 +38,14 @@ interface Proposal {
   neighborhood?: string | null;
   new_neighborhood?: boolean;
   year_built?: number | null;
-  url: string;
+  url: string | null;
+  // --pre-leasing only: a new building whose leasing hasn't opened
+  developer?: string | null;
+  units_total?: number | null;
+  /** The source's own words, e.g. "Leasing begins winter 2026" */
+  expected_opening?: string | null;
+  opening_checked_at?: string | null;
+  opening_source_url?: string | null;
 }
 
 function arg(name: string): string | undefined {
@@ -100,6 +112,7 @@ async function main() {
   const citySlug = arg("--city");
   const apply = process.argv.includes("--apply");
   const only = arg("--only")?.split(",");
+  const preLeasingMode = process.argv.includes("--pre-leasing");
   if (!file || !citySlug) throw new Error("usage: <proposals.json> --city <slug> [--only k1,k2] [--apply]");
 
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -136,6 +149,11 @@ async function main() {
 
   for (const p of proposals) {
     const label = `${p.name} (${p.address})`;
+    if (preLeasingMode && !p.expected_opening) {
+      console.log(`skip   ${label}: no stated opening date`);
+      summary.skipped++;
+      continue;
+    }
     if (takenNames.has(nameKey(p.name)) || takenAddresses.has(addressKey(p.address))) {
       console.log(`skip   ${label}: already listed (${dedupeSlugs.join(", ")})`);
       summary.skipped++;
@@ -148,7 +166,9 @@ async function main() {
       : undefined;
     if (!apply) {
       console.log(
-        `would  ${label} → ${hood ? hood.name : wanted ? `NEW neighborhood "${wanted}"` : "no neighborhood"} · ${p.url}`
+        `would  ${label} → ${hood ? hood.name : wanted ? `NEW neighborhood "${wanted}"` : "no neighborhood"} · ${
+          preLeasingMode ? `pre-leasing "${p.expected_opening}"` : p.url
+        }`
       );
       continue;
     }
@@ -187,11 +207,44 @@ async function main() {
     takenNames.add(nameKey(p.name));
     takenAddresses.add(addressKey(p.address));
 
-    await supabase
-      .from("building_scrape_status")
-      .upsert({ building_id: building.id, website_url: p.url, scrape_enabled: true }, { onConflict: "building_id" });
+    if (p.url) {
+      await supabase
+        .from("building_scrape_status")
+        .upsert({ building_id: building.id, website_url: p.url, scrape_enabled: true }, { onConflict: "building_id" });
+    }
+
+    if (preLeasingMode) {
+      const facts = [
+        ["leasing_status", "pre_leasing"],
+        ["expected_opening", p.expected_opening],
+        ["opening_checked_at", p.opening_checked_at ?? new Date().toISOString().slice(0, 10)],
+        ["opening_source_url", p.opening_source_url],
+        ["developer", p.developer],
+        ["total_units", p.units_total],
+      ].filter(([, v]) => v != null && v !== "");
+      const { error: factErr } = await supabase.from("building_facts").upsert(
+        facts.map(([key, value]) => ({ building_id: building.id, key, value, source: "research" })),
+        { onConflict: "building_id,key" }
+      );
+      if (factErr) throw factErr;
+
+      const amenities = p.url ? await scrapeAmenitiesOnly(p.url).catch(() => null) : null;
+      if (amenities?.success && amenities.data?.amenities.length) {
+        await saveScrapedAmenities(supabase, building.id, amenities.data.amenities);
+      }
+      if (coords) {
+        await supabase.from("buildings").update({ status: "active" }).eq("id", building.id);
+        summary.added_live++;
+        console.log(`LIVE   ${label}: /buildings/${building.slug} pre-leasing, ${amenities?.data?.amenities.length ?? 0} amenities`);
+      } else {
+        summary.added_inactive++;
+        console.log(`HELD   ${label}: /buildings/${building.slug} left inactive (address not geocoded)`);
+      }
+      continue;
+    }
 
     // Units and prices: the real scraper, nothing from the proposal
+    if (!p.url) throw new Error(`${label}: no url (required outside --pre-leasing)`);
     const scraped = await scrapeUnitsOnly(p.url);
 
     // The scraper shares its xAI account with Stacy. Out of credit, every
