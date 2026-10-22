@@ -253,7 +253,16 @@ async function renderViaPlaywright(url: string): Promise<RenderResult | null> {
 
   let browser;
   try {
-    browser = await chromium.launch({ headless: true });
+    // Chromium's new headless mode (the full browser, channel "chromium")
+    // gets through Cloudflare on Entrata's /conventional/ availability pages,
+    // where the default headless shell is served "Just a moment…" (The Jane:
+    // 0 → 9 prices, SOMA at Brickell: 0 → 19, 2026-10-22). The spoofed UA
+    // below still matters: the browser's own "HeadlessChrome" UA is
+    // challenged in every mode. Falls back to the shell if the full browser
+    // isn't installed.
+    browser = await chromium
+      .launch({ headless: true, channel: "chromium" })
+      .catch(() => chromium.launch({ headless: true }));
     const page = await browser.newPage({
       userAgent:
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
