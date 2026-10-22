@@ -349,7 +349,44 @@ export async function findUnitsPage(websiteUrl: string, mainHtml: string): Promi
   return findUnitsPageIn(mainHtml, websiteUrl);
 }
 
+// Landlords with many buildings on one site. When a building's configured
+// website is one of these HOMEPAGES, the page we'd find is the landlord's
+// portfolio-wide availability list (2 Cooper Square was set to rockrose.com,
+// and rockrose.com/availabilities/ lists every Rockrose building), so its
+// units would be attributed to the wrong building.
+const LANDLORD_HOSTS = new Set([
+  "rockrose.com",
+  "relatedrentals.com",
+  "glenwoodnyc.com",
+  "greystar.com",
+  "cortland.com",
+  "amli.com",
+  "lyvwellapartments.com",
+  "rent.brookfieldproperties.com",
+  "equityapartments.com",
+  "avaloncommunities.com",
+  "rosenyc.com",
+  "moinian.com",
+  "jrk.com",
+  "rpmliving.com",
+  "willowbridgepc.com",
+  "apartments.com",
+]);
+
+/** A landlord's homepage rather than one building's page. Pure. */
+export function isLandlordHomepage(websiteUrl: string): boolean {
+  try {
+    const url = new URL(websiteUrl);
+    return LANDLORD_HOSTS.has(normalizeHost(url.hostname)) && url.pathname.replace(/\/+$/, "") === "";
+  } catch {
+    return false;
+  }
+}
+
 export async function scrapeUnitsOnly(websiteUrl: string): Promise<ScrapeResult> {
+  if (isLandlordHomepage(websiteUrl)) {
+    return { success: false, error: "Website is the landlord's homepage, not this building's page; fix website_url" };
+  }
   try {
     // Fetch main page
     const mainResult = await fetchBuildingHTML(websiteUrl);

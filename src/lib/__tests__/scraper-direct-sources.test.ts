@@ -7,7 +7,7 @@ import {
   unitsFromSightMap,
 } from "../scraper/sightmap";
 import { isGlenwoodUrl, parseGlenwoodListings } from "../scraper/glenwood";
-import { findUnitsPageIn } from "../scraper/fetcher";
+import { findUnitsPageIn, isLandlordHomepage } from "../scraper/fetcher";
 import { isBotChallenge } from "../scraper/renderer";
 import { condenseHtml, focusOnPricing } from "../scraper/ai-extractor";
 
@@ -195,5 +195,14 @@ describe("groundedSpecials", () => {
     expect(groundedSpecials(["2 months free on 13+ month lease"], page)).toEqual([]);
     expect(groundedSpecials(["Contact for current specials", 42, null], page)).toEqual([]);
     expect(groundedSpecials("not an array", page)).toEqual([]);
+  });
+});
+
+describe("isLandlordHomepage", () => {
+  it("refuses a landlord's homepage but not one building's page on it", () => {
+    expect(isLandlordHomepage("https://www.rockrose.com/")).toBe(true);
+    expect(isLandlordHomepage("https://rockrose.com")).toBe(true);
+    expect(isLandlordHomepage("https://cortland.com/apartments/cortland-m-line/")).toBe(false);
+    expect(isLandlordHomepage("https://420kent.com/")).toBe(false);
   });
 });
