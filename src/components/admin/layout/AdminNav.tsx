@@ -23,6 +23,7 @@ import {
   Globe,
   HandCoins,
   BookUser,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ const navLinks = [
   { href: "/admin/data-quality", label: "Data Quality", icon: BarChart3, exact: false },
   { href: "/admin/errors", label: "Site Errors", icon: Bug, exact: false, badge: "errors" as const },
   { href: "/admin/microsites", label: "Microsites", icon: Globe, exact: false },
+  { href: "/admin/ai-search", label: "AI Search", icon: Bot, exact: false },
   { href: "/admin/agents", label: "Agents", icon: FileText, exact: false },
   { href: "/admin/showers", label: "Showers", icon: UserCheck, exact: false },
   { href: "/admin/showing-leads", label: "Showing Leads", icon: MapPin, exact: false },

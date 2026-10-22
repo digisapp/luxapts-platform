@@ -15,6 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Calendar, Loader2, CheckCircle2, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { analyticsSessionId } from "@/hooks/useAnalytics";
 
 interface ScheduleTourModalProps {
   buildingId: string;
@@ -147,6 +148,7 @@ export function ScheduleTourModal({
             ? `Instant tour booking for ${buildingName}\nSlot: ${tourDate} at ${tourTime}\n${formData.message ? `Message: ${formData.message}` : ""}`
             : `Tour Request for ${buildingName}\nPreferred Date: ${formData.preferredDate || "Flexible"}\nPreferred Time: ${formData.preferredTime || "Flexible"}\n${formData.message ? `Message: ${formData.message}` : ""}`,
           targets: [{ building_id: buildingId, rank: 1 }],
+          session_id: analyticsSessionId(),
         }),
       });
 

@@ -153,6 +153,8 @@ describe("buildSummary", () => {
     expect(two.overview.join(" ")).not.toContain("Residents have access");
     const three = buildSummary({ ...base, amenities: ["Pool", "Gym", "Rooftop"] });
     expect(three.overview.join(" ")).toContain("pool, gym, and rooftop");
+    const many = buildSummary({ ...base, amenities: ["A", "B", "C", "D", "E", "F", "G", "H", "I"] });
+    expect(many.overview.join(" ")).toContain("Residents have access to a, b, c, d, e, f, g, h, and 1 more amenity.");
   });
 
   it("dates the price check on the building's calendar day", () => {
@@ -163,6 +165,49 @@ describe("buildSummary", () => {
       timeZone: "America/Chicago",
     });
     expect(s.overview.join(" ")).toContain("last verified on October 12, 2026");
+  });
+
+  it("reads like a sentence, not a template", () => {
+    const s = buildSummary({
+      ...base,
+      units: [
+        { beds: 0, baths: 1, sqft: 500, price: 4295 },
+        { beds: 0, baths: 1, sqft: 520, price: 4795 },
+        { beds: 1, baths: 1, sqft: 700, price: 5495 },
+      ],
+    });
+    expect(s.overview[0]).toBe(
+      "Maple Terrace is a 24-story rental building at 3003 Maple Ave in Uptown, Dallas, TX, built in 2023."
+    );
+    expect(s.overview[1]).toContain("2 studios at $4,295–$4,795 a month and 1 one-bedroom at $5,495 a month");
+    const plans = s.faqs.find((f) => f.question.startsWith("What floor plans"));
+    expect(plans?.answer).toContain("1 one-bedroom (700 sq ft)");
+    expect(plans?.answer).not.toMatch(/\d 1 bedroom/);
+  });
+
+  it("uses 'an' before an 8- or 18-story building and skips missing parts", () => {
+    expect(buildSummary({ ...base, stories: 18 }).overview[0]).toContain("is an 18-story rental building");
+    expect(buildSummary({ ...base, stories: 80 }).overview[0]).toContain("is an 80-story rental building");
+    const bare = buildSummary({ name: "Linea", cityName: "Austin", state: "TX", units: [] });
+    expect(bare.overview[0]).toBe("Linea is a rental building in Austin, TX.");
+  });
+
+  it("does not call a condominium a rental building", () => {
+    const s = buildSummary({ ...base, description: "Art Deco-inspired condominium by CetraRuddy" });
+    expect(s.overview[1]).toContain("is a 24-story residential building");
+    expect(s.overview.join(" ")).not.toContain("rental building");
+  });
+
+  it("answers how to tour only when it can name the page", () => {
+    expect(buildSummary(base).faqs.some((f) => f.question.startsWith("How do I schedule"))).toBe(false);
+    const s = buildSummary({
+      ...base,
+      pageUrl: "https://staycio.com/buildings/maple-terrace",
+      leasingPhone: "214-555-0100",
+    });
+    const tour = s.faqs.find((f) => f.question === "How do I schedule a tour at Maple Terrace?");
+    expect(tour?.answer).toContain("staycio.com/buildings/maple-terrace");
+    expect(tour?.answer).toContain("214-555-0100");
   });
 
   it("gives two buildings with different inventory different copy", () => {

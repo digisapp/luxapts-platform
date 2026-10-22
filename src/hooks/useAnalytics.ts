@@ -16,6 +16,16 @@ function getSessionId(): string {
   return sessionId;
 }
 
+/**
+ * The current analytics session id, if this tab has one, for forms that send
+ * it with a lead so /api/leads can record where the visitor came from.
+ * Never creates one: no session means analytics never ran in this tab.
+ */
+export function analyticsSessionId(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  return storageGet("session", "lux_session_id") || undefined;
+}
+
 // Get UTM parameters from URL
 function getUtmParams(): Record<string, string> {
   if (typeof window === "undefined") return {};

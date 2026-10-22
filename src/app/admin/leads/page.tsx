@@ -15,6 +15,7 @@ export default async function AdminLeadsPage() {
         `
         id, created_at, status, name, user_email, user_phone,
         budget_min, budget_max, beds, move_in_date, source, source_detail, notes, needs_review,
+        referral_source, referral_detail,
         cities:city_id (name, slug)
       `,
         { count: "exact" }

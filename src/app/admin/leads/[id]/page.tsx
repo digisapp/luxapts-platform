@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { LeadEmailButton } from "./LeadEmailButton";
 import { LeadDeleteButton } from "./LeadDeleteButton";
+import { referralLabel } from "@/lib/analytics/referral";
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>;
@@ -513,6 +514,20 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
                 <span className="text-muted-foreground">Source</span>
                 <Badge variant="secondary">{lead.source}</Badge>
               </div>
+              {lead.referral_source && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Came from</span>
+                  <Badge variant="secondary">{referralLabel(lead.referral_source, lead.referral_detail)}</Badge>
+                </div>
+              )}
+              {lead.landing_page && (
+                <div className="flex justify-between gap-3">
+                  <span className="shrink-0 text-muted-foreground">First page</span>
+                  <span className="min-w-0 truncate font-mono text-xs" title={lead.landing_page}>
+                    {lead.landing_page}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Created</span>
                 <span>{formatMiamiDate(lead.created_at)}</span>

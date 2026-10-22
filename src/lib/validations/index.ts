@@ -57,6 +57,9 @@ export const leadFieldsSchema = z.object({
     .regex(/^\d{2}:\d{2}(:\d{2})?$/, "Time must be HH:MM format")
     .optional(),
   notes: z.string().max(5000, "Notes too long").optional(),
+  // The visitor's analytics session (useAnalytics), so /api/leads can record
+  // where the lead came from. Format matches getSessionId(): "<ms>-<base36>".
+  session_id: z.string().max(100).regex(/^[\w-]+$/).optional(),
   targets: z
     .array(
       z.object({

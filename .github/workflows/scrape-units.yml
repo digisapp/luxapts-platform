@@ -51,3 +51,15 @@ jobs:
           SCRAPE_LIMIT: ${{ inputs.limit || '60' }}
           SCRAPE_MINUTES: ${{ inputs.minutes || '50' }}
         run: npx tsx scripts/scrape-units-batch.ts --limit "$SCRAPE_LIMIT" --minutes "$SCRAPE_MINUTES"
+
+      # Tell Bing which building pages changed so they're recrawled within
+      # hours (ChatGPT search leans on Bing's index). Runs even when the scrape
+      # step failed partway: whatever it did update is still worth announcing.
+      # 120-minute window covers the scrape's 50-minute budget plus slack.
+      - name: Notify IndexNow
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/indexnow-submit.ts --since-minutes 120

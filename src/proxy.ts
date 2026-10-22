@@ -1,10 +1,20 @@
-import { type NextRequest } from "next/server";
+import { type NextFetchEvent, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { detectCrawler, recordCrawlerHit } from "@/lib/analytics/crawlers";
 
 // Next.js 16 "proxy" convention (formerly middleware.ts). Runs at the edge of
 // every matched request: refreshes the Supabase session cookie and gates the
 // admin/agent/partner areas by profile role.
-export async function proxy(request: NextRequest) {
+//
+// It also counts AI-assistant crawler requests (crawler_hits). The proxy runs
+// before the CDN cache, so ISR pages served from cache are counted too; the
+// insert runs after the response via waitUntil.
+export async function proxy(request: NextRequest, event: NextFetchEvent) {
+  const userAgent = request.headers.get("user-agent") || "";
+  const bot = detectCrawler(userAgent);
+  if (bot) {
+    event.waitUntil(recordCrawlerHit(bot, request.nextUrl.pathname, userAgent));
+  }
   return await updateSession(request);
 }
 

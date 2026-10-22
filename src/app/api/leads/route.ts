@@ -15,6 +15,7 @@ import {
 import { rateLimit, getClientIp, RATE_LIMITS, isInternalRequest } from "@/lib/rate-limit";
 import type { CreateLeadResponse } from "@/types/database";
 import { getLeadStats } from "@/lib/leads/stats";
+import { resolveReferral } from "@/lib/analytics/referral";
 
 function isSameOrigin(req: Request): boolean {
   try {
@@ -75,6 +76,15 @@ export async function POST(req: Request) {
       return apiError("City not found", 404);
     }
 
+    // Where the visitor came from (ChatGPT, Google, …), from the analytics
+    // session the form sent. Best effort: a lookup failure never blocks a lead.
+    const referral = body.session_id
+      ? await resolveReferral(supabase, body.session_id).catch((err) => {
+          console.error("Lead referral lookup failed:", err);
+          return null;
+        })
+      : null;
+
     // Create lead
     const leadInsert = await supabase
       .from("leads")
@@ -93,6 +103,10 @@ export async function POST(req: Request) {
         tour_time: body.tour_time || null,
         notes: body.notes || null,
         status: "new",
+        session_id: body.session_id ?? null,
+        referral_source: referral?.source ?? null,
+        referral_detail: referral?.detail ?? null,
+        landing_page: referral?.landingPage ?? null,
       })
       .select("id, status, created_at")
       .single();
@@ -132,6 +146,7 @@ export async function POST(req: Request) {
       payload: {
         source: body.source,
         city: cityRes.data.name,
+        ...(referral ? { referral_source: referral.source, landing_page: referral.landingPage } : {}),
       },
     });
 
@@ -302,6 +317,7 @@ export async function GET(req: Request) {
       .select(`
         id, created_at, status, name, user_email, user_phone,
         budget_min, budget_max, beds, move_in_date, source, source_detail, notes, needs_review,
+        referral_source, referral_detail,
         cities:city_id (name, slug)
       `, { count: "exact" })
       .order("created_at", { ascending: false })

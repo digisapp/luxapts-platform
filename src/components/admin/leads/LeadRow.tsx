@@ -28,6 +28,7 @@ import {
   sourceLabel,
   statusMeta,
 } from "./lead-format";
+import { referralLabel } from "@/lib/analytics/referral";
 
 export interface LeadRowData {
   id: string;
@@ -46,6 +47,9 @@ export interface LeadRowData {
   notes: string | null;
   /** A listing-site email the parser could not fully read (migration 038). */
   needs_review?: boolean;
+  /** Where a staycio.com visitor came from: "chatgpt", "google", … (migration 039). */
+  referral_source?: string | null;
+  referral_detail?: string | null;
   cities: { name: string; slug: string } | { name: string; slug: string }[] | null;
 }
 
@@ -180,6 +184,19 @@ export function LeadRow({ lead, selected, now, onSelect, onStatusChange, onEmail
             <SourceIcon className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
             {sourceLabel(lead.source, lead.source_detail)}
           </span>
+          {lead.referral_source && (
+            <span
+              title="Where the visitor came from before filling in the form"
+              className={cn(
+                "inline-flex items-center rounded-md border px-1.5 py-0.5 font-medium",
+                lead.referral_source === "chatgpt"
+                  ? "border-cyan-400/25 bg-cyan-400/10 text-cyan-200"
+                  : "border-white/10 bg-white/[0.05] text-foreground/85"
+              )}
+            >
+              via {referralLabel(lead.referral_source, lead.referral_detail)}
+            </span>
+          )}
           {lead.needs_review && (
             <span
               title="Read the original email: the lead's notes say why"

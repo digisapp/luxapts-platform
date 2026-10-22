@@ -11,6 +11,7 @@ interface ApartmentComplexJsonLdProps {
   amenities?: string[];
   latitude?: number;
   longitude?: number;
+  telephone?: string;
 }
 
 export function ApartmentComplexJsonLd({
@@ -26,6 +27,7 @@ export function ApartmentComplexJsonLd({
   amenities,
   latitude,
   longitude,
+  telephone,
 }: ApartmentComplexJsonLdProps) {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -41,6 +43,7 @@ export function ApartmentComplexJsonLd({
       addressCountry: "US",
     },
     ...(url && { url }),
+    ...(telephone && { telephone }),
     ...(image && { image }),
     ...(priceRange && {
       priceRange: `$${priceRange.min.toLocaleString()} - $${priceRange.max.toLocaleString()}/month`,

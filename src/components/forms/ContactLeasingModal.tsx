@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Mail, Loader2, CheckCircle2 } from "lucide-react";
+import { analyticsSessionId } from "@/hooks/useAnalytics";
 
 interface ContactLeasingModalProps {
   buildingId: string;
@@ -65,6 +66,7 @@ export function ContactLeasingModal({
           beds: formData.beds ? parseInt(formData.beds, 10) : undefined,
           notes: `Inquiry for ${buildingName}\n${formData.message}`,
           targets: [{ building_id: buildingId, rank: 1 }],
+          session_id: analyticsSessionId(),
         }),
       });
 

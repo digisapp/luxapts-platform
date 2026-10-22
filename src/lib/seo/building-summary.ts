@@ -35,6 +35,10 @@ export interface SummaryInput {
   units: SummaryUnit[];
   /** ISO date of the freshest rent snapshot, when one exists. */
   pricesVerifiedAt?: string | null;
+  /** Leasing office number, for the "how do I tour" answer. */
+  leasingPhone?: string | null;
+  /** Absolute URL of the building page, named in the "how do I tour" answer. */
+  pageUrl?: string | null;
   /** The building's IANA zone, so the verified date is its calendar day, not the server's. */
   timeZone?: string;
 }
@@ -65,6 +69,20 @@ function bedKey(beds: number | null): string | null {
 
 function bedLabel(key: string): string {
   return key === "studio" ? "Studio" : `${key.charAt(0)} Bedroom`;
+}
+
+/** How a layout reads in a sentence: "4 one-bedrooms", "1 studio". */
+const BED_WORDS: Record<string, [string, string]> = {
+  studio: ["studio", "studios"],
+  "1-bedroom": ["one-bedroom", "one-bedrooms"],
+  "2-bedroom": ["two-bedroom", "two-bedrooms"],
+  "3-bedroom": ["three-bedroom", "three-bedrooms"],
+  "4-bedroom": ["four-plus-bedroom", "four-plus-bedrooms"],
+};
+
+function layoutWord(key: string, count: number): string {
+  const [one, many] = BED_WORDS[key] ?? [key, `${key}s`];
+  return count === 1 ? one : many;
 }
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
@@ -134,6 +152,8 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
     units,
     pricesVerifiedAt,
     timeZone,
+    leasingPhone,
+    pageUrl,
   } = input;
 
   const place = neighborhoodName && cityName
@@ -153,20 +173,19 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
     overview.push(description.trim().replace(/\s*\.?$/, "."));
   }
 
-  const locationBits: string[] = [];
-  if (address) locationBits.push(`at ${address}`);
-  if (neighborhoodName) locationBits.push(`in ${neighborhoodName}`);
-  const built: string[] = [];
-  if (yearBuilt) built.push(`built in ${yearBuilt}`);
-  if (stories) built.push(`${stories} stories`);
-
+  // "3ELEVEN is a 60-story rental building at 311 Eleventh Avenue in Chelsea,
+  // Manhattan, New York, NY, built in 2023."
+  const where = [address ? `at ${address}` : null, neighborhoodName ? `in ${neighborhoodName}` : null]
+    .filter(Boolean)
+    .join(" ");
+  const cityPart = cityState ? (where ? `, ${cityState}` : `in ${cityState}`) : where ? "" : `in ${place}`;
+  // A condo tower (its own description says so) is not a "rental building",
+  // even when owners rent units out through it.
+  const kind = description && /\bcondo(minium)?s?\b/i.test(description) ? "residential building" : "rental building";
   overview.push(
-    `${name} is a rental building ${
-      locationBits.length ? `${joinList(locationBits)}, ` : ""
-    }${cityState ? `${cityState}` : place}${built.length ? ` — ${joinList(built)}` : ""}.`.replace(
-      /\s+/g,
-      " "
-    )
+    `${name} is ${stories ? `${/^8|^1[18]$/.test(String(stories)) ? "an" : "a"} ${stories}-story` : "a"} ${kind} ${where}${cityPart}${
+      yearBuilt ? `, built in ${yearBuilt}` : ""
+    }.`.replace(/\s+/g, " ")
   );
 
   // Paragraph 2 — the unit mix and what it costs. This is the part that
@@ -174,12 +193,10 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
   if (mix.length > 0) {
     const mixParts = mix.map((m) => {
       const priceText = range(m.minPrice, m.maxPrice, money);
-      return `${m.count} ${m.label.toLowerCase()}${m.count === 1 ? "" : "s"}${
-        priceText ? ` from ${priceText}/month` : ""
-      }`;
+      return `${m.count} ${layoutWord(m.key, m.count)}${priceText ? ` at ${priceText} a month` : ""}`;
     });
     overview.push(
-      `${units.length} unit${units.length === 1 ? " is" : "s are"} currently listed: ${joinList(
+      `${units.length} apartment${units.length === 1 ? " is" : "s are"} listed right now: ${joinList(
         mixParts
       )}.${
         minPrice && maxPrice && minPrice !== maxPrice
@@ -204,9 +221,11 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
 
   // Paragraph 3 — amenities, only when there are enough to be worth a sentence.
   if (amenities.length >= 3) {
+    const shown = amenities.slice(0, 8).map((a) => a.toLowerCase());
+    const extra = amenities.length - shown.length;
     overview.push(
-      `Residents have access to ${joinList(amenities.slice(0, 8).map((a) => a.toLowerCase()))}${
-        amenities.length > 8 ? `, and ${amenities.length - 8} more amenities` : ""
+      `Residents have access to ${
+        extra > 0 ? `${shown.join(", ")}, and ${extra} more amenit${extra === 1 ? "y" : "ies"}` : joinList(shown)
       }.`
     );
   }
@@ -224,7 +243,7 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
         mix.length
           ? ` By layout: ${mix
               .filter((m) => m.minPrice)
-              .map((m) => `${m.label.toLowerCase()} from ${money(m.minPrice as number)}`)
+              .map((m) => `${layoutWord(m.key, m.count)} from ${money(m.minPrice as number)}`)
               .join(", ")}.`
           : ""
       }`,
@@ -237,9 +256,7 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
       answer: `${name} currently lists ${joinList(
         mix.map((m) => {
           const sqft = range(m.minSqft, m.maxSqft, (n) => `${n.toLocaleString()} sq ft`);
-          return `${m.count} ${m.label.toLowerCase()}${m.count === 1 ? "" : "s"}${
-            sqft ? ` (${sqft})` : ""
-          }`;
+          return `${m.count} ${layoutWord(m.key, m.count)}${sqft ? ` (${sqft})` : ""}`;
         })
       )}.`,
     });
@@ -256,6 +273,18 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
     faqs.push({
       question: `Does ${name} have parking?`,
       answer: parkingPolicy.trim(),
+    });
+  }
+
+  // The question people ask an assistant right before they'd contact us.
+  // Only states what the form does: the renter gets an email confirming the
+  // request (tourConfirmationEmail in /api/leads).
+  if (pageUrl) {
+    faqs.push({
+      question: `How do I schedule a tour at ${name}?`,
+      answer: `Request a tour on Staycio at ${pageUrl.replace(/^https?:\/\//, "")}: pick a preferred date and time, and you'll get an email confirming the request.${
+        leasingPhone ? ` You can also call the ${name} leasing office at ${leasingPhone}.` : ""
+      }`,
     });
   }
 

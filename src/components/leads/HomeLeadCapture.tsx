@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
-import { useAnalytics } from "@/hooks/useAnalytics";
+import { useAnalytics, analyticsSessionId } from "@/hooks/useAnalytics";
 
 export interface LeadCaptureCity {
   name: string;
@@ -52,6 +52,7 @@ export function HomeLeadCapture({ cities, defaultNotes = "" }: HomeLeadCapturePr
           city_slug: citySlug,
           email: email.trim(),
           notes: notes.trim() || undefined,
+          session_id: analyticsSessionId(),
         }),
       });
 

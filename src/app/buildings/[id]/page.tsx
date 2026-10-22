@@ -13,6 +13,7 @@ import { ListingPlaceholder } from "@/components/ui/ListingPlaceholder";
 import { isJunkImageUrl } from "@/lib/images/quality";
 import { buildingPath, buildingUrl, isUuid } from "@/lib/seo/urls";
 import { buildSummary } from "@/lib/seo/building-summary";
+import { INVENTORY_MAX_AGE_DAYS } from "@/lib/microsite-inventory";
 
 // Revalidate every hour instead of force-dynamic — reduces DB load ~90%
 export const revalidate = 3600;
@@ -62,6 +63,19 @@ const getAvailableUnitCount = cache(async (id: string) => {
   return count ?? 0;
 });
 
+// Latest verified rent per available unit, shared by generateMetadata and the
+// page. fetchAvailableUnitPrices nulls captures older than the verified window.
+interface UnitPriceRow {
+  id: string;
+  building_id: string;
+  latest_rent: number | null;
+  price_captured_at: string | null;
+}
+
+const getUnitPrices = cache(async (id: string) =>
+  fetchAvailableUnitPrices<UnitPriceRow>(createAdminClient(), [id], ["price_captured_at"])
+);
+
 // Primary building image for social shares (deduplicated across renders)
 const getPrimaryBuildingImage = cache(async (id: string) => {
   const supabase = createAdminClient();
@@ -84,9 +98,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return { title: "Building Not Found - Staycio", robots: { index: false, follow: false } };
   }
 
-  const [ogImage, availableUnits] = await Promise.all([
+  const [ogImage, availableUnits, unitPrices] = await Promise.all([
     getPrimaryBuildingImage(building.id),
     getAvailableUnitCount(building.id),
+    getUnitPrices(building.id),
   ]);
   const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
   const neighborhood = Array.isArray(building.neighborhoods)
@@ -102,11 +117,26 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = `${building.name} Apartments${place ? ` — ${place}` : ""} | Staycio`;
 
   // Description carries the two facts that decide the click: what it costs and
-  // whether anything is open. Falls back to the static line when neither is
-  // known rather than emitting an empty snippet.
-  const description = `${building.name} in ${place || "the city"}: see live rents, available floor plans, amenities, pet and parking policies${
-    building.year_built ? `. Built ${building.year_built}` : ""
-  }. Verified pricing on Staycio.`;
+  // whether anything is open. Search engines and AI assistants quote it, so it
+  // states the verified starting rent and its date when there is one, and
+  // falls back to the static line otherwise.
+  const verified = unitPrices.filter((p) => p.latest_rent && p.price_captured_at);
+  const fromRent = verified.length ? Math.min(...verified.map((p) => p.latest_rent as number)) : null;
+  const checkedAt = verified.reduce<string | null>(
+    (latest, p) => (!latest || (p.price_captured_at as string) > latest ? (p.price_captured_at as string) : latest),
+    null
+  );
+  const tz = timeZoneForState(city?.state);
+  const description =
+    fromRent && checkedAt && availableUnits > 0
+      ? `${building.name} in ${place || "the city"}: ${availableUnits} apartment${
+          availableUnits === 1 ? "" : "s"
+        } listed from ${formatPrice(fromRent)}/month, prices verified ${formatDate(checkedAt, tz)}. Floor plans, amenities, pet and parking policies${
+          building.year_built ? `. Built ${building.year_built}` : ""
+        }.`
+      : `${building.name} in ${place || "the city"}: see live rents, available floor plans, amenities, pet and parking policies${
+          building.year_built ? `. Built ${building.year_built}` : ""
+        }. Verified pricing on Staycio.`;
 
   const canonical = buildingPath(building);
 
@@ -198,13 +228,6 @@ interface UnitImage {
   sort_order: number;
 }
 
-interface UnitPriceRow {
-  id: string;
-  building_id: string;
-  latest_rent: number | null;
-  price_captured_at: string | null;
-}
-
 interface PriceSnapshotRow {
   rent: number;
   captured_at: string;
@@ -247,7 +270,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
       .from("building_amenities")
       .select("details, amenities(id, name, category, icon)")
       .eq("building_id", id),
-    supabase.from("building_facts").select("key, value").eq("building_id", id),
+    supabase.from("building_facts").select("key, value, updated_at").eq("building_id", id),
     supabase
       .from("building_images")
       .select("url, alt_text, category")
@@ -267,9 +290,24 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
   const units = unitsRes.data;
 
   const buildingFacts: Record<string, string | number> = {};
+  const factUpdatedAt: Record<string, string> = {};
   for (const fact of factsRes.data || []) {
     buildingFacts[fact.key] = fact.value as string | number;
+    factUpdatedAt[fact.key] = fact.updated_at;
   }
+
+  // A special is an offer: show it only when it was captured inside the same
+  // window as a verified rent. Every stored special was a January 2026 scrape,
+  // some with deadlines long past, still shown as current in October.
+  const specialText =
+    typeof buildingFacts.move_in_specials === "string" ? buildingFacts.move_in_specials.trim() : "";
+  const moveInSpecial =
+    specialText &&
+    !/^contact\b/i.test(specialText) &&
+    factUpdatedAt.move_in_specials &&
+    isWithinDays(factUpdatedAt.move_in_specials, INVENTORY_MAX_AGE_DAYS)
+      ? specialText
+      : null;
 
   // Get unit IDs for fetching related data
   const unitIds = units?.map((u) => u.id) || [];
@@ -287,7 +325,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
       // single `.in("unit_id", unitIds)` put every unit id in the request URL,
       // which PostgREST rejects past ~150 — large buildings rendered every
       // unit as "Contact for pricing".
-      fetchAvailableUnitPrices<UnitPriceRow>(supabase, [id], ["price_captured_at"]),
+      getUnitPrices(id),
       // Recent history for the price chart, bounded by DATE rather than by
       // row count: the old `.limit(90)` took the 90 newest rows across ALL
       // units, so on a building with more than a handful of units the whole
@@ -468,6 +506,8 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     })),
     pricesVerifiedAt: latestPriceDate,
     timeZone: buildingTimeZone,
+    leasingPhone: building.leasing_phone,
+    pageUrl: buildingUrl(building),
   });
 
   // Unit rows, resolved here so the client list only filters and collapses.
@@ -493,7 +533,10 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     <>
       <ApartmentComplexJsonLd
         name={building.name}
-        description={building.description || undefined}
+        // The same fact-built overview the page shows (stored description
+        // first when there is one), not a "Luxury apartments at X" filler.
+        description={summary.overview.slice(0, 2).join(" ")}
+        telephone={building.leasing_phone || undefined}
         address={building.address_1}
         city={building.cities?.name || ""}
         state={building.cities?.state}
@@ -573,7 +616,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 <div>
                   <div className="mb-2 flex flex-wrap gap-2">
                     {building.neighborhoods && <Badge>{building.neighborhoods.name}</Badge>}
-                    {buildingFacts.move_in_specials && (
+                    {moveInSpecial && (
                       <Badge className="bg-stacy/10 text-link border-stacy/40 dark:bg-cyan-400/15 dark:border-cyan-400/30">
                         Special offer
                       </Badge>
@@ -710,13 +753,13 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
             <div className="min-w-0 space-y-6 lg:col-span-2">
               {/* Move-in Specials */}
-              {buildingFacts.move_in_specials && (
+              {moveInSpecial && (
                 <Card className="border-stacy/40 bg-stacy/[0.06] dark:border-cyan-400/25 dark:bg-cyan-400/[0.04]">
                   <CardContent className="flex items-start gap-3 p-4 sm:p-5">
                     <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-link" />
                     <div>
                       <h2 className="font-semibold text-foreground">Move-in special</h2>
-                      <p className="mt-1 text-sm text-foreground/80">{buildingFacts.move_in_specials}</p>
+                      <p className="mt-1 text-sm text-foreground/80">{moveInSpecial}</p>
                     </div>
                   </CardContent>
                 </Card>
