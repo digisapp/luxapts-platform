@@ -11,7 +11,10 @@
 // Input: a JSON array of {key, name, address, zip, neighborhood,
 // new_neighborhood?, year_built?, url} (research proposals).
 //
-// Run with: npx tsx scripts/import-verified-buildings.ts <proposals.json> --city <slug> [--only k1,k2] [--apply]
+// Run with: npx tsx scripts/import-verified-buildings.ts <proposals.json> --city <slug>
+//   [--also-dedupe new-york,brooklyn] [--only k1,k2] [--apply]
+// --also-dedupe: cities whose buildings also count as duplicates (Brooklyn
+// buildings are filed under both "new-york" and "brooklyn").
 
 import { config } from "dotenv";
 import { resolve } from "path";
@@ -108,8 +111,16 @@ async function main() {
 
   // Dedupe against every building in the city, active or not: a deactivated
   // fake must not come back under a slightly different name.
-  const { data: existing } = await supabase.from("buildings").select("name, address_1").eq("city_id", city.id);
-  const takenNames = new Set((existing ?? []).map((b) => nameKey(b.name)));
+  const dedupeSlugs = [citySlug, ...(arg("--also-dedupe")?.split(",") ?? [])];
+  const { data: dedupeCities } = await supabase.from("cities").select("id").in("slug", dedupeSlugs);
+  const { data: existing } = await supabase
+    .from("buildings")
+    .select("name, address_1, city_id")
+    .in("city_id", (dedupeCities ?? []).map((c) => c.id));
+  // Names repeat across cities (Manhattan's Atelier, Williamsburg's Atelier
+  // Apartments), so a name only counts in the import city; an address counts
+  // in all of them.
+  const takenNames = new Set((existing ?? []).filter((b) => b.city_id === city.id).map((b) => nameKey(b.name)));
   const takenAddresses = new Set((existing ?? []).filter((b) => b.address_1).map((b) => addressKey(b.address_1)));
 
   const { data: hoods } = await supabase.from("neighborhoods").select("id, name, slug").eq("city_id", city.id);
@@ -126,7 +137,7 @@ async function main() {
   for (const p of proposals) {
     const label = `${p.name} (${p.address})`;
     if (takenNames.has(nameKey(p.name)) || takenAddresses.has(addressKey(p.address))) {
-      console.log(`skip   ${label}: already in ${city.name}`);
+      console.log(`skip   ${label}: already listed (${dedupeSlugs.join(", ")})`);
       summary.skipped++;
       continue;
     }
