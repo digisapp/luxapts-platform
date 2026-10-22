@@ -242,7 +242,7 @@ async function appendFrameContent(
 
 /** Render via local Playwright (dev path; playwright is a devDependency). */
 async function renderViaPlaywright(url: string): Promise<RenderResult | null> {
-  let chromium;
+  let chromium: typeof import("playwright").chromium;
   try {
     // Marked external in next.config so this resolves at runtime only where
     // the devDependency is installed; in production it throws and we skip.
@@ -251,18 +251,36 @@ async function renderViaPlaywright(url: string): Promise<RenderResult | null> {
     return null;
   }
 
+  // Which headless mode Cloudflare lets through depends on the site AND on
+  // where the request comes from. From a residential IP the new headless mode
+  // (full Chromium, channel "chromium") got past Entrata's /conventional/
+  // walls the shell could not (The Jane 0 → 9 prices, SOMA 0 → 19); from
+  // GitHub's runners it changed nothing there and walled Arte Grand Central
+  // and Beatrice, which the shell had been rendering (2026-10-22). So try the
+  // new mode, and fall back to the shell when it is walled (or not
+  // installed): never worse than the shell alone.
+  const launches = [
+    () => chromium.launch({ headless: true, channel: "chromium" }),
+    () => chromium.launch({ headless: true }),
+  ];
+  let walled: RenderResult | null = null;
+  for (const launch of launches) {
+    const result = await renderWith(launch, url);
+    if (result && !isBotChallenge(result.html)) return result;
+    walled = result ?? walled;
+  }
+  return walled;
+}
+
+async function renderWith(
+  launch: () => Promise<import("playwright").Browser>,
+  url: string
+): Promise<RenderResult | null> {
   let browser;
   try {
-    // Chromium's new headless mode (the full browser, channel "chromium")
-    // gets through Cloudflare on Entrata's /conventional/ availability pages,
-    // where the default headless shell is served "Just a moment…" (The Jane:
-    // 0 → 9 prices, SOMA at Brickell: 0 → 19, 2026-10-22). The spoofed UA
-    // below still matters: the browser's own "HeadlessChrome" UA is
-    // challenged in every mode. Falls back to the shell if the full browser
-    // isn't installed.
-    browser = await chromium
-      .launch({ headless: true, channel: "chromium" })
-      .catch(() => chromium.launch({ headless: true }));
+    browser = await launch();
+    // The spoofed UA matters: the browser's own "HeadlessChrome" UA is
+    // challenged in every mode.
     const page = await browser.newPage({
       userAgent:
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
