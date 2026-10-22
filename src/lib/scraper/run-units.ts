@@ -126,6 +126,24 @@ export async function runUnitScrapeBatch(
             },
             saved,
           );
+
+          // The listing page's current specials, stamped now: the building
+          // page hides any special older than the verified-price window, and
+          // nothing refreshed them before (all 23 dated from January 2026).
+          const specials = scrapeResult.data.move_in_specials ?? [];
+          if (specials.length) {
+            const { error: specialsError } = await supabase.from("building_facts").upsert(
+              {
+                building_id: building.id,
+                key: "move_in_specials",
+                value: specials.join("; "),
+                source: "scrape",
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "building_id,key" }
+            );
+            if (specialsError) log(`WARN  ${building.name}: specials not saved: ${specialsError.message}`);
+          }
         }
 
         await updateScrapeStatus(supabase, building.id, {

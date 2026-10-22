@@ -21,7 +21,7 @@ For each unit, extract:
 - baths: Number of bathrooms
 - sqft: Square footage
 - rent: Monthly rent in dollars (number only, no $ or commas)
-- available_on: Move-in date if shown (YYYY-MM-DD format)
+- available_on: Move-in date if shown (YYYY-MM-DD format). Today is ${new Date().toISOString().slice(0, 10)}. Pages often show a date with no year ("10/26", "Nov 3"): use the year that makes it today or later, or at most a few weeks earlier (a listing already open). "Now"/"Immediately" → today.
 - floorplan_name: Name of the floor plan if shown
 - view: View type if mentioned (city, water, park, etc.)
 - lease_term_months: The SHORTEST lease term in months offered for this unit, if lease terms are shown (e.g. a 3-15 month picker or "flexible terms from 6 months" → 6; a single "12-month lease" → 12). Omit if the page shows no lease term information — never guess.
@@ -33,7 +33,7 @@ Return a JSON object with this structure:
     ...
   ],
   "total_available": 15,
-  "move_in_specials": ["2 months free on 13+ month lease", ...]
+  "move_in_specials": ["<each special offer, worded exactly as on the page>"]
 }
 
 Many leasing sites list FLOORPLANS with starting prices (e.g. "A1 — 1 Bed / 1 Bath — from $3,224/mo — 2 available") instead of individual units. That data is valuable: return one entry per floorplan that is currently available or priced, with floorplan_name set, unit_number omitted, and rent = the starting price. Skip floorplans marked unavailable/sold out with no price.
@@ -75,6 +75,11 @@ Only return valid JSON, no explanations.`;
 // naive head-truncation feeds the model nothing but boilerplate. Strip the
 // bloat but KEEP script blocks that look like they carry pricing/unit JSON
 // (Greystar, SightMap, and RentCafe embed listings that way).
+//
+// <select> blocks go too: a budget filter's "$3,000 / $3,500 / …" options are
+// price-shaped text that focusOnPricing used to centre its windows on, while
+// the real unit cards (Related Rentals: "Price: 5,675", no "$") were cut.
+// Responsive-image <source>/srcset markup carries nothing a model can use.
 export function condenseHtml(html: string): string {
   return html
     .replace(/<!--[\s\S]*?-->/g, "")
@@ -82,6 +87,9 @@ export function condenseHtml(html: string): string {
     .replace(/<svg[\s\S]*?<\/svg>/gi, "")
     .replace(/<head[\s\S]*?<\/head>/i, "")
     .replace(/<link\b[^>]*>/gi, "")
+    .replace(/<select\b[\s\S]*?<\/select>/gi, "")
+    .replace(/<source\b[^>]*>/gi, "")
+    .replace(/\s(?:srcset|data-srcset)="[^"]*"/gi, "")
     .replace(/<script[\s\S]*?<\/script>/gi, (block) =>
       /\$\s?\d{3,}|"(?:rent|price|minPrice|min_rent|starting)/i.test(block) ? block : ""
     )
@@ -92,7 +100,10 @@ export function condenseHtml(html: string): string {
 const MODEL_HTML_BUDGET = 100_000;
 const HEAD_CHARS = 6_000;
 const WINDOW_RADIUS = 2_500;
-const PRICING_SIGNAL = /\$\s?\d{1,2},?\d{3}(?!\d)|"(?:rent|price|minPrice|maxPrice|min_rent|max_rent)"\s*:/gi;
+// "$5,675"; JSON rent keys; data-price="5675" attributes; and labelled
+// prices without a dollar sign ("Price: 5,675", "Monthly Price $8,995").
+const PRICING_SIGNAL =
+  /\$\s?\d{1,2},?\d{3}(?!\d)|"(?:rent|price|minPrice|maxPrice|min_rent|max_rent)"\s*:|\bdata-(?:price|rent)="\d|\b(?:monthly\s+)?(?:price|rent):?\s*\$?\s?\d{1,2},?\d{3}(?!\d)/gi;
 
 /**
  * Fit a condensed page into the model's budget without dropping the listings.
@@ -127,6 +138,29 @@ export function focusOnPricing(text: string, budget = MODEL_HTML_BUDGET): string
     used += piece.length;
   }
   return parts.join("\n... [skipped] ...\n");
+}
+
+const words = (text: string) => text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+
+/**
+ * Specials the page actually states. A special is a promise to a renter, and
+ * the building page shows it, so one the model paraphrased from the prompt or
+ * invented is dropped: every number in it, and most of its words, must
+ * appear in the page text it was given.
+ */
+export function groundedSpecials(specials: unknown, pageText: string): string[] {
+  if (!Array.isArray(specials)) return [];
+  const page = new Set(words(pageText.replace(/<[^>]+>/g, " ")));
+  return specials
+    .filter((s): s is string => typeof s === "string")
+    .map((s) => s.trim())
+    .filter((s) => {
+      if (s.length < 6 || s.length > 300 || /^contact\b/i.test(s)) return false;
+      const w = words(s);
+      if (!w.every((x) => !/^\d/.test(x) || page.has(x))) return false;
+      const significant = w.filter((x) => x.length >= 3);
+      return significant.length > 0 && significant.filter((x) => page.has(x)).length / significant.length >= 0.8;
+    });
 }
 
 export interface UnitsExtraction {
@@ -175,7 +209,7 @@ export async function extractUnitsWithAI(
       return {
         units: parsed.units || [],
         total_available: parsed.total_available || parsed.units?.length || 0,
-        move_in_specials: parsed.move_in_specials || [],
+        move_in_specials: groundedSpecials(parsed.move_in_specials, truncatedHtml),
       };
     }
 

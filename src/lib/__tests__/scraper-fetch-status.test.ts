@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // and the AI extractor are mocks.
 vi.mock("../scraper/renderer", () => ({
   needsJsRendering: vi.fn(() => false),
+  isBotChallenge: vi.fn((html: string) => html.includes("Just a moment")),
   renderPage: vi.fn(async (url: string) => ({
     html: "<html><body>rendered</body></html>",
     finalUrl: url,
@@ -55,6 +56,29 @@ describe("fetchBuildingHTML — dead pages", () => {
     const result = await fetchBuildingHTML(nextUrl());
     expect(renderPage).toHaveBeenCalledTimes(1);
     expect(result?.html).toContain("rendered");
+  });
+
+  const CHALLENGE = "<html><head><title>Just a moment...</title></head><body></body></html>";
+
+  it("renders past a challenge page served with 200", async () => {
+    stubFetch(200, CHALLENGE);
+    const result = await fetchBuildingHTML(nextUrl());
+    expect(renderPage).toHaveBeenCalledTimes(1);
+    expect(result?.html).toContain("rendered");
+  });
+
+  it("fails instead of returning the wall when rendering hits it too", async () => {
+    stubFetch(200, CHALLENGE);
+    vi.mocked(renderPage).mockResolvedValueOnce({ html: CHALLENGE, finalUrl: "https://x.example.com/", renderer: "playwright" });
+    expect(await fetchBuildingHTML(nextUrl())).toBeNull();
+  });
+
+  it("keeps a real page when only the render was walled", async () => {
+    stubFetch(200);
+    vi.mocked((await import("../scraper/renderer")).needsJsRendering).mockReturnValueOnce(true);
+    vi.mocked(renderPage).mockResolvedValueOnce({ html: CHALLENGE, finalUrl: "https://x.example.com/", renderer: "playwright" });
+    const result = await fetchBuildingHTML(nextUrl());
+    expect(result?.html).toContain("Luxury rental apartments");
   });
 });
 

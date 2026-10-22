@@ -56,6 +56,36 @@ export function needsJsRendering(html: string): boolean {
   return false;
 }
 
+/**
+ * A bot wall instead of the page: Cloudflare's "Just a moment…", Akamai's
+ * "Access Denied", Incapsula, PerimeterX. These came back as a "successful"
+ * fetch with 0 units, so a blocked building looked healthy in
+ * building_scrape_status. Title-based, plus Cloudflare's challenge script on
+ * a page with almost no text (real pages behind Cloudflare load that script
+ * too, so the script alone proves nothing).
+ */
+export function isBotChallenge(html: string): boolean {
+  if (!html) return false;
+  const head = html.slice(0, 30_000).toLowerCase();
+  const title = /<title[^>]*>([^<]*)<\/title>/.exec(head)?.[1]?.trim() ?? "";
+  if (/^(just a moment|attention required|access denied|pardon our interruption|request rejected|one moment, please|security check)/.test(title)) {
+    return true;
+  }
+  if (head.includes("_incapsula_resource") || head.includes("cf-browser-verification") || head.includes("px-captcha")) {
+    return true;
+  }
+  if (head.includes("/cdn-cgi/challenge-platform/") || head.includes("challenges.cloudflare.com/turnstile")) {
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return text.length < 800;
+  }
+  return false;
+}
+
 export interface RenderResult {
   html: string;
   finalUrl: string;

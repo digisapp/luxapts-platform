@@ -3,7 +3,10 @@
 
 import { ScrapeResult, ImageScrapeResult, UnitsExtractionSource } from "./types";
 import { extractUnitsWithAI, extractAmenitiesWithAI, extractFullBuildingData, extractImagesWithAI, verifyImagesWithVision } from "./ai-extractor";
-import { needsJsRendering, renderPage } from "./renderer";
+import { isBotChallenge, needsJsRendering, renderPage } from "./renderer";
+import { scrapeSightMap } from "./sightmap";
+import { isGlenwoodUrl, parseGlenwoodListings } from "./glenwood";
+import type { ScrapedUnit } from "./types";
 import { collectImageCandidates } from "./image-candidates";
 
 // Common headers to appear as a real browser
@@ -87,6 +90,18 @@ async function rateLimitedFetch(url: string): Promise<Response> {
   return response;
 }
 
+/** Plain GET through the SSRF guard and rate limiter; null on any failure. */
+async function fetchTextSafe(url: string): Promise<string | null> {
+  try {
+    const res = await rateLimitedFetch(url);
+    if (!res.ok) return null;
+    const text = await res.text();
+    return text.length <= MAX_RESPONSE_BYTES ? text : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchBuildingHTML(websiteUrl: string): Promise<{ html: string; finalUrl: string } | null> {
   let fetched: { html: string; finalUrl: string } | null = null;
 
@@ -117,17 +132,23 @@ export async function fetchBuildingHTML(websiteUrl: string): Promise<{ html: str
     console.error(`Error fetching ${websiteUrl}:`, error);
   }
 
+  // A bot wall is not the page: render instead, and never return the wall
+  // itself, which used to be read as "this building lists 0 units".
+  const challenged = !!fetched && isBotChallenge(fetched.html);
+  if (challenged) console.error(`Bot challenge served for ${websiteUrl}`);
+
   // JS-rendered leasing sites (Entrata/RealPage/Yardi) ship an empty shell —
   // and bot-blocked fetches ship nothing. Try a headless render for both.
-  if (!fetched || needsJsRendering(fetched.html)) {
+  if (!fetched || challenged || needsJsRendering(fetched.html)) {
     const rendered = await renderPage(fetched?.finalUrl || websiteUrl);
-    if (rendered) {
+    if (rendered && !isBotChallenge(rendered.html)) {
       console.log(`Rendered ${websiteUrl} via ${rendered.renderer} (${rendered.html.length} bytes)`);
       return { html: rendered.html, finalUrl: rendered.finalUrl };
     }
+    if (rendered) console.error(`Bot challenge still served after rendering ${websiteUrl}`);
   }
 
-  return fetched;
+  return challenged ? null : fetched;
 }
 
 /**
@@ -151,13 +172,28 @@ const AMENITIES_LINK_PATTERNS = [
 const AMENITIES_KEYWORDS = /amenities|features|lifestyle/i;
 
 const UNITS_LINK_PATTERNS = [
-  /href=["']([^"']*(?:floor[-_]?plans?|availability|apartments|units|pricing)[^"']*)["']/gi,
+  /href=["']([^"']*(?:floor[-_]?plans?|availabilit(?:y|ies)|sightmap|conventional|apartments|units|pricing)[^"']*)["']/gi,
   /href=["']([^"']*(?:rent|apply|schedule)[^"']*)["']/gi,
 ];
-const UNITS_KEYWORDS = /floor[-_]?plans?|availability|apartments|units|pricing/i;
+const UNITS_KEYWORDS = /floor[-_]?plans?|availabilit(?:y|ies)|sightmap|\/conventional\b|apartments|units|pricing/i;
 // Narrower than UNITS_KEYWORDS: "/apartments/austin/amli-at-mueller" is a
 // property home page whose floor plans live one link deeper.
-const AVAILABILITY_PATH = /floor[-_]?plans?|availability|pricing/i;
+const AVAILABILITY_PATH = /floor[-_]?plans?|availabilit(?:y|ies)|pricing|\/conventional\b/i;
+
+/**
+ * Lower is better. A page named for availability beats a generic
+ * "apartments" match: 420 Kent's first match was /williamsburg-apartments-
+ * views/ (0 prices) while /availability/ listed 20; The Tower on Piedmont's
+ * was /apartments/ga/atlanta/amenities over /floor-plans.
+ */
+function unitsLinkRank(url: URL): number {
+  const path = (url.pathname + url.search).toLowerCase();
+  if (/amenit|gallery|photos|neighborhood|contact|blog|news/.test(path)) return 4;
+  if (/avail|floor[-_]?plans?|pricing|sightmap|\/conventional\b/.test(path)) return 0;
+  if (/units/.test(path)) return 1;
+  if (/apartments/.test(path)) return 2;
+  return 3;
+}
 
 const GALLERY_LINK_PATTERNS = [
   /href=["']([^"']*(?:gallery|photos|photo-gallery|images|media|virtual-tour)[^"']*)["']/gi,
@@ -168,7 +204,7 @@ const GALLERY_KEYWORDS = /gallery|photos|photo-gallery|images|media|virtual/i;
 // A WHOLE path segment naming a section of the same property (optionally with
 // a file extension). Whole, not substring: a sibling property's slug can
 // contain "gallery" (Gallery at Turtle Creek) but is never exactly "gallery".
-const UNITS_SECTION_SEGMENT = /^(?:floor[-_]?plans?|availability|pricing)(?:\.[a-z]+)?$/i;
+const UNITS_SECTION_SEGMENT = /^(?:floor[-_]?plans?|availabilit(?:y|ies)|pricing|sightmap)(?:\.[a-z]+)?$/i;
 const AMENITIES_SECTION_SEGMENT = /^(?:amenities|features|lifestyle)(?:\.[a-z]+)?$/i;
 const GALLERY_SECTION_SEGMENT = /^(?:gallery|photos|photo-gallery|images|media|virtual-tour)(?:\.[a-z]+)?$/i;
 
@@ -214,6 +250,7 @@ export function findLinkedPage(
   patterns: RegExp[],
   keywords: RegExp,
   sectionSegment: RegExp,
+  rank?: (url: URL) => number,
 ): string | null {
   let base: URL;
   try {
@@ -221,6 +258,10 @@ export function findLinkedPage(
   } catch {
     return null;
   }
+
+  // Without a rank the first match wins (amenities, gallery). With one, every
+  // match is collected and the best-ranked wins, ties going to page order.
+  let best: { href: string; score: number } | null = null;
 
   for (const pattern of patterns) {
     for (const match of mainHtml.matchAll(pattern)) {
@@ -255,12 +296,14 @@ export function findLinkedPage(
       if (!staysOnProperty(base, candidate, sectionSegment)) continue;
 
       if (keywords.test(candidate.pathname + candidate.search)) {
-        return candidate.href;
+        if (!rank) return candidate.href;
+        const score = rank(candidate);
+        if (!best || score < best.score) best = { href: candidate.href, score };
       }
     }
   }
 
-  return null;
+  return best?.href ?? null;
 }
 
 /** Amenities page finder (pure). */
@@ -281,7 +324,14 @@ export function findUnitsPageIn(mainHtml: string, baseUrl: string): string | nul
   } catch {
     return null;
   }
-  return findLinkedPage(mainHtml, baseUrl, UNITS_LINK_PATTERNS, UNITS_KEYWORDS, UNITS_SECTION_SEGMENT);
+  // A link back to the page itself outranks everything: on property pages
+  // like Cortland's and AMLI's (/apartments/<city>/<property>) the page lists
+  // the individual apartments, and the floor plans page only "from" prices.
+  const here = new URL(baseUrl);
+  const samePath = (u: URL) => u.pathname.replace(/\/+$/, "") === here.pathname.replace(/\/+$/, "");
+  return findLinkedPage(mainHtml, baseUrl, UNITS_LINK_PATTERNS, UNITS_KEYWORDS, UNITS_SECTION_SEGMENT, (u) =>
+    samePath(u) ? -1 : unitsLinkRank(u)
+  );
 }
 
 /** Photo gallery page finder (pure). */
@@ -328,6 +378,42 @@ export async function scrapeUnitsOnly(websiteUrl: string): Promise<ScrapeResult>
         // as "the building's numbered units are gone".
         unitsPageFetchFailed = true;
       }
+    }
+
+    // Sources read directly, before any model call: exact and free.
+    const pages = [{ html: mainResult.html, url: mainResult.finalUrl }];
+    if (source === "units_page") pages.push({ html: htmlToProcess, url: sourceUrl });
+
+    const directResult = (units: ScrapedUnit[], url: string, from: UnitsExtractionSource): ScrapeResult => ({
+      success: true,
+      data: {
+        units,
+        total_available: units.length,
+        move_in_specials: [],
+        amenities: [],
+        scraped_at: new Date().toISOString(),
+        source_url: url,
+      },
+      raw_html_length: htmlToProcess.length,
+      source: from,
+      units_page_fetch_failed: unitsPageFetchFailed,
+      units_page_url: unitsPageUrl || undefined,
+    });
+
+    if (isGlenwoodUrl(mainResult.finalUrl)) {
+      for (const page of [...pages].reverse()) {
+        const units = parseGlenwoodListings(page.html);
+        if (units.length) {
+          console.log(`Glenwood: ${units.length} listing(s) parsed from ${page.url}`);
+          return directResult(units, page.url, page.url === mainResult.finalUrl && source !== "units_page" ? "main_page_fallback" : source);
+        }
+      }
+    }
+
+    // SightMap's JSON lists every unit, so it is an authoritative units page.
+    const sightmap = await scrapeSightMap(pages, fetchTextSafe, (line) => console.log(line));
+    if (sightmap && sightmap.units.length) {
+      return directResult(sightmap.units, sightmap.sourceUrl, "units_page");
     }
 
     // Extract units with AI
