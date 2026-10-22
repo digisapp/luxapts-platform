@@ -6,6 +6,7 @@ import { extractUnitsWithAI, extractAmenitiesWithAI, extractFullBuildingData, ex
 import { isBotChallenge, needsJsRendering, renderPage } from "./renderer";
 import { scrapeSightMap } from "./sightmap";
 import { isGlenwoodUrl, parseGlenwoodListings } from "./glenwood";
+import { manhattanSkylineSlug, scrapeManhattanSkyline } from "./manhattan-skyline";
 import type { ScrapedUnit } from "./types";
 import { collectImageCandidates } from "./image-candidates";
 
@@ -444,6 +445,16 @@ export async function scrapeUnitsOnly(websiteUrl: string): Promise<ScrapeResult>
           console.log(`Glenwood: ${units.length} listing(s) parsed from ${page.url}`);
           return directResult(units, page.url, page.url === mainResult.finalUrl && source !== "units_page" ? "main_page_fallback" : source);
         }
+      }
+    }
+
+    // Manhattan Skyline loads listings from its own API; the page has none.
+    const skylineSlug = manhattanSkylineSlug(mainResult.finalUrl) ?? manhattanSkylineSlug(websiteUrl);
+    if (skylineSlug) {
+      const skyline = await scrapeManhattanSkyline(skylineSlug, fetchTextSafe);
+      if (skyline && skyline.units.length) {
+        console.log(`Manhattan Skyline: ${skyline.units.length} listing(s) for ${skylineSlug}`);
+        return directResult(skyline.units, skyline.sourceUrl, "units_page");
       }
     }
 

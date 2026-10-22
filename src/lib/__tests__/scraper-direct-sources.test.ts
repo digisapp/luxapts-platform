@@ -206,3 +206,39 @@ describe("isLandlordHomepage", () => {
     expect(isLandlordHomepage("https://420kent.com/")).toBe(false);
   });
 });
+
+describe("Manhattan Skyline", () => {
+  it("reads the building slug from its page URL only on that site", async () => {
+    const { manhattanSkylineSlug } = await import("../scraper/manhattan-skyline");
+    expect(manhattanSkylineSlug("https://manhattanskyline.com/buildings/upper-west-side/west-river-house")).toBe("west-river-house");
+    expect(manhattanSkylineSlug("https://manhattanskyline.com/buildings/soho/113-sullivan-street/apartment-x1")).toBe("113-sullivan-street");
+    expect(manhattanSkylineSlug("https://manhattanskyline.com/")).toBeNull();
+    expect(manhattanSkylineSlug("https://example.com/buildings/a/b")).toBeNull();
+  });
+
+  it("keeps priced residential rentals only", async () => {
+    const { unitsFromSkyline } = await import("../scraper/manhattan-skyline");
+    expect(
+      unitsFromSkyline([
+        { number: "5L", bedrooms: 1, bathrooms: 1, price: "5895.00", square_footage: null, available_on: "2026-11-07", is_rental: true, is_residential: true },
+        { number: "PH", bedrooms: 3, bathrooms: 3, price: "2500000.00", is_rental: false, is_residential: true },
+        { number: "Store", bedrooms: 0, bathrooms: 0, price: "15000.00", is_rental: true, is_residential: false },
+        { number: "2B", bedrooms: 2, bathrooms: 1, price: null, is_rental: true, is_residential: true },
+      ])
+    ).toEqual([{ unit_number: "5L", beds: 1, baths: 1, sqft: undefined, rent: 5895, available_on: "2026-11-07" }]);
+  });
+});
+
+describe("appendCapturedResponses", () => {
+  it("adds JSON as a script block the condenser keeps, and HTML as a section", async () => {
+    const { appendCapturedResponses } = await import("../scraper/renderer");
+    const out = appendCapturedResponses("<html></html>", [
+      { url: "https://x.com/api/units", body: '{"units":[{"price":"5895.00"}]}' },
+      { url: "https://x.com/ajax/getbuildingunits.asp", body: "<div>Residence 10F $4,095 /mo</div>" },
+    ]);
+    expect(out).toContain('<script type="application/json" data-captured-from="https://x.com/api/units">{"units"');
+    expect(out).toContain("<section data-captured-from=\"https://x.com/ajax/getbuildingunits.asp\"><div>Residence 10F $4,095");
+    const { condenseHtml } = await import("../scraper/ai-extractor");
+    expect(condenseHtml(out)).toContain('"price":"5895.00"');
+  });
+});

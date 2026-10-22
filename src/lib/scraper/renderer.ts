@@ -215,6 +215,35 @@ export async function settleForUnitContent(
  * that inventory was invisible to the extractor. Append any frame that carries
  * units, clearly delimited, so the extractor sees one document.
  */
+/** Rents in a response body: "$4,095", or a JSON rent/price field. */
+const PRICED_BODY = /\$\s?\d{1,2},?\d{3}(?!\d)|"(?:rent|price|minRent|min_rent|rent_amount)"\s*:\s*"?\d{3,}/i;
+const CAPTURE_BUDGET = 600_000;
+
+/**
+ * Data the page loaded in the background, appended so the extractor sees it.
+ * Leasing sites built on Spherexx (Marquis, Gateway Plaza) fetch their unit
+ * list with a POST to /ajax/getbuildingunits.asp, and others fetch JSON; the
+ * rendered DOM can still lack it when the list sits below the fold or in a
+ * widget. JSON goes in a <script type="application/json"> so condenseHtml
+ * keeps it. Pure; exported for tests.
+ */
+export function appendCapturedResponses(html: string, captured: { url: string; body: string }[]): string {
+  let budget = CAPTURE_BUDGET;
+  const parts: string[] = [];
+  for (const c of captured) {
+    if (budget <= 0) break;
+    const body = c.body.slice(0, budget);
+    budget -= body.length;
+    const isJson = /^\s*[[{]/.test(body);
+    parts.push(
+      isJson
+        ? `<script type="application/json" data-captured-from="${c.url.replace(/"/g, "")}">${body.replace(/<\/script/gi, "<\\/script")}</script>`
+        : `<section data-captured-from="${c.url.replace(/"/g, "")}">${body}</section>`
+    );
+  }
+  return parts.length ? html + parts.join("") : html;
+}
+
 async function appendFrameContent(
   page: import("playwright").Page,
   html: string,
@@ -286,6 +315,22 @@ async function renderWith(
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     });
 
+    // Background data responses that carry rents (see appendCapturedResponses)
+    const captured: { url: string; body: string }[] = [];
+    page.on("response", async (res) => {
+      const type = res.request().resourceType();
+      if (type !== "xhr" && type !== "fetch") return;
+      // Never another building's listings: Marquis pages also POST to
+      // /ajax/getotherbuildings.asp for "nearby buildings" with their rents.
+      if (/other|similar|nearby|related|featured|neighbo|recommend/i.test(res.url())) return;
+      const contentType = res.headers()["content-type"] ?? "";
+      if (!/json|html|text/i.test(contentType)) return;
+      const body = await res.text().catch(() => "");
+      if (body.length > 100 && body.length < 2_000_000 && PRICED_BODY.test(body)) {
+        captured.push({ url: res.url(), body });
+      }
+    });
+
     // Skip heavy assets — we only want the DOM
     await page.route("**/*", (route) => {
       const type = route.request().resourceType();
@@ -307,10 +352,20 @@ async function renderWith(
       return null;
     }
 
+    // Lists that load when scrolled into view (James Marquis's sits far
+    // below the fold) never fired within settleForUnitContent's first few
+    // scrolls. One quick pass down the page starts them loading.
+    for (let i = 0; i < 8; i++) {
+      await page.evaluate(() => window.scrollBy(0, Math.round(window.innerHeight * 1.5))).catch(() => {});
+      await page.waitForTimeout(350);
+    }
+    await page.evaluate(() => window.scrollTo(0, 0)).catch(() => {});
+
     // Network-idle only means the page stopped talking; the listings often
     // arrive after that, or on scroll. Keep looking for them.
     let html = await settleForUnitContent(page, SETTLE_BUDGET_MS);
     html = await appendFrameContent(page, html);
+    html = appendCapturedResponses(html, captured);
     if (!html || html.length > MAX_RESPONSE_BYTES) return null;
 
     return { html, finalUrl, renderer: "playwright" };
