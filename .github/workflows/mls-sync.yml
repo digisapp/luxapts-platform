@@ -1,0 +1,41 @@
+name: MLS sync
+
+# Pull active MLS lease listings (IDX feed) into mls_listings every 4 hours.
+# IDX rules require displayed listings to be refreshed at least every 12
+# hours; off-market listings drop off within one run. Does nothing until the
+# MLS_* secrets exist (scripts/mls-sync.ts exits quietly).
+
+on:
+  schedule:
+    - cron: "15 */4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: mls-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          MLS_PROVIDER: ${{ secrets.MLS_PROVIDER }}
+          MLS_CLIENT_ID: ${{ secrets.MLS_CLIENT_ID }}
+          MLS_CLIENT_SECRET: ${{ secrets.MLS_CLIENT_SECRET }}
+          MLS_BRIDGE_TOKEN: ${{ secrets.MLS_BRIDGE_TOKEN }}
+          MLS_BRIDGE_DATASET: ${{ secrets.MLS_BRIDGE_DATASET }}
+        run: npx tsx scripts/mls-sync.ts

@@ -24,6 +24,8 @@ interface ContactLeasingModalProps {
   trigger?: React.ReactNode;
   /** A building that hasn't opened leasing: the form joins its first-access list. */
   variant?: "contact" | "first_access";
+  /** What the question is about (e.g. "MLS A11234567, unit 3407"), saved with the lead. */
+  context?: string;
 }
 
 export function ContactLeasingModal({
@@ -33,6 +35,7 @@ export function ContactLeasingModal({
   leasingEmail,
   trigger,
   variant = "contact",
+  context,
 }: ContactLeasingModalProps) {
   const firstAccess = variant === "first_access";
   const [open, setOpen] = useState(false);
@@ -68,7 +71,7 @@ export function ContactLeasingModal({
           move_in_date: formData.moveInDate || undefined,
           budget_max: formData.budget ? parseInt(formData.budget, 10) : undefined,
           beds: formData.beds ? parseInt(formData.beds, 10) : undefined,
-          notes: `${firstAccess ? "First access request for" : "Inquiry for"} ${buildingName}\n${formData.message}`,
+          notes: `${firstAccess ? "First access request for" : "Inquiry for"} ${buildingName}${context ? ` (${context})` : ""}\n${formData.message}`,
           targets: [{ building_id: buildingId, rank: 1 }],
           session_id: analyticsSessionId(),
         }),

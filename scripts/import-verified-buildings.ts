@@ -29,6 +29,7 @@ config({ path: resolve(__dirname, "../.env.local") });
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { scrapeUnitsOnly, scrapeAmenitiesOnly } from "../src/lib/scraper/fetcher";
 import { saveScrapedUnits, saveScrapedAmenities, updateScrapeStatus } from "../src/lib/scraper/db";
+import { addressKey } from "../src/lib/address-key";
 
 interface Proposal {
   key: string;
@@ -46,6 +47,13 @@ interface Proposal {
   expected_opening?: string | null;
   opening_checked_at?: string | null;
   opening_source_url?: string | null;
+  // --condo only: a condominium tower; rentals come from the MLS feed
+  stories?: number | null;
+  extra_addresses?: string[] | null;
+  pets?: string | null;
+  min_lease_term?: string | null;
+  short_term_allowed?: boolean | string | null;
+  website?: string | null;
 }
 
 function arg(name: string): string | undefined {
@@ -61,24 +69,6 @@ const slugify = (s: string) =>
     .replace(/&/g, " and ")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-
-/** "100 West 31st Street" and "100 W 31st St" compare equal. */
-function addressKey(address: string): string {
-  return address
-    .toLowerCase()
-    .replace(/[.,#]/g, " ")
-    .replace(/\b(street|st)\b/g, "st")
-    .replace(/\b(avenue|ave|av)\b/g, "ave")
-    .replace(/\b(boulevard|blvd)\b/g, "blvd")
-    .replace(/\b(place|pl)\b/g, "pl")
-    .replace(/\b(west|w)\b/g, "w")
-    .replace(/\b(east|e)\b/g, "e")
-    .replace(/\b(north|n)\b/g, "n")
-    .replace(/\b(south|s)\b/g, "s")
-    .replace(/(\d+)(st|nd|rd|th)\b/g, "$1")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 const nameKey = (n: string) => slugify(n.replace(/^the\s+/i, "")).replace(/-(apartments|nyc|residences|rentals)$/, "");
 
@@ -117,6 +107,11 @@ async function main() {
   // (no pricing site, or one the scraper can't read): live with "Contact for
   // pricing", noindexed until units are listed (see the building page).
   const allowUnpriced = process.argv.includes("--allow-unpriced");
+  // Condominium towers (migration 040): property_type=condo, live without a
+  // price, listings from the MLS. No website_url, so the unit scraper never
+  // visits them (an association site has no inventory); the official site is
+  // kept as a fact.
+  const condoMode = process.argv.includes("--condo");
   if (!file || !citySlug) throw new Error("usage: <proposals.json> --city <slug> [--only k1,k2] [--apply]");
 
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -171,7 +166,7 @@ async function main() {
     if (!apply) {
       console.log(
         `would  ${label} → ${hood ? hood.name : wanted ? `NEW neighborhood "${wanted}"` : "no neighborhood"} · ${
-          preLeasingMode ? `pre-leasing "${p.expected_opening}"` : p.url
+          condoMode ? "condo" : preLeasingMode ? `pre-leasing "${p.expected_opening}"` : p.url
         }`
       );
       continue;
@@ -208,7 +203,8 @@ async function main() {
         address_1: p.address,
         zip: p.zip ?? null,
         year_built: p.year_built ?? null,
-        website_url: p.url,
+        website_url: condoMode ? null : p.url,
+        ...(condoMode ? { property_type: "condo", stories: p.stories ?? null, pet_policy: p.pets ?? null } : {}),
         lat: coords?.lat ?? null,
         lng: coords?.lng ?? null,
         status: "inactive",
@@ -218,6 +214,33 @@ async function main() {
     if (insErr) throw insErr;
     takenNames.add(nameKey(p.name));
     takenAddresses.add(addressKey(p.address));
+
+    if (condoMode) {
+      const facts = [
+        ["developer", p.developer],
+        ["total_units", p.units_total],
+        ["addresses", p.extra_addresses?.length ? p.extra_addresses : null],
+        ["min_lease_term", p.min_lease_term],
+        ["short_term_allowed", p.short_term_allowed == null ? null : String(p.short_term_allowed)],
+        ["website", p.website],
+      ].filter(([, v]) => v != null && v !== "");
+      if (facts.length) {
+        const { error: factErr } = await supabase.from("building_facts").upsert(
+          facts.map(([key, value]) => ({ building_id: building.id, key, value, source: "research" })),
+          { onConflict: "building_id,key" }
+        );
+        if (factErr) throw factErr;
+      }
+      if (coords) {
+        await supabase.from("buildings").update({ status: "active" }).eq("id", building.id);
+        summary.added_live++;
+        console.log(`LIVE   ${label}: /buildings/${building.slug} condo`);
+      } else {
+        summary.added_inactive++;
+        console.log(`HELD   ${label}: /buildings/${building.slug} left inactive (address not geocoded)`);
+      }
+      continue;
+    }
 
     if (p.url) {
       await supabase

@@ -95,6 +95,23 @@ const getPreLeasingFacts = cache(async (id: string) => {
   };
 });
 
+// Active MLS rental listings in this building (condos; migration 040). A
+// missing table or any error reads as "no listings", never a broken page.
+const getMlsListings = cache(async (id: string) => {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("mls_listings")
+    .select(
+      "listing_id, list_price, bedrooms, bathrooms, living_area, unit_number, available_date, furnished, photo_urls, list_office_name, last_seen_at"
+    )
+    .eq("building_id", id)
+    .eq("is_active", true)
+    .order("list_price", { ascending: true })
+    .limit(60);
+  if (error || !data) return [];
+  return data;
+});
+
 // Primary building image for social shares (deduplicated across renders)
 const getPrimaryBuildingImage = cache(async (id: string) => {
   const supabase = createAdminClient();
@@ -117,12 +134,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return { title: "Building Not Found - Staycio", robots: { index: false, follow: false } };
   }
 
-  const [ogImage, availableUnits, unitPrices, preLeasingFacts] = await Promise.all([
+  const [ogImage, availableUnits, unitPrices, preLeasingFacts, mlsListings] = await Promise.all([
     getPrimaryBuildingImage(building.id),
     getAvailableUnitCount(building.id),
     getUnitPrices(building.id),
     getPreLeasingFacts(building.id),
+    getMlsListings(building.id),
   ]);
+  const mlsRents = mlsListings.map((l) => l.list_price).filter((p): p is number => typeof p === "number" && p > 0);
   // Pre-leasing applies only until units are listed; then it's a normal page.
   const preLeasing = availableUnits === 0 ? preLeasingFacts : null;
   const city = Array.isArray(building.cities) ? building.cities[0] : building.cities;
@@ -151,7 +170,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const tz = timeZoneForState(city?.state);
   // Pre-leasing: no opening year in the snippet (dates slip; see the
   // microsite-title rule), the dated quote lives on the page.
-  const description = preLeasing
+  const description = mlsRents.length && availableUnits === 0
+    ? `${building.name} in ${place || "the city"}: ${mlsListings.length} condo${mlsListings.length === 1 ? "" : "s"} for rent from ${formatPrice(
+        Math.min(...mlsRents)
+      )}/month, listed on the MLS. Building facts, amenities and current rentals on Staycio.`
+    : preLeasing
     ? `${building.name} in ${place || "the city"}: new rental building${
         preLeasing.developer ? ` from ${preLeasing.developer}` : ""
       }${preLeasing.unitsTotal ? `, ${preLeasing.unitsTotal.toLocaleString()} apartments` : ""}. Leasing hasn't opened yet: get first access to pricing and floor plans on Staycio.`
@@ -175,7 +198,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     // of the index (and the sitemap) until it has inventory again.
     // A pre-leasing building is indexable too: it has real, dated facts and a
     // first-access form, and new buildings are searched by name.
-    robots: availableUnits > 0 || preLeasing ? undefined : { index: false, follow: true },
+    robots: availableUnits > 0 || preLeasing || mlsListings.length > 0 ? undefined : { index: false, follow: true },
     alternates: { canonical },
     openGraph: {
       title,
@@ -219,6 +242,7 @@ import type { UnitRowData } from "./UnitRow";
 import { timeZoneForState, todayKey } from "../availability";
 import { compareUnitRows, toUnitRowData } from "./unit-rows";
 import { BuildingContactButtons } from "./BuildingContactButtons";
+import { MlsListings } from "./MlsListings";
 import { FavoriteButton } from "@/components/listings/FavoriteButton";
 import { StickyMobileCTA } from "@/components/ui/StickyMobileCTA";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
@@ -518,6 +542,17 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
   // A new building whose leasing hasn't opened, until units are listed
   const preLeasing = (units?.length ?? 0) === 0 ? await getPreLeasingFacts(id) : null;
 
+  // Condo: rentals come from the MLS, not a leasing office
+  const isCondo = building.property_type === "condo";
+  const mlsListings = await getMlsListings(id);
+  const mlsRents = mlsListings.map((l) => l.list_price).filter((p): p is number => typeof p === "number" && p > 0);
+  const mlsMin = mlsRents.length ? Math.min(...mlsRents) : null;
+  const mlsMax = mlsRents.length ? Math.max(...mlsRents) : null;
+  const mlsUpdated = mlsListings.reduce<string | null>(
+    (latest, l) => (l.last_seen_at && (!latest || l.last_seen_at > latest) ? l.last_seen_at : latest),
+    null
+  );
+
   const summary = buildSummary({
     name: building.name,
     address: building.address_1,
@@ -541,6 +576,15 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
     leasingPhone: building.leasing_phone,
     pageUrl: buildingUrl(building),
     preLeasing,
+    condo: isCondo
+      ? {
+          listings: mlsListings.length,
+          minRent: mlsMin,
+          maxRent: mlsMax,
+          unitsTotal: Number(buildingFacts.total_units) > 0 ? Number(buildingFacts.total_units) : null,
+          developer: typeof buildingFacts.developer === "string" ? buildingFacts.developer : null,
+        }
+      : null,
   });
 
   // Unit rows, resolved here so the client list only filters and collapses.
@@ -714,9 +758,14 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {priceRange ? "Starting from" : preLeasing ? "Pre-leasing" : "Pricing"}
+                      {priceRange || mlsMin ? "Starting from" : preLeasing ? "Pre-leasing" : "Pricing"}
                     </p>
-                    {priceRange ? (
+                    {!priceRange && mlsMin ? (
+                      <p className="whitespace-nowrap text-2xl font-bold tabular-nums">
+                        {formatPrice(mlsMin)}
+                        <span className="text-lg font-normal text-muted-foreground">/mo</span>
+                      </p>
+                    ) : priceRange ? (
                       <p className="whitespace-nowrap text-2xl font-bold tabular-nums">
                         {formatPrice(priceRange.min)}
                         {priceRange.min !== priceRange.max && (
@@ -730,6 +779,15 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                       <p className="text-lg font-semibold">{preLeasing ? "Pricing not released yet" : "Contact for pricing"}</p>
                     )}
                   </div>
+                  {unitCount === 0 && mlsListings.length > 0 && (
+                    <a
+                      href="#mls-listings"
+                      className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-medium text-link underline-offset-4 hover:underline dark:hover:text-cyan-200 dark:hover:no-underline"
+                    >
+                      {mlsListings.length} condo{mlsListings.length === 1 ? "" : "s"} for rent
+                      <ChevronDown className="h-4 w-4" />
+                    </a>
+                  )}
                   {unitCount > 0 && (
                     <a
                       href="#available-units"
@@ -888,7 +946,47 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 </CardContent>
               </Card>
 
+              {/* Condo rentals from the MLS (IDX) */}
+              {(isCondo || mlsListings.length > 0) && (
+                <Card id="mls-listings" className="scroll-mt-24">
+                  <CardHeader className="p-4 sm:p-6">
+                    <CardTitle as="h2" className="text-lg">
+                      Condos for rent at {building.name}
+                      <span className="ml-2 font-normal text-muted-foreground">({mlsListings.length})</span>
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">Owner-rented units listed on the MLS, lowest rent first</p>
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
+                    {mlsListings.length ? (
+                      <MlsListings
+                        buildingId={building.id}
+                        buildingName={building.name}
+                        citySlug={building.cities?.slug || ""}
+                        updatedLabel={mlsUpdated ? formatDate(mlsUpdated, buildingTimeZone) : null}
+                        listings={mlsListings.map((l) => ({
+                          listingId: l.listing_id,
+                          price: l.list_price,
+                          beds: l.bedrooms,
+                          baths: l.bathrooms,
+                          sqft: l.living_area,
+                          unit: l.unit_number,
+                          availableDate: l.available_date,
+                          furnished: l.furnished,
+                          photo: l.photo_urls?.[0] ?? null,
+                          office: l.list_office_name,
+                        }))}
+                      />
+                    ) : (
+                      <p className="text-muted-foreground">
+                        No units at {building.name} are listed for rent on the MLS right now. Tell us what you&apos;re looking for and an agent will watch the building for you.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Available Units — the page's main content */}
+              {!(isCondo && unitCount === 0) && (
               <Card id="available-units" className="scroll-mt-24">
                 <CardHeader className="p-4 sm:p-6">
                   <CardTitle as="h2" className="text-lg">
@@ -911,6 +1009,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                   )}
                 </CardContent>
               </Card>
+              )}
 
               <BuildingPriceHistory priceHistory={priceHistory} />
 
@@ -1069,9 +1168,9 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
                 <CardContent className="space-y-4 p-5">
                   <div>
                     <p className="truncate text-sm text-muted-foreground">{building.name}</p>
-                    {priceRange ? (
+                    {priceRange || mlsMin ? (
                       <p className="mt-0.5 text-2xl font-bold tabular-nums">
-                        {formatPrice(priceRange.min)}
+                        {formatPrice(priceRange?.min ?? (mlsMin as number))}
                         <span className="text-base font-normal text-muted-foreground">/mo and up</span>
                       </p>
                     ) : (
@@ -1116,7 +1215,7 @@ export default async function BuildingPage({ params }: BuildingPageProps) {
         buildingId={building.id}
         buildingName={building.name}
         citySlug={building.cities?.slug || ""}
-        price={priceRange?.min}
+        price={priceRange?.min ?? mlsMin ?? undefined}
         preLeasing={!!preLeasing}
       />
 

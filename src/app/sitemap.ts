@@ -93,6 +93,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const f of preLeasingFacts ?? []) {
     if (f.value === "pre_leasing") buildingsWithUnits.add(f.building_id);
   }
+  // Condos with live MLS rentals (an error, e.g. before migration 040, adds none)
+  const { data: mlsBuildings } = await supabase
+    .from("mls_listings")
+    .select("building_id")
+    .eq("is_active", true)
+    .not("building_id", "is", null)
+    .limit(10000);
+  for (const m of mlsBuildings ?? []) if (m.building_id) buildingsWithUnits.add(m.building_id);
   const buildingRoutes: MetadataRoute.Sitemap = buildings.filter((b) => buildingsWithUnits.has(b.id)).map((b) => ({
     // Slug URL only. Emitting the UUID here submitted a URL that now 301s,
     // which wastes crawl budget and splits signals across two paths.

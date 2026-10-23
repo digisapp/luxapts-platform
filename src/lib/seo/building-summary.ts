@@ -52,6 +52,17 @@ export interface SummaryInput {
     developer?: string | null;
     unitsTotal?: number | null;
   } | null;
+  /**
+   * A condominium: units are owned individually and rented by their owners;
+   * the rentals come from the MLS (IDX), not a leasing office.
+   */
+  condo?: {
+    listings: number;
+    minRent: number | null;
+    maxRent: number | null;
+    unitsTotal?: number | null;
+    developer?: string | null;
+  } | null;
 }
 
 export interface UnitMixRow {
@@ -180,6 +191,7 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
     leasingPhone,
     pageUrl,
     preLeasing,
+    condo,
   } = input;
 
   const place = neighborhoodName && cityName
@@ -207,7 +219,11 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
   const cityPart = cityState ? (where ? `, ${cityState}` : `in ${cityState}`) : where ? "" : `in ${place}`;
   // A condo tower (its own description says so) is not a "rental building",
   // even when owners rent units out through it.
-  const kind = description && /\bcondo(minium)?s?\b/i.test(description) ? "residential building" : "rental building";
+  const kind = condo
+    ? "condominium tower"
+    : description && /\bcondo(minium)?s?\b/i.test(description)
+      ? "residential building"
+      : "rental building";
   overview.push(
     `${name} is ${stories ? `${/^8|^1[18]$/.test(String(stories)) ? "an" : "a"} ${stories}-story` : "a"} ${kind} ${where}${cityPart}${
       yearBuilt ? `, built in ${yearBuilt}` : ""
@@ -237,6 +253,22 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
               timeZone,
             })}.`
           : ""
+      }`
+    );
+  } else if (condo) {
+    overview.push(
+      `${name}'s ${condo.unitsTotal ? `${condo.unitsTotal.toLocaleString()} ` : ""}residences are owned individually and rented out by their owners${
+        condo.developer ? ` (developer: ${condo.developer})` : ""
+      }. ${
+        condo.listings > 0
+          ? `${condo.listings} ${condo.listings === 1 ? "unit is" : "units are"} listed for rent on the MLS right now${
+              condo.minRent
+                ? condo.maxRent && condo.maxRent !== condo.minRent
+                  ? `, from ${money(condo.minRent)} to ${money(condo.maxRent)} a month`
+                  : `, at ${money(condo.minRent)} a month`
+                : ""
+            }.`
+          : "No units are listed for rent on the MLS right now; ask Stacy or an agent to watch the building for you."
       }`
     );
   } else if (preLeasing) {
@@ -306,6 +338,17 @@ export function buildSummary(input: SummaryInput): BuildingSummary {
     faqs.push({
       question: `Does ${name} have parking?`,
       answer: parkingPolicy.trim(),
+    });
+  }
+
+  if (condo && condo.listings > 0 && condo.minRent && !minPrice) {
+    faqs.push({
+      question: `How much does it cost to rent at ${name}?`,
+      answer: `Units at ${name} listed for rent on the MLS right now ask ${
+        condo.maxRent && condo.maxRent !== condo.minRent
+          ? `${money(condo.minRent)} to ${money(condo.maxRent)}`
+          : money(condo.minRent)
+      } a month. Each unit is rented by its owner, so terms vary by listing.`,
     });
   }
 

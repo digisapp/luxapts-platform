@@ -231,6 +231,21 @@ describe("buildSummary", () => {
     expect(s.faqs.some((f) => f.question.startsWith("How do I schedule a tour"))).toBe(false);
   });
 
+  it("describes a condo tower from its MLS listings", () => {
+    const s = buildSummary({
+      ...base,
+      units: [],
+      condo: { listings: 12, minRent: 3800, maxRent: 9500, unitsTotal: 452, developer: "Related Group" },
+    });
+    const text = s.overview.join(" ");
+    expect(text).toContain("24-story condominium tower");
+    expect(text).toContain("452 residences are owned individually");
+    expect(text).toContain("12 units are listed for rent on the MLS right now, from $3,800 to $9,500 a month");
+    expect(s.faqs.find((f) => f.question.startsWith("How much"))?.answer).toContain("$3,800 to $9,500");
+    const none = buildSummary({ ...base, units: [], condo: { listings: 0, minRent: null, maxRent: null } });
+    expect(none.overview.join(" ")).toContain("No units are listed for rent on the MLS right now");
+  });
+
   it("gives two buildings with different inventory different copy", () => {
     const a = buildSummary(base).overview.join(" ");
     const b = buildSummary({
