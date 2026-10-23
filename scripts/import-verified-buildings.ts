@@ -113,6 +113,10 @@ async function main() {
   const apply = process.argv.includes("--apply");
   const only = arg("--only")?.split(",");
   const preLeasingMode = process.argv.includes("--pre-leasing");
+  // Operating buildings the owner wants listed before their prices are found
+  // (no pricing site, or one the scraper can't read): live with "Contact for
+  // pricing", noindexed until units are listed (see the building page).
+  const allowUnpriced = process.argv.includes("--allow-unpriced");
   if (!file || !citySlug) throw new Error("usage: <proposals.json> --city <slug> [--only k1,k2] [--apply]");
 
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -252,8 +256,10 @@ async function main() {
     }
 
     // Units and prices: the real scraper, nothing from the proposal
-    if (!p.url) throw new Error(`${label}: no url (required outside --pre-leasing)`);
-    const scraped = await scrapeUnitsOnly(p.url);
+    if (!p.url && !allowUnpriced) throw new Error(`${label}: no url (required outside --pre-leasing/--allow-unpriced)`);
+    const scraped = p.url
+      ? await scrapeUnitsOnly(p.url)
+      : { success: true, data: undefined, error: undefined };
 
     // The scraper shares its xAI account with Stacy. Out of credit, every
     // further building would fail anyway and Stacy is about to stop
@@ -268,15 +274,17 @@ async function main() {
       await saveScrapedUnits(supabase, building.id, scraped.data.units);
       priced = await pricedUnitCount(supabase, building.id);
     }
-    await updateScrapeStatus(supabase, building.id, {
-      type: "units",
-      success: scraped.success,
-      error: scraped.error,
-      unitsFound: scraped.data?.units.length ?? 0,
-    });
+    if (p.url) {
+      await updateScrapeStatus(supabase, building.id, {
+        type: "units",
+        success: scraped.success,
+        error: scraped.error,
+        unitsFound: scraped.data?.units.length ?? 0,
+      });
+    }
 
     // Amenities and policies from the building's own site
-    const amenities = await scrapeAmenitiesOnly(p.url).catch(() => null);
+    const amenities = p.url ? await scrapeAmenitiesOnly(p.url).catch(() => null) : null;
     if (amenities?.success && amenities.data) {
       if (amenities.data.amenities.length) await saveScrapedAmenities(supabase, building.id, amenities.data.amenities);
       if (amenities.data.pet_policy || amenities.data.parking_policy) {
@@ -290,7 +298,7 @@ async function main() {
       }
     }
 
-    if (priced > 0 && coords) {
+    if ((priced > 0 || allowUnpriced) && coords) {
       await supabase.from("buildings").update({ status: "active" }).eq("id", building.id);
       summary.added_live++;
       console.log(`LIVE   ${label}: /buildings/${building.slug}, ${priced} priced units, ${amenities?.data?.amenities.length ?? 0} amenities`);
