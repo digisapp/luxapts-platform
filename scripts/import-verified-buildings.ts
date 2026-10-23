@@ -185,7 +185,15 @@ async function main() {
       console.log(`       new neighborhood ${created.name}`);
     }
 
-    const coords = await geocode(p.address, city.name === "Brooklyn" ? "Brooklyn" : "New York", city.state, p.zip);
+    // The postal city, not the site's city record: Manhattan addresses are
+    // "New York", and Miami Beach is its own city inside Staycio's Miami.
+    const postalCity =
+      citySlug === "new-york"
+        ? "New York"
+        : /miami beach|south beach/i.test(p.neighborhood ?? "")
+          ? "Miami Beach"
+          : city.name;
+    const coords = await geocode(p.address, postalCity, city.state, p.zip);
 
     const { data: building, error: insErr } = await supabase
       .from("buildings")
